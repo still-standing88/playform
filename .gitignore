@@ -1,0 +1,10 @@
+bin/
+lib/
+data/
+logs/
+Screenshots/
+docs/
+__pycache__/
+venv/
+
+*.pyc

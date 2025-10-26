@@ -1,0 +1,739 @@
+import os
+import datetime as dt
+import time
+import logging
+from typing import Callable, Optional, Dict
+import av_play
+
+from PySide6.QtWidgets import (QWidget, QLayout, QVBoxLayout, QHBoxLayout, QSplitter,
+                               QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox)
+from PySide6.QtGui import QCloseEvent, QFont, QPalette, QColor, QShortcut
+from PySide6.QtCore import Qt, Signal, QTimer, QSize
+
+from app_config import prefs, key_config
+from app_constance.vlc_args import log_args
+from .player_controls import PlayerControls
+from .subtitles_widget import SubtitlesWidget
+from .video_display_widget import VideoDisplayWidget
+from gui_controls.player_key_event_filter import KeyEventFilter
+from gui_controls.toggle_button import ToggleButton
+from .subtitles import SubtitleManager
+from .filters_widget import FiltersWidget
+from .url_extractor import UrlExtractor
+
+from utilities.functions import get_app_path, get_debug_level, get_parent_dir, get_vlclog_file, parse_vlc_args
+from utilities.media_utils import format_time, seconds_to_microseconds, get_media_files_from_directory
+
+
+LayoutType = QVBoxLayout | QHBoxLayout 
+
+logger = logging.getLogger(__name__)
+
+
+class PlayerWidget(QWidget):
+
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.is_seeking = False
+        self._last_known_state = av_play.AVPlaybackState.AV_STATE_NOTHING
+        self.url_extractor = None
+        self._shortcuts:Dict[str, QShortcut] = {}
+        self._key_event_filter = KeyEventFilter(self)
+        
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
+        self.setup_ui()
+        self.layout_widgets()
+        
+        self.player:av_play.VLCVideoPlayer = av_play.VLCVideoPlayer()
+        self.subtitle_manager = SubtitleManager()
+        self._loading = False
+        
+
+        self._init_player()
+        self.connect_signals()
+        self.apply_styles()
+        self.set_shortcuts()
+        self._install_event_filters()
+        
+    def setup_ui(self):
+        self.player_controls = PlayerControls(self)
+        self.video_display = VideoDisplayWidget(parent = self, on_close_callback=self._update_fullscreen_state)
+
+        self.subtitles_widget = SubtitlesWidget(self)
+        self.filters_widget = FiltersWidget(self)
+        self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
+        
+    def layout_widgets(self):
+        self.main_layout = QHBoxLayout(self)
+        self.main_layout.setContentsMargins(5, 5, 5, 5)
+        
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(5)
+        
+        left_layout.addWidget(self.video_display, 1)
+        left_layout.addWidget(self.player_controls)
+        left_layout.addWidget(self.subtitles_widget)
+        left_layout.addWidget(self.filters_widget)
+        self.video_display.set_position_info(left_layout, 0)
+        
+        self.main_splitter.addWidget(left_widget)
+
+        self.main_splitter.setSizes([800, 300])
+        self.main_splitter.setStretchFactor(0, 1)
+        self.main_splitter.setStretchFactor(1, 0)
+        
+        self.main_layout.addWidget(self.main_splitter)
+
+    def _init_player(self):
+        vlc_args = log_args
+        if prefs.prefs.get("vlc_logging", True):
+            vlc_args.extend([
+                "--file-logging",
+                "--logmode", "text",
+                "--logfile", get_vlclog_file(),
+                "--verbose", str(int(get_debug_level()))
+            ])
+
+        try:
+            try:
+                extra_args = parse_vlc_args(prefs.prefs.get("vlc_args", ""))
+                self.player.init(vlc_args=vlc_args+extra_args)
+            except:
+                self.player.init(vlc_args=vlc_args)
+            self.player.set_window(self.video_display.winId())
+            self.player.set_auto_play(prefs.prefs["autoplay"]) 
+            self.player.set_track_end_callback(self._update_current_track)
+            self.filters_widget.set_player(self.player)
+            device = prefs.prefs.get("device", 0)
+            if device < self.player.get_devices():
+                self.player.set_device(device)
+
+
+            rm = prefs.prefs.get("repeat_mode", 0)
+            if rm == 2:
+                self.player.set_playlist_repeat_mode(av_play.AVPlaylistRepeatMode.REPEAT_ONE)
+                self.player_controls.set_repeat_mode("one")
+            elif rm == 1:
+                self.player.set_playlist_repeat_mode(av_play.AVPlaylistRepeatMode.REPEAT_ALL)
+                self.player_controls.set_repeat_mode("all")
+            else:
+                self.player.set_playlist_repeat_mode(av_play.AVPlaylistRepeatMode.REPEAT_OFF)
+                self.player_controls.set_repeat_mode("off")
+
+            sh = bool(prefs.prefs.get("shuffle", False))
+            if sh:
+                self.player.set_playlist_shuffle_mode(av_play.AVPlaylistShuffleMode.SHUFFLE)
+                self.player_controls.set_shuffle_state(True)
+            else:
+                self.player.set_playlist_shuffle_mode(av_play.AVPlaylistShuffleMode.SEQUENTIAL)
+                self.player_controls.set_shuffle_state(False)
+
+        except av_play.AVError as e:
+            self.player_controls.set_controls_enabled(False)
+
+
+    def connect_signals(self):
+        self.player_controls.playPauseClicked.connect(self._on_play_pause_clicked)
+        self.player_controls.muteUnmuteClicked.connect(self._on_mute_unmute_clicked)
+        self.player_controls.forwardClicked.connect(self._on_forward_clicked)
+        self.player_controls.backwardClicked.connect(self._on_backward_clicked)
+        self.player_controls.previousClicked.connect(self._on_previous_clicked)
+        self.player_controls.nextClicked.connect(self._on_next_clicked)
+        self.player_controls.repeatClicked.connect(self._on_repeat_clicked)
+        self.player_controls.shuffleClicked.connect(self._on_shuffle_clicked)
+        
+        self.player_controls.seekChanged.connect(self._on_seek_changed)
+        self.player_controls.seekPressed.connect(self._on_seek_pressed)
+        self.player_controls.seekReleased.connect(self._on_seek_released)
+        self.player_controls.volumeChanged.connect(self._on_volume_changed)
+        
+        self.player_controls.volumeUpRequested.connect(self._on_volume_up)
+        self.player_controls.volumeDownRequested.connect(self._on_volume_down)
+        self.player_controls.jumpToBeginningRequested.connect(self._on_jump_to_beginning)
+        self.player_controls.jumpToEndRequested.connect(self._on_jump_to_end)
+        self.player_controls.stopRequested.connect(self._on_stop)
+        self.player_controls.speedChanged.connect(self._on_speed_changed)
+        self.player_controls.fullscreenToggled.connect(self._on_fullscreen_toggled)
+        self.player_controls.timeUpdateRequested.connect(self._update_player_state)
+        self.player_controls.aspectRatioChanged.connect(self._on_aspect_ratio_changed)
+        self.player_controls.scaleChanged.connect(self._on_scale_changed)
+        self.player_controls.screenshotRequested.connect(self._on_screenshot)
+
+    def apply_styles(self):
+        self.setStyleSheet("""
+            PlayerWidget { background-color: #ecf0f1; border: 1px solid #bdc3c7; border-radius: 8px; }
+        """)
+
+    def _on_play_pause_clicked(self):
+        instance = self.player.primary_instance
+        if not instance:
+            QMessageBox.warning(self, "Playback Error", "No media instance available.")
+            return
+        try:
+            state = instance.get_playback_state()
+            if state == av_play.AVPlaybackState.AV_STATE_PLAYING:
+                instance.pause()
+                self.player_controls.save_last_position()
+            else:
+                if state == av_play.AVPlaybackState.AV_STATE_STOPPED or av_play.AVPlaybackState.AV_STATE_PAUSED:
+                    instance.play()
+        except av_play.AVError as e:
+            msg = f"Playback error: {getattr(e, 'message', str(e))}"
+            QMessageBox.critical(self, "Playback Error", msg)
+        
+    def _on_mute_unmute_clicked(self):
+        instance = self.player.primary_instance
+        if not instance:
+            QMessageBox.warning(self, "Mute Error", "No media instance available.")
+            return
+        try:
+            state = instance.get_mute_state()
+            if state == av_play.AVMuteState.AV_AUDIO_MUTED:
+                instance.unmute()
+            else:
+                instance.mute()
+        except av_play.AVError as e:
+            msg = f"Mute error: {getattr(e, 'message', str(e))}"
+            QMessageBox.critical(self, "Mute Error", msg)
+        
+    def _on_forward_clicked(self):
+        if self.player:
+            self.player_controls._is_user_seeking = True
+            self.player.forward(prefs.prefs["offset"]["seek"])
+            self.player_controls._is_user_seeking = False
+        
+    def _on_backward_clicked(self):
+        if self.player:
+            self.player_controls._is_user_seeking = True
+            self.player.backward(prefs.prefs["offset"]["seek"])
+            self.player_controls._is_user_seeking = False
+        
+    def _on_previous_clicked(self):
+        if self.player:
+            self.player.previous()
+            self.filters_widget.reset_filters()
+        
+    def _on_next_clicked(self):
+        if self.player:
+            self.player.next()
+            self.filters_widget.reset_filters()
+        
+    def _on_repeat_clicked(self):
+        current_mode = self.player.get_playlist_repeat_mode()
+
+        if current_mode == av_play.AVPlaylistRepeatMode.REPEAT_ONE:
+            new_mode = av_play.AVPlaylistRepeatMode.REPEAT_ALL
+            self.player_controls.set_repeat_mode("all")
+            prefs.prefs["repeat_mode"] = 1
+        elif current_mode == av_play.AVPlaylistRepeatMode.REPEAT_ALL:
+            new_mode = av_play.AVPlaylistRepeatMode.REPEAT_OFF
+            self.player_controls.set_repeat_mode("off")
+            prefs.prefs["repeat_mode"] = 0
+        else:
+            new_mode = av_play.AVPlaylistRepeatMode.REPEAT_ONE
+            self.player_controls.set_repeat_mode("one")
+            prefs.prefs["repeat_mode"] = 2
+        self.player.set_playlist_repeat_mode(new_mode)
+        try:
+            prefs.save()
+        except Exception:
+            pass
+        
+    def _on_shuffle_clicked(self):
+        current_mode = self.player.get_playlist_shuffle_mode()
+
+        if current_mode == av_play.AVPlaylistShuffleMode.SHUFFLE:
+            new_mode = av_play.AVPlaylistShuffleMode.SEQUENTIAL
+            self.player_controls.set_shuffle_state(False)
+            prefs.prefs["shuffle"] = False
+        else:
+            new_mode = av_play.AVPlaylistShuffleMode.SHUFFLE
+            self.player_controls.set_shuffle_state(True)
+            prefs.prefs["shuffle"] = True
+        self.player.set_playlist_shuffle_mode(new_mode)
+        try:
+            prefs.save()
+        except Exception:
+            pass
+        
+    def _on_seek_changed(self, position):
+        if self.player.primary_instance is not None:
+            self.player_controls.set_time_text(f"{format_time(position)} / {format_time(self.player.primary_instance.get_length())}")
+            self.is_seeking = True
+            self.set_position()
+            self.is_seeking = False
+
+    def _on_seek_pressed(self):
+        self.is_seeking = True
+        self.player_controls._is_user_seeking = True
+        
+    def _on_seek_released(self):
+        self.is_seeking = False
+        self.player_controls._is_user_seeking = False
+        self.set_position()
+
+    def set_position(self):
+        instance = self.player.primary_instance
+        if instance:
+            try:
+                position = self.player_controls.get_seek_position()
+                instance.set_position(position)
+            except av_play.AVError as e:
+                msg = f"Seek error: {getattr(e, 'message', str(e))}"
+                QMessageBox.critical(self, "Seek Error", msg)
+        
+    def _on_volume_changed(self, volume):
+        instance = self.player.primary_instance
+        if instance:
+            try:
+                instance.set_volume(float(volume))
+            except av_play.AVError as e:
+                msg = f"Volume error: {getattr(e, 'message', str(e))}"
+                QMessageBox.critical(self, "Volume Error", msg)
+
+    def _on_volume_up(self):
+        instance = self.player.primary_instance
+        if instance:
+            try:
+                current_volume = instance.get_volume()
+                new_volume = min(100, current_volume + prefs.prefs["offset"]["volume"])
+                instance.set_volume(new_volume)
+            except av_play.AVError as e:
+                msg = f"Volume error: {getattr(e, 'message', str(e))}"
+                QMessageBox.critical(self, "Volume Error", msg)
+    
+    def _on_volume_down(self):
+        instance = self.player.primary_instance
+        if instance:
+            try:
+                current_volume = instance.get_volume()
+                new_volume = max(0, current_volume - prefs.prefs["offset"]["volume"])
+                instance.set_volume(new_volume)
+            except av_play.AVError as e:
+                msg = f"Volume error: {getattr(e, 'message', str(e))}"
+                QMessageBox.critical(self, "Volume Error", msg)
+    
+    def _on_jump_to_beginning(self):
+        instance = self.player.primary_instance
+        if instance:
+            try:
+                instance.set_position(0)
+            except av_play.AVError as e:
+                msg = f"Seek error: {getattr(e, 'message', str(e))}"
+                QMessageBox.critical(self, "Seek Error", msg)
+    
+    def _on_jump_to_end(self):
+        instance = self.player.primary_instance
+        if instance:
+            try:
+                length = instance.get_length()
+                instance.set_position(length )
+            except av_play.AVError as e:
+                msg = f"Seek error: {getattr(e, 'message', str(e))}"
+                QMessageBox.critical(self, "Seek Error", msg)
+    
+    def _on_stop(self):
+        instance = self.player.primary_instance
+        if instance:
+            try:
+                self.player_controls.save_last_position()
+                instance.stop()
+            except av_play.AVError as e:
+                msg = f"Stop error: {getattr(e, 'message', str(e))}"
+                QMessageBox.critical(self, "Stop Error", msg)
+
+    def _on_speed_changed(self, speed):
+        self.player.set_playback_speed(speed)
+
+    def _on_aspect_ratio_changed(self, ratio: str):
+        self.player.set_aspect_ratio(ratio)
+
+    def _on_scale_changed(self, scale: float):
+        self.player.set_scale(scale)
+
+    def _on_fullscreen_toggled(self, enabled):
+        self.video_display.set_fullscreen(enabled)
+        try:
+            self.player.set_fullscreen(enabled)
+        except Exception:
+            pass
+
+    def _on_screenshot(self):
+        try:
+            image_format = prefs.prefs.get("image_format", "png")
+            file_date = str(dt.datetime.now().strftime("%y-%d-%m-%I-%M-%S%p"))
+            image_path = os.path.join(get_app_path(), "Screenshots", f"screenshot-{file_date}.{image_format}")
+            self.player.take_screenshot(image_path)
+        except Exception:
+            pass
+    
+    def close_current_media(self):
+        try:
+            self.player_controls.save_last_position()
+            
+            if self.player.primary_instance is not None:
+                self.player.primary_instance.stop()
+                self.player.primary_instance.release()
+            
+            self.player.stop_playlist()
+            self._reset_ui_to_default()
+            
+            self.subtitle_manager = SubtitleManager()
+            self.player_controls._current_file = None
+            self.player_controls._current_bookmark_index = -1
+            
+        except Exception:
+            pass
+
+    def _update_media_player_data(self):
+                self.player_controls.load_bookmarks()
+                self.player_controls.load_last_positions()
+                self.player_controls.load_repeat_loops()
+
+    def _update_fullscreen_state(self, state:bool):
+        self.player_controls.set_fullscreen_state(state)
+        self.player_controls.fullscreenToggled.emit(state)
+
+    def _update_current_track(self, index):
+        if self.player is not None and self.player.primary_instance is not None and self.player.current_playlist is not None:
+            try:
+                entry = self.player.current_playlist.get_entry(index)
+                if entry:
+                    self.player_controls.set_current_track(os.path.basename(entry.location))
+                    self._load_subtitles_for_current_track()
+                    self.filters_widget.reset_filters()
+            except av_play.AVError:
+                pass
+
+    def _update_player_state(self):
+        instance = self.player.primary_instance
+        if not instance:
+            self._reset_ui_to_default()
+            return
+        
+        try:
+            state = instance.get_playback_state()
+            pos = instance.get_position()
+            length = instance.get_length()
+            
+            if state == av_play.AVPlaybackState.AV_STATE_NOTHING and self._last_known_state == av_play.AVPlaybackState.AV_STATE_PLAYING:
+                self._last_known_state = state
+                if not self._loading: self.player.next()
+                self._load_subtitles_for_current_track()
+                self.filters_widget.reset_filters()
+                self._update_current_file()
+                return
+
+            self._last_known_state = state
+            
+            self.player_controls.set_play_pause_state(state == av_play.AVPlaybackState.AV_STATE_PLAYING)
+            self.player_controls.set_mute_state(instance.get_mute_state() == av_play.AVMuteState.AV_AUDIO_MUTED)
+            self.player_controls.set_volume(int(instance.get_volume()))
+            self.player_controls.set_current_track(os.path.basename(instance.file_path))
+            
+            if length > 0:
+                self.player_controls.set_controls_enabled(True)
+                self.player_controls.set_seek_range(0, length)
+                
+                if not self.is_seeking:
+                    self.player_controls.set_seek_position(pos)
+                    self.player_controls.check_loop_position(pos)
+                
+                self.player_controls.set_time_text(f"{format_time(pos)} / {format_time(length)}")
+            
+            current_subtitle = self.subtitle_manager.get_subtitle_at(seconds_to_microseconds(pos))
+            if current_subtitle:
+                self.subtitles_widget.subtitles_list.clear()
+                self.subtitles_widget.subtitles_list.addItem(QListWidgetItem(current_subtitle))
+
+        except (av_play.AVError, Exception):
+            pass
+
+    def _update_current_file(self):
+        instance = self.player.primary_instance
+        if instance:
+            self.player_controls.set_current_file(instance.file_path)
+            self._update_media_player_data()
+
+    def seek_to_last_pos(self, event:object):
+        self.seek_to_last()
+        #QTimer.singleShot(1, self.seek_to_last)
+
+    def seek_to_last(self):
+        instance = self.player.primary_instance
+        if not instance:
+            return
+
+        try:
+            self.player_controls.load_last_position()
+            #self.loading = False
+            if self.player_controls.last_position and self.player_controls.last_position > 0:
+                #length = instance.get_length()
+                #if length > 0 and self.player_controls.last_position <= length:
+
+                #self.player_controls.seek_slider.blockSignals(True)
+                #self.is_seeking = True
+                instance.set_position(self.player_controls.last_position)
+                #self.player_controls.seek_slider.blockSignals(False)
+                #self.is_seeking = False
+        except av_play.AVError:
+            pass
+
+    def _load_subtitles_for_current_track(self):
+        self.subtitles_widget.clear_subtitles()
+        instance = self.player.primary_instance
+        if instance and av_play.is_path(instance.file_path):
+            self.subtitle_manager.load_for_video(instance.file_path)
+        self.filters_widget.reset_filters()
+
+    def _reset_ui_to_default(self):
+        self.player_controls.set_current_track("No media loaded")
+        self.player_controls.set_time_text("00:00 / 00:00")
+        self.player_controls.set_seek_range(0, 100)
+        self.player_controls.set_seek_position(0)
+        self.player_controls.set_play_pause_state(False)
+        self.player_controls.set_controls_enabled(False)
+        self.subtitles_widget.clear_subtitles()
+        self.filters_widget.reset_filters()
+
+    def load_file(self, file_path: str):
+        #if self.loading: return
+        #self.loading = True
+        try:
+            if self.player:
+                self.player.stop_playlist()
+                instance = self.player.primary_instance
+                if instance:
+                    instance.stop()
+                    instance.release()
+            self.player_controls.set_current_file(file_path)
+            dir_path = os.path.dirname(file_path)
+            media_files = get_media_files_from_directory(dir_path, av_play.formats["audio"], av_play.formats["video"])
+            
+            playlist = av_play.Playlist(title=os.path.basename(dir_path))
+            start_index = 0
+            for i, media_file in enumerate(media_files):
+                playlist.add_entry(av_play.PlaylistEntry(location=media_file, title=os.path.basename(media_file)))
+                if media_file == file_path:
+                    start_index = i
+
+            self.load_playlist(playlist, start_index=start_index)
+            self.player_controls.set_current_track(os.path.basename(file_path))
+            self.player_controls.load_last_position()
+            self.seek_to_last()
+            self._update_media_player_data()
+        except Exception:
+            self._reset_ui_to_default()
+
+    def load_url(self, url: str):
+        try:
+            if self.url_extractor and self.url_extractor.isRunning():
+                self.url_extractor.terminate()
+                self.url_extractor.wait()
+            
+            self.url_extractor = UrlExtractor(url, self)
+            self.url_extractor.started.connect(self._on_url_extraction_started)
+            self.url_extractor.finished.connect(self._on_url_extraction_complete)
+            self.url_extractor.failed.connect(self._on_url_extraction_failed)
+            self.url_extractor.start()
+            
+        except Exception as e:
+            logger.error(f"Failed to start URL extraction: {e}")
+            self._reset_ui_to_default()
+
+    def load_playlist(self, playlist: av_play.Playlist, start_index: int = 0, auto_play: bool = True):
+        if playlist is None or len(playlist) == 0:
+            self._reset_ui_to_default()
+            return
+        try:
+            if self.player.primary_instance is not None:
+                try:
+                    self.player.primary_instance.release()
+                    self.player._primary_instance = None
+                except Exception as e:
+                    pass
+            self.player.stop_playlist()
+            self._loading = True
+            #self.player.load_playlist(playlist, auto_play=False)
+            #if start_index >0:
+            self.player.load_playlist(playlist, auto_play=False, start_index = start_index)
+            #self.player.pause_playlist()
+            #self.player.jump_to_track(start_index-1)
+            self.player._play_playlist_track()
+            #else:
+                #self.player.load_playlist(playlist, auto_play=auto_play)
+
+
+            #instance = self.player.primary_instance
+            #if start_index < len(playlist):# and start_index != 0:
+                #try:
+                    #jump_method = getattr(self.player, 'jump_to_track', None)
+                    #if jump_method and callable(jump_method):
+                        #jump_method(start_index-1)
+                    #else:
+                        #self.player._current_playlist_index = start_index-1
+                        #if auto_play:
+                            #self.player._play_playlist_track()
+                #except Exception:
+                    #self.player._current_playlist_index = start_index-1
+                    #if auto_play:
+                        #self.player._play_playlist_track()
+
+            #self.player.jump_to_track(start_index)
+            self._load_subtitles_for_current_track()
+            self._update_current_file()
+            self._update_player_state()
+        except Exception as e:
+            self._reset_ui_to_default()
+        finally:
+            self._loading = False
+
+    def change_path(self, path: str):
+        if not path: return
+
+        try:
+            if av_play.is_url(path):
+                self.load_url(path)
+            elif os.path.isfile(path):
+                ext = path.split('.')[-1].lower()
+                if ext in ['m3u', 'm3u8', 'pls', 'xspf', 'json']:
+                    playlist = av_play.Playlist().load(path)
+                    self.load_playlist(playlist)
+                else:
+                    self.load_file(path)
+        except Exception:
+            self._reset_ui_to_default()
+            
+    def sizeHint(self):
+        return QSize(1200, 800)
+        
+    def minimumSizeHint(self):
+        return QSize(800, 600)
+        
+    def _on_url_extraction_started(self):
+        logger.info("URL extraction started, showing loading message")
+        self.video_display.show_loading("Extracting URL...")
+        self.player_controls.set_controls_enabled(False)
+        
+    def _on_url_extraction_complete(self, result):
+        logger.info("URL extraction completed, processing result")
+        self.video_display.hide_loading()
+        self.player_controls.set_controls_enabled(True)
+        
+        try:
+            if isinstance(result, list):
+                logger.info(f"Creating playlist from {len(result)} URLs")
+                playlist = av_play.Playlist(title="Extracted Playlist")
+                for i, url in enumerate(result):
+                    title = f"Track {i+1}"
+                    playlist.add_entry(av_play.PlaylistEntry(location=url, title=title))
+                self.load_playlist(playlist)
+            else:
+                logger.info("Creating single entry playlist from extracted URL")
+                playlist = av_play.Playlist(title="Extracted URL")
+                playlist.add_entry(av_play.PlaylistEntry(location=result, title="Streaming URL"))
+                self.load_playlist(playlist)
+        except Exception as e:
+            logger.error(f"Failed to load extracted URL(s): {e}")
+            self._reset_ui_to_default()
+            
+    def _on_url_extraction_failed(self, error_msg):
+        logger.error(f"URL extraction failed: {error_msg}")
+        self.video_display.hide_loading()
+        self.player_controls.set_controls_enabled(True)
+        self._reset_ui_to_default()
+        
+        msg = QMessageBox(self)
+        msg.setWindowTitle("URL Extraction Failed")
+        msg.setText(f"Failed to extract URL:\n{error_msg}")
+        msg.setIcon(QMessageBox.Icon.Warning)
+        msg.exec()
+
+    def set_shortcuts(self):
+        hotkeys = key_config.key_config["Player"]
+        
+        shortcuts: Dict[str, Callable] = {
+            hotkeys["Play/Pause"]: lambda: self.player_controls.playPauseClicked.emit(),
+            hotkeys["Backward"]: lambda: self.player_controls.backwardClicked.emit(),
+            hotkeys["Forward"]: lambda: self.player_controls.forwardClicked.emit(),
+            hotkeys["Stop"]: lambda: self.player_controls.stopRequested.emit(),
+            hotkeys["Mute/Unmute"]: lambda: self.player_controls.muteUnmuteClicked.emit(),
+            hotkeys["Previous"]: lambda: self.player_controls.previousClicked.emit(),
+            hotkeys["Next"]: lambda: self.player_controls.nextClicked.emit(),
+            hotkeys["Jump to beginning"]: lambda: self.player_controls.jumpToBeginningRequested.emit(),
+            hotkeys["Jump to the end"]: lambda: self.player_controls.jumpToEndRequested.emit(),
+            hotkeys["Toggle repeat"]: lambda: self.player_controls.repeatClicked.emit(),
+            hotkeys["Volume up"]: lambda: self.player_controls.volume_up(),
+            hotkeys["Volume down"]: lambda: self.player_controls.volume_down(),
+            hotkeys["Bookmarks list"]: lambda: self.player_controls.show_bookmarks_dialog(),
+            hotkeys["New mark at current position"]: lambda: self.player_controls.add_bookmark_at_current_position(),
+            hotkeys["Repeat loop start"]: lambda: self.player_controls.set_loop_start(),
+            hotkeys["Repeat loop end"]: lambda: self.player_controls.set_loop_end(),
+            hotkeys["Clear repeat loop"]: lambda: self.player_controls.clear_repeat_loop(),
+            hotkeys["Take snapshot"]: lambda: self.player_controls.screenshotRequested.emit(),
+            hotkeys["Delete current bookmark"]: lambda: self.player_controls.delete_current_bookmark(),
+            hotkeys["Fullscreen"]: lambda: self.player_controls.fullscreenToggled.emit(True),
+            hotkeys["Exit fullscreen"]: lambda: self.player_controls.fullscreenToggled.emit(False),
+            hotkeys["Previous bookmark"]: lambda: self.player_controls.jump_to_previous_bookmark(),
+            hotkeys["Next bookmark"]: lambda: self.player_controls.jump_to_next_bookmark(),
+            hotkeys["Previous repeat loop"]: lambda: self.player_controls.jump_to_previous_loop(),
+            hotkeys["Next repeat loop"]: lambda: self.player_controls.jump_to_next_loop(),
+            hotkeys["Mark1 position"]: lambda: self.player_controls.jump_to_mark(0),
+            hotkeys["Mark2 position"]: lambda: self.player_controls.jump_to_mark(1),
+            hotkeys["Mark3 position"]: lambda: self.player_controls.jump_to_mark(2),
+            hotkeys["Mark4 position"]: lambda: self.player_controls.jump_to_mark(3),
+            hotkeys["Mark5 position"]: lambda: self.player_controls.jump_to_mark(4),
+            hotkeys["Mark6 position"]: lambda: self.player_controls.jump_to_mark(5),
+            hotkeys["Mark7 position"]: lambda: self.player_controls.jump_to_mark(6),
+            hotkeys["Mark8 position"]: lambda: self.player_controls.jump_to_mark(7),
+            hotkeys["Mark9 position"]: lambda: self.player_controls.jump_to_mark(8),
+            hotkeys["Mark10 position"]: lambda: self.player_controls.jump_to_mark(9),
+        }
+        
+        for shortcut in self._shortcuts.values():
+            shortcut.activated.disconnect()
+            shortcut.setParent(None)
+        self._shortcuts.clear()
+
+        for shortcut, callback in shortcuts.items():
+            sh = QShortcut(shortcut, self)
+            sh.activated.connect(callback)
+            sh.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+            self._shortcuts[shortcut] = sh
+
+    def reset_shortcuts(self):
+        pass
+
+    def _install_event_filters(self):
+        widgets = [
+            self.player_controls.previous_btn, self.player_controls.backward_btn, self.player_controls.play_pause_btn, 
+            self.player_controls.forward_btn, self.player_controls.next_btn, self.player_controls.repeat_btn, self.player_controls.shuffle_btn,
+            self.player_controls.bookmarks_btn, self.player_controls.screenshot_btn,
+            self.player_controls.seek_slider, self.player_controls.mute_btn, self.player_controls.volume_slider,
+            self.player_controls.time_label, self.player_controls.current_track_label, self.player_controls.more_btn,
+            self.player_controls.toggle_controls_btn
+        ]
+        self._key_event_filter.install_on_widgets(widgets)
+
+
+
+    def closeEvent(self, event):
+        try:
+            if self.url_extractor and self.url_extractor.isRunning():
+                self.url_extractor.terminate()
+                self.url_extractor.wait()
+            
+            self.player_controls.save_last_position()
+            if self.player.primary_instance is not None:
+                try:
+                    self.player.primary_instance.release()
+                except Exception:
+                    pass
+            self.player.release()
+        except Exception:
+            pass
+        super().closeEvent(event)
