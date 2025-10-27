@@ -39,6 +39,7 @@ class ThumbnailGeneratorUI(QWidget):
 
         self.input_path = QLineEdit()
         self.input_path.setAccessibleName("Video file input path")
+        self.input_path.textChanged.connect(self.update_action_buttons)
         self.browse_button = QPushButton("Browse Video")
         self.browse_button.clicked.connect(self.browse_video)
         input_layout = QHBoxLayout()
@@ -81,17 +82,20 @@ class ThumbnailGeneratorUI(QWidget):
         self.main_layout.addWidget(self.scene_options_widget)
 
         self.generate_button = QPushButton("Generate Thumbnail(s)")
+        self.generate_button.setEnabled(False)
         self.generate_button.clicked.connect(self.generate_thumbnail)
         self.main_layout.addWidget(self.generate_button)
 
         self.main_layout.addStretch()
 
         self.update_options(0)
+        self.update_action_buttons()
 
     def browse_video(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Video File")
         if file_path:
             self.input_path.setText(file_path)
+            self.update_action_buttons()
 
     def update_options(self, index):
         self.manual_options_widget.setVisible(index == 0)
@@ -114,17 +118,17 @@ class ThumbnailGeneratorUI(QWidget):
         
         try:
             output_options = {}
-            if mode == 0: # Manual
+            if mode == 0:
                 timestamp = self.timestamp_edit.text()
                 output_path = os.path.join(output_dir, "thumbnail.png")
                 output_options['frames:v'] = 1
                 ffmpeg.input(input_video, ss=timestamp).output(output_path, **output_options)
-            elif mode == 1: # Auto
+            elif mode == 1:
                 output_path = os.path.join(output_dir, "thumbnail_auto.png")
                 output_options['vf'] = "thumbnail"
                 output_options['frames:v'] = 1
                 ffmpeg.input(input_video).output(output_path, **output_options)
-            elif mode == 2: # Scene
+            elif mode == 2:
                 num_frames = self.num_frames_edit.text()
                 threshold = self.scene_threshold_edit.text()
                 output_pattern = os.path.join(output_dir, "scene-%02d.png")
@@ -166,3 +170,8 @@ class ThumbnailGeneratorUI(QWidget):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
             QMessageBox.critical(self, "Error", f"An error occurred: {message}")
+    
+    def update_action_buttons(self):
+        path = self.input_path.text()
+        enabled = bool(path) and os.path.exists(path)
+        self.generate_button.setEnabled(enabled)

@@ -45,6 +45,7 @@ class ExtractorUI(QWidget):
 
         self.input_path = QLineEdit()
         self.input_path.setAccessibleName("Video file for extraction")
+        self.input_path.textChanged.connect(self.update_action_buttons)
         self.browse_button = QPushButton("Browse Video")
         self.browse_button.clicked.connect(self.browse_video)
         input_layout = QHBoxLayout()
@@ -57,6 +58,7 @@ class ExtractorUI(QWidget):
         self.setup_image_extraction_group()
 
         self.main_layout.addStretch()
+        self.update_action_buttons()
 
     def setup_audio_extraction_group(self):
         audio_group = QGroupBox("Audio Extraction")
@@ -82,6 +84,7 @@ class ExtractorUI(QWidget):
         audio_layout.addLayout(time_layout)
 
         self.extract_audio_button = QPushButton("Extract Audio")
+        self.extract_audio_button.setEnabled(False)
         self.extract_audio_button.clicked.connect(self.extract_audio)
         audio_layout.addWidget(self.extract_audio_button)
         
@@ -110,6 +113,7 @@ class ExtractorUI(QWidget):
         image_layout.addLayout(time_layout)
 
         self.extract_images_button = QPushButton("Extract Images")
+        self.extract_images_button.setEnabled(False)
         self.extract_images_button.clicked.connect(self.extract_images)
         image_layout.addWidget(self.extract_images_button)
 
@@ -120,6 +124,7 @@ class ExtractorUI(QWidget):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Video File")
         if file_path:
             self.input_path.setText(file_path)
+            self.update_action_buttons()
 
     def run_ffmpeg_task(self, ffmpeg_instance, title):
         self.progress_dialog = QProgressDialog(title, "Cancel", 0, 0, self)
@@ -184,15 +189,15 @@ class ExtractorUI(QWidget):
         input_options = {}
         output_options = {}
 
-        if mode == 0: # All
+        if mode == 0:
             ffmpeg.input(input_video).output(output_pattern, **output_options)
-        elif mode == 1: # Range
+        elif mode == 1:
             start = self.image_start_time.text()
             duration = self.image_duration.text()
             input_options['ss'] = start
             output_options['t'] = duration
             ffmpeg.input(input_video, **input_options).output(output_pattern, **output_options)
-        elif mode == 2: # 1 image per second
+        elif mode == 2:
             output_options['vf'] = 'fps=1'
             ffmpeg.input(input_video).output(output_pattern, **output_options)
 
@@ -221,3 +226,9 @@ class ExtractorUI(QWidget):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
             QMessageBox.critical(self, "Error", f"An error occurred: {message}")
+
+    def update_action_buttons(self):
+        path = self.input_path.text()
+        enabled = bool(path) and os.path.exists(path)
+        self.extract_audio_button.setEnabled(enabled)
+        self.extract_images_button.setEnabled(enabled)

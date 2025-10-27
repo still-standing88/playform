@@ -44,7 +44,7 @@ class FFmpegBatchThread(QThread):
                 output_opts = {}
                 if self.options['type'] == 'video':
                     output_opts['codec:v'] = codec
-                else: # audio
+                else:
                     output_opts['codec:a'] = codec
                     if self.options.get('sample_rate'):
                         output_opts['ar'] = self.options['sample_rate']
@@ -99,8 +99,11 @@ class BatchConverterUI(QWidget):
         self.setup_conversion_options()
 
         self.start_button = QPushButton("Start Batch Conversion")
+        self.start_button.setEnabled(False)
         self.start_button.clicked.connect(self.start_conversion)
         self.main_layout.addWidget(self.start_button)
+        
+        self.update_buttons_state()
 
     def setup_conversion_options(self):
         options_group = QGroupBox("Conversion Options")
@@ -139,13 +142,13 @@ class BatchConverterUI(QWidget):
     def update_format_combo(self, index):
         self.format_combo.clear()
         self.bitrate_combo.clear()
-        if index == 0: # Audio
+        if index == 0:
             self.audio_formats = get_audio_formats_map()
             self.format_combo.addItems(list(self.audio_formats.keys()))
             self.bitrate_combo.addItems(get_common_audio_bitrates())
             self.bitrate_combo.setCurrentText("192k")
             self.samplerate_combo.setEnabled(True)
-        else: # Video
+        else:
             self.video_formats = get_video_formats_map()
             self.format_combo.addItems(list(self.video_formats.keys()))
             self.bitrate_combo.addItems(get_common_video_bitrates())
@@ -155,10 +158,12 @@ class BatchConverterUI(QWidget):
     def add_files(self):
         files, _ = QFileDialog.getOpenFileNames(self, "Select files to convert")
         self.file_list.addItems(files)
+        self.update_buttons_state()
 
     def remove_files(self):
         for item in self.file_list.selectedItems():
             self.file_list.takeItem(self.file_list.row(item))
+        self.update_buttons_state()
 
     def start_conversion(self):
         files = [self.file_list.item(i).text() for i in range(self.file_list.count())]
@@ -194,6 +199,10 @@ class BatchConverterUI(QWidget):
         self.progress_dialog.canceled.connect(self.thread.stop)
         self.thread.start()
         self.progress_dialog.show()
+
+    def update_buttons_state(self):
+        has_files = self.file_list.count() > 0
+        self.start_button.setEnabled(has_files)
 
     def update_progress(self, value, total, filename):
         if self.progress_dialog:
