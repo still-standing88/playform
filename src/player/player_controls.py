@@ -685,7 +685,6 @@ class PlayerControls(QWidget):
             return False
         if start is None or end is None or end <= start:
             return False
-        # ensure no intersection with other loops
         if self._would_loop_intersect(start, end, exclude_index=index):
             return False
         loops[index] = (start, end)
@@ -700,7 +699,7 @@ class PlayerControls(QWidget):
         if index < 0 or index >= len(loops):
             return False
         del loops[index]
-        # adjust current index
+
         complete_count = len([l for l in loops if l[0] is not None and l[1] is not None])
         if complete_count == 0:
             self._current_loop_index = -1
