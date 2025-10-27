@@ -15,6 +15,7 @@ from app_constance.vlc_args import log_args
 from .player_controls import PlayerControls
 from .subtitles_widget import SubtitlesWidget
 from .video_display_widget import VideoDisplayWidget
+from .timeline import SegmentTimelineWidget
 from gui_controls.player_key_event_filter import KeyEventFilter
 from gui_controls.toggle_button import ToggleButton
 from .subtitles import SubtitleManager
@@ -60,6 +61,8 @@ class PlayerWidget(QWidget):
     def setup_ui(self):
         self.player_controls = PlayerControls(self)
         self.video_display = VideoDisplayWidget(parent = self, on_close_callback=self._update_fullscreen_state)
+        self.timeline = SegmentTimelineWidget(self)
+        self.timeline.setAccessibleDescription("Segment Timeline Widget")
 
         self.subtitles_widget = SubtitlesWidget(self)
         self.filters_widget = FiltersWidget(self)
@@ -75,6 +78,7 @@ class PlayerWidget(QWidget):
         left_layout.setSpacing(5)
         
         left_layout.addWidget(self.video_display, 1)
+        left_layout.addWidget(self.timeline)
         left_layout.addWidget(self.player_controls)
         left_layout.addWidget(self.subtitles_widget)
         left_layout.addWidget(self.filters_widget)
@@ -159,6 +163,14 @@ class PlayerWidget(QWidget):
         self.player_controls.speedChanged.connect(self._on_speed_changed)
         self.player_controls.fullscreenToggled.connect(self._on_fullscreen_toggled)
         self.player_controls.timeUpdateRequested.connect(self._update_player_state)
+        self.timeline.segmentAdded.connect(self._on_timeline_segment_added)
+        self.timeline.segmentUpdated.connect(self._on_timeline_segment_updated)
+        self.timeline.segmentRemoved.connect(self._on_timeline_segment_removed)
+        self.timeline.segmentSelected.connect(self._on_timeline_segment_selected)
+        self.timeline.markerAdded.connect(self._on_timeline_marker_added)
+        self.timeline.markerMoved.connect(self._on_timeline_marker_moved)
+        self.timeline.markerRemoved.connect(self._on_timeline_marker_removed)
+        self.timeline.markerSelected.connect(self._on_timeline_marker_selected)
         self.player_controls.aspectRatioChanged.connect(self._on_aspect_ratio_changed)
         self.player_controls.scaleChanged.connect(self._on_scale_changed)
         self.player_controls.screenshotRequested.connect(self._on_screenshot)
@@ -390,9 +402,122 @@ class PlayerWidget(QWidget):
             pass
 
     def _update_media_player_data(self):
-                self.player_controls.load_bookmarks()
-                self.player_controls.load_last_positions()
-                self.player_controls.load_repeat_loops()
+        self.player_controls.load_bookmarks()
+        self.player_controls.load_last_positions()
+        self.player_controls.load_repeat_loops()
+        try:
+            self._update_timeline_from_data()
+        except Exception:
+            pass
+
+    def _update_timeline_from_data(self):
+        length = None
+        try:
+            if self.player and self.player.primary_instance is not None:
+                length = float(self.player.primary_instance.get_length())
+        except Exception:
+            length = None
+
+        if not length or length <= 0:
+
+            length = float(self.player_controls.seek_slider.maximum() or 0)
+
+        loops = self.player_controls.get_current_loops()
+        segments_norm = []
+        for start, end in loops:
+            if start is None or end is None:
+                continue
+            if length > 0:
+                segments_norm.append((start / length, end / length))
+
+        self.timeline.setSegments(segments_norm)
+
+        self._timeline_seg_map = {}
+        for idx, seg in enumerate(self.timeline.segments):
+            self._timeline_seg_map[seg['id']] = idx
+
+        bookmarks = self.player_controls.get_bookmarks()
+        markers_norm = []
+        for pos in bookmarks:
+            if length > 0:
+                markers_norm.append(pos / length)
+
+        self.timeline.setMarkers(markers_norm)
+        self._timeline_marker_map = {}
+        for idx, m in enumerate(self.timeline.markers):
+            self._timeline_marker_map[m['id']] = idx
+
+    def _norm_to_seconds(self, norm:float) -> float:
+        try:
+            if self.player and self.player.primary_instance is not None:
+                length = float(self.player.primary_instance.get_length())
+                return norm * length
+        except Exception:
+            pass
+        return norm * float(self.player_controls.seek_slider.maximum() or 0)
+
+    def _seconds_to_norm(self, sec:float) -> float:
+        try:
+            if self.player and self.player.primary_instance is not None:
+                length = float(self.player.primary_instance.get_length())
+                if length > 0:
+                    return sec / length
+        except Exception:
+            pass
+        maxv = float(self.player_controls.seek_slider.maximum() or 1)
+        if maxv <= 0:
+            return 0.0
+        return sec / maxv
+
+    def _on_timeline_segment_added(self, start_norm:float, end_norm:float):
+        start_sec = self._norm_to_seconds(start_norm)
+        end_sec = self._norm_to_seconds(end_norm)
+        try:
+            self.player_controls.set_loop_start_precise(start_sec)
+            self.player_controls.set_loop_end_precise(end_sec)
+        except Exception:
+            pass
+        self._update_timeline_from_data()
+
+    def _on_timeline_segment_updated(self, seg_id:int, start_norm:float, end_norm:float):
+        if seg_id in self._timeline_seg_map:
+            loop_index = self._timeline_seg_map[seg_id]
+            start_sec = self._norm_to_seconds(start_norm)
+            end_sec = self._norm_to_seconds(end_norm)
+            self.player_controls.update_loop_by_index(loop_index, start_sec, end_sec)
+            self._update_timeline_from_data()
+
+    def _on_timeline_segment_removed(self, seg_id:int):
+        if seg_id in self._timeline_seg_map:
+            loop_index = self._timeline_seg_map[seg_id]
+            self.player_controls.delete_loop_by_index(loop_index)
+            self._update_timeline_from_data()
+
+    def _on_timeline_segment_selected(self, seg_id:int):
+        if seg_id in self._timeline_seg_map:
+            self.player_controls._current_loop_index = self._timeline_seg_map[seg_id]
+
+    def _on_timeline_marker_added(self, pos_norm:float):
+        pos_sec = self._norm_to_seconds(pos_norm)
+        self.player_controls.add_bookmark_at_position(pos_sec)
+        self._update_timeline_from_data()
+
+    def _on_timeline_marker_moved(self, marker_id:int, pos_norm:float):
+        if marker_id in self._timeline_marker_map:
+            bm_index = self._timeline_marker_map[marker_id]
+            pos_sec = self._norm_to_seconds(pos_norm)
+            self.player_controls.update_bookmark_at_index(bm_index, pos_sec)
+            self._update_timeline_from_data()
+
+    def _on_timeline_marker_removed(self, marker_id:int):
+        if marker_id in self._timeline_marker_map:
+            bm_index = self._timeline_marker_map[marker_id]
+            self.player_controls.delete_bookmark_at(bm_index)
+            self._update_timeline_from_data()
+
+    def _on_timeline_marker_selected(self, marker_id:int):
+        if marker_id in self._timeline_marker_map:
+            self.player_controls._current_bookmark_index = self._timeline_marker_map[marker_id]
 
     def _update_fullscreen_state(self, state:bool):
         self.player_controls.set_fullscreen_state(state)
@@ -671,8 +796,8 @@ class PlayerWidget(QWidget):
             hotkeys["Volume down"]: lambda: self.player_controls.volume_down(),
             hotkeys["Bookmarks list"]: lambda: self.player_controls.show_bookmarks_dialog(),
             hotkeys["New mark at current position"]: lambda: self.player_controls.add_bookmark_at_current_position(),
-            hotkeys["Repeat loop start"]: lambda: self.player_controls.set_loop_start(),
-            hotkeys["Repeat loop end"]: lambda: self.player_controls.set_loop_end(),
+            hotkeys["Repeat loop start"]: lambda: self._on_repeat_start_shortcut(),
+            hotkeys["Repeat loop end"]: lambda: self._on_repeat_end_shortcut(),
             hotkeys["Clear repeat loop"]: lambda: self.player_controls.clear_repeat_loop(),
             hotkeys["Take snapshot"]: lambda: self.player_controls.screenshotRequested.emit(),
             hotkeys["Delete current bookmark"]: lambda: self.player_controls.delete_current_bookmark(),
@@ -707,6 +832,34 @@ class PlayerWidget(QWidget):
 
     def reset_shortcuts(self):
         pass
+
+    def _on_repeat_start_shortcut(self):
+        try:
+            pos = None
+            if hasattr(self, 'player') and self.player and self.player.primary_instance is not None:
+                try:
+                    pos = float(self.player.primary_instance.get_position())
+                except Exception:
+                    pos = None
+            if pos is None:
+                pos = float(self.player_controls.get_seek_position())
+            self.player_controls.set_loop_start_precise(pos)
+        except Exception:
+            pass
+
+    def _on_repeat_end_shortcut(self):
+        try:
+            pos = None
+            if hasattr(self, 'player') and self.player and self.player.primary_instance is not None:
+                try:
+                    pos = float(self.player.primary_instance.get_position())
+                except Exception:
+                    pos = None
+            if pos is None:
+                pos = float(self.player_controls.get_seek_position())
+            self.player_controls.set_loop_end_precise(pos)
+        except Exception:
+            pass
 
     def _install_event_filters(self):
         widgets = [

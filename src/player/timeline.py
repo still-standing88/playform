@@ -4,35 +4,49 @@ from PySide6.QtWidgets import QWidget
 
 
 class SegmentTimelineWidget(QWidget):
-    # Signals
-    segmentAdded = Signal(float, float)        # start, end in 0.0–1.0
-    segmentUpdated = Signal(int, float, float) # segment_id, new start, end
-    segmentRemoved = Signal(int)               # segment_id
-    segmentSelected = Signal(int)              # segment_id
+
+    segmentAdded = Signal(float, float)
+    segmentUpdated = Signal(int, float, float)
+    segmentRemoved = Signal(int)
+    segmentSelected = Signal(int)
+
+    markerAdded = Signal(float)
+    markerMoved = Signal(int, float)
+    markerRemoved = Signal(int)
+    markerSelected = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimumHeight(40)
         self.setMouseTracking(True)
 
-        # internal state
-        self.segments = []  # list of dicts: {'id': int, 'start': float, 'end': float}
+
+        self.segments = []
         self.next_id = 1
         self.focused_segment_id = None
         self._hover_pos = None
-        self._dragging = None   # {'id', 'edge'} edge='start'/'end'
-        self._min_segment_width = 0.01  # in 0.0–1.0 scale
+        self._dragging = None
+        self._min_segment_width = 0.01
 
-    # --------------------------
-    # Segment management
-    # --------------------------
+
+        self.markers = []
+        self.next_marker_id = 1
+        self.focused_marker_id = None
+
     def setSegments(self, segments):
-        """Replace the current segments with a given list."""
         self.segments = []
         for seg in segments:
             self.segments.append({'id': self.next_id, 'start': seg[0], 'end': seg[1]})
             self.next_id += 1
         self.focused_segment_id = None
+        self.update()
+
+    def setMarkers(self, markers):
+        self.markers = []
+        for m in markers:
+            self.markers.append({'id': self.next_marker_id, 'pos': m})
+            self.next_marker_id += 1
+        self.focused_marker_id = None
         self.update()
 
     def clearFocusedSegment(self):
@@ -42,40 +56,55 @@ class SegmentTimelineWidget(QWidget):
             self.focused_segment_id = None
             self.update()
 
-    # --------------------------
-    # Painting
-    # --------------------------
+    def clearFocusedMarker(self):
+        if self.focused_marker_id is not None:
+            self.markers = [m for m in self.markers if m['id'] != self.focused_marker_id]
+            self.markerRemoved.emit(self.focused_marker_id)
+            self.focused_marker_id = None
+            self.update()
+
     def paintEvent(self, event):
         w, h = self.width(), self.height()
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        # Background
         painter.fillRect(self.rect(), QColor("#1e1e1e"))
 
-        # Draw segments
         for seg in self.segments:
             x_start = seg['start'] * w
             x_end = seg['end'] * w
             color = QColor("#4e9cff80") if seg['id'] != self.focused_segment_id else QColor("#ff9f4080")
             painter.fillRect(QRectF(x_start, 8, x_end - x_start, h - 16), color)
 
-        # Draw hover line if applicable
+
+        for m in self.markers:
+            x = m['pos'] * w
+            pen = QPen(QColor("#ffff0080"))
+            pen.setWidth(2)
+            painter.setPen(pen)
+            painter.drawLine(x, 4, x, h - 4)
+
+
         if self._hover_pos is not None:
             pen = QPen(QColor("#ffffff80"))
             pen.setWidth(1)
             painter.setPen(pen)
             painter.drawLine(self._hover_pos, 0, self._hover_pos, h)
 
-    # --------------------------
-    # Mouse handling
-    # --------------------------
     def mousePressEvent(self, event):
         x = event.pos().x()
         w = self.width()
         pos_norm = x / w
 
-        # Check if clicking on existing segment edges (resize)
+        for m in self.markers:
+            margin = 0.01
+            if abs(pos_norm - m['pos']) < margin:
+                self._dragging = {'marker': m['id']}
+                self.focused_marker_id = m['id']
+                self.markerSelected.emit(m['id'])
+                return
+
+
         for seg in self.segments:
             edge_margin = 0.02
             if abs(pos_norm - seg['start']) < edge_margin:
@@ -84,17 +113,33 @@ class SegmentTimelineWidget(QWidget):
             elif abs(pos_norm - seg['end']) < edge_margin:
                 self._dragging = {'id': seg['id'], 'edge': 'end'}
                 return
-            # Click inside → select
+
             if seg['start'] <= pos_norm <= seg['end']:
                 self.focused_segment_id = seg['id']
                 self.segmentSelected.emit(seg['id'])
                 self.update()
                 return
 
-        # Else: add new segment at click position
+
+        mods = event.modifiers()
+        if mods & Qt.ShiftModifier or mods & Qt.ControlModifier:
+
+            marker_pos = max(0.0, min(1.0, pos_norm))
+
+            too_close = any(abs(marker_pos - m['pos']) < 0.01 for m in self.markers)
+            if not too_close:
+                new_marker = {'id': self.next_marker_id, 'pos': marker_pos}
+                self.markers.append(new_marker)
+                self.focused_marker_id = new_marker['id']
+                self.markerAdded.emit(marker_pos)
+                self.next_marker_id += 1
+                self.update()
+            return
+
+
         new_start = max(0.0, pos_norm - 0.05)
         new_end = min(1.0, pos_norm + 0.05)
-        # Validate against overlaps
+
         if not self._checkOverlap(new_start, new_end):
             new_seg = {'id': self.next_id, 'start': new_start, 'end': new_end}
             self.segments.append(new_seg)
@@ -108,7 +153,17 @@ class SegmentTimelineWidget(QWidget):
         if self._dragging is not None:
             w = self.width()
             pos_norm = self._hover_pos / w
-            seg = next((s for s in self.segments if s['id'] == self._dragging['id']), None)
+
+            if 'marker' in self._dragging:
+                mid = next((m for m in self.markers if m['id'] == self._dragging['marker']), None)
+                if mid:
+                    new_pos = max(0.0, min(1.0, pos_norm))
+                    mid['pos'] = new_pos
+                    self.markerMoved.emit(mid['id'], new_pos)
+                    self.update()
+                    return
+
+            seg = next((s for s in self.segments if s['id'] == self._dragging.get('id')), None)
             if seg:
                 if self._dragging['edge'] == 'start':
                     new_start = min(pos_norm, seg['end'] - self._min_segment_width)
@@ -131,11 +186,7 @@ class SegmentTimelineWidget(QWidget):
         self._hover_pos = None
         self.update()
 
-    # --------------------------
-    # Utilities
-    # --------------------------
     def _checkOverlap(self, start, end, ignore_id=None):
-        """Return True if overlap exists with existing segments (excluding ignore_id)."""
         for seg in self.segments:
             if ignore_id is not None and seg['id'] == ignore_id:
                 continue

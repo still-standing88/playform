@@ -579,45 +579,60 @@ class PlayerControls(QWidget):
     def set_loop_start(self):
         if not self._current_file:
             return
-        
         current_pos = float(self.get_seek_position())
-        
-        if self._current_file not in self._repeat_loops:
-            self._repeat_loops[self._current_file] = []
-        
-        if self._is_position_in_existing_loop(current_pos):
-            return
-        
-        self._repeat_loops[self._current_file].append((current_pos, None))
-        self.save_repeat_loops()
+        self.set_loop_start_precise(current_pos)
     
     def set_loop_end(self):
         if not self._current_file:
             return
-        
         current_pos = float(self.get_seek_position())
-        
+        self.set_loop_end_precise(current_pos)
+
+    def set_loop_start_precise(self, position: float):
+        if not self._current_file:
+            return
+
+        if self._current_file not in self._repeat_loops:
+            self._repeat_loops[self._current_file] = []
+
+        if self._is_position_in_existing_loop(position):
+            return
+
+        self._repeat_loops[self._current_file].append((position, None))
+        self.save_repeat_loops()
+
+    def set_loop_end_precise(self, position: float):
+        if not self._current_file:
+            return
+
         if self._current_file not in self._repeat_loops:
             return
-        
+
         loops = self._repeat_loops[self._current_file]
         if not loops:
             return
-        
+
         for i in range(len(loops) - 1, -1, -1):
             if loops[i][1] is None:
                 loop_start = loops[i][0]
-                
-                if loop_start is None or current_pos <= loop_start:
+
+                if loop_start is None or position <= loop_start:
                     return
-                
-                if self._would_loop_intersect(loop_start, current_pos, exclude_index=i):
+
+                if self._would_loop_intersect(loop_start, position, exclude_index=i):
                     return
-                
-                loops[i] = (loop_start, current_pos)
-                break
-        
-        self.save_repeat_loops()
+
+                loops[i] = (loop_start, position)
+                self._current_loop_index = i
+                self.save_repeat_loops()
+
+                if loop_start is not None:
+                    self._is_user_seeking = True
+                    self.set_seek_position(int(loop_start))
+                    self.seekChanged.emit(int(loop_start))
+                    self._is_user_seeking = False
+
+                return
     
     def clear_repeat_loop(self):
         if not self._current_file or self._current_file not in self._repeat_loops:
@@ -661,6 +676,63 @@ class PlayerControls(QWidget):
         if not self._current_file or self._current_file not in self._repeat_loops:
             return []
         return self._repeat_loops[self._current_file]
+
+    def update_loop_by_index(self, index:int, start:float, end:float):
+        if not self._current_file or self._current_file not in self._repeat_loops:
+            return False
+        loops = self._repeat_loops[self._current_file]
+        if index < 0 or index >= len(loops):
+            return False
+        if start is None or end is None or end <= start:
+            return False
+        # ensure no intersection with other loops
+        if self._would_loop_intersect(start, end, exclude_index=index):
+            return False
+        loops[index] = (start, end)
+        self._current_loop_index = index
+        self.save_repeat_loops()
+        return True
+
+    def delete_loop_by_index(self, index:int):
+        if not self._current_file or self._current_file not in self._repeat_loops:
+            return False
+        loops = self._repeat_loops[self._current_file]
+        if index < 0 or index >= len(loops):
+            return False
+        del loops[index]
+        # adjust current index
+        complete_count = len([l for l in loops if l[0] is not None and l[1] is not None])
+        if complete_count == 0:
+            self._current_loop_index = -1
+        else:
+            self._current_loop_index = max(0, min(self._current_loop_index, complete_count - 1))
+        self.save_repeat_loops()
+        return True
+
+    def add_bookmark_at_position(self, position:float):
+        if not self._current_file:
+            return False
+        if self._current_file not in self._bookmarks:
+            self._bookmarks[self._current_file] = []
+        self._bookmarks[self._current_file].append(position)
+        self._bookmarks[self._current_file].sort()
+        self.save_bookmarks()
+        if hasattr(self, '_bookmarks_dialog') and self._bookmarks_dialog is not None:
+            self._refresh_bookmarks_dialog()
+        return True
+
+    def update_bookmark_at_index(self, index:int, position:float):
+        if not self._current_file or self._current_file not in self._bookmarks:
+            return False
+        bookmarks = self._bookmarks[self._current_file]
+        if index < 0 or index >= len(bookmarks):
+            return False
+        bookmarks[index] = position
+        bookmarks.sort()
+        self.save_bookmarks()
+        if hasattr(self, '_bookmarks_dialog') and self._bookmarks_dialog is not None:
+            self._refresh_bookmarks_dialog()
+        return True
     
     def should_loop_playback(self, current_position: float) -> Optional[float]:
         if not self._current_file or self._current_file not in self._repeat_loops:
