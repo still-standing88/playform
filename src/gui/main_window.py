@@ -36,6 +36,8 @@ from gui_controls.key_event_filter import ShortcutManager
 from app_config import key_config
 from app_constance.file_filter import file_filter
 from .tool_dialog import ToolDialog
+from tools.logs_viewer_dialog import LogsViewerDialog
+from tools.debug_console_dock import DebugConsoleDock
 
 
 
@@ -296,6 +298,17 @@ class MainWindow(QMainWindow):
         self.thumbnail_generator_action = QAction("&Thumbnail Generator", self)
         self.thumbnail_generator_action.triggered.connect(self.open_thumbnail_generator)
         self.tools_menu.addAction(self.thumbnail_generator_action)
+
+        self.debug_menu = self.tools_menu.addMenu("&Debug")
+        self.view_logs_action = QAction("&View Logs…", self)
+        self.view_logs_action.triggered.connect(self.open_logs_viewer)
+        self.debug_menu.addAction(self.view_logs_action)
+
+        self.show_console_dock_action = QAction("Show &Console Dock", self)
+        self.show_console_dock_action.setCheckable(True)
+        self.show_console_dock_action.setChecked(False)
+        self.show_console_dock_action.triggered.connect(self.toggle_console_dock)
+        self.debug_menu.addAction(self.show_console_dock_action)
         
     def setup_about_menu(self):
         self.preferences_action = QAction("&Manage Preferences", self)
@@ -357,6 +370,13 @@ class MainWindow(QMainWindow):
         self.playlists_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
         self.playlists_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.playlists_dock)
+
+
+        self.debug_console_dock = DebugConsoleDock(self)
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.debug_console_dock)
+        self.debug_console_dock.hide()
+        if hasattr(self.debug_console_dock, 'visibilityChanged'):
+            self.debug_console_dock.visibilityChanged.connect(self.update_console_menu)
         
     def setup_main_layout(self):
         left_panel = QWidget()
@@ -726,6 +746,27 @@ class MainWindow(QMainWindow):
         
     def update_playlists_menu(self, visible):
         self.show_playlists_action.setChecked(visible)
+        
+    def update_console_menu(self, visible):
+
+        if hasattr(self, 'show_console_dock_action'):
+            self.show_console_dock_action.setChecked(visible)
+
+    def toggle_console_dock(self, checked):
+        if not hasattr(self, 'debug_console_dock') or self.debug_console_dock is None:
+            self.debug_console_dock = DebugConsoleDock(self)
+            self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.debug_console_dock)
+            if hasattr(self.debug_console_dock, 'visibilityChanged'):
+                self.debug_console_dock.visibilityChanged.connect(self.update_console_menu)
+        if checked:
+            self.debug_console_dock.show()
+            self.debug_console_dock.raise_()
+        else:
+            self.debug_console_dock.hide()
+
+    def open_logs_viewer(self):
+        dlg = LogsViewerDialog(self)
+        dlg.exec()
         
     def apply_audio_device(self, device_index):
 
