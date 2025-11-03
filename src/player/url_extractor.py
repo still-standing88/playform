@@ -31,9 +31,10 @@ class UrlExtractor(QThread):
                 logger.info("No valid cookies file found, proceeding without cookies")
             
             if not is_supported(self.url):
-                logger.info(f"URL not supported by extractors, returning as-is: {self.url}")
-                self.finished.emit(self.url)
-                return
+                logger.info(f"URL not supported by yt-dlp extractors")
+                #logger.info(f"URL not supported by extractors, returning as-is: {self.url}")
+                #self.finished.emit(self.url)
+                #return
             
             logger.info("Extracting URL(s)...")
             result = extract(self.url, cookies=cookies)

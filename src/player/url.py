@@ -1,8 +1,12 @@
 import subprocess
+import logging
 import json
+import requests
 from typing import Optional, List, Union
 from urllib.parse import urlparse, parse_qs
 
+headers={ "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" }
+logger = logging.getLogger(__name__)
 YTDLP_PATH = 'yt-dlp'
 YTDLP_LOG_FILE = None
 YTDLP_VERBOSE = False
@@ -148,6 +152,11 @@ def get_best_format(info) -> str:
 
 def extract(url: str, cookies: Optional[str] = None) -> Union[str, List[str]]:
     if not is_supported(url):
+        logger.info("Attempting to resolve direct URL redirection if any")
+        res = requests.get(url, allow_redirects=True, stream=True, timeout=15, headers=headers)
+        url = res.url
+        res.close()
+        logger.info(f"Resolved URL: {url}")
         return url
     
     try:
