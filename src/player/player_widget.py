@@ -21,6 +21,7 @@ from gui_controls.toggle_button import ToggleButton
 from .subtitles import SubtitleManager
 from .filters_widget import FiltersWidget
 from .url_extractor import UrlExtractor
+from app_constance.styles import PLAYER_WIDGET_STYLE
 
 from utilities.functions import get_app_path, get_debug_level, get_parent_dir, get_vlclog_file, parse_vlc_args
 from utilities.media_utils import format_time, seconds_to_microseconds, get_media_files_from_directory
@@ -176,9 +177,7 @@ class PlayerWidget(QWidget):
         self.player_controls.screenshotRequested.connect(self._on_screenshot)
 
     def apply_styles(self):
-        self.setStyleSheet("""
-            PlayerWidget { background-color: #ecf0f1; border: 1px solid #bdc3c7; border-radius: 8px; }
-        """)
+        self.setStyleSheet(PLAYER_WIDGET_STYLE)
 
     def _on_play_pause_clicked(self):
         instance = self.player.primary_instance

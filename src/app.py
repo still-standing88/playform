@@ -26,8 +26,8 @@ import av_play
 import app_config
 import app_db
 
-from llog_handler import log_error, cleanup_logging
 from app_config import key_config
+from app_constance.styles import get_dark_palette
 from gui.main_window import MainWindow
 
 
@@ -35,27 +35,7 @@ def setup_application_style(app: QApplication):
     app.setStyle('Fusion')
     font = QFont("Segoe UI", 9)
     app.setFont(font)
-
-    dark_palette = QPalette()
-    dark_palette.setColor(QPalette.ColorRole.Window, QColor(30, 30, 30))
-    dark_palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
-    dark_palette.setColor(QPalette.ColorRole.Base, QColor(42, 42, 42))
-    dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(66, 66, 66))
-    dark_palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(50, 50, 50))
-    dark_palette.setColor(QPalette.ColorRole.ToolTipText, QColor(220, 220, 220))
-    dark_palette.setColor(QPalette.ColorRole.Text, QColor(255, 255, 255))
-
-    dark_palette.setColor(QPalette.ColorRole.Button, QColor(80, 80, 80))
-    dark_palette.setColor(QPalette.ColorRole.ButtonText, QColor(255, 255, 255))
-
-    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, QColor(120, 120, 120))
-    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, QColor(120, 120, 120))
-
-    dark_palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
-
-    app.setPalette(dark_palette)
+    app.setPalette(get_dark_palette())
 
 
 def main():
@@ -113,11 +93,11 @@ def main():
     except Exception as e:
         exc_t = sys.exc_info()[2]
         raise Exception(f"Error: {e}").with_traceback(exc_t)
-        log_error(f"Critical error in main application{e}", )
+        #log_error(f"Critical error in main application{e}", )
         exit_code = 1
 
-    finally:
-        cleanup_logging()
+    #finally:
+        #cleanup_logging()
     sys.exit(exit_code)
 
 if __name__ == "__main__":

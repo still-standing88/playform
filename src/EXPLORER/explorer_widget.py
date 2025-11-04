@@ -10,6 +10,7 @@ from typing import Optional, Callable
 from av_play import VLCVideoPlayer, formats, AVMediaInstance, AVPlaybackState
 from app_config import prefs
 from app_constance.vlc_args import log_args
+from app_constance.styles import COLORS
 from app_db import UserFiles
 from .explorer import Explorer
 from .explorer_view import ExplorerView
@@ -114,7 +115,7 @@ class ExplorerWidget(QWidget):
         preview_layout = QVBoxLayout(preview_group)
         self.video_widget = QFrame(self)
         self.vid_palette = self.video_widget.palette()
-        self.vid_palette.setColor(QPalette.ColorRole.Window, QColor(0, 0, 0))
+        self.vid_palette.setColor(QPalette.ColorRole.Window, COLORS['black'])
         self.video_widget.setPalette(self.vid_palette)
         self.video_widget.setAutoFillBackground(True)
 

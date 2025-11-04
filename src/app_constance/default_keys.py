@@ -14,6 +14,7 @@ key_dict = {
 "Close Currently playing Media":"Ctrl+W",
 "Show/Hide explorer": "Ctrl+E",
 "Show/Hide player controls": "Ctrl+H",
+"Show/Hide playlists": "Ctrl+L",
 "Hide window": "Alt+H",
 "Exit": "Alt+X",
 "Focus explorer": "Alt+E",
@@ -26,7 +27,8 @@ key_dict = {
 "Play/Pause": "Space",
 "Backward": "left",
 "Forward": "right",
-"Stop": "Ctrl+Space"
+"Stop": "Ctrl+Space",
+"Search files/folders": "F3",
 },
 "Player": {
 "Play/Pause": "Space",

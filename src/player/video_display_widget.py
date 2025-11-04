@@ -2,6 +2,7 @@ from typing import Callable, Optional
 from PySide6.QtWidgets import QWidget, QLayout, QVBoxLayout, QHBoxLayout, QLabel
 from PySide6.QtGui import QCloseEvent, QPalette, QColor
 from PySide6.QtCore import Qt
+from app_constance.styles import COLORS, VIDEO_PLACEHOLDER_STYLE, VIDEO_LOADING_STYLE
 
 LayoutType = QVBoxLayout | QHBoxLayout 
 
@@ -20,7 +21,7 @@ class VideoDisplayWidget(QWidget):
         self.setAccessibleName("Video Display Area")
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.vid_palette = self.palette()
-        self.vid_palette.setColor(QPalette.ColorRole.Window, QColor(0, 0, 0))
+        self.vid_palette.setColor(QPalette.ColorRole.Window, COLORS['black'])
         self.setPalette(self.vid_palette)
         self.setAutoFillBackground(True)
 
@@ -36,31 +37,14 @@ class VideoDisplayWidget(QWidget):
         
         self.placeholder_label = QLabel("Video Display Area", self)
         self.placeholder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.placeholder_label.setStyleSheet("""
-            QLabel {
-                background-color: #2c3e50;
-                color: white;
-                font-size: 24px;
-                font-weight: bold;
-                border: 2px dashed #34495e;
-            }
-        """)
+        self.placeholder_label.setStyleSheet(VIDEO_PLACEHOLDER_STYLE)
         self.placeholder_label.setMinimumSize(640, 360)
         self.placeholder_label.setAccessibleName("Video display area")
         self.placeholder_label.setAccessibleDescription("Main video playback area")
         
         self.loading_label = QLabel("Extracting URL...", self)
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.loading_label.setStyleSheet("""
-            QLabel {
-                background-color: rgba(0, 0, 0, 180);
-                color: white;
-                font-size: 18px;
-                font-weight: bold;
-                border-radius: 10px;
-                padding: 20px;
-            }
-        """)
+        self.loading_label.setStyleSheet(VIDEO_LOADING_STYLE)
         self.loading_label.hide()
         
         layout.addWidget(self.placeholder_label)

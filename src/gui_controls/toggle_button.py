@@ -56,17 +56,15 @@ class ToggleButton(QPushButton):
                 font-weight: 500;
                 color: #2c3e50;
                 text-align: center;
-                transition: all 0.3s ease;
             }
             
             QPushButton:hover {
                 border-color: rgba(46, 204, 113, 0.8);
                 background-color: rgba(46, 204, 113, 0.05);
-                transform: translateY(-1px);
             }
             
             QPushButton:pressed {
-                transform: translateY(0px);
+                background-color: rgba(46, 204, 113, 0.1);
             }
         """
         
@@ -81,19 +79,15 @@ class ToggleButton(QPushButton):
                 font-weight: 600;
                 color: white;
                 text-align: center;
-                transition: all 0.3s ease;
             }
             
             QPushButton:hover {
                 background-color: #27ae60;
                 border-color: #229954;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
             }
             
             QPushButton:pressed {
                 background-color: #229954;
-                transform: translateY(0px);
             }
         """
         

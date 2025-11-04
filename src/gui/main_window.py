@@ -38,6 +38,7 @@ from app_constance.file_filter import file_filter
 from .tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from tools.debug_console_dock import DebugConsoleDock
+from app_constance.styles import SECTION_LABEL_STYLE
 
 
 
@@ -384,12 +385,12 @@ class MainWindow(QMainWindow):
         left_layout.setContentsMargins(5, 5, 5, 5)
         
         favorites_label = QLabel("Favorites")
-        favorites_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        favorites_label.setStyleSheet(SECTION_LABEL_STYLE)
         left_layout.addWidget(favorites_label)
         left_layout.addWidget(self.favorites_widget, 1)
         
         recents_label = QLabel("Recent Files")
-        recents_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        recents_label.setStyleSheet(SECTION_LABEL_STYLE)
         left_layout.addWidget(recents_label)
         left_layout.addWidget(self.recents_widget, 1)
         

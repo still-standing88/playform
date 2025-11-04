@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox
 from PySide6.QtCore import Qt, Signal, QThread
 from PySide6.QtGui import QKeyEvent
+from app_constance.styles import TITLE_LABEL_STYLE
 
 
 class ToolDialog(QDialog):
@@ -24,7 +25,7 @@ class ToolDialog(QDialog):
         
         title_bar = QHBoxLayout()
         title_label = QLabel(title)
-        title_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        title_label.setStyleSheet(TITLE_LABEL_STYLE)
         title_bar.addWidget(title_label)
         title_bar.addStretch()
         

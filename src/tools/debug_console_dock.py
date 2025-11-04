@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from utilities import get_app_path
+from app_constance.styles import COLORS
 
 
 class QTextEditLogHandler(logging.Handler):
@@ -31,25 +32,23 @@ class QTextEditLogHandler(logging.Handler):
     def emit(self, record):
         try:
             msg = self.format(record)
-            # Add color for different log levels
             if hasattr(self.text_widget, "setTextColor"):
                 if record.levelno >= logging.ERROR:
-                    self.text_widget.setTextColor(QColor("red"))
+                    self.text_widget.setTextColor(COLORS['red'])
                 elif record.levelno >= logging.WARNING:
-                    self.text_widget.setTextColor(QColor("orange"))
+                    self.text_widget.setTextColor(COLORS['orange'])
                 else:
-                    self.text_widget.setTextColor(QColor("lightgray"))
+                    self.text_widget.setTextColor(COLORS['lightgray'])
                     
             if hasattr(self.text_widget, "appendPlainText"):
                 self.text_widget.appendPlainText(msg)
             elif hasattr(self.text_widget, "append"):
                 self.text_widget.append(msg)
                 
-            # Reset color
             if hasattr(self.text_widget, "setTextColor"):
-                self.text_widget.setTextColor(QColor("white"))
+                self.text_widget.setTextColor(COLORS['white'])
         except Exception:
-            pass  # Fail silently to avoid recursion
+            pass
 
 
 class LoggingStreamRedirect:
@@ -72,15 +71,13 @@ class LoggingStreamRedirect:
 
         display_text = text.rstrip("\r\n")
         if hasattr(self.widget, "appendPlainText"):
-
             self.widget.appendPlainText(display_text)
         elif hasattr(self.widget, "append"):
-
             if self.is_stderr and hasattr(self.widget, "setTextColor"):
-                self.widget.setTextColor(QColor("red"))
+                self.widget.setTextColor(COLORS['red'])
             self.widget.append(display_text)
             if self.is_stderr and hasattr(self.widget, "setTextColor"):
-                self.widget.setTextColor(QColor("black"))
+                self.widget.setTextColor(COLORS['black'])
 
 
         for line in text.splitlines():

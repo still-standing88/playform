@@ -13,6 +13,8 @@ from gui_controls.toggle_button import ToggleButton
 from app_config import prefs
 from .bookmarks_dialog import BookmarksDialog
 from app_constance.misc import video_resolutions, video_speeds, video_aspect_ratios, video_scales
+from app_constance.styles import (PLAYER_CONTROLS_STYLE, BUTTON_STYLE, SLIDER_STYLE,
+                                   TIME_LABEL_STYLE, TRACK_LABEL_STYLE, get_repeat_button_active_style)
 from utilities.functions import get_app_path
 
 
@@ -234,34 +236,17 @@ class PlayerControls(QWidget):
         self.toggle_controls_btn.actuated.connect(self.toggle_controls)
 
     def apply_styles(self):
-        self.setStyleSheet("background-color: transparent;")
-        button_style = """
-            QPushButton {
-                background-color: #3498db; border: none; border-radius: 20px;
-                color: white; font-size: 16px; font-weight: bold;
-            }
-            QPushButton:hover { background-color: #2980b9; }
-            QPushButton:pressed { background-color: #21618c; }
-            QPushButton:disabled { background-color: #bdc3c7; }
-        """
-        
-        slider_style = """
-            QSlider::groove:horizontal { border: 1px solid #bbb; background: white; height: 8px; border-radius: 4px; }
-            QSlider::sub-page:horizontal { background: #3498db; border: 1px solid #777; height: 8px; border-radius: 4px; }
-            QSlider::add-page:horizontal { background: #fff; border: 1px solid #777; height: 8px; border-radius: 4px; }
-            QSlider::handle:horizontal { background: #3498db; border: 2px solid #777; width: 18px; margin: -2px 0; border-radius: 9px; }
-            QSlider::handle:horizontal:hover { background: #2980b9; }
-        """
+        self.setStyleSheet(PLAYER_CONTROLS_STYLE)
         
         for btn in [self.play_pause_btn, self.previous_btn, self.backward_btn,
                    self.forward_btn, self.next_btn, self.repeat_btn, self.mute_btn, self.more_btn, self.shuffle_btn, self.bookmarks_btn, self.screenshot_btn]:
-            btn.setStyleSheet(button_style)
+            btn.setStyleSheet(BUTTON_STYLE)
             
-        self.seek_slider.setStyleSheet(slider_style)
-        self.volume_slider.setStyleSheet(slider_style)
+        self.seek_slider.setStyleSheet(SLIDER_STYLE)
+        self.volume_slider.setStyleSheet(SLIDER_STYLE)
         
-        self.time_label.setStyleSheet("QLabel { color: #2c3e50; font-weight: bold; }")
-        self.current_track_label.setStyleSheet("QLabel { color: #34495e; font-size: 14px; }")
+        self.time_label.setStyleSheet(TIME_LABEL_STYLE)
+        self.current_track_label.setStyleSheet(TRACK_LABEL_STYLE)
         
     def toggle_controls(self, minimized):
         self.is_minimized = minimized
@@ -347,9 +332,9 @@ class PlayerControls(QWidget):
     def set_repeat_state(self, is_repeat_on):
         if self.is_repeat_on == is_repeat_on: return
         self.is_repeat_on = is_repeat_on
-        base_style = self.play_pause_btn.styleSheet()
+        base_style = BUTTON_STYLE
         if is_repeat_on:
-            self.repeat_btn.setStyleSheet(base_style + "QPushButton { background-color: #e74c3c; }")
+            self.repeat_btn.setStyleSheet(get_repeat_button_active_style(base_style))
         else:
             self.repeat_btn.setStyleSheet(base_style)
 
@@ -371,9 +356,9 @@ class PlayerControls(QWidget):
     def set_shuffle_state(self, is_shuffle_on):
         if self.is_shuffle_on == is_shuffle_on: return
         self.is_shuffle_on = is_shuffle_on
-        base_style = self.play_pause_btn.styleSheet()
+        base_style = BUTTON_STYLE
         if is_shuffle_on:
-            self.shuffle_btn.setStyleSheet(base_style + "QPushButton { background-color: #e74c3c; }")
+            self.shuffle_btn.setStyleSheet(get_repeat_button_active_style(base_style))
         else:
             self.shuffle_btn.setStyleSheet(base_style)
         self._update_shuffle_text()

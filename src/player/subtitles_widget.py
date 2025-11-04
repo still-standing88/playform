@@ -4,6 +4,7 @@ from PySide6.QtGui import QFont
 
 from gui_controls.toggle_button import ToggleButton
 from gui_controls.player_key_event_filter import KeyEventFilter
+from app_constance.styles import SUBTITLES_LIST_STYLE
 
 
 class SubtitlesWidget(QWidget):
@@ -47,22 +48,7 @@ class SubtitlesWidget(QWidget):
         self.subtitles_list.setAlternatingRowColors(True)
         self.subtitles_list.setMaximumHeight(150)
         
-        self.subtitles_list.setStyleSheet("""
-            QListWidget {
-                background-color: #f8f9fa;
-                border: 1px solid #dee2e6;
-                border-radius: 4px;
-                padding: 5px;
-            }
-            QListWidget::item {
-                padding: 5px;
-                border-bottom: 1px solid #e9ecef;
-            }
-            QListWidget::item:selected {
-                background-color: #007bff;
-                color: white;
-            }
-        """)
+        self.subtitles_list.setStyleSheet(SUBTITLES_LIST_STYLE)
         
         layout.addWidget(self.subtitles_list)
         
