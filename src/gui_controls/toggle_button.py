@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QPushButton, QGraphicsOpacityEffect
-from PySide6.QtCore import Signal, QPropertyAnimation, QEasingCurve, QRect, Qt, QParallelAnimationGroup
-from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QPushButton, QGraphicsOpacityEffect, QGraphicsDropShadowEffect
+from PySide6.QtCore import Signal, QPropertyAnimation, QEasingCurve, QRect, Qt, QParallelAnimationGroup, QSize
+from PySide6.QtGui import QFont, QColor
 
 class ToggleButton(QPushButton):
     actuated = Signal(bool)
@@ -17,7 +17,7 @@ class ToggleButton(QPushButton):
         
         self.clicked.connect(self.onActuate)
         
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         
         if text and text.strip():
             self.setText(text)
@@ -31,18 +31,27 @@ class ToggleButton(QPushButton):
         self.animationGroup = QParallelAnimationGroup(self)
         
         self.opacityEffect = QGraphicsOpacityEffect()
-        self.setGraphicsEffect(self.opacityEffect)
         
         self.opacityAnimation = QPropertyAnimation(self.opacityEffect, b"opacity")
         self.opacityAnimation.setDuration(200)
-        self.opacityAnimation.setEasingCurve(QEasingCurve.InOutQuad)
+        self.opacityAnimation.setEasingCurve(QEasingCurve.Type.InOutQuad)
         
         self.sizeAnimation = QPropertyAnimation(self, b"minimumSize")
         self.sizeAnimation.setDuration(250)
-        self.sizeAnimation.setEasingCurve(QEasingCurve.OutCubic)
+        self.sizeAnimation.setEasingCurve(QEasingCurve.Type.OutCubic)
         
         self.animationGroup.addAnimation(self.opacityAnimation)
         self.animationGroup.addAnimation(self.sizeAnimation)
+        
+        self.shadowEffect = QGraphicsDropShadowEffect()
+        self.shadowEffect.setBlurRadius(8)
+        self.shadowEffect.setOffset(0, 4)
+        self.shadowEffect.setColor(QColor(46, 204, 113, 76))
+        self.shadowEffect.setEnabled(False)
+        
+        self.shadowAnimation = QPropertyAnimation(self.shadowEffect, b"blurRadius")
+        self.shadowAnimation.setDuration(200)
+        self.shadowAnimation.setEasingCurve(QEasingCurve.Type.OutQuad)
         
     def setupStyle(self):
         self.base_style = """
@@ -131,7 +140,7 @@ class ToggleButton(QPushButton):
         self.actuated.emit(self.activated)
         
     def actuatedChange(self):
-        if self.animationGroup.state() == QParallelAnimationGroup.Running:
+        if self.animationGroup.state() == QParallelAnimationGroup.State.Running:
             self.animationGroup.stop()
             
         self.opacityAnimation.setStartValue(1.0)
@@ -154,12 +163,33 @@ class ToggleButton(QPushButton):
         
     def enterEvent(self, event):
         super().enterEvent(event)
-        if hasattr(self, 'opacityEffect'):
-            pass
+        if self.activated and hasattr(self, 'shadowEffect'):
+            current_effect = self.graphicsEffect()
+            if current_effect != self.shadowEffect:
+                self.setGraphicsEffect(self.shadowEffect)
+            self.shadowEffect.setEnabled(True)
+            self.shadowAnimation.stop()
+            self.shadowAnimation.setStartValue(self.shadowEffect.blurRadius())
+            self.shadowAnimation.setEndValue(12)
+            self.shadowAnimation.start()
             
     def leaveEvent(self, event):
         super().leaveEvent(event)
+        if hasattr(self, 'shadowEffect') and self.shadowEffect.isEnabled():
+            self.shadowAnimation.stop()
+            self.shadowAnimation.setStartValue(self.shadowEffect.blurRadius())
+            self.shadowAnimation.setEndValue(0)
+            self.shadowAnimation.finished.connect(self._restoreOpacityEffect)
+            self.shadowAnimation.start()
+    
+    def _restoreOpacityEffect(self):
+        if hasattr(self, 'shadowEffect'):
+            self.shadowEffect.setEnabled(False)
         if hasattr(self, 'opacityEffect'):
+            self.setGraphicsEffect(self.opacityEffect)
+        try:
+            self.shadowAnimation.finished.disconnect(self._restoreOpacityEffect)
+        except:
             pass
             
     def sizeHint(self):
