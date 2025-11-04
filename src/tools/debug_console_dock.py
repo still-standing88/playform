@@ -205,15 +205,20 @@ class DebugConsoleDock(QDockWidget):
 
     def __init__(self, parent=None):
         super().__init__("Debug Console", parent)
+        
+        self.setObjectName("debugConsoleDock")
 
         container = QWidget()
+        container.setObjectName("debugConsoleContainer")
         self.setWidget(container)
         layout = QVBoxLayout(container)
         info = QLabel("Console output. Tab key won't insert tabs inside editor.")
+        info.setObjectName("consoleInfoLabel")
         layout.addWidget(info)
 
 
         self.console = QTextEdit()
+        self.console.setObjectName("consoleTextEdit")
         self.console.setReadOnly(True)
         self.console.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByKeyboard | Qt.TextInteractionFlag.TextSelectableByMouse

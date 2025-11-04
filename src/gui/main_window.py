@@ -49,6 +49,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
+        self.setObjectName("mainWindow")
+        
         self.user_db = app_db.user_db
         self.current_player_instance = None
         self.is_repeat_enabled = False
@@ -148,6 +150,7 @@ class MainWindow(QMainWindow):
 
     def setup_ui(self):
         central_widget = QWidget()
+        central_widget.setObjectName("centralWidget")
         self.setCentralWidget(central_widget)
         
         self.main_layout = QHBoxLayout(central_widget)
@@ -155,10 +158,13 @@ class MainWindow(QMainWindow):
         self.main_layout.setSpacing(10)
         
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.main_splitter.setObjectName("mainSplitter")
         self.main_layout.addWidget(self.main_splitter)
         
         self.favorites_widget = FavoritesWidget(self.user_db)
+        self.favorites_widget.setObjectName("favoritesWidget")
         self.recents_widget = RecentsWidget(self.user_db)
+        self.recents_widget.setObjectName("recentsWidget")
         
         self.explorer_widget = ExplorerWidget(
             self.user_db,
@@ -169,30 +175,39 @@ class MainWindow(QMainWindow):
             playlist_callback=self.add_to_playlist,
             create_playlist_callback=self.create_playlist_from_folder
         )
+        self.explorer_widget.setObjectName("explorerWidget")
         
         self.player_widget = PlayerWidget(self)
+        self.player_widget.setObjectName("playerWidget")
         
         self.playlists_widget = PlaylistsWidget(
             parent=self,
             play_callback=self.play_file
         )
+        self.playlists_widget.setObjectName("playlistsWidget")
         
     def setup_menus(self):
         menubar = self.menuBar()
+        menubar.setObjectName("menuBar")
         
         self.file_menu = menubar.addMenu("&File")
+        self.file_menu.setObjectName("fileMenu")
         self.setup_file_menu()
         
         self.media_menu = menubar.addMenu("&Media")
+        self.media_menu.setObjectName("mediaMenu")
         self.setup_media_menu()
         
         self.view_menu = menubar.addMenu("&View")
+        self.view_menu.setObjectName("viewMenu")
         self.setup_view_menu()
         
         self.tools_menu = menubar.addMenu("&Tools")
+        self.tools_menu.setObjectName("toolsMenu")
         self.setup_tools_menu()
         
         self.about_menu = menubar.addMenu("&About")
+        self.about_menu.setObjectName("aboutMenu")
         self.setup_about_menu()
         
     def setup_file_menu(self):
@@ -322,6 +337,7 @@ class MainWindow(QMainWindow):
         
     def setup_toolbar(self):
         self.toolbar = QToolBar("Main Toolbar")
+        self.toolbar.setObjectName("mainToolbar")
         self.toolbar.setMovable(False)
         self.addToolBar(self.toolbar)
         
@@ -338,22 +354,27 @@ class MainWindow(QMainWindow):
         
     def setup_statusbar(self):
         self.status_bar = QStatusBar()
+        self.status_bar.setObjectName("statusBar")
         self.setStatusBar(self.status_bar)
         
         self.status_label = QLabel("Ready")
+        self.status_label.setObjectName("statusLabel")
         self.status_bar.addWidget(self.status_label)
         
         self.media_info_label = QLabel("")
+        self.media_info_label.setObjectName("mediaInfoLabel")
         self.status_bar.addPermanentWidget(self.media_info_label)
         
 
         self.show_tool_button = QPushButton("Show Tool")
+        self.show_tool_button.setObjectName("showToolButton")
         self.show_tool_button.clicked.connect(self.show_hidden_tool)
         self.show_tool_button.setVisible(False)
         self.status_bar.addPermanentWidget(self.show_tool_button)
         
     def setup_dock_widgets(self):
         self.explorer_dock = QDockWidget("Explorer", self)
+        self.explorer_dock.setObjectName("explorerDock")
         self.explorer_dock.setWidget(self.explorer_widget)
         self.explorer_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
         self.explorer_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
@@ -361,12 +382,14 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.explorer_dock)
         
         self.player_dock = QDockWidget("Player", self)
+        self.player_dock.setObjectName("playerDock")
         self.player_dock.setWidget(self.player_widget)
         self.player_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
         self.player_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.player_dock)
         
         self.playlists_dock = QDockWidget("Playlists", self)
+        self.playlists_dock.setObjectName("playlistsDock")
         self.playlists_dock.setWidget(self.playlists_widget)
         self.playlists_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
         self.playlists_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
@@ -374,6 +397,7 @@ class MainWindow(QMainWindow):
 
 
         self.debug_console_dock = DebugConsoleDock(self)
+        self.debug_console_dock.setObjectName("debugConsoleDock")
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.debug_console_dock)
         self.debug_console_dock.hide()
         if hasattr(self.debug_console_dock, 'visibilityChanged'):
@@ -381,15 +405,18 @@ class MainWindow(QMainWindow):
         
     def setup_main_layout(self):
         left_panel = QWidget()
+        left_panel.setObjectName("leftPanel")
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(5, 5, 5, 5)
         
         favorites_label = QLabel("Favorites")
+        favorites_label.setObjectName("favoritesLabel")
         favorites_label.setStyleSheet(SECTION_LABEL_STYLE)
         left_layout.addWidget(favorites_label)
         left_layout.addWidget(self.favorites_widget, 1)
         
         recents_label = QLabel("Recent Files")
+        recents_label.setObjectName("recentsLabel")
         recents_label.setStyleSheet(SECTION_LABEL_STYLE)
         left_layout.addWidget(recents_label)
         left_layout.addWidget(self.recents_widget, 1)
