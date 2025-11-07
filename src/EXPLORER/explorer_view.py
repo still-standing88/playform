@@ -78,25 +78,31 @@ class ExplorerView(QListWidget):
         self._shortcut_manager.uninstall_from_application()
 
     def open_file(self):
-        self._execute_callback("open_callback", self._focused_item_path)
+        if self._focused_item_path:
+            self._execute_callback("open_callback", self._focused_item_path)  # type: ignore[arg-type]
 
     def open_new_tab(self):
-        self._execute_callback("open_new_callback", self._focused_item_path)
+        if self._focused_item_path:
+            self._execute_callback("open_new_callback", self._focused_item_path)  # type: ignore[arg-type]
 
     def add_to_favorites(self):
-        self._execute_callback("favorites_callback", self._focused_item_path)
+        if self._focused_item_path:
+            self._execute_callback("favorites_callback", self._focused_item_path)  # type: ignore[arg-type]
 
     def update_path(self):
         self._execute_callback("path_change_callback", with_param=False)
 
     def add_to_playlist(self):
-        self._execute_callback("playlist_callback", self._focused_item_path)
+        if self._focused_item_path:
+            self._execute_callback("playlist_callback", self._focused_item_path)  # type: ignore[arg-type]
 
     def create_playlist_from_folder(self):
-        self._execute_callback("create_playlist_callback", self._focused_item_path)
+        if self._focused_item_path:
+            self._execute_callback("create_playlist_callback", self._focused_item_path)  # type: ignore[arg-type]
 
     def add_to_library(self):
-        self._execute_callback("library_callback", self._focused_item_path)
+        if self._focused_item_path:
+            self._execute_callback("library_callback", self._focused_item_path)  # type: ignore[arg-type]
 
     def copy_path(self):
         copyText(self._focused_item_path)
@@ -196,12 +202,13 @@ class ExplorerView(QListWidget):
     @Slot(float)
     def on_playbar_seek(self, position: float):
         if self._instance is not None:
-            self._instance.set_position(position)
+            self._instance.set_position(int(position))
 
     def set_item_info(self):
         if self.currentItem() is None: return
         current_item = self.currentItem().text()
         item_info:Optional[PathInfo] = self._explorer.items.get(current_item, None)
+        if item_info is None: return  # Guard against None
         info = f"Type extension: {item_info.info.ext}\rDate modified: {item_info.info.modify_date}{"\rsize: " + item_info.info.size if item_info.type == PathType.FILE else ""}"
         infoText  = QLabel(info,self)
         infoText.adjustSize()
@@ -223,6 +230,7 @@ class ExplorerView(QListWidget):
         if self.currentItem() is None: return
         item = self.currentItem().text()
         item_info:Optional[PathInfo] = self._explorer.items.get(item, None)
+        if item_info is None: return  # Guard against None
         menu = QMenu()
 
         if item_info.type == PathType.FOLDER:
