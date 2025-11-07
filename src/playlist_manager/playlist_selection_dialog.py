@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QListWidget, 
                                QPushButton, QLabel, QMessageBox)
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from av_play import PlaylistManager
 
 
@@ -54,6 +54,7 @@ class PlaylistSelectionDialog(QDialog):
             for playlist_name in playlists:
                 self.playlists_list.addItem(playlist_name)
                 
+    @Slot()
     def accept_selection(self):
         current_item = self.playlists_list.currentItem()
         if current_item:

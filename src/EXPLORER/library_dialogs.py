@@ -3,7 +3,7 @@ import os
 from typing import Optional, Callable
 from PySide6.QtWidgets import (QDialog, QHBoxLayout, QVBoxLayout, 
 QFileDialog, QTextEdit, QPlainTextEdit, QLabel, QPushButton, )
-from PySide6.QtCore import Qt as qt
+from PySide6.QtCore import Qt as qt, Slot
 
 
 class libraryDialog(QDialog):
@@ -48,12 +48,14 @@ class libraryDialog(QDialog):
         bottomLayout.addWidget(self.cancel_button)
         self.Layout.addLayout(bottomLayout)
 
+    @Slot()
     def onBrows(self):
         path_dialog = QFileDialog.getExistingDirectory(self)
         if path_dialog:
             self.path = path_dialog
         self.path_field.setPlainText(self.path) # type: ignore
 
+    @Slot()
     def onConfirm(self):
         if self.on_confirm_callback:
             self.on_confirm_callback(self.path) # type: ignore

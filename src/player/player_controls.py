@@ -6,7 +6,7 @@ from typing import Optional, Callable, Dict, List, Tuple
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QPushButton, 
                                QSlider, QLabel, QSizePolicy, QFrame, QSpinBox, QMenu)
 from PySide6.QtWidgets import QDialog
-from PySide6.QtCore import Qt, Signal, QTimer
+from PySide6.QtCore import Qt, Signal, QTimer, Slot
 from PySide6.QtGui import QIcon, QFont
 
 from gui_controls.toggle_button import ToggleButton
@@ -248,6 +248,7 @@ class PlayerControls(QWidget):
         self.time_label.setStyleSheet(TIME_LABEL_STYLE)
         self.current_track_label.setStyleSheet(TRACK_LABEL_STYLE)
         
+    @Slot(bool)
     def toggle_controls(self, minimized):
         self.is_minimized = minimized
         
@@ -263,6 +264,7 @@ class PlayerControls(QWidget):
             
         self.controlsToggled.emit(not minimized)
     
+    @Slot()
     def show_more_menu(self):
         menu = QMenu(self)
         
@@ -302,6 +304,7 @@ class PlayerControls(QWidget):
     def _create_speed_handler(self, speed):
         return lambda: self.speedChanged.emit(speed)
     
+    @Slot()
     def _toggle_fullscreen(self):
         self.is_fullscreen = not self.is_fullscreen
         self.fullscreenToggled.emit(self.is_fullscreen)
@@ -402,6 +405,7 @@ class PlayerControls(QWidget):
                       self.mute_btn, self.seek_slider, self.volume_slider]:
             widget.setEnabled(enabled)
     
+    @Slot(int)
     def _on_seek_value_changed(self, position):
         self.seekChanged.emit(position)
     
@@ -419,6 +423,7 @@ class PlayerControls(QWidget):
         if file_path not in self._bookmarks:
             self._current_bookmark_index = -1
     
+    @Slot()
     def show_bookmarks_dialog(self):
         if not self._current_file or self._current_file not in self._bookmarks:
             return
@@ -552,6 +557,7 @@ class PlayerControls(QWidget):
             self.save_bookmarks()
             self._bookmarks_dialog.remove_bookmark_at(idx)
 
+    @Slot(int)
     def delete_bookmark_at(self, index:int):
         if not self._current_file or self._current_file not in self._bookmarks:
             return
@@ -782,6 +788,7 @@ class PlayerControls(QWidget):
             return []
         return self._bookmarks[self._current_file].copy()
     
+    @Slot()
     def clear_bookmarks(self):
         if self._current_file and self._current_file in self._bookmarks:
             del self._bookmarks[self._current_file]
@@ -874,6 +881,7 @@ class PlayerControls(QWidget):
                 seconds = int(bookmark % 60)
                 dlg.bookmarks_list.addItem(f"Mark {i+1}: {minutes:02d}:{seconds:02d}")
     
+    @Slot()
     def volume_up(self):
         current_volume = self.get_volume()
         volume_offset = prefs.prefs["offset"]["volume"]
@@ -881,6 +889,7 @@ class PlayerControls(QWidget):
         self.set_volume(new_volume)
         self.volumeChanged.emit(new_volume)
     
+    @Slot()
     def volume_down(self):
         current_volume = self.get_volume()
         volume_offset = prefs.prefs["offset"]["volume"]
@@ -894,6 +903,7 @@ class PlayerControls(QWidget):
             self.set_seek_position(int(loop_position))
             self.seekChanged.emit(int(loop_position))
     
+    @Slot()
     def _check_current_position(self):
         if self._current_file:
             current_pos = float(self.get_seek_position())

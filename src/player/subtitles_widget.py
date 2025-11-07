@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QFont
 
 from gui_controls.toggle_button import ToggleButton
@@ -55,6 +55,7 @@ class SubtitlesWidget(QWidget):
     def connect_signals(self):
         self.toggle_btn.actuated.connect(self.toggle_subtitles)
         
+    @Slot(bool)
     def toggle_subtitles(self, hidden):
         self.subtitles_list.setVisible(not hidden)
         

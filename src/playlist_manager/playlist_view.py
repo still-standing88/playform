@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QMenu, QApplication,
                                QMessageBox, QFileDialog)
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal, Qt, Slot
 from PySide6.QtGui import QAction
 from gui_controls.list_control import Listctrl
 from av_play import Playlist, PlaylistEntry
@@ -49,6 +49,7 @@ class PlaylistView(QWidget):
         clear_action.triggered.connect(self.clear_tracks)
         self.context_menu.addAction(clear_action)
         
+    @Slot(object)
     def show_context_menu(self, position):
         self.context_menu.exec(self.list_ctrl.mapToGlobal(position))
         
@@ -81,12 +82,14 @@ class PlaylistView(QWidget):
                 "3": album
             })
             
+    @Slot(object)
     def on_item_activated(self, item):
         if self.current_playlist and self.play_callback:
             self.play_callback(self.current_playlist)
         elif self.current_playlist:
             self.play_playlist_signal.emit(self.current_playlist)
             
+    @Slot()
     def add_tracks(self):
         if not self.current_playlist:
             QMessageBox.warning(self, "Warning", "No playlist selected")
@@ -103,6 +106,7 @@ class PlaylistView(QWidget):
                 self.current_playlist.add_entry(entry)
             self.refresh_view()
             
+    @Slot()
     def delete_selected(self):
         if not self.current_playlist:
             return
@@ -113,6 +117,7 @@ class PlaylistView(QWidget):
             self.current_playlist.remove_entry(index)
             self.refresh_view()
             
+    @Slot()
     def clear_tracks(self):
         if not self.current_playlist:
             return

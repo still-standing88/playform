@@ -126,5 +126,6 @@ class PlayerBar(QWidget):
         QToolTip.showText(self.mapToGlobal(event.pos()), tooltip_text, self)
         self._tooltip_timer.start(3000)
     
+    @Slot()
     def _hide_tooltip(self):
         QToolTip.hideText()

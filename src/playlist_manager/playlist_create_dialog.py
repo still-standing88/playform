@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLineEdit,
                                QLabel, QPushButton, QListWidget, QFileDialog,
                                QMessageBox, QSizePolicy)
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from av_play import Playlist, PlaylistEntry
 import os
 
@@ -59,6 +59,7 @@ class PlaylistCreateDialog(QDialog):
         
         self.name_edit.setFocus()
         
+    @Slot()
     def browse_tracks(self):
         file_dialog = QFileDialog(self)
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
@@ -72,6 +73,7 @@ class PlaylistCreateDialog(QDialog):
                     filename = os.path.basename(file_path)
                     self.tracks_list.addItem(filename)
                     
+    @Slot()
     def confirm_creation(self):
         name = self.name_edit.text().strip()
         if not name:

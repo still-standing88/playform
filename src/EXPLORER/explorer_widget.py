@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QTextEdit, QListWidget, QCheckBox, QSpinBox, QLabel, 
     QSplitter, QGroupBox
 )
-from PySide6.QtCore import Qt as qt, QTimer
+from PySide6.QtCore import Qt as qt, QTimer, Slot
 from PySide6.QtGui import QKeyEvent, QPalette, QColor
 
 from typing import Optional, Callable
@@ -163,6 +163,7 @@ class ExplorerWidget(QWidget):
                     pass
 
 
+    @Slot(int)
     def volumeChange(self, value):
         if self._instance is not None:
             try:
@@ -177,6 +178,7 @@ class ExplorerWidget(QWidget):
                  except:
                      pass
 
+    @Slot(int)
     def autoplayState(self, state):
         if state == 2:
             prefs.prefs['autoplay'] = True
@@ -191,6 +193,7 @@ class ExplorerWidget(QWidget):
         new_path = self.path_edit.toPlainText()
         self.explorer_view.change_path(new_path)
 
+    @Slot()
     def backward(self):
         self.explorer_view.backward()
 

@@ -4,7 +4,7 @@ import os
 from typing import Optional, Callable
 from PySide6.QtGui import QKeyEvent, QKeySequence
 from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel
-from PySide6.QtCore import Qt as qt
+from PySide6.QtCore import Qt as qt, Slot
 from av_play import AVMediaInstance, VLCVideoPlayer, AVPlaybackState
 import av_play
 
@@ -141,6 +141,7 @@ class ExplorerView(QListWidget):
             self.setCurrentItem(self.findItems(item_name, qt.MatchFlag.MatchExactly)[0])
         self.set_last_path(self._explorer.current_path)        
 
+    @Slot()
     def onItemActivate(self):
         if self._focused_item_path is not None:
             if os.path.isfile(self._focused_item_path):
@@ -168,6 +169,7 @@ class ExplorerView(QListWidget):
                 if self._player_bar:
                     self._player_bar.setState(True)
 
+    @Slot(bool)
     def on_playbar_play_pause(self, playing: bool):
         if self._instance is not None:
             if playing:
@@ -175,10 +177,12 @@ class ExplorerView(QListWidget):
             else:
                 self._instance.pause()
 
+    @Slot()
     def media_backward(self):
         if self._instance is not None:
             self._instance.set_position(self._instance.get_position() - prefs.prefs["offset"]["seek"])
 
+    @Slot()
     def media_forward(self):
         if self._instance is not None:
             self._instance.set_position(self._instance.get_position() + prefs.prefs["offset"]["seek"])
@@ -189,6 +193,7 @@ class ExplorerView(QListWidget):
             if self._player_bar:
                 self._player_bar.setState(False)
 
+    @Slot(float)
     def on_playbar_seek(self, position: float):
         if self._instance is not None:
             self._instance.set_position(position)
@@ -237,6 +242,7 @@ class ExplorerView(QListWidget):
         menu.exec()
 
 
+    @Slot(object, object)
     def onItemChange(self, c, p):
         if p is not None:
             p.setData(qt.ItemDataRole.AccessibleDescriptionRole, "")

@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLineEdit,
                                QLabel, QPushButton, QMessageBox)
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from av_play import Playlist
 
 
@@ -50,6 +50,7 @@ class PlaylistEditDialog(QDialog):
         self.name_edit.setFocus()
         self.name_edit.selectAll()
         
+    @Slot()
     def confirm_update(self):
         name = self.name_edit.text().strip()
         if not name:

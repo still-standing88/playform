@@ -2,7 +2,7 @@ import os
 
 from typing import Optional, Callable, List
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QHeaderView, QMenu
-from PySide6.QtCore import Qt as qt
+from PySide6.QtCore import Qt as qt, Slot
 
 from utilities.util_gui import  contextMenu, messageBox, menuItem
 from app_db import UserFiles
@@ -63,6 +63,7 @@ class LibraryView(QTreeWidget):
                 self.lib.takeChild(self.lib.indexOfChild(current_item))
                 self._user_db.remove_library_folder(item_path)
 
+    @Slot()
     def navigateTo(self):
         current_item = self.currentItem()
         if current_item is None or current_item.text(0) == "library":

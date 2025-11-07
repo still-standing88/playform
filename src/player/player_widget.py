@@ -8,7 +8,7 @@ import av_play
 from PySide6.QtWidgets import (QWidget, QLayout, QVBoxLayout, QHBoxLayout, QSplitter,
                                QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox)
 from PySide6.QtGui import QCloseEvent, QFont, QPalette, QColor, QShortcut
-from PySide6.QtCore import Qt, Signal, QTimer, QSize
+from PySide6.QtCore import Qt, Signal, QTimer, QSize, Slot
 
 from app_config import prefs, key_config
 from app_constance.vlc_args import log_args
@@ -179,6 +179,7 @@ class PlayerWidget(QWidget):
     def apply_styles(self):
         self.setStyleSheet(PLAYER_WIDGET_STYLE)
 
+    @Slot()
     def _on_play_pause_clicked(self):
         instance = self.player.primary_instance
         if not instance:
@@ -196,6 +197,7 @@ class PlayerWidget(QWidget):
             msg = f"Playback error: {getattr(e, 'message', str(e))}"
             QMessageBox.critical(self, "Playback Error", msg)
         
+    @Slot()
     def _on_mute_unmute_clicked(self):
         instance = self.player.primary_instance
         if not instance:
@@ -211,28 +213,33 @@ class PlayerWidget(QWidget):
             msg = f"Mute error: {getattr(e, 'message', str(e))}"
             QMessageBox.critical(self, "Mute Error", msg)
         
+    @Slot()
     def _on_forward_clicked(self):
         if self.player:
             self.player_controls._is_user_seeking = True
             self.player.forward(prefs.prefs["offset"]["seek"])
             self.player_controls._is_user_seeking = False
         
+    @Slot()
     def _on_backward_clicked(self):
         if self.player:
             self.player_controls._is_user_seeking = True
             self.player.backward(prefs.prefs["offset"]["seek"])
             self.player_controls._is_user_seeking = False
         
+    @Slot()
     def _on_previous_clicked(self):
         if self.player:
             self.player.previous()
             self.filters_widget.reset_filters()
         
+    @Slot()
     def _on_next_clicked(self):
         if self.player:
             self.player.next()
             self.filters_widget.reset_filters()
         
+    @Slot()
     def _on_repeat_clicked(self):
         current_mode = self.player.get_playlist_repeat_mode()
 
@@ -254,6 +261,7 @@ class PlayerWidget(QWidget):
         except Exception:
             pass
         
+    @Slot()
     def _on_shuffle_clicked(self):
         current_mode = self.player.get_playlist_shuffle_mode()
 
@@ -271,6 +279,7 @@ class PlayerWidget(QWidget):
         except Exception:
             pass
         
+    @Slot(int)
     def _on_seek_changed(self, position):
         if self.player.primary_instance is not None:
             self.player_controls.set_time_text(f"{format_time(position)} / {format_time(self.player.primary_instance.get_length())}")
@@ -297,6 +306,7 @@ class PlayerWidget(QWidget):
                 msg = f"Seek error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, "Seek Error", msg)
         
+    @Slot(int)
     def _on_volume_changed(self, volume):
         instance = self.player.primary_instance
         if instance:
@@ -306,6 +316,7 @@ class PlayerWidget(QWidget):
                 msg = f"Volume error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, "Volume Error", msg)
 
+    @Slot()
     def _on_volume_up(self):
         instance = self.player.primary_instance
         if instance:
@@ -328,6 +339,7 @@ class PlayerWidget(QWidget):
                 msg = f"Volume error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, "Volume Error", msg)
     
+    @Slot()
     def _on_jump_to_beginning(self):
         instance = self.player.primary_instance
         if instance:
@@ -337,6 +349,7 @@ class PlayerWidget(QWidget):
                 msg = f"Seek error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, "Seek Error", msg)
     
+    @Slot()
     def _on_jump_to_end(self):
         instance = self.player.primary_instance
         if instance:
@@ -347,6 +360,7 @@ class PlayerWidget(QWidget):
                 msg = f"Seek error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, "Seek Error", msg)
     
+    @Slot()
     def _on_stop(self):
         instance = self.player.primary_instance
         if instance:
@@ -357,15 +371,19 @@ class PlayerWidget(QWidget):
                 msg = f"Stop error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, "Stop Error", msg)
 
+    @Slot(float)
     def _on_speed_changed(self, speed):
         self.player.set_playback_speed(speed)
 
+    @Slot(str)
     def _on_aspect_ratio_changed(self, ratio: str):
         self.player.set_aspect_ratio(ratio)
 
+    @Slot(float)
     def _on_scale_changed(self, scale: float):
         self.player.set_scale(scale)
 
+    @Slot(bool)
     def _on_fullscreen_toggled(self, enabled):
         self.video_display.set_fullscreen(enabled)
         try:
@@ -478,6 +496,7 @@ class PlayerWidget(QWidget):
             pass
         self._update_timeline_from_data()
 
+    @Slot(int, float, float)
     def _on_timeline_segment_updated(self, seg_id:int, start_norm:float, end_norm:float):
         if seg_id in self._timeline_seg_map:
             loop_index = self._timeline_seg_map[seg_id]
@@ -486,21 +505,25 @@ class PlayerWidget(QWidget):
             self.player_controls.update_loop_by_index(loop_index, start_sec, end_sec)
             self._update_timeline_from_data()
 
+    @Slot(int)
     def _on_timeline_segment_removed(self, seg_id:int):
         if seg_id in self._timeline_seg_map:
             loop_index = self._timeline_seg_map[seg_id]
             self.player_controls.delete_loop_by_index(loop_index)
             self._update_timeline_from_data()
 
+    @Slot(int)
     def _on_timeline_segment_selected(self, seg_id:int):
         if seg_id in self._timeline_seg_map:
             self.player_controls._current_loop_index = self._timeline_seg_map[seg_id]
 
+    @Slot(float)
     def _on_timeline_marker_added(self, pos_norm:float):
         pos_sec = self._norm_to_seconds(pos_norm)
         self.player_controls.add_bookmark_at_position(pos_sec)
         self._update_timeline_from_data()
 
+    @Slot(int, float)
     def _on_timeline_marker_moved(self, marker_id:int, pos_norm:float):
         if marker_id in self._timeline_marker_map:
             bm_index = self._timeline_marker_map[marker_id]
@@ -508,12 +531,14 @@ class PlayerWidget(QWidget):
             self.player_controls.update_bookmark_at_index(bm_index, pos_sec)
             self._update_timeline_from_data()
 
+    @Slot(int)
     def _on_timeline_marker_removed(self, marker_id:int):
         if marker_id in self._timeline_marker_map:
             bm_index = self._timeline_marker_map[marker_id]
             self.player_controls.delete_bookmark_at(bm_index)
             self._update_timeline_from_data()
 
+    @Slot(int)
     def _on_timeline_marker_selected(self, marker_id:int):
         if marker_id in self._timeline_marker_map:
             self.player_controls._current_bookmark_index = self._timeline_marker_map[marker_id]
@@ -533,6 +558,7 @@ class PlayerWidget(QWidget):
             except av_play.AVError:
                 pass
 
+    @Slot()
     def _update_player_state(self):
         instance = self.player.primary_instance
         if not instance:
@@ -738,11 +764,13 @@ class PlayerWidget(QWidget):
     def minimumSizeHint(self):
         return QSize(800, 600)
         
+    @Slot()
     def _on_url_extraction_started(self):
         logger.info("URL extraction started, showing loading message")
         self.video_display.show_loading("Extracting URL...")
         self.player_controls.set_controls_enabled(False)
         
+    @Slot(object)
     def _on_url_extraction_complete(self, result):
         logger.info("URL extraction completed, processing result")
         self.video_display.hide_loading()
@@ -765,6 +793,7 @@ class PlayerWidget(QWidget):
             logger.error(f"Failed to load extracted URL(s): {e}")
             self._reset_ui_to_default()
             
+    @Slot(str)
     def _on_url_extraction_failed(self, error_msg):
         logger.error(f"URL extraction failed: {error_msg}")
         self.video_display.hide_loading()

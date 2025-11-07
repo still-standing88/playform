@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                                QListWidget, QSplitter, QLabel, QMessageBox,
                                QListWidgetItem)
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from .playlist_view import PlaylistView
 from .playlist_create_dialog import PlaylistCreateDialog
 from .playlist_edit_dialog import PlaylistEditDialog
@@ -114,11 +114,13 @@ class PlaylistsWidget(QWidget):
         item = QListWidgetItem(name)
         self.playlists_list.addItem(item)
         
+    @Slot()
     def create_playlist(self):
         dialog = PlaylistCreateDialog(self)
         dialog.playlist_created.connect(self.on_playlist_created)
         dialog.exec()
         
+    @Slot(str, object)
     def on_playlist_created(self, name, playlist):
         if name in [self.playlists_list.item(i).text() for i in range(self.playlists_list.count())]:
             QMessageBox.warning(self, "Warning", f"Playlist '{name}' already exists")
@@ -134,6 +136,7 @@ class PlaylistsWidget(QWidget):
                 self.on_playlist_selected(self.playlists_list.item(i))
                 break
                 
+    @Slot(object)
     def edit_playlist(self, item):
         name = item.text()
         playlist = self.playlist_manager.get_playlist(name)
@@ -143,6 +146,7 @@ class PlaylistsWidget(QWidget):
             dialog.playlist_updated.connect(self.on_playlist_updated)
             dialog.exec()
             
+    @Slot(str, str)
     def on_playlist_updated(self, old_name, new_name):
         if old_name != new_name:
             if new_name in [self.playlists_list.item(i).text() for i in range(self.playlists_list.count())]:
@@ -161,6 +165,7 @@ class PlaylistsWidget(QWidget):
                         
         self.save_playlists_data()
         
+    @Slot(object)
     def on_playlist_selected(self, item):
         if item:
             name = item.text()
