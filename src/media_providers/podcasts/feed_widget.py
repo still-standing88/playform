@@ -1,4 +1,6 @@
 import os
+import bleach
+
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QListWidget, QListWidgetItem,
     QLineEdit, QPushButton, QLabel, QTreeWidget, QTreeWidgetItem, QTextBrowser,
@@ -6,10 +8,10 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QAction, QShortcut, QKeySequence, QDesktopServices
+
 from urllib.parse import urlparse
 from datetime import datetime
 from time import mktime
-import bleach
 
 from utilities.functions import get_app_path
 from media_providers.podcasts.feed_manager import FeedManager

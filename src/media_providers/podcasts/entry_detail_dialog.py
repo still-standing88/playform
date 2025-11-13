@@ -3,10 +3,13 @@ from PySide6.QtWidgets import (
     QMessageBox, QApplication
 )
 from PySide6.QtCore import Qt
+
 import html
 
 
 class EntryDetailDialog(QDialog):
+
+
     def __init__(self, entry, parent=None):
         super().__init__(parent)
         self.entry = entry
@@ -14,6 +17,7 @@ class EntryDetailDialog(QDialog):
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(700, 500)
         self.setMinimumSize(600, 400)
+
         self.setup_ui()
         self.display_entry()
 
@@ -51,15 +55,18 @@ class EntryDetailDialog(QDialog):
         html_parts.append("<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry Data</h2>")
         
         attrs = {}
+
         if isinstance(self.entry, dict):
             attrs = self.entry
         elif hasattr(self.entry, '__dict__'):
             attrs = vars(self.entry)
         else:
+
             try:
                 keys = getattr(self.entry, 'keys', None)
                 if keys and callable(keys):
                     key_list = list(keys())  # type: ignore[arg-type]
+
                     for key in key_list:
                         attrs[key] = self.entry[key]
             except:
@@ -122,10 +129,12 @@ class EntryDetailDialog(QDialog):
         elif hasattr(self.entry, '__dict__'):
             attrs = vars(self.entry)
         else:
+
             try:
                 keys = getattr(self.entry, 'keys', None)
                 if keys and callable(keys):
                     key_list = list(keys())  # type: ignore[arg-type]
+
                     for key in key_list:
                         attrs[key] = self.entry[key]
             except:
