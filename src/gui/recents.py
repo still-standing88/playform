@@ -1,6 +1,6 @@
 import os
 from PySide6.QtWidgets import QListWidget, QMenu, QMessageBox
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal, Qt, Slot
 from PySide6.QtGui import QAction
 from app_db import UserFiles
 from utilities.util_gui import contextMenu, messageBox
@@ -62,6 +62,7 @@ class RecentsWidget(QListWidget):
         except Exception as e:
             messageBox("Error", f"Failed to add recent file: {e}")
     
+    @Slot()
     def clear_recents(self):
         reply = QMessageBox.question(self, "Clear Recent Files", 
                                    "Are you sure you want to clear all recent files?",
@@ -83,6 +84,7 @@ class RecentsWidget(QListWidget):
         
         menu.exec(self.mapToGlobal(position))
     
+    @Slot(object)
     def on_item_activated(self, item):
         if item:
             filename = item.text()

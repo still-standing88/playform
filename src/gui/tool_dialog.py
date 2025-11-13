@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox
-from PySide6.QtCore import Qt, Signal, QThread
+from PySide6.QtCore import Qt, Signal, QThread, Slot
 from PySide6.QtGui import QKeyEvent
 from app_constance.styles import TITLE_LABEL_STYLE
 
@@ -50,10 +50,12 @@ class ToolDialog(QDialog):
             return
         super().keyPressEvent(event)
     
+    @Slot()
     def hide_and_unlock(self):
         self.hide()
         self.dialog_hidden.emit()
     
+    @Slot()
     def show_dialog(self):
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.show()
@@ -67,6 +69,7 @@ class ToolDialog(QDialog):
                 return thread.isRunning()
         return False
     
+    @Slot()
     def close_dialog(self):
         if self.is_tool_active():
             QMessageBox.warning(

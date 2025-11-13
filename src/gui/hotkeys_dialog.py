@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QPushButton, QKeySequenceEdit, QMessageBox, QHeaderView
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QKeySequence
 from app_config import key_config
 
@@ -78,10 +78,12 @@ class HotkeysDialog(QDialog):
         self.tree.header().setSectionsMovable(False)
         self.tree.header().setSectionsClickable(False)
 
+    @Slot(object, int)
     def on_item_clicked(self, item, column):
         if item.parent() is not None and column == 1:
             self.start_editing(item, column)
 
+    @Slot(object, int)
     def on_item_double_clicked(self, item, column):
         if item.parent() is not None and column == 1:
             self.start_editing(item, column)
@@ -131,6 +133,7 @@ class HotkeysDialog(QDialog):
         self.current_editor = None
         self.current_editor_item = None
 
+    @Slot()
     def reset_to_default(self):
         reply = QMessageBox.question(
             self,
@@ -143,6 +146,7 @@ class HotkeysDialog(QDialog):
             key_config.keysToDefault()
             self.populate_tree()
 
+    @Slot()
     def apply_changes(self):
         key_config.saveConfig()
         key_config.apply_global_hotkeys()
@@ -158,7 +162,8 @@ class HotkeysDialog(QDialog):
     def reject(self):
         if self.current_editor:
             try:
-                self.tree.setItemWidget(self.current_editor_item, 1, None)
+                if self.current_editor_item is not None:  # Type guard
+                    self.tree.setItemWidget(self.current_editor_item, 1, None)
             except Exception:
                 pass
             self.current_editor.deleteLater()

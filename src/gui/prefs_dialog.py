@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QTabWidget,
                                QWidget, QLabel, QComboBox, QSpinBox, QPushButton,
                                QFormLayout, QDialogButtonBox, QTextEdit, QCheckBox,
                                QFileDialog, QMessageBox, QLineEdit)
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QKeyEvent
 import sys
 import os
@@ -143,6 +143,7 @@ class PreferencesDialog(QDialog):
         
         self.tab_widget.addTab(ytdlp_widget, "yt-dlp")
         
+    @Slot(bool)
     def toggle_vlc_logging_options(self, checked):
         debug_label = self.vlc_args_edit.parent().layout().itemAt(self.debug_level_row, QFormLayout.ItemRole.LabelRole).widget() # type: ignore
         debug_field = self.vlc_args_edit.parent().layout().itemAt(self.debug_level_row, QFormLayout.ItemRole.FieldRole).widget() # type: ignore
@@ -150,6 +151,7 @@ class PreferencesDialog(QDialog):
         debug_label.setVisible(checked)
         debug_field.setVisible(checked)
         
+    @Slot(bool)
     def toggle_ytdlp_logging_options(self, checked):
         verbose_label = self.ytdlp_layout.itemAt(self.ytdlp_verbose_row, QFormLayout.ItemRole.LabelRole).widget()
         verbose_field = self.ytdlp_layout.itemAt(self.ytdlp_verbose_row, QFormLayout.ItemRole.FieldRole).widget()
@@ -166,12 +168,14 @@ class PreferencesDialog(QDialog):
             return False
         return True
         
+    @Slot()
     def browse_cookies_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Cookies File", 
                                                  "", "Text Files (*.txt);;All Files (*)")
         if file_path:
             self.youtube_cookies_edit.setText(file_path)
             
+    @Slot()
     def browse_ytdlp_path(self):
         dir_path = QFileDialog.getExistingDirectory(self, "Select yt-dlp Directory")
         if dir_path:

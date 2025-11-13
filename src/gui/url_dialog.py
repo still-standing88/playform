@@ -1,7 +1,7 @@
 
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QComboBox, 
                                QPushButton, QLabel, QMessageBox)
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from app_config import prefs
 from utilities.functions import isValidURL
 
@@ -63,6 +63,7 @@ class URLDialog(QDialog):
         prefs.prefs["urlls"] = urls
         prefs.save()
         
+    @Slot()
     def open_url(self):
         url = self.url_combo.currentText().strip()
         

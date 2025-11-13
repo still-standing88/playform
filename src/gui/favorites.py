@@ -1,6 +1,6 @@
 import os
 from PySide6.QtWidgets import QListWidget, QMenu, QMessageBox
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal, Qt, Slot
 from PySide6.QtGui import QAction
 from app_db import UserFiles
 from utilities.util_gui import contextMenu, messageBox
@@ -65,6 +65,7 @@ class FavoritesWidget(QListWidget):
         except Exception as e:
             messageBox("Error", f"Failed to remove favorite: {e}")
     
+    @Slot()
     def clear_favorites(self):
         reply = QMessageBox.question(self, "Clear Favorites", 
                                    "Are you sure you want to clear all favorites?",
@@ -92,6 +93,7 @@ class FavoritesWidget(QListWidget):
         
         menu.exec(self.mapToGlobal(position))
     
+    @Slot()
     def remove_current_favorite(self):
         current_item = self.currentItem()
         if current_item:
@@ -99,6 +101,7 @@ class FavoritesWidget(QListWidget):
             if filename in self.path_mapping:
                 self.remove_favorite(self.path_mapping[filename])
     
+    @Slot(object)
     def on_item_activated(self, item):
         if item:
             filename = item.text()
