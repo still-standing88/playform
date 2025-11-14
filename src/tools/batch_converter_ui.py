@@ -11,6 +11,7 @@ from .utils import (
     get_common_sample_rates, get_common_audio_bitrates, get_common_video_bitrates,
     get_audio_formats_map, get_video_formats_map, get_container_from_format
 )
+from utilities import signal_manager
 
 class FFmpegBatchThread(QThread):
     file_progress = Signal(str)
@@ -199,6 +200,7 @@ class BatchConverterUI(QWidget):
         self.progress_dialog.canceled.connect(self.thread.stop)
         self.thread.start()
         self.progress_dialog.show()
+        signal_manager.statusbar_message.emit(f"Starting batch conversion of {len(files)} files")
 
     def update_buttons_state(self):
         has_files = self.file_list.count() > 0
@@ -220,7 +222,9 @@ class BatchConverterUI(QWidget):
             self.progress_dialog.setValue(self.progress_dialog.maximum())
             QMessageBox.information(self, "Success", "Batch conversion completed.")
             self.progress_dialog.close()
+            signal_manager.statusbar_message.emit("Batch conversion completed successfully")
 
     def on_error(self, filename, message):
         error_msg = f"Failed to convert {os.path.basename(filename)}:\n{message}"
         QMessageBox.warning(self, "Conversion Error", error_msg)
+        signal_manager.statusbar_message.emit(f"Error converting {os.path.basename(filename)}")

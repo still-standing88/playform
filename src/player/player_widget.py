@@ -25,6 +25,7 @@ from app_constance.styles import PLAYER_WIDGET_STYLE
 
 from utilities.functions import get_app_path, get_debug_level, get_parent_dir, get_vlclog_file, parse_vlc_args
 from utilities.media_utils import format_time, seconds_to_microseconds, get_media_files_from_directory
+from utilities import signal_manager
 
 
 LayoutType = QVBoxLayout | QHBoxLayout 
@@ -397,8 +398,9 @@ class PlayerWidget(QWidget):
             file_date = str(dt.datetime.now().strftime("%y-%d-%m-%I-%M-%S%p"))
             image_path = os.path.join(get_app_path(), "Screenshots", f"screenshot-{file_date}.{image_format}")
             self.player.take_screenshot(image_path)
+            signal_manager.statusbar_message.emit(f"Screenshot saved: {os.path.basename(image_path)}")
         except Exception:
-            pass
+            signal_manager.statusbar_message.emit("Failed to take screenshot")
     
     def close_current_media(self):
         try:
@@ -651,6 +653,7 @@ class PlayerWidget(QWidget):
         self.filters_widget.reset_filters()
 
     def load_file(self, file_path: str):
+        signal_manager.statusbar_message.emit(f"Loading: {os.path.basename(file_path)}")
         #if self.loading: return
         #self.loading = True
         try:
@@ -680,6 +683,7 @@ class PlayerWidget(QWidget):
             self._reset_ui_to_default()
 
     def load_url(self, url: str):
+        signal_manager.statusbar_message.emit(f"Loading URL: {url}")
         try:
             if self.url_extractor and self.url_extractor.isRunning():
                 self.url_extractor.terminate()
@@ -699,6 +703,7 @@ class PlayerWidget(QWidget):
         if playlist is None or len(playlist) == 0:
             self._reset_ui_to_default()
             return
+        signal_manager.statusbar_message.emit(f"Loading playlist: {playlist.title or 'Untitled'}")
         try:
             if self.player.primary_instance is not None:
                 try:

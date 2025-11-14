@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QThread, Signal
 from .ffmpeg_handler import FFmpegHandler
 from ffmpeg import FFmpegError, Progress
+from utilities import signal_manager
 
 class FFmpegTaskThread(QThread):
     progress = Signal(Progress)
@@ -147,9 +148,11 @@ class ThumbnailGeneratorUI(QWidget):
             self.progress_dialog.canceled.connect(self.thread.terminate)
             self.thread.start()
             self.progress_dialog.show()
+            signal_manager.statusbar_message.emit("Starting thumbnail generation")
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to start process: {e}")
+            signal_manager.statusbar_message.emit("Failed to start thumbnail generation")
 
     def update_progress(self, progress: Progress):
         if self.progress_dialog:
@@ -165,11 +168,13 @@ class ThumbnailGeneratorUI(QWidget):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
             QMessageBox.information(self, "Success", "Thumbnail generation completed successfully.")
+            signal_manager.statusbar_message.emit("Thumbnail generation completed")
 
     def on_error(self, message):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
             QMessageBox.critical(self, "Error", f"An error occurred: {message}")
+            signal_manager.statusbar_message.emit("Thumbnail generation failed")
     
     def update_action_buttons(self):
         path = self.input_path.text()

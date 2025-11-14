@@ -4,6 +4,7 @@ from PySide6.QtCore import Signal, Qt, Slot
 from PySide6.QtGui import QAction
 from gui_controls.list_control import Listctrl
 from av_play import Playlist, PlaylistEntry
+from utilities import signal_manager
 
 
 class PlaylistView(QWidget):
@@ -105,6 +106,7 @@ class PlaylistView(QWidget):
                 entry = PlaylistEntry(location=file_path)
                 self.current_playlist.add_entry(entry)
             self.refresh_view()
+            signal_manager.statusbar_message.emit(f"Added {len(files)} track(s) to playlist")
             
     @Slot()
     def delete_selected(self):
@@ -116,6 +118,7 @@ class PlaylistView(QWidget):
             index = current_row - 1
             self.current_playlist.remove_entry(index)
             self.refresh_view()
+            signal_manager.statusbar_message.emit("Track removed from playlist")
             
     @Slot()
     def clear_tracks(self):
@@ -127,3 +130,4 @@ class PlaylistView(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             self.current_playlist.clear()
             self.refresh_view()
+            signal_manager.statusbar_message.emit("Playlist cleared")

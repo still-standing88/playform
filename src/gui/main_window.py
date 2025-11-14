@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QFileDialog, QInputDialog, QSystemTrayIcon, QApplication, QMessageBox, QDialog,
     QPushButton
 )
-from PySide6.QtCore import Qt, Signal, Slot, QTimer, QUrl
+from PySide6.QtCore import Qt, Signal, QTimer, QUrl
 from PySide6.QtGui import QAction, QIcon, QKeySequence
 
 from app_db import UserFiles
@@ -27,6 +27,7 @@ from .hotkeys_dialog import HotkeysDialog
 from .url_dialog import URLDialog
 from utilities.util_gui import menuItem, messageBox
 from utilities.media_utils import get_media_files_from_directory
+from utilities import signal_manager
 from av_play import Playlist, PlaylistEntry, formats
 from tools.batch_converter_ui import BatchConverterUI
 from tools.extractor_ui import ExtractorUI
@@ -111,7 +112,6 @@ class MainWindow(QMainWindow):
     def reset_shortcuts(self):
         self.set_shortcuts()
 
-    @Slot()
     def reset_shortcuts_callback(self):
         self.reset_shortcuts()
         
@@ -373,6 +373,9 @@ class MainWindow(QMainWindow):
         self.show_tool_button.setVisible(False)
         self.status_bar.addPermanentWidget(self.show_tool_button)
         
+        signal_manager.statusbar_message.connect(self.status_label.setText)
+        signal_manager.media_info_message.connect(self.media_info_label.setText)
+        
     def setup_dock_widgets(self):
         self.explorer_dock = QDockWidget("Explorer", self)
         self.explorer_dock.setObjectName("explorerDock")
@@ -460,8 +463,7 @@ class MainWindow(QMainWindow):
             self.player_dock.visibilityChanged.connect(self.update_player_menu)
         if hasattr(self.playlists_dock, 'visibilityChanged'):
             self.playlists_dock.visibilityChanged.connect(self.update_playlists_menu)
-    
-    @Slot()
+            
     def open_file_dialog(self):
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Open Media File", "", file_filter
@@ -469,15 +471,13 @@ class MainWindow(QMainWindow):
         if file_path:
             self.play_file(file_path)
     
-    @Slot()
     def open_folder_dialog(self):
         folder_path = QFileDialog.getExistingDirectory(
             self, "Open Folder", ""
         )
         if folder_path:
             self.load_folder_as_playlist(folder_path)
-    
-    @Slot()
+            
     def open_url_dialog(self):
         dialog = URLDialog(self)
         dialog.url_opened.connect(self.play_url)
@@ -501,30 +501,25 @@ class MainWindow(QMainWindow):
         if media_files:
             self.player_widget.load_playlist(playlist, start_index=0)
             self.play_file(media_files[0])
-    
-    @Slot(str)
+            
     def play_file(self, file_path: str):
-        self.status_label.setText(f"Loading: {os.path.basename(file_path)}")
-        self.media_info_label.setText(file_path)
+        signal_manager.statusbar_message.emit(f"Loading: {os.path.basename(file_path)}")
+        signal_manager.media_info_message.emit(file_path)
         self.add_to_recents(file_path)
         self.update_recent_files_menu()
         self.fileOpened.emit(file_path)
-    
-    @Slot(str)
+        
     def play_url(self, url: str):
-        self.status_label.setText(f"Loading URL: {url}")
-        self.media_info_label.setText(url)
+        signal_manager.statusbar_message.emit(f"Loading URL: {url}")
+        signal_manager.media_info_message.emit(url)
         self.urlOpened.emit(url)
-    
-    @Slot(str)
+        
     def add_to_favorites(self, file_path: str):
         self.favorites_widget.add_favorite(file_path)
-    
-    @Slot(str)
+        
     def add_to_recents(self, file_path: str):
         self.recents_widget.add_recent(file_path)
-    
-    @Slot(str)
+        
     def add_to_playlist(self, file_path: str):
 
         playlist_manager = self.playlists_widget.playlist_manager
@@ -544,8 +539,7 @@ class MainWindow(QMainWindow):
             lambda playlist_name: self.add_file_to_playlist(file_path, playlist_name)
         )
         dialog.exec()
-    
-    @Slot(str)
+        
     def create_playlist_from_folder(self, folder_path: str):
 
         if not os.path.isdir(folder_path):
@@ -576,7 +570,7 @@ class MainWindow(QMainWindow):
 
         self.player_widget.load_playlist(playlist, start_index=0, auto_play=True)
         
-        self.status_label.setText(f"Created and loaded playlist '{playlist_name}' with {len(media_files)} tracks")
+        signal_manager.statusbar_message.emit(f"Created and loaded playlist '{playlist_name}' with {len(media_files)} tracks")
         
     def add_file_to_playlist(self, file_path: str, playlist_name: str):
 
@@ -587,7 +581,7 @@ class MainWindow(QMainWindow):
             self.playlists_widget.save_playlists_data()
             
             filename = os.path.basename(file_path)
-            self.status_label.setText(f"Added '{filename}' to playlist '{playlist_name}'")
+            signal_manager.statusbar_message.emit(f"Added '{filename}' to playlist '{playlist_name}'")
         else:
             messageBox("Error", f"Playlist '{playlist_name}' not found")
             
@@ -607,7 +601,7 @@ class MainWindow(QMainWindow):
         self.playlists_widget.playlist_manager.playlists[name] = playlist
         self.playlists_widget.add_playlist_to_list(name)
         self.playlists_widget.save_playlists_data()
-        self.status_label.setText(f"Created new playlist '{name}'")
+        signal_manager.statusbar_message.emit(f"Created new playlist '{name}'")
         
     def update_recent_files_menu(self):
         self.recent_files_menu.clear()
@@ -623,8 +617,7 @@ class MainWindow(QMainWindow):
                 action.setToolTip(file_path)
                 action.triggered.connect(lambda checked=False, path=file_path: self.play_file(path))
                 self.recent_files_menu.addAction(action)
-    
-    @Slot()
+                
     def toggle_play_pause(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             try:
@@ -632,33 +625,30 @@ class MainWindow(QMainWindow):
                     state = self.player_widget.player.primary_instance.get_playback_state()
                     if state == "playing":
                         self.player_widget.player.primary_instance.pause()
-                        self.status_label.setText("Paused")
+                        signal_manager.statusbar_message.emit("Paused")
                     else:
                         self.player_widget.player.primary_instance.play()
-                        self.status_label.setText("Playing")
+                        signal_manager.statusbar_message.emit("Playing")
             except Exception as e:
-                self.status_label.setText("No media loaded")
-    
-    @Slot()
+                signal_manager.statusbar_message.emit("No media loaded")
+                
     def stop_playback(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             try:
                 if self.player_widget.player.primary_instance:
                     self.player_widget.player.primary_instance.stop()
-                    self.status_label.setText("Stopped")
+                    signal_manager.statusbar_message.emit("Stopped")
             except Exception as e:
-                self.status_label.setText("No media loaded")
-    
-    @Slot()
+                signal_manager.statusbar_message.emit("No media loaded")
+                
     def toggle_mute(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             try:
                 if self.player_widget.player.primary_instance:
-                    self.status_label.setText("Mute toggled")
+                    signal_manager.statusbar_message.emit("Mute toggled")
             except Exception as e:
-                self.status_label.setText("No media loaded")
-    
-    @Slot()
+                signal_manager.statusbar_message.emit("No media loaded")
+                
     def seek_forward(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             try:
@@ -667,8 +657,7 @@ class MainWindow(QMainWindow):
                     self.player_widget.player.primary_instance.set_position(current_pos + 10)
             except Exception as e:
                 pass
-    
-    @Slot()
+                
     def seek_backward(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             try:
@@ -677,16 +666,13 @@ class MainWindow(QMainWindow):
                     self.player_widget.player.primary_instance.set_position(max(0, current_pos - 10))
             except Exception as e:
                 pass
-    
-    @Slot()
+                
     def previous_track(self):
-        self.status_label.setText("Previous track")
-    
-    @Slot()
+        signal_manager.statusbar_message.emit("Previous track")
+        
     def next_track(self):
-        self.status_label.setText("Next track")
+        signal_manager.statusbar_message.emit("Next track")
 
-    @Slot()
     def volume_down(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             instance = self.player_widget.player.primary_instance
@@ -694,7 +680,6 @@ class MainWindow(QMainWindow):
                 current_volume = instance.get_volume()
                 instance.set_volume(max(0, current_volume - 5))
 
-    @Slot()
     def volume_up(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             instance = self.player_widget.player.primary_instance
@@ -702,19 +687,15 @@ class MainWindow(QMainWindow):
                 current_volume = instance.get_volume()
                 instance.set_volume(min(100, current_volume + 5))
     
-    @Slot()
     def open_batch_converter(self):
         self.open_tool_dialog("batch_converter", BatchConverterUI(), "Batch Converter")
-    
-    @Slot()
+        
     def open_extractor(self):
         self.open_tool_dialog("extractor", ExtractorUI(), "Media Extractor")
-    
-    @Slot()
+        
     def open_tag_editor(self):
         self.open_tool_dialog("tag_editor", TagEditorUI(), "Tag Editor")
-    
-    @Slot()
+        
     def open_thumbnail_generator(self):
         self.open_tool_dialog("thumbnail_generator", ThumbnailGeneratorUI(), "Thumbnail Generator")
         
@@ -744,16 +725,14 @@ class MainWindow(QMainWindow):
             dialog.show_dialog()
         
         self.active_tool_name = tool_name
-        self.status_label.setText(f"Opened {title}")
+        signal_manager.statusbar_message.emit(f"Opened {title}")
     
-    @Slot(str, str)
     def on_tool_hidden(self, tool_name, title):
 
         self.show_tool_button.setText(f"Show {title}")
         self.show_tool_button.setVisible(True)
-        self.status_label.setText(f"{title} hidden")
+        signal_manager.statusbar_message.emit(f"{title} hidden")
     
-    @Slot(str)
     def on_tool_closed(self, tool_name):
 
         if tool_name in self.tool_dialogs:
@@ -761,17 +740,15 @@ class MainWindow(QMainWindow):
         if self.active_tool_name == tool_name:
             self.active_tool_name = None
         self.show_tool_button.setVisible(False)
-        self.status_label.setText("Tool closed")
+        signal_manager.statusbar_message.emit("Tool closed")
     
-    @Slot()
     def show_hidden_tool(self):
         if self.active_tool_name and self.active_tool_name in self.tool_dialogs:
             dialog = self.tool_dialogs[self.active_tool_name]
             dialog.show_dialog()
             self.show_tool_button.setVisible(False)
-            self.status_label.setText(f"Showing {dialog.title}")
+            signal_manager.statusbar_message.emit(f"Showing {dialog.title}")
         
-    @Slot()
     def toggle_repeat(self):
         self.is_repeat_enabled = not self.is_repeat_enabled
         prefs.prefs['repeat'] = self.is_repeat_enabled
@@ -779,42 +756,34 @@ class MainWindow(QMainWindow):
         
         repeat_text = "Toggle Repeat: On" if self.is_repeat_enabled else "Toggle Repeat: Off"
         self.repeat_action.setText(repeat_text)
-        self.status_label.setText(f"Repeat: {'On' if self.is_repeat_enabled else 'Off'}")
+        signal_manager.statusbar_message.emit(f"Repeat: {'On' if self.is_repeat_enabled else 'Off'}")
         
-    @Slot(bool)
     def toggle_explorer(self, checked):
         self.explorer_dock.setVisible(checked)
         
-    @Slot(bool)
     def toggle_player_minimize(self, checked):
         if checked:
             self.player_dock.hide()
         else:
             self.player_dock.show()
             
-    @Slot(bool)
     def toggle_playlists(self, checked):
         self.playlists_dock.setVisible(checked)
         
-    @Slot(bool)
     def update_explorer_menu(self, visible):
         self.show_explorer_action.setChecked(visible)
         
-    @Slot(bool)
     def update_player_menu(self, visible):
         self.minimize_player_action.setChecked(not visible)
         
-    @Slot(bool)
     def update_playlists_menu(self, visible):
         self.show_playlists_action.setChecked(visible)
         
-    @Slot(bool)
     def update_console_menu(self, visible):
 
         if hasattr(self, 'show_console_dock_action'):
             self.show_console_dock_action.setChecked(visible)
 
-    @Slot(bool)
     def toggle_console_dock(self, checked):
         if not hasattr(self, 'debug_console_dock') or self.debug_console_dock is None:
             self.debug_console_dock = DebugConsoleDock(self)
@@ -827,12 +796,10 @@ class MainWindow(QMainWindow):
         else:
             self.debug_console_dock.hide()
 
-    @Slot()
     def open_logs_viewer(self):
         dlg = LogsViewerDialog(self)
         dlg.exec()
         
-    @Slot(int)
     def apply_audio_device(self, device_index):
 
         try:
@@ -855,7 +822,6 @@ class MainWindow(QMainWindow):
         except Exception as e:
             pass
     
-    @Slot()
     def open_preferences(self):
 
         audio_devices = []
@@ -872,15 +838,13 @@ class MainWindow(QMainWindow):
         
         dialog = PreferencesDialog(self, audio_devices, self.apply_audio_device)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.status_label.setText("Preferences saved")
+            signal_manager.statusbar_message.emit("Preferences saved")
             
-    @Slot()
     def open_hotkeys(self):
         dialog = HotkeysDialog(self, reset_callback=self.reset_shortcuts_callback)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.status_label.setText("Hotkeys updated")
+            signal_manager.statusbar_message.emit("Hotkeys updated")
             
-    @Slot()
     def hide_to_tray(self):
         if self.tray_icon:
             self.hide()
@@ -895,7 +859,6 @@ class MainWindow(QMainWindow):
         else:
             self.showMinimized()
             
-    @Slot()
     def toggle_window_visibility(self):
         if self.isVisible() and not self.isMinimized():
             self.hide()
@@ -906,7 +869,6 @@ class MainWindow(QMainWindow):
             self.activateWindow()
             self.show_hide_action.setText("Hide")
             
-    @Slot(QSystemTrayIcon.ActivationReason)
     def tray_icon_activated(self, reason):
         if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
             self.toggle_window_visibility()
@@ -942,7 +904,6 @@ class MainWindow(QMainWindow):
         
         return reply == QMessageBox.StandardButton.Yes
 
-    @Slot()
     def close_application(self):
         if self.has_active_tools():
             if not self.confirm_close_with_active_tools():

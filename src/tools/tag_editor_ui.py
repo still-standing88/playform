@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit,
     QFileDialog, QListWidget, QGridLayout, QMessageBox, QTextEdit
 )
+from utilities import signal_manager
 
 class TagEditorUI(QWidget):
     def __init__(self):
@@ -85,6 +86,8 @@ class TagEditorUI(QWidget):
                 except Exception as e:
                     QMessageBox.warning(self, "Error", f"Could not load {file_path}: {e}")
         self.update_buttons_state()
+        if files:
+            signal_manager.statusbar_message.emit(f"Loaded {len(files)} file(s) for tag editing")
 
     def remove_file(self):
         current_item = self.file_list.currentItem()
@@ -169,8 +172,10 @@ class TagEditorUI(QWidget):
             self.current_file.save()
             self.dirty_flags[self.current_path] = False
             QMessageBox.information(self, "Success", "Tags saved successfully.")
+            signal_manager.statusbar_message.emit(f"Tags saved for {os.path.basename(self.current_path)}")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to save tags: {e}")
+            signal_manager.statusbar_message.emit("Failed to save tags")
 
     def save_all(self):
         try:
@@ -185,8 +190,10 @@ class TagEditorUI(QWidget):
                 QMessageBox.information(self, "Success", "1 file saved.")
             else:
                 QMessageBox.information(self, "Success", f"{len(to_save)} files saved.")
+            signal_manager.statusbar_message.emit(f"Tags saved for {len(to_save)} file(s)")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred while saving all files: {e}")
+            signal_manager.statusbar_message.emit("Failed to save tags")
 
     def update_buttons_state(self):
         has_files = self.file_list.count() > 0

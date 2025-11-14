@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt, QThread, Signal
 from .ffmpeg_handler import FFmpegHandler
 from ffmpeg import FFmpegError, Progress
 from .utils import get_audio_formats_map, get_container_from_format
+from utilities import signal_manager
 
 class FFmpegTaskThread(QThread):
     progress = Signal(Progress)
@@ -171,6 +172,7 @@ class ExtractorUI(QWidget):
 
         ffmpeg.input(input_video, **input_options).output(output_path, **output_options)
         self.run_ffmpeg_task(ffmpeg, "Extracting Audio...")
+        signal_manager.statusbar_message.emit("Starting audio extraction")
 
     def extract_images(self):
         input_video = self.input_path.text()
@@ -202,6 +204,7 @@ class ExtractorUI(QWidget):
             ffmpeg.input(input_video).output(output_pattern, **output_options)
 
         self.run_ffmpeg_task(ffmpeg, "Extracting Images...")
+        signal_manager.statusbar_message.emit("Starting image extraction")
 
     def update_progress(self, progress: Progress):
         if self.progress_dialog:
@@ -221,11 +224,13 @@ class ExtractorUI(QWidget):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
             QMessageBox.information(self, "Success", "Extraction completed successfully.")
+            signal_manager.statusbar_message.emit("Extraction completed successfully")
 
     def on_error(self, message):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
             QMessageBox.critical(self, "Error", f"An error occurred: {message}")
+            signal_manager.statusbar_message.emit("Extraction failed")
 
     def update_action_buttons(self):
         path = self.input_path.text()

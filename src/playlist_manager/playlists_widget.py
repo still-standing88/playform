@@ -10,6 +10,7 @@ import os
 import json
 
 from utilities.functions import get_app_path
+from utilities import signal_manager
 
 
 class PlaylistsWidget(QWidget):
@@ -129,6 +130,7 @@ class PlaylistsWidget(QWidget):
         self.playlist_manager.playlists[name] = playlist
         self.add_playlist_to_list(name)
         self.save_playlists_data()
+        signal_manager.statusbar_message.emit(f"Playlist '{name}' created")
         
         for i in range(self.playlists_list.count()):
             if self.playlists_list.item(i).text() == name:
@@ -164,6 +166,7 @@ class PlaylistsWidget(QWidget):
                         break
                         
         self.save_playlists_data()
+        signal_manager.statusbar_message.emit(f"Playlist '{new_name}' updated")
         
     @Slot(object)
     def on_playlist_selected(self, item):
