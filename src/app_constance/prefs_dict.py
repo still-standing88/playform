@@ -25,5 +25,11 @@ prefs = {
 "youtube_cookies": "",
 "vlc_args": "",
 "yt-dlp_path": os.path.join(get_parent_dir(), "bin"),
+"accessibility_feedback": False,
+"tts_prefer_sapi": False,
+"tts_voice": "",
+"tts_volume": 75,
+"tts_rate": 50,
+"save_urls": False,
 "urlls": []
 }
