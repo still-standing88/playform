@@ -27,6 +27,7 @@ from .hotkeys_dialog import HotkeysDialog
 from .url_dialog import URLDialog
 from utilities.util_gui import menuItem, messageBox
 from utilities.media_utils import get_media_files_from_directory
+from utilities.speech import speech_manager
 from utilities import signal_manager
 from av_play import Playlist, PlaylistEntry, formats
 from tools.batch_converter_ui import BatchConverterUI
@@ -373,7 +374,7 @@ class MainWindow(QMainWindow):
         self.show_tool_button.setVisible(False)
         self.status_bar.addPermanentWidget(self.show_tool_button)
         
-        signal_manager.statusbar_message.connect(self.status_label.setText)
+        signal_manager.statusbar_message.connect(self._update_status_message)
         signal_manager.media_info_message.connect(self.media_info_label.setText)
         
     def setup_dock_widgets(self):
@@ -617,7 +618,13 @@ class MainWindow(QMainWindow):
                 action.setToolTip(file_path)
                 action.triggered.connect(lambda checked=False, path=file_path: self.play_file(path))
                 self.recent_files_menu.addAction(action)
-                
+
+    def _update_status_message(self, message: str):
+        self.status_label.setText(message)
+        
+        if prefs.prefs["accessibility_feedback"]:
+            speech_manager.output(message, prefs.prefs["tts_speech_interrupt"])
+
     def toggle_play_pause(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             try:
