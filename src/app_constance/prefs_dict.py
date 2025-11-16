@@ -26,6 +26,7 @@ prefs = {
 "vlc_args": "",
 "yt-dlp_path": os.path.join(get_parent_dir(), "bin"),
 "accessibility_feedback": False,
+"tts_speech_interrupt": True,
 "tts_prefer_sapi": False,
 "tts_voice": "",
 "tts_volume": 80.0,
