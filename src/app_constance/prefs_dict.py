@@ -28,8 +28,8 @@ prefs = {
 "accessibility_feedback": False,
 "tts_prefer_sapi": False,
 "tts_voice": "",
-"tts_volume": 75,
-"tts_rate": 50,
+"tts_volume": 80.0,
+"tts_rate": 1.0,
 "save_urls": False,
 "urlls": []
 }
