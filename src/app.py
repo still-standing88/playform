@@ -1,5 +1,6 @@
 import os, sys, logging
-import PySide6
+import threading
+#import PySide6
 
 from utilities.functions import get_app_path, get_parent_dir, get_restart_flag, set_restart_flag, restart_app
 
@@ -26,9 +27,10 @@ import av_play
 import app_config
 import app_db
 
-from app_config import key_config
+from app_config import key_config, load_speech_config
 from app_constance.styles import get_dark_palette
 from gui.main_window import MainWindow
+from utilities.speech import speech_manager
 
 
 def setup_application_style(app: QApplication):
@@ -75,6 +77,8 @@ def main():
         import locale
         locale.setlocale(locale.LC_NUMERIC, 'C')
         key_config.load_keys()
+        threading.Thread(target=speech_manager.init, daemon=True).start()
+        load_speech_config()
 
         window = MainWindow()
         cli_args_msg:app_guard.IPCMsg = app_instance.create_ipc_msg("cli-args",
