@@ -20,17 +20,27 @@ class AccessibilityPanel(QWidget):
         self.enable_speech_check.toggled.connect(self.on_speech_toggled)
         speech_layout.addRow(self.enable_speech_check)
         
-        if sys.platform == "win32":
-            self.prefer_sapi_check = QCheckBox("Use SAPI instead of screen reader")
-            self.prefer_sapi_check.setToolTip("Use Windows SAPI for speech output instead of screen reader")
-            self.prefer_sapi_check.toggled.connect(self.on_prefer_sapi_toggled)
-            speech_layout.addRow(self.prefer_sapi_check)
-            
+        # if sys.platform == "win32":
+        #     self.prefer_sapi_check = QCheckBox("Use SAPI instead of screen reader")
+        #     self.prefer_sapi_check.setToolTip("Use Windows SAPI for speech output instead of screen reader")
+        #     self.prefer_sapi_check.toggled.connect(self.on_prefer_sapi_toggled)
+        #     speech_layout.addRow(self.prefer_sapi_check)
+        #     
+        #     self.voice_settings_btn = QPushButton("Voice Settings")
+        #     self.voice_settings_btn.clicked.connect(self.open_voice_settings)
+        #     speech_layout.addRow("Configure Voice:", self.voice_settings_btn)
+        # else:
+        #     self.prefer_sapi_check = None
+        #     self.voice_settings_btn = QPushButton("Voice Settings")
+        #     self.voice_settings_btn.clicked.connect(self.open_voice_settings)
+        #     speech_layout.addRow("Configure Voice:", self.voice_settings_btn)
+        
+        self.prefer_sapi_check = None
+        if sys.platform != "win32":
             self.voice_settings_btn = QPushButton("Voice Settings")
             self.voice_settings_btn.clicked.connect(self.open_voice_settings)
             speech_layout.addRow("Configure Voice:", self.voice_settings_btn)
         else:
-            self.prefer_sapi_check = None
             self.voice_settings_btn = None
             
         self.interrupt_check = QCheckBox("Interrupt previous speech")
@@ -40,23 +50,23 @@ class AccessibilityPanel(QWidget):
         layout.addStretch()
         
     def on_speech_toggled(self, checked):
-        if self.prefer_sapi_check:
-            self.prefer_sapi_check.setEnabled(checked)
+        # if self.prefer_sapi_check:
+        #     self.prefer_sapi_check.setEnabled(checked)
         if self.voice_settings_btn:
-            self.voice_settings_btn.setVisible(False)
+            self.voice_settings_btn.setEnabled(checked)
         self.interrupt_check.setEnabled(checked)
         
-    def on_prefer_sapi_toggled(self, checked):
-        if sys.platform == "win32":
-            if self.voice_settings_btn:
-                self.voice_settings_btn.setVisible(checked)
-            try:
-                from app_config import prefs
-                prefs.prefs["tts_prefer_sapi"] = checked
-                speech_manager.prefer_sapi(checked)
-                speech_manager.detect_driver()
-            except:
-                pass
+    # def on_prefer_sapi_toggled(self, checked):
+    #     if sys.platform == "win32":
+    #         if self.voice_settings_btn:
+    #             self.voice_settings_btn.setVisible(checked)
+    #         try:
+    #             from app_config import prefs
+    #             prefs.prefs["tts_prefer_sapi"] = checked
+    #             speech_manager.prefer_sapi(checked)
+    #             speech_manager.detect_driver()
+    #         except:
+    #             pass
                 
     def open_voice_settings(self):
         dialog = VoiceSettingsDialog(self)
@@ -79,10 +89,10 @@ class AccessibilityPanel(QWidget):
     def load_settings(self, prefs):
         self.enable_speech_check.setChecked(prefs["accessibility_feedback"])
         
-        if self.prefer_sapi_check and sys.platform == "win32":
-            self.prefer_sapi_check.setChecked(prefs["tts_prefer_sapi"])
-            if self.voice_settings_btn:
-                self.voice_settings_btn.setVisible(prefs["tts_prefer_sapi"])
+        # if self.prefer_sapi_check and sys.platform == "win32":
+        #     self.prefer_sapi_check.setChecked(prefs["tts_prefer_sapi"])
+        #     if self.voice_settings_btn:
+        #         self.voice_settings_btn.setVisible(prefs["tts_prefer_sapi"])
             
         self.interrupt_check.setChecked(prefs["tts_speech_interrupt"])
         
@@ -91,7 +101,7 @@ class AccessibilityPanel(QWidget):
     def save_settings(self, prefs):
         prefs["accessibility_feedback"] = self.enable_speech_check.isChecked()
         
-        if self.prefer_sapi_check and sys.platform == "win32":
-            prefs["tts_prefer_sapi"] = self.prefer_sapi_check.isChecked()
+        # if self.prefer_sapi_check and sys.platform == "win32":
+        #     prefs["tts_prefer_sapi"] = self.prefer_sapi_check.isChecked()
             
         prefs["tts_speech_interrupt"] = self.interrupt_check.isChecked()

@@ -1,4 +1,5 @@
 import os
+import platform
 import sys
 import app_guard
 
@@ -623,6 +624,10 @@ class MainWindow(QMainWindow):
         self.status_label.setText(message)
         
         if prefs.prefs["accessibility_feedback"]:
+            # The following is a conditional check to disable Sapi onWindows until a solution is fodun for GUI freezing when Sapi speaks.
+            if  sys.platform == "win32" and speech_manager.current_driver() == "Sapi5":
+                pass
+
             speech_manager.output(message, prefs.prefs["tts_speech_interrupt"])
 
     def toggle_play_pause(self):
