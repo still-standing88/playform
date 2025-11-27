@@ -121,6 +121,85 @@ SECTION_LABEL_STYLE = "font-weight: bold; font-size: 14px;"
 def get_repeat_button_active_style(base_style):
     return base_style + f"QPushButton {{ background-color: {COLORS['button_repeat_active']}; }}"
 
+RADIO_GROUP_BOX_STYLE = """
+    QGroupBox {
+        font-weight: bold;
+        border: 2px solid #555;
+        border-radius: 5px;
+        margin-top: 10px;
+        padding-top: 10px;
+    }
+    QGroupBox::title {
+        subcontrol-origin: margin;
+        left: 10px;
+        padding: 0 5px;
+    }
+"""
+
+RADIO_TREE_STYLE = """
+    QTreeWidget {
+        alternate-row-colors: true;
+        selection-background-color: #2980b9;
+    }
+    QTreeWidget::item {
+        padding: 5px;
+    }
+    QTreeWidget::item:hover {
+        background-color: #34495e;
+    }
+"""
+
+RADIO_COMBO_STYLE = """
+    QComboBox {
+        padding: 5px;
+        border: 1px solid #555;
+        border-radius: 3px;
+    }
+    QComboBox::drop-down {
+        border: none;
+    }
+    QComboBox::down-arrow {
+        image: none;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 6px solid #aaa;
+        margin-right: 5px;
+    }
+"""
+
+RADIO_LINE_EDIT_STYLE = """
+    QLineEdit {
+        padding: 5px;
+        border: 1px solid #555;
+        border-radius: 3px;
+        background-color: #2a2a2a;
+    }
+    QLineEdit:focus {
+        border: 1px solid #2980b9;
+    }
+"""
+
+RADIO_BUTTON_STYLE = """
+    QPushButton {
+        background-color: #3498db;
+        border: none;
+        border-radius: 4px;
+        color: white;
+        padding: 6px 12px;
+        font-weight: bold;
+    }
+    QPushButton:hover {
+        background-color: #2980b9;
+    }
+    QPushButton:pressed {
+        background-color: #21618c;
+    }
+    QPushButton:disabled {
+        background-color: #7f8c8d;
+        color: #bdc3c7;
+    }
+"""
+
 def get_dark_palette():
     dark_palette = QPalette()
     dark_palette.setColor(QPalette.ColorRole.Window, APP_PALETTE_COLORS['window'])
