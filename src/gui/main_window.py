@@ -35,6 +35,8 @@ from tools.batch_converter_ui import BatchConverterUI
 from tools.extractor_ui import ExtractorUI
 from tools.tag_editor_ui import TagEditorUI
 from tools.thumbnail_generator_ui import ThumbnailGeneratorUI
+from tools.subtitle_converter_ui import SubtitleConverterUI
+from tools.subtitle_editor_ui import SubtitleEditorUI
 from gui_controls.key_event_filter import ShortcutManager
 from app_config import key_config
 from app_constance.file_filter import file_filter
@@ -317,6 +319,15 @@ class MainWindow(QMainWindow):
         self.thumbnail_generator_action = QAction("&Thumbnail Generator", self)
         self.thumbnail_generator_action.triggered.connect(self.open_thumbnail_generator)
         self.tools_menu.addAction(self.thumbnail_generator_action)
+
+        self.subtitle_tools_menu = self.tools_menu.addMenu("&Subtitle Tools")
+        self.subtitle_converter_action = QAction("Subtitle &Converter", self)
+        self.subtitle_converter_action.triggered.connect(self.open_subtitle_converter)
+        self.subtitle_tools_menu.addAction(self.subtitle_converter_action)
+        
+        self.subtitle_editor_action = QAction("Subtitle &Editor", self)
+        self.subtitle_editor_action.triggered.connect(self.open_subtitle_editor)
+        self.subtitle_tools_menu.addAction(self.subtitle_editor_action)
 
         self.debug_menu = self.tools_menu.addMenu("&Debug")
         self.view_logs_action = QAction("&View Logs…", self)
@@ -710,6 +721,12 @@ class MainWindow(QMainWindow):
         
     def open_thumbnail_generator(self):
         self.open_tool_dialog("thumbnail_generator", ThumbnailGeneratorUI(), "Thumbnail Generator")
+    
+    def open_subtitle_converter(self):
+        self.open_tool_dialog("subtitle_converter", SubtitleConverterUI(), "Subtitle Converter")
+    
+    def open_subtitle_editor(self):
+        self.open_tool_dialog("subtitle_editor", SubtitleEditorUI(), "Subtitle Editor")
         
     def open_tool_dialog(self, tool_name, tool_widget, title):
 
