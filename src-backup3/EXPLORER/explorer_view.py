@@ -1,0 +1,255 @@
+from genericpath import isfile
+import os
+
+from typing import Optional, Callable
+from PySide6.QtGui import QKeyEvent, QKeySequence
+from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel
+from PySide6.QtCore import Qt as qt, QTimer
+from av_play import AVMediaInstance, mpv_video_player, AVPlaybackState
+import av_play
+
+from app_config import prefs
+from gui_controls.key_event_filter import ShortcutManager
+from app_config import key_config
+from utilities.functions import copyText
+from utilities.util_gui import menuItem, contextMenu
+from .explorer import Explorer, PathInfo, PathType
+
+
+class ExplorerView(QListWidget):
+
+    @staticmethod
+    def set_last_path(path):
+        prefs.prefs["last_path"] = path
+        prefs.save()
+
+
+    def __init__(self, explorer:Explorer, player:mpv_video_player.MPVVideoPlayer, **kw):
+        self._callbacks = kw
+        self._just_launched = True
+        self._current_media:Optional[str] = None
+        self._focused_item_path:Optional[str] = None
+        self._player = player
+        self._instance:Optional[AVMediaInstance] = None
+        self._explorer = explorer
+        
+        self._media_load_timer = QTimer()
+        self._media_load_timer.setSingleShot(True)
+        self._media_load_timer.timeout.connect(self._delayed_media_load)
+        self._pending_media_path:Optional[str] = None
+
+        super().__init__(kw.get("parent", None))
+        self.currentItemChanged.connect(self.onItemChange)
+        self.itemClicked.connect(self.onItemActivate)
+        self.itemActivated.connect(self.onItemActivate)
+        contextMenu(self, self.context_menu)
+
+        self._shortcut_manager:ShortcutManager = ShortcutManager(self)
+        self.set_shortcuts()
+
+        last_path = prefs.prefs["last_path"]
+        if last_path != "" and os.path.exists(last_path):
+            self.change_path(last_path)
+        else:
+            self.change_path(self._explorer.default_path)
+
+
+    def set_shortcuts(self):
+        hotkeys = key_config.key_config["Explorer"]
+        shortcuts:dict[str, Callable] = {
+        hotkeys["Play/Pause"]: self.media_play_pause,
+        hotkeys["Stop"]: self.media_stop,
+        hotkeys["Forward"]: self.media_forward,
+        hotkeys["Backward"]: self.media_backward,
+        }
+
+        self._shortcut_manager.clear_shortcuts()
+        for shortcut in shortcuts:
+            self._shortcut_manager.add_widget_shortcut(self, shortcut, shortcuts[shortcut])
+        self.install_shortcuts()
+
+    def reset_shortcuts(self):
+        self.set_shortcuts()
+    
+    def install_shortcuts(self):
+        self._shortcut_manager.install_on_application()
+    
+    def uninstall_shortcuts(self):
+        self._shortcut_manager.uninstall_from_application()
+
+    def open_file(self):
+        self._execute_callback("open_callback", self._focused_item_path) # type: ignore
+
+    def open_new_tab(self):
+        self._execute_callback("open_new_callback", self._focused_item_path) # type: ignore
+
+    def add_to_favorites(self):
+        self._execute_callback("favorites_callback", self._focused_item_path) # type: ignore
+
+    def update_path(self):
+        self._execute_callback("path_change_callback", with_param=False)
+
+    def add_to_playlist(self):
+        self._execute_callback("playlist_callback", self._focused_item_path) # type: ignore
+
+    def create_playlist_from_folder(self):
+        self._execute_callback("create_playlist_callback", self._focused_item_path) # type: ignore
+
+    def add_to_library(self):
+        self._execute_callback("library_callback", self._focused_item_path) # type: ignore
+
+    def copy_path(self):
+        copyText(self._focused_item_path)
+
+    def _delayed_media_load(self):
+        if self._pending_media_path and self._pending_media_path != self._current_media:
+            self._current_media = self._pending_media_path
+            
+            if self._instance is None:
+                self._instance = self._player.create_file_instance(self._pending_media_path)
+            else:
+                self._instance.load_file(self._pending_media_path)
+            self._instance.stop()
+            if not self._just_launched and prefs.prefs["autoplay"]:
+                self._instance.play()
+        self._pending_media_path = None
+
+    def change_path(self, path:str):
+        self._explorer.set_current_path(path)
+        self.relist_contents()
+        self.update_path()
+        self.set_last_path(self._explorer.current_path)
+
+    def forward(self):
+        if self._focused_item_path is not None:
+            self._explorer.forward(self._focused_item_path)
+            self.relist_contents()
+            self.update_path()
+            self.set_last_path(self._explorer.current_path)
+
+    def backward(self):
+        item_name = os.path.basename(self._explorer.current_path)
+        self._explorer.backward()
+        self.relist_contents()
+        self.update_path()
+        if item_name in self._explorer.items:
+            self.setCurrentItem(self.findItems(item_name, qt.MatchFlag.MatchExactly)[0])
+        self.set_last_path(self._explorer.current_path)        
+
+    def onItemActivate(self):
+        if self._focused_item_path is not None:
+            if os.path.isfile(self._focused_item_path):
+                self.open_file()
+            elif os.path.isdir(self._focused_item_path):
+                self.forward()
+
+    def relist_contents(self):
+        self.clear()
+        self.list_contents()
+
+    def list_contents(self):
+        self.addItems(self._explorer.folders+ self._explorer.files)
+
+
+    def media_play_pause(self):
+        if self._instance is not None:
+            state:AVPlaybackState = self._instance.get_playback_state()
+            if state == AVPlaybackState.AV_STATE_PLAYING:
+                self._instance.pause()
+            else:
+                self._instance.play()
+
+
+    def media_backward(self):
+        if self._instance is not None:
+            self._instance.set_position(self._instance.get_position() - prefs.prefs["offset"]["seek"])
+
+    def media_forward(self):
+        if self._instance is not None:
+            self._instance.set_position(self._instance.get_position() + prefs.prefs["offset"]["seek"])
+
+    def media_stop(self):
+        if self._instance is not None:
+            self._instance.stop()
+
+
+    def set_item_info(self):
+        if self.currentItem() is None: return
+        current_item = self.currentItem().text()
+        item_info:Optional[PathInfo] = self._explorer.items.get(current_item, None)
+        info = f"Type extension: {item_info.info.ext}\rDate modified: {item_info.info.modify_date}{"\rsize: " + item_info.info.size if item_info.type == PathType.FILE else ""}" # type: ignore
+#        position = self.viewport().mapToGlobal(self.visualItemRect(self.currentItem()).bottomLeft())
+#        if hasattr(self,"tooltip")==True: del self.tooltip
+#        self.tooltip = tooltip(self.info,position,3,self,self.parent)
+        infoText  = QLabel(info,self)
+        infoText.adjustSize()
+        self.setItemWidget(self.currentItem(),infoText)
+        infoText.setMinimumHeight(50)
+        infoText.setMinimumWidth(200)
+        self.currentItem().setSizeHint(infoText.sizeHint())
+        self.currentItem().setData(qt.ItemDataRole.AccessibleDescriptionRole,f", {info}")
+
+    def _execute_callback(self, callback_name:str, param:str = "", with_param :bool = True):
+        callback:Optional[Callable[[str], None]] = self._callbacks.get(callback_name, None)
+        if callback is not None:
+            if with_param:
+                callback(param)
+            else:
+                callback()
+
+    def context_menu(self, event):
+        if self.currentItem() is None: return
+        item = self.currentItem().text()
+        item_info:Optional[PathInfo] = self._explorer.items.get(item, None)
+        menu = QMenu()
+
+        if item_info.type == PathType.FOLDER: # type: ignore
+            menuItem(menu, 'navigate to folder', self.forward, self)
+        elif item_info.type == PathType.FILE: # type: ignore
+                menuItem(menu, 'Open', self.open_file, self)
+                #menuItem(menu, 'Open ina  new tab', self.open_new_tab, self)
+
+                menuItem(menu,"copy path",self.copy_path,self)
+
+        if item_info.type == PathType.FOLDER: # type: ignore
+            menuItem(menu, 'Add to library', self.add_to_library, self)
+            menuItem(menu, 'Create playlist from folder', self.create_playlist_from_folder, self)
+        elif item_info.type == PathType.FILE: # type: ignore
+                menuItem(menu, 'Add to playlist', self.add_to_playlist, self)
+                menuItem(menu, 'Add to favorites', self.add_to_favorites, self)
+        #menuItem(menu, 'add current path to library', self.addLibrary, self)
+
+        menu.exec()
+
+
+    def onItemChange(self, c, p):
+        if p is not None:
+            p.setData(qt.ItemDataRole.AccessibleDescriptionRole, "")
+            self.removeItemWidget(p)
+
+        if c is None: return
+
+        item_name = c.text()
+        item_info:Optional[PathInfo] = self._explorer.items.get(item_name, None)
+        
+        if item_info is None: return
+        
+        if self._explorer.current_path == "drives":
+            self._focused_item_path = self._explorer.items[item_name].path
+        else:
+            self._focused_item_path = os.path.join(self._explorer.current_path, item_name)
+        
+        self.set_item_info()
+
+        if item_info.type == PathType.FILE and self._focused_item_path is not None:
+            self._media_load_timer.stop()
+            self._pending_media_path = self._focused_item_path
+            self._media_load_timer.start(300)
+
+        if self._just_launched: self._just_launched = False
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == qt.Key.Key_Backspace:
+            self.backward()
+        else:
+            super().keyPressEvent(event)
