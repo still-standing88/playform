@@ -45,6 +45,7 @@ from tools.debug_console_dock import DebugConsoleDock
 from media_providers.radio import RadioBrowserWidget
 from media_providers.podcasts.feed_widget import FeedWidget
 from app_constance.styles import SECTION_LABEL_STYLE
+from data.session import dock_session
 
 
 
@@ -94,6 +95,7 @@ class MainWindow(QMainWindow):
         self.setup_toolbar()
         self.setup_statusbar()
         self.setup_dock_widgets()
+        self.restore_dock_session()
         self.setup_main_layout()
         self.setup_system_tray()
         self.connect_signals()
@@ -923,6 +925,52 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'status_bar') and self.status_bar.isVisible():
             self.focusable_widgets.append(self.status_bar)
     
+    def save_dock_session(self):
+        dock_states = {
+            'recents_favorites': self.recents_favorites_dock.isVisible(),
+            'explorer': self.explorer_dock.isVisible(),
+            'player': self.player_dock.isVisible(),
+            'playlists': self.playlists_dock.isVisible(),
+            'radio': self.radio_dock.isVisible() if self.radio_dock else False,
+            'podcast': self.podcast_dock.isVisible() if self.podcast_dock else False,
+            'debug_console': self.debug_console_dock.isVisible() if hasattr(self, 'debug_console_dock') else False
+        }
+        dock_session.save_session(dock_states)
+    
+    def restore_dock_session(self):
+        dock_states = dock_session.load_session()
+        
+        self.recents_favorites_dock.setVisible(dock_states.get('recents_favorites', True))
+        self.show_recents_favorites_action.setChecked(dock_states.get('recents_favorites', True))
+        
+        self.explorer_dock.setVisible(dock_states.get('explorer', False))
+        self.show_explorer_action.setChecked(dock_states.get('explorer', False))
+        
+        self.player_dock.setVisible(dock_states.get('player', True))
+        self.minimize_player_action.setChecked(not dock_states.get('player', True))
+        
+        self.playlists_dock.setVisible(dock_states.get('playlists', False))
+        self.show_playlists_action.setChecked(dock_states.get('playlists', False))
+        
+        if dock_states.get('radio', False):
+            self._create_radio_dock()
+            self.radio_dock.setVisible(True)
+            if hasattr(self, 'show_radio_action'):
+                self.show_radio_action.setChecked(True)
+        
+        if dock_states.get('podcast', False):
+            self._create_podcast_dock()
+            self.podcast_dock.setVisible(True)
+            if hasattr(self, 'show_podcast_action'):
+                self.show_podcast_action.setChecked(True)
+        
+        if dock_states.get('debug_console', False) and hasattr(self, 'debug_console_dock'):
+            self.debug_console_dock.setVisible(True)
+            if hasattr(self, 'show_console_dock_action'):
+                self.show_console_dock_action.setChecked(True)
+        
+        self._update_focusable_widgets()
+    
     def focus_next_widget(self):
         self._update_focusable_widgets()
         if not self.focusable_widgets:
@@ -1106,6 +1154,8 @@ class MainWindow(QMainWindow):
             if not self.confirm_close_with_active_tools():
                 event.ignore()
                 return
+        
+        self.save_dock_session()
         
         if self.radio_widget and hasattr(self.radio_widget, 'closeEvent'):
             self.radio_widget.closeEvent(event)

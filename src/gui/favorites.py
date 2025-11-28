@@ -76,7 +76,7 @@ class FavoritesWidget(QListWidget):
                 self.clear()
                 self.path_mapping.clear()
             except Exception as e:
-                messageBox("Error", f"Failed to clear favorites: {e}")
+                                messageBox("Error", f"Failed to clear favorites: {e}")
     
     def show_context_menu(self, position):
         menu = QMenu(self)

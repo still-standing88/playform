@@ -19,9 +19,6 @@ class RecentsWidget(QListWidget):
         self.setAlternatingRowColors(True)
         self.setDragDropMode(QListWidget.DragDropMode.NoDragDrop)
         
-        contextMenu(self, self.show_context_menu)
-        self.itemDoubleClicked.connect(self.on_item_activated)
-        self.itemActivated.connect(self.on_item_activated)
         self.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self.setToolTip("Double-click or press Enter on a file to open it")
         
