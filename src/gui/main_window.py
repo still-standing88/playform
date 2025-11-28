@@ -46,6 +46,10 @@ from media_providers.radio import RadioBrowserWidget
 from media_providers.podcasts.feed_widget import FeedWidget
 from app_constance.styles import SECTION_LABEL_STYLE
 from data.session import dock_session
+from data.toolbar_config import toolbar_config
+from .toolbar_customize_dialog import ToolbarCustomizeDialog
+from data.toolbar_config import toolbar_config
+from .toolbar_customize_dialog import ToolbarCustomizeDialog
 
 
 
@@ -72,6 +76,7 @@ class MainWindow(QMainWindow):
         
         self.focusable_widgets = []
         self.current_focus_index = -1
+        self.tool_actions_map = {}
         
         self.global_hotkeys = {
             "Play/Pause": self.toggle_play_pause,
@@ -384,6 +389,8 @@ class MainWindow(QMainWindow):
         self.toolbar = QToolBar("Main Toolbar")
         self.toolbar.setObjectName("mainToolbar")
         self.toolbar.setMovable(False)
+        self.toolbar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.toolbar.customContextMenuRequested.connect(self.show_toolbar_context_menu)
         self.addToolBar(self.toolbar)
         
         self.toolbar.addAction(self.open_file_action)
@@ -396,6 +403,52 @@ class MainWindow(QMainWindow):
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.previous_action)
         self.toolbar.addAction(self.next_action)
+        
+        self.toolbar.addSeparator()
+        self.load_toolbar_tools()
+    
+    def show_toolbar_context_menu(self, pos):
+        menu = QMenu(self)
+        customize_action = QAction("Customize Toolbar...", self)
+        customize_action.triggered.connect(self.open_toolbar_customize_dialog)
+        menu.addAction(customize_action)
+        menu.exec(self.toolbar.mapToGlobal(pos))
+    
+    def open_toolbar_customize_dialog(self):
+        available_tools = toolbar_config.get_available_tools()
+        selected_tools = toolbar_config.load_config()
+        
+        dialog = ToolbarCustomizeDialog(available_tools, selected_tools, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            new_tools = dialog.get_selected_tools()
+            toolbar_config.save_config(new_tools)
+            self.update_toolbar_tools()
+    
+    def load_toolbar_tools(self):
+        selected_tools = toolbar_config.load_config()
+        self.tool_actions_map = {
+            'batch_converter': self.batch_converter_action,
+            'extractor': self.extractor_action,
+            'tag_editor': self.tag_editor_action,
+            'thumbnail_generator': self.thumbnail_generator_action,
+            'subtitle_converter': self.subtitle_converter_action,
+            'subtitle_editor': self.subtitle_editor_action
+        }
+        
+        for tool_id in selected_tools:
+            if tool_id in self.tool_actions_map:
+                self.toolbar.addAction(self.tool_actions_map[tool_id])
+    
+    def update_toolbar_tools(self):
+        actions = self.toolbar.actions()
+        for action in actions:
+            if action in self.tool_actions_map.values():
+                self.toolbar.removeAction(action)
+        
+        selected_tools = toolbar_config.load_config()
+        for tool_id in selected_tools:
+            if tool_id in self.tool_actions_map:
+                self.toolbar.addAction(self.tool_actions_map[tool_id])
         
     def setup_statusbar(self):
         self.status_bar = QStatusBar()
