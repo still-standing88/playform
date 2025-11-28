@@ -21,9 +21,8 @@ from player.player_widget import PlayerWidget
 from playlist_manager.playlists_widget import PlaylistsWidget
 from playlist_manager.playlist_selection_dialog import PlaylistSelectionDialog
 from playlist_manager.playlist_create_dialog import PlaylistCreateDialog
-from .favorites import FavoritesWidget
-from .recents import RecentsWidget
-from .prefs_dialog import PreferencesDialog
+from .recents_and_favorites import RecentsAndFavoritesWidget
+from .prefs_panels import PreferencesDialog
 from .hotkeys_dialog import HotkeysDialog
 from .url_dialog import URLDialog
 from utilities.util_gui import menuItem, messageBox
@@ -178,10 +177,8 @@ class MainWindow(QMainWindow):
         self.main_splitter.setObjectName("mainSplitter")
         self.main_layout.addWidget(self.main_splitter)
         
-        self.favorites_widget = FavoritesWidget(self.user_db)
-        self.favorites_widget.setObjectName("favoritesWidget")
-        self.recents_widget = RecentsWidget(self.user_db)
-        self.recents_widget.setObjectName("recentsWidget")
+        self.recents_and_favorites_widget = RecentsAndFavoritesWidget(self.user_db)
+        self.recents_and_favorites_widget.setObjectName("recentsAndFavoritesWidget")
         
         self.explorer_widget = ExplorerWidget(
             self.user_db,
@@ -298,6 +295,12 @@ class MainWindow(QMainWindow):
         self.media_menu.addAction(self.repeat_action)
         
     def setup_view_menu(self):
+        self.show_recents_favorites_action = QAction("Show &Recents/Favorites", self)
+        self.show_recents_favorites_action.setCheckable(True)
+        self.show_recents_favorites_action.setChecked(True)
+        self.show_recents_favorites_action.triggered.connect(self.toggle_recents_favorites)
+        self.view_menu.addAction(self.show_recents_favorites_action)
+        
         self.show_explorer_action = QAction("Show &Explorer", self)
         self.show_explorer_action.setCheckable(True)
         self.show_explorer_action.setChecked(False)
@@ -311,7 +314,7 @@ class MainWindow(QMainWindow):
         
         self.show_playlists_action = QAction("Show &Playlists", self)
         self.show_playlists_action.setCheckable(True)
-        self.show_playlists_action.setChecked(True)
+        self.show_playlists_action.setChecked(False)
         self.show_playlists_action.triggered.connect(self.toggle_playlists)
         self.view_menu.addAction(self.show_playlists_action)
         
@@ -416,6 +419,14 @@ class MainWindow(QMainWindow):
         signal_manager.media_info_message.connect(self.media_info_label.setText)
         
     def setup_dock_widgets(self):
+        self.recents_favorites_dock = QDockWidget("Recents & Favorites", self)
+        self.recents_favorites_dock.setObjectName("recentsFavoritesDock")
+        self.recents_favorites_dock.setWidget(self.recents_and_favorites_widget)
+        self.recents_favorites_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+        self.recents_favorites_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.recents_favorites_dock.visibilityChanged.connect(self.update_recents_favorites_menu)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.recents_favorites_dock)
+        
         self.explorer_dock = QDockWidget("Explorer", self)
         self.explorer_dock.setObjectName("explorerDock")
         self.explorer_dock.setWidget(self.explorer_widget)
@@ -438,6 +449,7 @@ class MainWindow(QMainWindow):
         self.playlists_dock.setWidget(self.playlists_widget)
         self.playlists_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
         self.playlists_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.playlists_dock.setVisible(False)
         self.playlists_dock.visibilityChanged.connect(self.update_playlists_menu)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.playlists_dock)
 
@@ -451,25 +463,7 @@ class MainWindow(QMainWindow):
         self._update_focusable_widgets()
         
     def setup_main_layout(self):
-        left_panel = QWidget()
-        left_panel.setObjectName("leftPanel")
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.setContentsMargins(5, 5, 5, 5)
-        
-        favorites_label = QLabel("Favorites")
-        favorites_label.setObjectName("favoritesLabel")
-        favorites_label.setStyleSheet(SECTION_LABEL_STYLE)
-        left_layout.addWidget(favorites_label)
-        left_layout.addWidget(self.favorites_widget, 1)
-        
-        recents_label = QLabel("Recent Files")
-        recents_label.setObjectName("recentsLabel")
-        recents_label.setStyleSheet(SECTION_LABEL_STYLE)
-        left_layout.addWidget(recents_label)
-        left_layout.addWidget(self.recents_widget, 1)
-        
-        self.main_splitter.addWidget(left_panel)
-        self.main_splitter.setSizes([300, 1100])
+        pass
         
     def setup_system_tray(self):
         if QSystemTrayIcon.isSystemTrayAvailable():
@@ -495,8 +489,7 @@ class MainWindow(QMainWindow):
             self.tray_icon = None
             
     def connect_signals(self):
-        self.favorites_widget.itemRequested.connect(self.play_file)
-        self.recents_widget.itemRequested.connect(self.play_file)
+        self.recents_and_favorites_widget.itemRequested.connect(self.play_file)
 
         self.urlOpened.connect(self.player_widget.change_path)
         self.fileOpened.connect(self.player_widget.change_path)
@@ -558,10 +551,10 @@ class MainWindow(QMainWindow):
         self.urlOpened.emit(url)
         
     def add_to_favorites(self, file_path: str):
-        self.favorites_widget.add_favorite(file_path)
+        self.recents_and_favorites_widget.add_favorite(file_path)
         
     def add_to_recents(self, file_path: str):
-        self.recents_widget.add_recent(file_path)
+        self.recents_and_favorites_widget.add_recent(file_path)
         
     def add_to_playlist(self, file_path: str):
 
@@ -648,7 +641,7 @@ class MainWindow(QMainWindow):
         
     def update_recent_files_menu(self):
         self.recent_files_menu.clear()
-        recent_files = self.recents_widget.get_recent_files_list()
+        recent_files = self.recents_and_favorites_widget.get_recent_files_list()
         
         if not recent_files:
             no_recent_action = QAction("No recent files", self)
@@ -817,6 +810,11 @@ class MainWindow(QMainWindow):
         self.repeat_action.setText(repeat_text)
         signal_manager.statusbar_message.emit(f"Repeat: {'On' if self.is_repeat_enabled else 'Off'}")
         
+    def toggle_recents_favorites(self, checked):
+        self.recents_favorites_dock.setVisible(checked)
+        if checked:
+            self.recents_and_favorites_widget.setFocus()
+    
     def toggle_explorer(self, checked):
         self.explorer_dock.setVisible(checked)
         if checked:
@@ -874,6 +872,10 @@ class MainWindow(QMainWindow):
             self.podcast_dock.visibilityChanged.connect(self.update_podcast_menu)
             self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.podcast_dock)
         
+    def update_recents_favorites_menu(self, visible):
+        self.show_recents_favorites_action.setChecked(visible)
+        self._update_focusable_widgets()
+    
     def update_explorer_menu(self, visible):
         self.show_explorer_action.setChecked(visible)
         self._update_focusable_widgets()
@@ -903,6 +905,7 @@ class MainWindow(QMainWindow):
             self.focusable_widgets.append(self.toolbar)
         
         dock_widgets = [
+            (self.recents_favorites_dock, self.recents_and_favorites_widget),
             (self.explorer_dock, self.explorer_widget),
             (self.player_dock, self.player_widget),
             (self.playlists_dock, self.playlists_widget),
