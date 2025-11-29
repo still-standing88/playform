@@ -1,3 +1,0 @@
-import prefs
-
-prefs.initialize

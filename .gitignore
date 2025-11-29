@@ -1,10 +1,15 @@
 bin/
 lib/
 data/
+cache/
 logs/
 Screenshots/
 docs/
 __pycache__/
 venv/
+tst/
+test/
+.kilocode/
+archive/
 
 *.pyc
