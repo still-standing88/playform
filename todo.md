@@ -13,7 +13,7 @@ The following outlines the final roadmap and features to be implemented before r
 - [x] Implement timeline system for bookmarks and repeat-loop navigation/marking.
 - [ ] Add thumbnail generation per file using `ffmpeg`, with local caching.
   - [ ] Include preference toggle to enable/disable caching.
-- [ ] Add subtitle tools via `pysubs2`.
+- [x] Add subtitle tools via `pysubs2`.
 - [ ] Add media data viewer (codec, bitrate, resolution, etc.) for both local files and URL streams.
 - [ ] Show YouTube video/playlist info (via `yt-dlp` JSON output).
 - [ ] Add YouTube video/playlist downloader using `yt-dlp`.
@@ -21,15 +21,15 @@ The following outlines the final roadmap and features to be implemented before r
 
 ## 🌐 Internet / Stream Features
 
-- [ ] Integrate podcast and radio modules:
-  - [ ] Either separate sub-windows
+- [x] Integrate podcast and radio modules:
+  - [x] Either separate sub-windows
   - [ ] Or a single window with tabbed interface.
 - [ ] Add check for `yt-dlp` presence in URL dialog.
   - [ ] Warn user or block unsupported URLs if missing.
 
 ## 🧰 Tools & Utilities
 
-- [ ] Add view logging under Tools → Logs.
+- [x] Add view logging under Tools → Logs.
 - [ ] Create downloader manager (single queue) for:
   - [ ] Updates
   - [ ] Tools
