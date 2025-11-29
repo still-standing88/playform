@@ -49,7 +49,7 @@ from utilities.session import dock_session
 from data.toolbar_config import toolbar_config
 from .toolbar_customize_dialog import ToolbarCustomizeDialog
 
-# Import Managers
+
 from .managers.menu_manager import MenuManager
 from .managers.toolbar_manager import ToolbarManager
 from .managers.dock_manager import DockManager
@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
         self.podcast_widget = None
         self.podcast_dock = None
         
-        # UI Elements initialized by Managers
+
         self.explorer_dock: Optional[QDockWidget] = None
         self.player_dock: Optional[QDockWidget] = None
         self.playlists_dock: Optional[QDockWidget] = None
@@ -117,7 +117,7 @@ class MainWindow(QMainWindow):
         
         self._shortcut_manager = ShortcutManager(self)
         
-        # Initialize Managers
+
         self.menu_manager = MenuManager(self)
         self.toolbar_manager = ToolbarManager(self)
         self.dock_manager = DockManager(self)
@@ -430,7 +430,7 @@ class MainWindow(QMainWindow):
         self.status_label.setText(message)
         
         if prefs.prefs["accessibility_feedback"]:
-            # The following is a conditional check to disable Sapi onWindows until a solution is fodun for GUI freezing when Sapi speaks.
+            # The following is a conditional check to disable Sapi onWindows until a solution is found for GUI freezing when Sapi speaks.
             if  sys.platform == "win32" and speech_manager.current_driver() == "Sapi5":
                 pass
 
