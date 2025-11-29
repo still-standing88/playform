@@ -34,7 +34,7 @@ The following outlines the final roadmap and features to be implemented before r
   - [ ] Updates
   - [ ] Tools
   - [ ] Add-ons
-  - [ ] Option to minimize to status bar
+  - [x] Option to minimize to status bar
 - [ ] Create program downloader to fetch external packages (`yt-dlp`, `ffmpeg`) and updates.
 - [ ] Implement CRC verification when downloading files from GitHub.
 
