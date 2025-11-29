@@ -45,11 +45,16 @@ from tools.debug_console_dock import DebugConsoleDock
 from media_providers.radio import RadioBrowserWidget
 from media_providers.podcasts.feed_widget import FeedWidget
 from app_constance.styles import SECTION_LABEL_STYLE
-from data.session import dock_session
+from utilities.session import dock_session
 from data.toolbar_config import toolbar_config
 from .toolbar_customize_dialog import ToolbarCustomizeDialog
-from data.toolbar_config import toolbar_config
-from .toolbar_customize_dialog import ToolbarCustomizeDialog
+
+# Import Managers
+from .managers.menu_manager import MenuManager
+from .managers.toolbar_manager import ToolbarManager
+from .managers.dock_manager import DockManager
+from .managers.tool_window_manager import ToolWindowManager
+from .managers.playlist_handler import PlaylistHandler
 
 
 
@@ -74,6 +79,23 @@ class MainWindow(QMainWindow):
         self.podcast_widget = None
         self.podcast_dock = None
         
+        # UI Elements initialized by Managers
+        self.explorer_dock: Optional[QDockWidget] = None
+        self.player_dock: Optional[QDockWidget] = None
+        self.playlists_dock: Optional[QDockWidget] = None
+        self.recents_favorites_dock: Optional[QDockWidget] = None
+        self.debug_console_dock: Optional[QDockWidget] = None
+        
+        self.repeat_action: Optional[QAction] = None
+        self.show_recents_favorites_action: Optional[QAction] = None
+        self.show_explorer_action: Optional[QAction] = None
+        self.minimize_player_action: Optional[QAction] = None
+        self.show_playlists_action: Optional[QAction] = None
+        self.show_radio_action: Optional[QAction] = None
+        self.show_podcast_action: Optional[QAction] = None
+        self.show_console_dock_action: Optional[QAction] = None
+        self.toolbar: Optional[QToolBar] = None
+
         self.focusable_widgets = []
         self.current_focus_index = -1
         self.tool_actions_map = {}
@@ -95,12 +117,19 @@ class MainWindow(QMainWindow):
         
         self._shortcut_manager = ShortcutManager(self)
         
+        # Initialize Managers
+        self.menu_manager = MenuManager(self)
+        self.toolbar_manager = ToolbarManager(self)
+        self.dock_manager = DockManager(self)
+        self.tool_manager = ToolWindowManager(self)
+        self.playlist_handler = PlaylistHandler(self)
+        
         self.setup_ui()
-        self.setup_menus()
-        self.setup_toolbar()
+        self.menu_manager.setup_menus()
+        self.toolbar_manager.setup_toolbar()
         self.setup_statusbar()
-        self.setup_dock_widgets()
-        self.restore_dock_session()
+        self.dock_manager.setup_dock_widgets()
+        self.dock_manager.restore_dock_session()
         self.setup_main_layout()
         self.setup_system_tray()
         self.connect_signals()
@@ -114,8 +143,8 @@ class MainWindow(QMainWindow):
             hotkeys["Open file"]: self.open_file_dialog,
             hotkeys["Open folder"]: self.open_folder_dialog,
             hotkeys["Open URL"]: self.open_url_dialog,
-            hotkeys["Show/Hide explorer"]: self.toggle_explorer_shortcut,
-            hotkeys["Show/Hide player controls"]: self.toggle_player_minimize_shortcut,
+            hotkeys["Show/Hide explorer"]: lambda: self.dock_manager.toggle_explorer(not self.explorer_dock.isVisible()) if self.explorer_dock else None,
+            hotkeys["Show/Hide player controls"]: lambda: self.dock_manager.toggle_player_minimize(self.player_dock.isVisible()) if self.player_dock else None,
             hotkeys["Hide window"]: self.hide_to_tray,
             hotkeys["Exit"]: self.close_application,
             hotkeys["Focus explorer"]: self.focus_explorer,
@@ -149,26 +178,12 @@ class MainWindow(QMainWindow):
     def uninstall_shortcuts(self):
         self._shortcut_manager.uninstall_from_application()
 
-    def toggle_explorer_shortcut(self):
-        is_visible = self.explorer_dock.isVisible()
-        self.explorer_dock.setVisible(not is_visible)
-        self.show_explorer_action.setChecked(not is_visible)
-        if not is_visible:
-            self.explorer_widget.setFocus()
-
-    def toggle_player_minimize_shortcut(self):
-        is_visible = self.player_dock.isVisible()
-        self.player_dock.setVisible(not is_visible)
-        self.minimize_player_action.setChecked(not is_visible)
-        if not is_visible:
-            self.player_widget.setFocus()
-
     def focus_explorer(self):
-        if self.explorer_dock.isVisible():
+        if self.explorer_dock and self.explorer_dock.isVisible():
             self.explorer_widget.setFocus()
 
     def focus_player(self):
-        if self.player_dock.isVisible():
+        if self.player_dock and self.player_dock.isVisible():
             self.player_widget.setFocus()
 
     def setup_ui(self):
@@ -207,249 +222,6 @@ class MainWindow(QMainWindow):
         )
         self.playlists_widget.setObjectName("playlistsWidget")
         
-    def setup_menus(self):
-        menubar = self.menuBar()
-        menubar.setObjectName("menuBar")
-        
-        self.file_menu = menubar.addMenu("&File")
-        self.file_menu.setObjectName("fileMenu")
-        self.setup_file_menu()
-        
-        self.media_menu = menubar.addMenu("&Media")
-        self.media_menu.setObjectName("mediaMenu")
-        self.setup_media_menu()
-        
-        self.view_menu = menubar.addMenu("&View")
-        self.view_menu.setObjectName("viewMenu")
-        self.setup_view_menu()
-        
-        self.tools_menu = menubar.addMenu("&Tools")
-        self.tools_menu.setObjectName("toolsMenu")
-        self.setup_tools_menu()
-        
-        self.about_menu = menubar.addMenu("&About")
-        self.about_menu.setObjectName("aboutMenu")
-        self.setup_about_menu()
-        
-    def setup_file_menu(self):
-        self.open_file_action = QAction("&Open File...", self)
-        self.open_file_action.triggered.connect(self.open_file_dialog)
-        self.file_menu.addAction(self.open_file_action)
-        
-        self.open_folder_action = QAction("Open &Folder...", self)
-        self.open_folder_action.triggered.connect(self.open_folder_dialog)
-        self.file_menu.addAction(self.open_folder_action)
-        
-        self.open_url_action = QAction("Open &URL...", self)
-        self.open_url_action.triggered.connect(self.open_url_dialog)
-        self.file_menu.addAction(self.open_url_action)
-        
-        self.file_menu.addSeparator()
-        
-        self.recent_files_menu = QMenu("&Recent Files", self)
-        self.file_menu.addMenu(self.recent_files_menu)
-        self.update_recent_files_menu()
-        
-        self.file_menu.addSeparator()
-        
-        self.minimize_action = QAction("&Minimize to Taskbar", self)
-        self.minimize_action.triggered.connect(self.hide_to_tray)
-        self.file_menu.addAction(self.minimize_action)
-        
-        self.exit_action = QAction("E&xit", self)
-        self.exit_action.triggered.connect(self.close_application)
-        self.file_menu.addAction(self.exit_action)
-        
-    def setup_media_menu(self):
-        self.play_pause_action = QAction("&Play/Pause", self)
-        self.play_pause_action.triggered.connect(self.toggle_play_pause)
-        self.media_menu.addAction(self.play_pause_action)
-        
-        self.stop_action = QAction("&Stop", self)
-        self.stop_action.triggered.connect(self.stop_playback)
-        self.media_menu.addAction(self.stop_action)
-        
-        self.media_menu.addSeparator()
-        
-        self.mute_action = QAction("&Mute/Unmute", self)
-        self.mute_action.triggered.connect(self.toggle_mute)
-        self.media_menu.addAction(self.mute_action)
-        
-        self.media_menu.addSeparator()
-        
-        self.forward_action = QAction("&Forward", self)
-        self.forward_action.triggered.connect(self.seek_forward)
-        self.media_menu.addAction(self.forward_action)
-        
-        self.backward_action = QAction("&Backward", self)
-        self.backward_action.triggered.connect(self.seek_backward)
-        self.media_menu.addAction(self.backward_action)
-        
-        self.media_menu.addSeparator()
-        
-        self.previous_action = QAction("&Previous", self)
-        self.previous_action.triggered.connect(self.previous_track)
-        self.media_menu.addAction(self.previous_action)
-        
-        self.next_action = QAction("&Next", self)
-        self.next_action.triggered.connect(self.next_track)
-        self.media_menu.addAction(self.next_action)
-        
-        self.media_menu.addSeparator()
-        
-        self.repeat_action = QAction("Toggle &Repeat: Off", self)
-        self.repeat_action.triggered.connect(self.toggle_repeat)
-        self.media_menu.addAction(self.repeat_action)
-        
-    def setup_view_menu(self):
-        self.show_recents_favorites_action = QAction("Show &Recents/Favorites", self)
-        self.show_recents_favorites_action.setCheckable(True)
-        self.show_recents_favorites_action.setChecked(True)
-        self.show_recents_favorites_action.triggered.connect(self.toggle_recents_favorites)
-        self.view_menu.addAction(self.show_recents_favorites_action)
-        
-        self.show_explorer_action = QAction("Show &Explorer", self)
-        self.show_explorer_action.setCheckable(True)
-        self.show_explorer_action.setChecked(False)
-        self.show_explorer_action.triggered.connect(self.toggle_explorer)
-        self.view_menu.addAction(self.show_explorer_action)
-        
-        self.minimize_player_action = QAction("&Minimize Player", self)
-        self.minimize_player_action.setCheckable(True)
-        self.minimize_player_action.triggered.connect(self.toggle_player_minimize)
-        self.view_menu.addAction(self.minimize_player_action)
-        
-        self.show_playlists_action = QAction("Show &Playlists", self)
-        self.show_playlists_action.setCheckable(True)
-        self.show_playlists_action.setChecked(False)
-        self.show_playlists_action.triggered.connect(self.toggle_playlists)
-        self.view_menu.addAction(self.show_playlists_action)
-        
-        self.view_menu.addSeparator()
-        
-        self.show_radio_action = QAction("Show &Radio Browser", self)
-        self.show_radio_action.setCheckable(True)
-        self.show_radio_action.setChecked(False)
-        self.show_radio_action.triggered.connect(self.toggle_radio)
-        self.view_menu.addAction(self.show_radio_action)
-        
-        self.show_podcast_action = QAction("Show &Podcasts", self)
-        self.show_podcast_action.setCheckable(True)
-        self.show_podcast_action.setChecked(False)
-        self.show_podcast_action.triggered.connect(self.toggle_podcast)
-        self.view_menu.addAction(self.show_podcast_action)
-        
-    def setup_tools_menu(self):
-        self.batch_converter_action = QAction("&Batch Converter", self)
-        self.batch_converter_action.triggered.connect(self.open_batch_converter)
-        self.tools_menu.addAction(self.batch_converter_action)
-        
-        self.extractor_action = QAction("&Media Extractor", self)
-        self.extractor_action.triggered.connect(self.open_extractor)
-        self.tools_menu.addAction(self.extractor_action)
-        
-        self.tag_editor_action = QAction("&Tag Editor", self)
-        self.tag_editor_action.triggered.connect(self.open_tag_editor)
-        self.tools_menu.addAction(self.tag_editor_action)
-        
-        self.thumbnail_generator_action = QAction("&Thumbnail Generator", self)
-        self.thumbnail_generator_action.triggered.connect(self.open_thumbnail_generator)
-        self.tools_menu.addAction(self.thumbnail_generator_action)
-
-        self.subtitle_tools_menu = self.tools_menu.addMenu("&Subtitle Tools")
-        self.subtitle_converter_action = QAction("Subtitle &Converter", self)
-        self.subtitle_converter_action.triggered.connect(self.open_subtitle_converter)
-        self.subtitle_tools_menu.addAction(self.subtitle_converter_action)
-        
-        self.subtitle_editor_action = QAction("Subtitle &Editor", self)
-        self.subtitle_editor_action.triggered.connect(self.open_subtitle_editor)
-        self.subtitle_tools_menu.addAction(self.subtitle_editor_action)
-
-        self.debug_menu = self.tools_menu.addMenu("&Debug")
-        self.view_logs_action = QAction("&View Logs…", self)
-        self.view_logs_action.triggered.connect(self.open_logs_viewer)
-        self.debug_menu.addAction(self.view_logs_action)
-
-        self.show_console_dock_action = QAction("Show &Console Dock", self)
-        self.show_console_dock_action.setCheckable(True)
-        self.show_console_dock_action.setChecked(False)
-        self.show_console_dock_action.triggered.connect(self.toggle_console_dock)
-        self.debug_menu.addAction(self.show_console_dock_action)
-        
-    def setup_about_menu(self):
-        self.preferences_action = QAction("&Manage Preferences", self)
-        self.preferences_action.triggered.connect(self.open_preferences)
-        self.about_menu.addAction(self.preferences_action)
-        
-        self.hotkeys_action = QAction("Manage &Hotkeys", self)
-        self.hotkeys_action.triggered.connect(self.open_hotkeys)
-        self.about_menu.addAction(self.hotkeys_action)
-        
-    def setup_toolbar(self):
-        self.toolbar = QToolBar("Main Toolbar")
-        self.toolbar.setObjectName("mainToolbar")
-        self.toolbar.setMovable(False)
-        self.toolbar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.toolbar.customContextMenuRequested.connect(self.show_toolbar_context_menu)
-        self.addToolBar(self.toolbar)
-        
-        self.toolbar.addAction(self.open_file_action)
-        self.toolbar.addAction(self.open_folder_action)
-        self.toolbar.addAction(self.open_url_action)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.play_pause_action)
-        self.toolbar.addAction(self.stop_action)
-        self.toolbar.addAction(self.mute_action)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.previous_action)
-        self.toolbar.addAction(self.next_action)
-        
-        self.toolbar.addSeparator()
-        self.load_toolbar_tools()
-    
-    def show_toolbar_context_menu(self, pos):
-        menu = QMenu(self)
-        customize_action = QAction("Customize Toolbar...", self)
-        customize_action.triggered.connect(self.open_toolbar_customize_dialog)
-        menu.addAction(customize_action)
-        menu.exec(self.toolbar.mapToGlobal(pos))
-    
-    def open_toolbar_customize_dialog(self):
-        available_tools = toolbar_config.get_available_tools()
-        selected_tools = toolbar_config.load_config()
-        
-        dialog = ToolbarCustomizeDialog(available_tools, selected_tools, self)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            new_tools = dialog.get_selected_tools()
-            toolbar_config.save_config(new_tools)
-            self.update_toolbar_tools()
-    
-    def load_toolbar_tools(self):
-        selected_tools = toolbar_config.load_config()
-        self.tool_actions_map = {
-            'batch_converter': self.batch_converter_action,
-            'extractor': self.extractor_action,
-            'tag_editor': self.tag_editor_action,
-            'thumbnail_generator': self.thumbnail_generator_action,
-            'subtitle_converter': self.subtitle_converter_action,
-            'subtitle_editor': self.subtitle_editor_action
-        }
-        
-        for tool_id in selected_tools:
-            if tool_id in self.tool_actions_map:
-                self.toolbar.addAction(self.tool_actions_map[tool_id])
-    
-    def update_toolbar_tools(self):
-        actions = self.toolbar.actions()
-        for action in actions:
-            if action in self.tool_actions_map.values():
-                self.toolbar.removeAction(action)
-        
-        selected_tools = toolbar_config.load_config()
-        for tool_id in selected_tools:
-            if tool_id in self.tool_actions_map:
-                self.toolbar.addAction(self.tool_actions_map[tool_id])
-        
     def setup_statusbar(self):
         self.status_bar = QStatusBar()
         self.status_bar.setObjectName("statusBar")
@@ -473,49 +245,7 @@ class MainWindow(QMainWindow):
         signal_manager.statusbar_message.connect(self._update_status_message)
         signal_manager.media_info_message.connect(self.media_info_label.setText)
         
-    def setup_dock_widgets(self):
-        self.recents_favorites_dock = QDockWidget("Recents & Favorites", self)
-        self.recents_favorites_dock.setObjectName("recentsFavoritesDock")
-        self.recents_favorites_dock.setWidget(self.recents_and_favorites_widget)
-        self.recents_favorites_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
-        self.recents_favorites_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.recents_favorites_dock.visibilityChanged.connect(self.update_recents_favorites_menu)
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.recents_favorites_dock)
-        
-        self.explorer_dock = QDockWidget("Explorer", self)
-        self.explorer_dock.setObjectName("explorerDock")
-        self.explorer_dock.setWidget(self.explorer_widget)
-        self.explorer_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
-        self.explorer_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.explorer_dock.setVisible(False)
-        self.explorer_dock.visibilityChanged.connect(self.update_explorer_menu)
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.explorer_dock)
-        
-        self.player_dock = QDockWidget("Player", self)
-        self.player_dock.setObjectName("playerDock")
-        self.player_dock.setWidget(self.player_widget)
-        self.player_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
-        self.player_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.player_dock.visibilityChanged.connect(self.update_player_menu)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.player_dock)
-        
-        self.playlists_dock = QDockWidget("Playlists", self)
-        self.playlists_dock.setObjectName("playlistsDock")
-        self.playlists_dock.setWidget(self.playlists_widget)
-        self.playlists_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
-        self.playlists_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.playlists_dock.setVisible(False)
-        self.playlists_dock.visibilityChanged.connect(self.update_playlists_menu)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.playlists_dock)
 
-        self.debug_console_dock = DebugConsoleDock(self)
-        self.debug_console_dock.setObjectName("debugConsoleDock")
-        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.debug_console_dock)
-        self.debug_console_dock.hide()
-        if hasattr(self.debug_console_dock, 'visibilityChanged'):
-            self.debug_console_dock.visibilityChanged.connect(self.update_console_menu)
-        
-        self._update_focusable_widgets()
         
     def setup_main_layout(self):
         pass
@@ -548,12 +278,12 @@ class MainWindow(QMainWindow):
 
         self.urlOpened.connect(self.player_widget.change_path)
         self.fileOpened.connect(self.player_widget.change_path)
-        if hasattr(self.explorer_dock, 'visibilityChanged'):
-            self.explorer_dock.visibilityChanged.connect(self.update_explorer_menu)
-        if hasattr(self.player_dock, 'visibilityChanged'):
-            self.player_dock.visibilityChanged.connect(self.update_player_menu)
-        if hasattr(self.playlists_dock, 'visibilityChanged'):
-            self.playlists_dock.visibilityChanged.connect(self.update_playlists_menu)
+        if self.explorer_dock and hasattr(self.explorer_dock, 'visibilityChanged'):
+            self.explorer_dock.visibilityChanged.connect(self.menu_manager.update_explorer_menu)
+        if self.player_dock and hasattr(self.player_dock, 'visibilityChanged'):
+            self.player_dock.visibilityChanged.connect(self.menu_manager.update_player_menu)
+        if self.playlists_dock and hasattr(self.playlists_dock, 'visibilityChanged'):
+            self.playlists_dock.visibilityChanged.connect(self.menu_manager.update_playlists_menu)
             
     def open_file_dialog(self):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -597,7 +327,7 @@ class MainWindow(QMainWindow):
         signal_manager.statusbar_message.emit(f"Loading: {os.path.basename(file_path)}")
         signal_manager.media_info_message.emit(file_path)
         self.add_to_recents(file_path)
-        self.update_recent_files_menu()
+        self.menu_manager.update_recent_files_menu()
         self.fileOpened.emit(file_path)
         
     def play_url(self, url: str):
@@ -694,20 +424,7 @@ class MainWindow(QMainWindow):
         self.playlists_widget.save_playlists_data()
         signal_manager.statusbar_message.emit(f"Created new playlist '{name}'")
         
-    def update_recent_files_menu(self):
-        self.recent_files_menu.clear()
-        recent_files = self.recents_and_favorites_widget.get_recent_files_list()
-        
-        if not recent_files:
-            no_recent_action = QAction("No recent files", self)
-            no_recent_action.setEnabled(False)
-            self.recent_files_menu.addAction(no_recent_action)
-        else:
-            for file_path in recent_files:
-                action = QAction(os.path.basename(file_path), self)
-                action.setToolTip(file_path)
-                action.triggered.connect(lambda checked=False, path=file_path: self.play_file(path))
-                self.recent_files_menu.addAction(action)
+
 
     def _update_status_message(self, message: str):
         self.status_label.setText(message)
@@ -862,170 +579,18 @@ class MainWindow(QMainWindow):
         prefs.save()
         
         repeat_text = "Toggle Repeat: On" if self.is_repeat_enabled else "Toggle Repeat: Off"
-        self.repeat_action.setText(repeat_text)
+        if self.repeat_action:
+            self.repeat_action.setText(repeat_text)
         signal_manager.statusbar_message.emit(f"Repeat: {'On' if self.is_repeat_enabled else 'Off'}")
         
-    def toggle_recents_favorites(self, checked):
-        self.recents_favorites_dock.setVisible(checked)
-        if checked:
-            self.recents_and_favorites_widget.setFocus()
+
     
-    def toggle_explorer(self, checked):
-        self.explorer_dock.setVisible(checked)
-        if checked:
-            self.explorer_widget.setFocus()
-        
-    def toggle_player_minimize(self, checked):
-        if checked:
-            self.player_dock.hide()
-        else:
-            self.player_dock.show()
-            self.player_widget.setFocus()
-            
-    def toggle_playlists(self, checked):
-        self.playlists_dock.setVisible(checked)
-        if checked:
-            self.playlists_widget.setFocus()
-        
-    def toggle_radio(self, checked):
-        if self.radio_dock is None and checked:
-            self._create_radio_dock()
-        if self.radio_dock:
-            self.radio_dock.setVisible(checked)
-            if checked:
-                self.radio_widget.setFocus()
-            self._update_focusable_widgets()
-        
-    def toggle_podcast(self, checked):
-        if self.podcast_dock is None and checked:
-            self._create_podcast_dock()
-        if self.podcast_dock:
-            self.podcast_dock.setVisible(checked)
-            if checked:
-                self.podcast_widget.setFocus()
-            self._update_focusable_widgets()
+
     
-    def _create_radio_dock(self):
-        if self.radio_dock is None:
-            self.radio_widget = RadioBrowserWidget(self)
-            self.radio_dock = QDockWidget("Radio Browser", self)
-            self.radio_dock.setObjectName("radioDock")
-            self.radio_dock.setWidget(self.radio_widget)
-            self.radio_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
-            self.radio_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
-            self.radio_dock.visibilityChanged.connect(self.update_radio_menu)
-            self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.radio_dock)
-    
-    def _create_podcast_dock(self):
-        if self.podcast_dock is None:
-            self.podcast_widget = FeedWidget(self)
-            self.podcast_dock = QDockWidget("Podcasts", self)
-            self.podcast_dock.setObjectName("podcastDock")
-            self.podcast_dock.setWidget(self.podcast_widget)
-            self.podcast_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
-            self.podcast_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
-            self.podcast_dock.visibilityChanged.connect(self.update_podcast_menu)
-            self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.podcast_dock)
-        
-    def update_recents_favorites_menu(self, visible):
-        self.show_recents_favorites_action.setChecked(visible)
-        self._update_focusable_widgets()
-    
-    def update_explorer_menu(self, visible):
-        self.show_explorer_action.setChecked(visible)
-        self._update_focusable_widgets()
-        
-    def update_player_menu(self, visible):
-        self.minimize_player_action.setChecked(not visible)
-        self._update_focusable_widgets()
-        
-    def update_playlists_menu(self, visible):
-        self.show_playlists_action.setChecked(visible)
-        self._update_focusable_widgets()
-    
-    def update_radio_menu(self, visible):
-        if hasattr(self, 'show_radio_action'):
-            self.show_radio_action.setChecked(visible)
-        self._update_focusable_widgets()
-    
-    def update_podcast_menu(self, visible):
-        if hasattr(self, 'show_podcast_action'):
-            self.show_podcast_action.setChecked(visible)
-        self._update_focusable_widgets()
-        
-    def _update_focusable_widgets(self):
-        self.focusable_widgets = []
-        
-        if hasattr(self, 'toolbar') and self.toolbar.isVisible():
-            self.focusable_widgets.append(self.toolbar)
-        
-        dock_widgets = [
-            (self.recents_favorites_dock, self.recents_and_favorites_widget),
-            (self.explorer_dock, self.explorer_widget),
-            (self.player_dock, self.player_widget),
-            (self.playlists_dock, self.playlists_widget),
-        ]
-        
-        if self.radio_dock is not None:
-            dock_widgets.append((self.radio_dock, self.radio_widget))
-        if self.podcast_dock is not None:
-            dock_widgets.append((self.podcast_dock, self.podcast_widget))
-        
-        for dock, widget in dock_widgets:
-            if dock.isVisible() and widget:
-                self.focusable_widgets.append(widget)
-        
-        if hasattr(self, 'status_bar') and self.status_bar.isVisible():
-            self.focusable_widgets.append(self.status_bar)
-    
-    def save_dock_session(self):
-        dock_states = {
-            'recents_favorites': self.recents_favorites_dock.isVisible(),
-            'explorer': self.explorer_dock.isVisible(),
-            'player': self.player_dock.isVisible(),
-            'playlists': self.playlists_dock.isVisible(),
-            'radio': self.radio_dock.isVisible() if self.radio_dock else False,
-            'podcast': self.podcast_dock.isVisible() if self.podcast_dock else False,
-            'debug_console': self.debug_console_dock.isVisible() if hasattr(self, 'debug_console_dock') else False
-        }
-        dock_session.save_session(dock_states)
-    
-    def restore_dock_session(self):
-        dock_states = dock_session.load_session()
-        
-        self.recents_favorites_dock.setVisible(dock_states.get('recents_favorites', True))
-        self.show_recents_favorites_action.setChecked(dock_states.get('recents_favorites', True))
-        
-        self.explorer_dock.setVisible(dock_states.get('explorer', False))
-        self.show_explorer_action.setChecked(dock_states.get('explorer', False))
-        
-        self.player_dock.setVisible(dock_states.get('player', True))
-        self.minimize_player_action.setChecked(not dock_states.get('player', True))
-        
-        self.playlists_dock.setVisible(dock_states.get('playlists', False))
-        self.show_playlists_action.setChecked(dock_states.get('playlists', False))
-        
-        if dock_states.get('radio', False):
-            self._create_radio_dock()
-            self.radio_dock.setVisible(True)
-            if hasattr(self, 'show_radio_action'):
-                self.show_radio_action.setChecked(True)
-        
-        if dock_states.get('podcast', False):
-            self._create_podcast_dock()
-            self.podcast_dock.setVisible(True)
-            if hasattr(self, 'show_podcast_action'):
-                self.show_podcast_action.setChecked(True)
-        
-        if dock_states.get('debug_console', False) and hasattr(self, 'debug_console_dock'):
-            self.debug_console_dock.setVisible(True)
-            if hasattr(self, 'show_console_dock_action'):
-                self.show_console_dock_action.setChecked(True)
-        
-        self._update_focusable_widgets()
+
     
     def focus_next_widget(self):
-        self._update_focusable_widgets()
+        self.dock_manager.update_focusable_widgets()
         if not self.focusable_widgets:
             return
         
@@ -1034,7 +599,7 @@ class MainWindow(QMainWindow):
         widget.setFocus()
     
     def focus_previous_widget(self):
-        self._update_focusable_widgets()
+        self.dock_manager.update_focusable_widgets()
         if not self.focusable_widgets:
             return
         
@@ -1042,22 +607,7 @@ class MainWindow(QMainWindow):
         widget = self.focusable_widgets[self.current_focus_index]
         widget.setFocus()
     
-    def update_console_menu(self, visible):
 
-        if hasattr(self, 'show_console_dock_action'):
-            self.show_console_dock_action.setChecked(visible)
-
-    def toggle_console_dock(self, checked):
-        if not hasattr(self, 'debug_console_dock') or self.debug_console_dock is None:
-            self.debug_console_dock = DebugConsoleDock(self)
-            self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.debug_console_dock)
-            if hasattr(self.debug_console_dock, 'visibilityChanged'):
-                self.debug_console_dock.visibilityChanged.connect(self.update_console_menu)
-        if checked:
-            self.debug_console_dock.show()
-            self.debug_console_dock.raise_()
-        else:
-            self.debug_console_dock.hide()
 
     def open_logs_viewer(self):
         dlg = LogsViewerDialog(self)
@@ -1208,7 +758,7 @@ class MainWindow(QMainWindow):
                 event.ignore()
                 return
         
-        self.save_dock_session()
+        self.dock_manager.save_dock_session()
         
         if self.radio_widget and hasattr(self.radio_widget, 'closeEvent'):
             self.radio_widget.closeEvent(event)
