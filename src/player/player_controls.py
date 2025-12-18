@@ -908,10 +908,5 @@ class PlayerControls(QWidget):
         if self._current_file:
             current_pos = float(self.get_seek_position())
             self.check_loop_position(current_pos)
-    
-    #def install_shortcuts(self):
-        #self._shortcut_manager.install_on_application()
-    
-    #def uninstall_shortcuts(self):
-        #self._shortcut_manager.uninstall_from_application()
+
 
