@@ -90,25 +90,31 @@ class PlayerControls(QWidget):
         self.toggle_controls_btn.setFixedSize(30, 30)
         self.toggle_controls_btn.setToolTip("Minimize/Maximize Controls")
         
-        buttons_config = [
-            ("previous_btn", "⏮Previous", "Previous Track"),
-            ("backward_btn", "⏪Rewind", "Backward"),
-            ("play_pause_btn", "▶", "Play/Pause"),
-            ("forward_btn", "⏩Forward", "Forward"),
-            ("next_btn", "⏭Next", "Next Track"),
-            ("repeat_btn", "🔁Off", "Repeat mode"),
-            ("shuffle_btn", "🔀Shuffle", "Shuffle"),
-            ("bookmarks_btn", "🔖", "Bookmarks list"),
-            ("screenshot_btn", "📷", "Take screenshot"),
-        ]
-
-        for attr_name, text, tooltip in buttons_config:
-            btn = QPushButton(text, self)
-            btn.setToolTip(tooltip)
+        self.previous_btn = QPushButton("⏮Previous", self)
+        self.backward_btn = QPushButton("⏪Rewind", self)
+        self.play_pause_btn = QPushButton("▶", self)
+        self.forward_btn = QPushButton("⏩Forward", self)
+        self.next_btn = QPushButton("⏭Next", self)
+        self.repeat_btn = QPushButton("🔁Off", self)
+        self.shuffle_btn = QPushButton("🔀Shuffle", self)
+        self.bookmarks_btn = QPushButton("🔖", self)
+        self.bookmarks_btn.setToolTip("Bookmarks list")
+        self.screenshot_btn = QPushButton("📷", self)
+        self.screenshot_btn.setToolTip("Take screenshot")
+        
+        for btn in [self.previous_btn, self.backward_btn, self.play_pause_btn,
+                   self.forward_btn, self.next_btn, self.repeat_btn, self.shuffle_btn, self.bookmarks_btn, self.screenshot_btn]:
             btn.setFixedSize(40, 40)
-            setattr(self, attr_name, btn)
             
         self.play_pause_btn.setFixedSize(50, 50)
+        
+        self.previous_btn.setToolTip("Previous Track")
+        self.backward_btn.setToolTip("Backward")
+        self.play_pause_btn.setToolTip("Play/Pause")
+        self.forward_btn.setToolTip("Forward")
+        self.next_btn.setToolTip("Next Track")
+        self.repeat_btn.setToolTip("Repeat mode")
+        self.shuffle_btn.setToolTip("Shuffle")
         
         self.seek_slider = QSlider(Qt.Orientation.Horizontal, self)
         self.seek_slider.setMinimum(0)
