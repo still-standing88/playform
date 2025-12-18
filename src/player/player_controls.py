@@ -98,23 +98,23 @@ class PlayerControls(QWidget):
         self.repeat_btn = QPushButton("🔁Off", self)
         self.shuffle_btn = QPushButton("🔀Shuffle", self)
         self.bookmarks_btn = QPushButton("🔖", self)
-        self.bookmarks_btn.setToolTip("Bookmarks list")
         self.screenshot_btn = QPushButton("📷", self)
-        self.screenshot_btn.setToolTip("Take screenshot")
-        
-        for btn in [self.previous_btn, self.backward_btn, self.play_pause_btn,
-                   self.forward_btn, self.next_btn, self.repeat_btn, self.shuffle_btn, self.bookmarks_btn, self.screenshot_btn]:
-            btn.setFixedSize(40, 40)
-            
-        self.play_pause_btn.setFixedSize(50, 50)
-        
-        self.previous_btn.setToolTip("Previous Track")
-        self.backward_btn.setToolTip("Backward")
-        self.play_pause_btn.setToolTip("Play/Pause")
-        self.forward_btn.setToolTip("Forward")
-        self.next_btn.setToolTip("Next Track")
-        self.repeat_btn.setToolTip("Repeat mode")
-        self.shuffle_btn.setToolTip("Shuffle")
+
+        button_specs = [
+            (self.previous_btn, 40, 40, "Previous Track"),
+            (self.backward_btn, 40, 40, "Backward"),
+            (self.play_pause_btn, 50, 50, "Play/Pause"),
+            (self.forward_btn, 40, 40, "Forward"),
+            (self.next_btn, 40, 40, "Next Track"),
+            (self.repeat_btn, 40, 40, "Repeat mode"),
+            (self.shuffle_btn, 40, 40, "Shuffle"),
+            (self.bookmarks_btn, 40, 40, "Bookmarks list"),
+            (self.screenshot_btn, 40, 40, "Take screenshot"),
+        ]
+
+        for btn, w, h, tooltip in button_specs:
+            btn.setFixedSize(w, h)
+            btn.setToolTip(tooltip)
         
         self.seek_slider = QSlider(Qt.Orientation.Horizontal, self)
         self.seek_slider.setMinimum(0)
@@ -123,31 +123,34 @@ class PlayerControls(QWidget):
         self.seek_slider.setValue(0)
         self.seek_slider.setAccessibleName("Seek")
 
-        
         self.mute_btn = QPushButton("🔊", self)
-        self.mute_btn.setFixedSize(35, 35)
-        self.mute_btn.setToolTip("Mute/Unmute")
+        self.more_btn = QPushButton("⋯", self)
+        for btn, w, h, tooltip in [
+            (self.mute_btn, 35, 35, "Mute/Unmute"),
+            (self.more_btn, 35, 35, "More Options"),
+        ]:
+            btn.setFixedSize(w, h)
+            btn.setToolTip(tooltip)
         
         self.volume_slider = QSlider(Qt.Orientation.Horizontal, self)
-        self.volume_slider.setMinimum(0)
-        self.volume_slider.setMaximum(100)
-        self.volume_slider.setSingleStep(prefs.prefs["offset"]["volume"])
-        self.volume_slider.setValue(100)
-        self.volume_slider.setFixedWidth(80)
         self.volume_slider.setAccessibleName("Volume")
+
+        sliders = [
+            (self.volume_slider, 0, 100, prefs.prefs["offset"]["volume"], 100, 80),
+        ]
+        for slider, minv, maxv, step, value, fixed_width in sliders:
+            slider.setMinimum(minv)
+            slider.setMaximum(maxv)
+            slider.setSingleStep(step)
+            slider.setValue(value)
+            slider.setFixedWidth(fixed_width)
 
         
         self.time_label = QLabel("00:00 / 00:00", self)
         self.time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.time_label.setMinimumWidth(100)
         self.time_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
-        
-        self.more_btn = QPushButton("⋯", self)
-        self.more_btn.setFixedSize(35, 35)
-        self.more_btn.setToolTip("More Options")
 
-
-        
         self.current_track_label = QLabel("No media loaded", self)
         self.current_track_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.current_track_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
