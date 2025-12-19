@@ -16,6 +16,7 @@ from app_constance.misc import video_resolutions, video_speeds, video_aspect_rat
 from app_constance.styles import (PLAYER_CONTROLS_STYLE, BUTTON_STYLE, SLIDER_STYLE,
                                    TIME_LABEL_STYLE, TRACK_LABEL_STYLE, get_repeat_button_active_style)
 from utilities.functions import get_app_path
+from .playback_state_manager import PlaybackStateManager
 
 
 class PlayerControls(QWidget):
@@ -67,8 +68,8 @@ class PlayerControls(QWidget):
         self._is_user_seeking: bool = False
         self._data_dir = os.path.join(get_app_path(), "data")
         os.makedirs(self._data_dir, exist_ok=True)
-        
-        #self._shortcut_manager: ShortcutManager = ShortcutManager(self)
+
+        self._state = PlaybackStateManager(self._data_dir)
         
         self.setup_ui()
         self.layout_widgets()
@@ -154,7 +155,6 @@ class PlayerControls(QWidget):
         self.current_track_label = QLabel("No media loaded", self)
         self.current_track_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.current_track_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
-        #self.current_track_label.setAccessibleName("Currently Playing")
 
 
         self.separator1 = QFrame(self)
@@ -422,9 +422,10 @@ class PlayerControls(QWidget):
         self._current_bookmark_index = -1
         self._current_loop_index = -1
         self._last_known_position = 0.0
-        
-        if file_path not in self._bookmarks:
-            self._current_bookmark_index = -1
+
+        self._state.bookmarks = self._bookmarks
+        self._state.repeat_loops = self._repeat_loops
+        self._state.last_positions = self._last_positions
     
     @Slot()
     def show_bookmarks_dialog(self):
@@ -448,13 +449,10 @@ class PlayerControls(QWidget):
             return
         
         current_pos = self.get_seek_position()
-        
-        if self._current_file not in self._bookmarks:
-            self._bookmarks[self._current_file] = []
-        
-        self._bookmarks[self._current_file].append(current_pos)
-        self._bookmarks[self._current_file].sort()
-        self.save_bookmarks()
+
+        self._state.bookmarks = self._bookmarks
+        if self._state.add_bookmark(self._current_file, float(current_pos)):
+            self._bookmarks = self._state.bookmarks
         if hasattr(self, '_bookmarks_dialog') and isinstance(self._bookmarks_dialog, BookmarksDialog) and self._bookmarks_dialog is not None:
             self._refresh_bookmarks_dialog()
     
@@ -555,19 +553,19 @@ class PlayerControls(QWidget):
         idx = self._bookmarks_dialog.get_selected_bookmark_index()
         if idx is None:
             return
-        if 0 <= idx < len(self._bookmarks[self._current_file]):
-            del self._bookmarks[self._current_file][idx]
-            self.save_bookmarks()
+        self._state.bookmarks = self._bookmarks
+        if self._state.delete_bookmark(self._current_file, idx):
+            self._bookmarks = self._state.bookmarks
             self._bookmarks_dialog.remove_bookmark_at(idx)
 
     @Slot(int)
     def delete_bookmark_at(self, index:int):
         if not self._current_file or self._current_file not in self._bookmarks:
             return
-        if 0 <= index < len(self._bookmarks[self._current_file]):
-            del self._bookmarks[self._current_file][index]
+        self._state.bookmarks = self._bookmarks
+        if self._state.delete_bookmark(self._current_file, index):
+            self._bookmarks = self._state.bookmarks
             self._current_bookmark_index = -1
-            self.save_bookmarks()
             self._refresh_bookmarks_dialog()
     
     def set_loop_start(self):
@@ -586,253 +584,138 @@ class PlayerControls(QWidget):
         if not self._current_file:
             return
 
-        if self._current_file not in self._repeat_loops:
-            self._repeat_loops[self._current_file] = []
-
-        if self._is_position_in_existing_loop(position):
-            return
-
-        self._repeat_loops[self._current_file].append((position, None))
-        self.save_repeat_loops()
+        self._state.repeat_loops = self._repeat_loops
+        if self._state.add_loop_start(self._current_file, position):
+            self._repeat_loops = self._state.repeat_loops
 
     def set_loop_end_precise(self, position: float):
         if not self._current_file:
             return
 
-        if self._current_file not in self._repeat_loops:
+        self._state.repeat_loops = self._repeat_loops
+        loop_index = self._state.add_loop_end(self._current_file, position)
+        if loop_index is None:
             return
+        self._repeat_loops = self._state.repeat_loops
+        self._current_loop_index = loop_index
 
-        loops = self._repeat_loops[self._current_file]
-        if not loops:
-            return
-
-        for i in range(len(loops) - 1, -1, -1):
-            if loops[i][1] is None:
-                loop_start = loops[i][0]
-
-                if loop_start is None or position <= loop_start:
-                    return
-
-                if self._would_loop_intersect(loop_start, position, exclude_index=i):
-                    return
-
-                loops[i] = (loop_start, position)
-                self._current_loop_index = i
-                self.save_repeat_loops()
-
-                if loop_start is not None:
-                    self._is_user_seeking = True
-                    self.set_seek_position(int(loop_start))
-                    self.seekChanged.emit(int(loop_start))
-                    self._is_user_seeking = False
-
-                return
+        loops = self._repeat_loops.get(self._current_file, [])
+        loop_start = loops[loop_index][0] if 0 <= loop_index < len(loops) else None
+        if loop_start is not None:
+            self._is_user_seeking = True
+            self.set_seek_position(int(loop_start))
+            self.seekChanged.emit(int(loop_start))
+            self._is_user_seeking = False
     
     def clear_repeat_loop(self):
-        if not self._current_file or self._current_file not in self._repeat_loops:
+        if not self._current_file:
             return
-        
-        loops = self._repeat_loops[self._current_file]
-        if not loops:
-            return
-        
-        complete_loops = [(i, start, end) for i, (start, end) in enumerate(loops) if start is not None and end is not None]
-        
-        if not complete_loops:
-            incomplete_loops = [i for i, (start, end) in enumerate(loops) if start is None or end is None]
-            if incomplete_loops:
-                del loops[incomplete_loops[-1]]
-            self.save_repeat_loops()
-            return
-        
-        if self._current_loop_index == -1 or self._current_loop_index >= len(complete_loops):
-            self._current_loop_index = len(complete_loops) - 1
-        
-        if 0 <= self._current_loop_index < len(complete_loops):
-            actual_index, _, _ = complete_loops[self._current_loop_index]
-            del loops[actual_index]
-            
-            if self._current_loop_index >= len([l for l in loops if l[0] is not None and l[1] is not None]):
-                self._current_loop_index = max(0, len([l for l in loops if l[0] is not None and l[1] is not None]) - 1)
-            
-            if not loops or all(start is None or end is None for start, end in loops):
-                self._current_loop_index = -1
-        
-        self.save_repeat_loops()
+
+        self._state.repeat_loops = self._repeat_loops
+        self._current_loop_index = self._state.clear_repeat_loop(self._current_file, self._current_loop_index)
+        self._repeat_loops = self._state.repeat_loops
     
     def clear_all_repeat_loops(self):
-        if self._current_file and self._current_file in self._repeat_loops:
-            self._repeat_loops[self._current_file] = []
+        if not self._current_file:
+            return
+        self._state.repeat_loops = self._repeat_loops
+        if self._state.clear_all_loops(self._current_file):
+            self._repeat_loops = self._state.repeat_loops
             self._current_loop_index = -1
-            self.save_repeat_loops()
     
     def get_current_loops(self) -> List[Tuple[Optional[float], Optional[float]]]:
-        if not self._current_file or self._current_file not in self._repeat_loops:
-            return []
-        return self._repeat_loops[self._current_file]
+        self._state.repeat_loops = self._repeat_loops
+        return self._state.get_loops(self._current_file)
 
     def update_loop_by_index(self, index:int, start:float, end:float):
-        if not self._current_file or self._current_file not in self._repeat_loops:
-            return False
-        loops = self._repeat_loops[self._current_file]
-        if index < 0 or index >= len(loops):
-            return False
-        if start is None or end is None or end <= start:
-            return False
-        if self._would_loop_intersect(start, end, exclude_index=index):
-            return False
-        loops[index] = (start, end)
-        self._current_loop_index = index
-        self.save_repeat_loops()
-        return True
+        self._state.repeat_loops = self._repeat_loops
+        ok = self._state.update_loop(self._current_file, index, start, end)
+        self._repeat_loops = self._state.repeat_loops
+        if ok:
+            self._current_loop_index = index
+        return ok
 
     def delete_loop_by_index(self, index:int):
-        if not self._current_file or self._current_file not in self._repeat_loops:
+        self._state.repeat_loops = self._repeat_loops
+        ok = self._state.delete_loop(self._current_file, index)
+        self._repeat_loops = self._state.repeat_loops
+        if not ok:
             return False
-        loops = self._repeat_loops[self._current_file]
-        if index < 0 or index >= len(loops):
-            return False
-        del loops[index]
 
+        loops = self._repeat_loops.get(self._current_file, [])
         complete_count = len([l for l in loops if l[0] is not None and l[1] is not None])
         if complete_count == 0:
             self._current_loop_index = -1
         else:
             self._current_loop_index = max(0, min(self._current_loop_index, complete_count - 1))
-        self.save_repeat_loops()
         return True
 
     def add_bookmark_at_position(self, position:float):
-        if not self._current_file:
-            return False
-        if self._current_file not in self._bookmarks:
-            self._bookmarks[self._current_file] = []
-        self._bookmarks[self._current_file].append(position)
-        self._bookmarks[self._current_file].sort()
-        self.save_bookmarks()
-        if hasattr(self, '_bookmarks_dialog') and self._bookmarks_dialog is not None:
+        self._state.bookmarks = self._bookmarks
+        ok = self._state.add_bookmark(self._current_file, position)
+        self._bookmarks = self._state.bookmarks
+        if ok and hasattr(self, '_bookmarks_dialog') and self._bookmarks_dialog is not None:
             self._refresh_bookmarks_dialog()
-        return True
+        return ok
 
     def update_bookmark_at_index(self, index:int, position:float):
-        if not self._current_file or self._current_file not in self._bookmarks:
-            return False
-        bookmarks = self._bookmarks[self._current_file]
-        if index < 0 or index >= len(bookmarks):
-            return False
-        bookmarks[index] = position
-        bookmarks.sort()
-        self.save_bookmarks()
-        if hasattr(self, '_bookmarks_dialog') and self._bookmarks_dialog is not None:
+        self._state.bookmarks = self._bookmarks
+        ok = self._state.update_bookmark(self._current_file, index, position)
+        self._bookmarks = self._state.bookmarks
+        if ok and hasattr(self, '_bookmarks_dialog') and self._bookmarks_dialog is not None:
             self._refresh_bookmarks_dialog()
-        return True
+        return ok
     
     def should_loop_playback(self, current_position: float) -> Optional[float]:
-        if not self._current_file or self._current_file not in self._repeat_loops:
-            return None
-        
-        if self._is_user_seeking:
-            self._last_known_position = current_position
-            return None
-        
-        current_time = time.time()
-        if current_time - self._last_loop_trigger_time < 1.0:
-            self._last_known_position = current_position
-            return None
-        
-        position_delta = current_position - self._last_known_position
-        
-        if abs(position_delta) > 2.0:
-            self._last_known_position = current_position
-            return None
-        
-        loops = self._repeat_loops[self._current_file]
-        for loop_start, loop_end in loops:
-            if loop_start is not None and loop_end is not None:
-                if self._last_known_position < loop_end and current_position >= loop_end:
-                    if position_delta > 0 and position_delta < 2.0:
-                        self._last_loop_trigger_time = current_time
-                        self._last_known_position = loop_start
-                        return loop_start
-        
-        self._last_known_position = current_position
-        return None
+        self._state.repeat_loops = self._repeat_loops
+        loop_pos, self._last_loop_trigger_time, self._last_known_position = self._state.should_loop_playback(
+            self._current_file,
+            current_position,
+            self._is_user_seeking,
+            self._last_loop_trigger_time,
+            self._last_known_position,
+        )
+        self._repeat_loops = self._state.repeat_loops
+        return loop_pos
     
     def _is_position_in_existing_loop(self, position: float) -> bool:
-        if self._current_file not in self._repeat_loops:
-            return False
-        
-        loops = self._repeat_loops[self._current_file]
-        for loop_start, loop_end in loops:
-            if loop_start is not None and loop_end is not None:
-                if loop_start <= position <= loop_end:
-                    return True
-        return False
+        self._state.repeat_loops = self._repeat_loops
+        return self._state.is_position_in_existing_loop(self._current_file, position)
     
     def _would_loop_intersect(self, new_start: float, new_end: float, exclude_index: int = -1) -> bool:
-        if self._current_file not in self._repeat_loops:
-            return False
-        
-        loops = self._repeat_loops[self._current_file]
-        for i, (loop_start, loop_end) in enumerate(loops):
-            if i == exclude_index:
-                continue
-            
-            if loop_start is not None and loop_end is not None:
-                if (new_start <= loop_start <= new_end or 
-                    new_start <= loop_end <= new_end or
-                    loop_start <= new_start <= loop_end or
-                    loop_start <= new_end <= loop_end):
-                    return True
-        return False
+        self._state.repeat_loops = self._repeat_loops
+        return self._state.would_loop_intersect(self._current_file, new_start, new_end, exclude_index=exclude_index)
     
     def get_bookmarks(self) -> List[float]:
-        if not self._current_file or self._current_file not in self._bookmarks:
-            return []
-        return self._bookmarks[self._current_file].copy()
+        self._state.bookmarks = self._bookmarks
+        return self._state.get_bookmarks(self._current_file)
     
     @Slot()
     def clear_bookmarks(self):
-        if self._current_file and self._current_file in self._bookmarks:
-            del self._bookmarks[self._current_file]
+        if not self._current_file:
+            return
+        self._state.bookmarks = self._bookmarks
+        if self._state.clear_bookmarks(self._current_file):
+            self._bookmarks = self._state.bookmarks
             self._current_bookmark_index = -1
-            self.save_bookmarks()
             if hasattr(self, '_bookmarks_dialog') and self._bookmarks_dialog is not None:
                 self._bookmarks_dialog.clear_all()
     
     def save_bookmarks(self):
-        bookmarks_file = os.path.join(self._data_dir, "bookmarks.json")
-        try:
-            with open(bookmarks_file, 'w') as f:
-                json.dump(self._bookmarks, f, indent=2)
-        except Exception:
-            pass
+        self._state.bookmarks = self._bookmarks
+        self._state.save_bookmarks()
     
     def load_bookmarks(self):
-        bookmarks_file = os.path.join(self._data_dir, "bookmarks.json")
-        try:
-            if os.path.exists(bookmarks_file):
-                with open(bookmarks_file, 'r') as f:
-                    self._bookmarks = json.load(f)
-        except Exception:
-            self._bookmarks = {}
+        self._state.load_bookmarks()
+        self._bookmarks = self._state.bookmarks
     
     def save_repeat_loops(self):
-        loops_file = os.path.join(self._data_dir, "repeat_loops.json")
-        try:
-            with open(loops_file, 'w') as f:
-                json.dump(self._repeat_loops, f, indent=2)
-        except Exception:
-            pass
+        self._state.repeat_loops = self._repeat_loops
+        self._state.save_repeat_loops()
     
     def load_repeat_loops(self):
-        loops_file = os.path.join(self._data_dir, "repeat_loops.json")
-        try:
-            if os.path.exists(loops_file):
-                with open(loops_file, 'r') as f:
-                    self._repeat_loops = json.load(f)
-        except Exception:
-            self._repeat_loops = {}
+        self._state.load_repeat_loops()
+        self._repeat_loops = self._state.repeat_loops
     
     def save_last_position(self):
         if not self._current_file:
@@ -840,38 +723,20 @@ class PlayerControls(QWidget):
         
         current_pos = self.get_seek_position()
         self._last_positions[self._current_file] = current_pos
-        
-        positions_file = os.path.join(self._data_dir, "last_positions.json")
-        try:
-            with open(positions_file, 'w') as f:
-                json.dump(self._last_positions, f, indent=2)
-        except Exception:
-            pass
+
+        self._state.last_positions = self._last_positions
+        self._state.save_last_positions()
     
     def load_last_positions(self):
-        positions_file = os.path.join(self._data_dir, "last_positions.json")
-        try:
-            if os.path.exists(positions_file):
-                with open(positions_file, 'r') as f:
-                    self._last_positions = json.load(f)
-        except Exception:
-            self._last_positions = {}
+        self._state.load_last_positions()
+        self._last_positions = self._state.last_positions
     
     def load_last_position(self):
-        if not self._current_file:
-            return
-        
-        if self._current_file in self._last_positions:
-            try:
-                last_pos = self._last_positions[self._current_file]
-                if isinstance(last_pos, (int, float)) and last_pos >= 0:
-                    #max_duration = self.seek_slider.maximum()
-                    #if max_duration > 0 and last_pos <= max_duration:
-                    self.last_position = int(last_pos)
-                        #self.set_seek_position(int(last_pos))
-                        #self.seekChanged.emit(int(last_pos))
-            except Exception as e:
-                pass
+        self._state.last_positions = self._last_positions
+        last_pos = self._state.get_last_position(self._current_file)
+        self._last_positions = self._state.last_positions
+        if last_pos is not None:
+            self.last_position = int(last_pos)
 
     def _refresh_bookmarks_dialog(self):
         if not hasattr(self, '_bookmarks_dialog') or self._bookmarks_dialog is None:
