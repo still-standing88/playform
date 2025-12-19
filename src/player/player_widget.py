@@ -21,6 +21,7 @@ from gui_controls.toggle_button import ToggleButton
 from .subtitles import SubtitleManager
 from .filters_widget import FiltersWidget
 from .url_extractor import UrlExtractor
+from .utilities import ensure_ytdlp_available
 from app_constance.styles import PLAYER_WIDGET_STYLE
 
 from utilities.functions import get_app_path, get_debug_level, get_parent_dir, get_vlclog_file, parse_vlc_args
@@ -684,6 +685,10 @@ class PlayerWidget(QWidget):
 
     def load_url(self, url: str):
         signal_manager.statusbar_message.emit(f"Loading URL: {url}")
+
+        if not ensure_ytdlp_available(self, show_message=True):
+            self._reset_ui_to_default()
+            return
         try:
             if self.url_extractor and self.url_extractor.isRunning():
                 self.url_extractor.terminate()

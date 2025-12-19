@@ -8,21 +8,28 @@ from tools.subtitle_editor_ui import SubtitleEditorUI
 from gui.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
+from player.utilities import ensure_ffmpeg_available
 
 class ToolWindowManager:
     def __init__(self, main_window):
         self.main_window = main_window
         
     def open_batch_converter(self):
+        if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
+            return
         self.open_tool_dialog("batch_converter", BatchConverterUI(), "Batch Converter")
         
     def open_extractor(self):
+        if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
+            return
         self.open_tool_dialog("extractor", ExtractorUI(), "Media Extractor")
         
     def open_tag_editor(self):
         self.open_tool_dialog("tag_editor", TagEditorUI(), "Tag Editor")
         
     def open_thumbnail_generator(self):
+        if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
+            return
         self.open_tool_dialog("thumbnail_generator", ThumbnailGeneratorUI(), "Thumbnail Generator")
     
     def open_subtitle_converter(self):

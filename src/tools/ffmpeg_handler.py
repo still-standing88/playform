@@ -1,6 +1,6 @@
 import os
 import shutil
-from pyffmpeg import FFmpeg as FFmpegDownloader
+from pyffmpeg import FFmpeg as FFmpegBin
 from ffmpeg import FFmpeg
 from ffmpeg.asyncio import FFmpeg as AsyncFFmpeg
 
@@ -27,7 +27,7 @@ class FFmpegHandler:
             os.makedirs(bin_dir, exist_ok=True)
             
             try:
-                downloader = FFmpegDownloader()
+                downloader = FFmpegBin()
                 temp_ffmpeg_path = downloader.get_ffmpeg_bin()
                 shutil.copy2(temp_ffmpeg_path, local_ffmpeg_path)
 

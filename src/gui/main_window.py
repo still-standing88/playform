@@ -29,6 +29,7 @@ from utilities.util_gui import menuItem, messageBox
 from utilities.media_utils import get_media_files_from_directory
 from utilities.speech import speech_manager
 from utilities import signal_manager
+from player.utilities import ensure_ffmpeg_available
 from av_play import Playlist, PlaylistEntry, formats
 from tools.batch_converter_ui import BatchConverterUI
 from tools.extractor_ui import ExtractorUI
@@ -431,8 +432,8 @@ class MainWindow(QMainWindow):
         
         if prefs.prefs["accessibility_feedback"]:
             # The following is a conditional check to disable Sapi onWindows until a solution is found for GUI freezing when Sapi speaks.
-            if  sys.platform == "win32" and speech_manager.current_driver() == "Sapi5":
-                pass
+            if sys.platform == "win32" and speech_manager.current_driver() == "Sapi5":
+                return
 
             speech_manager.output(message, prefs.prefs["tts_speech_interrupt"])
 
@@ -506,15 +507,21 @@ class MainWindow(QMainWindow):
                 instance.set_volume(min(100, current_volume + 5))
     
     def open_batch_converter(self):
+        if not ensure_ffmpeg_available(self, show_message=True, min_major=6):
+            return
         self.open_tool_dialog("batch_converter", BatchConverterUI(), "Batch Converter")
         
     def open_extractor(self):
+        if not ensure_ffmpeg_available(self, show_message=True, min_major=6):
+            return
         self.open_tool_dialog("extractor", ExtractorUI(), "Media Extractor")
         
     def open_tag_editor(self):
         self.open_tool_dialog("tag_editor", TagEditorUI(), "Tag Editor")
         
     def open_thumbnail_generator(self):
+        if not ensure_ffmpeg_available(self, show_message=True, min_major=6):
+            return
         self.open_tool_dialog("thumbnail_generator", ThumbnailGeneratorUI(), "Thumbnail Generator")
     
     def open_subtitle_converter(self):

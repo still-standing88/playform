@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QComboBox,
 from PySide6.QtCore import Qt, Signal, Slot
 from app_config import prefs
 from utilities.functions import isValidURL
+from player.utilities import ensure_ytdlp_available
 
 class URLDialog(QDialog):
     url_opened = Signal(str)
@@ -73,6 +74,9 @@ class URLDialog(QDialog):
             
         if not self.is_valid_url(url):
             QMessageBox.warning(self, "Invalid URL", f"'{url}' is not a valid URL.")
+            return
+
+        if not ensure_ytdlp_available(self, show_message=True):
             return
             
         self.add_url_to_history(url)
