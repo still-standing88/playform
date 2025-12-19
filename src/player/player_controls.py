@@ -624,10 +624,14 @@ class PlayerControls(QWidget):
             self._current_loop_index = -1
     
     def get_current_loops(self) -> List[Tuple[Optional[float], Optional[float]]]:
+        if not self._current_file:
+            return []
         self._state.repeat_loops = self._repeat_loops
         return self._state.get_loops(self._current_file)
 
     def update_loop_by_index(self, index:int, start:float, end:float):
+        if not self._current_file:
+            return False
         self._state.repeat_loops = self._repeat_loops
         ok = self._state.update_loop(self._current_file, index, start, end)
         self._repeat_loops = self._state.repeat_loops
@@ -636,6 +640,8 @@ class PlayerControls(QWidget):
         return ok
 
     def delete_loop_by_index(self, index:int):
+        if not self._current_file:
+            return False
         self._state.repeat_loops = self._repeat_loops
         ok = self._state.delete_loop(self._current_file, index)
         self._repeat_loops = self._state.repeat_loops
@@ -651,6 +657,8 @@ class PlayerControls(QWidget):
         return True
 
     def add_bookmark_at_position(self, position:float):
+        if not self._current_file:
+            return False
         self._state.bookmarks = self._bookmarks
         ok = self._state.add_bookmark(self._current_file, position)
         self._bookmarks = self._state.bookmarks
@@ -659,6 +667,8 @@ class PlayerControls(QWidget):
         return ok
 
     def update_bookmark_at_index(self, index:int, position:float):
+        if not self._current_file:
+            return False
         self._state.bookmarks = self._bookmarks
         ok = self._state.update_bookmark(self._current_file, index, position)
         self._bookmarks = self._state.bookmarks
@@ -667,6 +677,8 @@ class PlayerControls(QWidget):
         return ok
     
     def should_loop_playback(self, current_position: float) -> Optional[float]:
+        if not self._current_file:
+            return None
         self._state.repeat_loops = self._repeat_loops
         loop_pos, self._last_loop_trigger_time, self._last_known_position = self._state.should_loop_playback(
             self._current_file,
@@ -679,14 +691,20 @@ class PlayerControls(QWidget):
         return loop_pos
     
     def _is_position_in_existing_loop(self, position: float) -> bool:
+        if not self._current_file:
+            return False
         self._state.repeat_loops = self._repeat_loops
         return self._state.is_position_in_existing_loop(self._current_file, position)
     
     def _would_loop_intersect(self, new_start: float, new_end: float, exclude_index: int = -1) -> bool:
+        if not self._current_file:
+            return False
         self._state.repeat_loops = self._repeat_loops
         return self._state.would_loop_intersect(self._current_file, new_start, new_end, exclude_index=exclude_index)
     
     def get_bookmarks(self) -> List[float]:
+        if not self._current_file:
+            return []
         self._state.bookmarks = self._bookmarks
         return self._state.get_bookmarks(self._current_file)
     
