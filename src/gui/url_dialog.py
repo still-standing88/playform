@@ -51,6 +51,9 @@ class URLDialog(QDialog):
         return isValidURL(url)
         
     def add_url_to_history(self, url):
+        if not prefs.prefs.get("save_urls", False):
+            return
+            
         urls = prefs.prefs.get("urlls", [])
         
         if url in urls:

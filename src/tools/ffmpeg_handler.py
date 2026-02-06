@@ -1,20 +1,21 @@
 import os
-import shutil
-from pyffmpeg import FFmpeg as FFmpegBin
 from ffmpeg import FFmpeg
 from ffmpeg.asyncio import FFmpeg as AsyncFFmpeg
 
-from utilities.functions import get_app_path, get_parent_dir
+from utilities.functions import get_parent_dir
+from utilities.ffmpeg_extractor import extract_ffmpeg_from_pyffmpeg
+from player.utilities import resolve_ffmpeg_binary_path
+from app_config import prefs
 
 class FFmpegHandler:
     _ffmpeg_path: str | None = None
     _ffprobe_path: str | None = None
+    _errors: list = []
 
     @staticmethod
     def get_ffmpeg_binary():
         if FFmpegHandler._ffmpeg_path is not None:
             return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
-
 
         base_dir = get_parent_dir()
         bin_dir = os.path.join(base_dir, 'bin')
@@ -24,22 +25,26 @@ class FFmpegHandler:
         local_ffprobe_path = os.path.join(bin_dir, ffprobe_exe_name)
 
         if not os.path.exists(local_ffmpeg_path):
-            os.makedirs(bin_dir, exist_ok=True)
+            found_ffmpeg = resolve_ffmpeg_binary_path()
             
-            try:
-                downloader = FFmpegBin()
-                temp_ffmpeg_path = downloader.get_ffmpeg_bin()
-                shutil.copy2(temp_ffmpeg_path, local_ffmpeg_path)
-
-                temp_dir = os.path.dirname(temp_ffmpeg_path)
-                temp_ffprobe_path = os.path.join(temp_dir, ffprobe_exe_name)
-                if os.path.exists(temp_ffprobe_path):
-                    shutil.copy2(temp_ffprobe_path, local_ffprobe_path)
-
-            except Exception as e:
-                FFmpegHandler._ffmpeg_path = "ffmpeg"
-                FFmpegHandler._ffprobe_path = "ffprobe"
+            if found_ffmpeg and os.path.exists(found_ffmpeg):
+                FFmpegHandler._ffmpeg_path = found_ffmpeg
+                ffprobe_dir = os.path.dirname(found_ffmpeg)
+                ffprobe_candidate = os.path.join(ffprobe_dir, ffprobe_exe_name)
+                FFmpegHandler._ffprobe_path = ffprobe_candidate if os.path.exists(ffprobe_candidate) else None
                 return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
+            
+            extracted_ffmpeg, extracted_ffprobe = extract_ffmpeg_from_pyffmpeg(bin_dir)
+            
+            if extracted_ffmpeg and os.path.exists(extracted_ffmpeg):
+                FFmpegHandler._ffmpeg_path = extracted_ffmpeg
+                FFmpegHandler._ffprobe_path = extracted_ffprobe
+                return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
+            
+            FFmpegHandler._errors.append("FFmpeg not found in system PATH or preferences")
+            FFmpegHandler._ffmpeg_path = "ffmpeg"
+            FFmpegHandler._ffprobe_path = "ffprobe"
+            return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
 
         FFmpegHandler._ffmpeg_path = local_ffmpeg_path
         FFmpegHandler._ffprobe_path = local_ffprobe_path
@@ -62,3 +67,11 @@ class FFmpegHandler:
     def create_async_ffmpeg_instance():
         ffmpeg_path, _ = FFmpegHandler.get_ffmpeg_binary()
         return AsyncFFmpeg(executable=str(ffmpeg_path))
+
+    @staticmethod
+    def get_errors():
+        return FFmpegHandler._errors.copy()
+    
+    @staticmethod
+    def has_errors():
+        return len(FFmpegHandler._errors) > 0

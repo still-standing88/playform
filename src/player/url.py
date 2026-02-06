@@ -20,7 +20,27 @@ def set_ytdlp_log(log_file: Optional[str] = None, verbose: bool = False):
     YTDLP_LOG_FILE = log_file
     YTDLP_VERBOSE = verbose
 
+def get_yt_video_info(url: str) -> dict:
+    command = [YTDLP_PATH, '--dump-json', '--no-playlist', url]
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=True,
+            encoding='utf-8'
+        )
+        return json.loads(result.stdout)
+    except FileNotFoundError:
+        raise RuntimeError(f"yt-dlp executable not found at '{YTDLP_PATH}'.")
+    except subprocess.CalledProcessError as e:
+        raise ValueError(f"yt-dlp returned an error: {e.stderr}")
+    except json.JSONDecodeError:
+        raise ValueError(f"Failed to parse JSON from yt-dlp output.")
+
 def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None):
+    from app_config import prefs
+    
     cmd = [YTDLP_PATH, '--dump-json']
     
     if not as_playlist:
@@ -30,6 +50,10 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
     
     if cookies:
         cmd.extend(['--cookies', cookies])
+    else:
+        cookies_file = prefs.prefs.get("youtube_cookies")
+        if cookies_file:
+            cmd.extend(['--cookies', cookies_file])
     
     if YTDLP_VERBOSE:
         cmd.append('--verbose')
@@ -63,10 +87,16 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
         raise ValueError("No output from yt-dlp")
 
 def fetch_full_info(url: str, cookies: Optional[str] = None):
+    from app_config import prefs
+    
     cmd = [YTDLP_PATH, '--dump-json', '--no-playlist', url]
     
     if cookies:
         cmd.extend(['--cookies', cookies])
+    else:
+        cookies_file = prefs.prefs.get("youtube_cookies")
+        if cookies_file:
+            cmd.extend(['--cookies', cookies_file])
     
     if YTDLP_VERBOSE:
         cmd.append('--verbose')
