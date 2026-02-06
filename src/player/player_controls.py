@@ -3,9 +3,9 @@ import json
 
 import time
 from typing import Optional, Callable, Dict, List, Tuple
-from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QPushButton, 
+from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QToolButton,
                                QSlider, QLabel, QSizePolicy, QFrame, QSpinBox, QMenu)
-from PySide6.QtWidgets import QDialog
+from PySide6.QtWidgets import QDialog, QApplication
 from PySide6.QtCore import Qt, Signal, QTimer, Slot
 from PySide6.QtGui import QIcon, QFont
 
@@ -14,9 +14,12 @@ from app_config import prefs
 from .bookmarks_dialog import BookmarksDialog
 from app_constance.misc import video_resolutions, video_speeds, video_aspect_ratios, video_scales
 from app_constance.styles import (PLAYER_CONTROLS_STYLE, BUTTON_STYLE, SLIDER_STYLE,
-                                   TIME_LABEL_STYLE, TRACK_LABEL_STYLE, get_repeat_button_active_style)
+                                   TIME_LABEL_STYLE, TRACK_LABEL_STYLE, TOOLBUTTON_STYLE,
+                                   get_repeat_button_active_style)
 from utilities.functions import get_app_path
 from .playback_state_manager import PlaybackStateManager
+from utilities.functions import is_youtube_url, is_local_file, open_file_location
+from utilities.icon_loader import load_icon
 
 
 class PlayerControls(QWidget):
@@ -91,26 +94,62 @@ class PlayerControls(QWidget):
         self.toggle_controls_btn.setFixedSize(30, 30)
         self.toggle_controls_btn.setToolTip("Minimize/Maximize Controls")
         
-        self.previous_btn = QPushButton("⏮Previous", self)
-        self.backward_btn = QPushButton("⏪Rewind", self)
-        self.play_pause_btn = QPushButton("▶", self)
-        self.forward_btn = QPushButton("⏩Forward", self)
-        self.next_btn = QPushButton("⏭Next", self)
-        self.repeat_btn = QPushButton("🔁Off", self)
-        self.shuffle_btn = QPushButton("🔀Shuffle", self)
-        self.bookmarks_btn = QPushButton("🔖", self)
-        self.screenshot_btn = QPushButton("📷", self)
+        # Create media control buttons with icons
+        self.previous_btn = QToolButton(self)
+        self.previous_btn.setIcon(load_icon("previous.svg"))
+        self.previous_btn.setText("Previous")
+        self.previous_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        
+        self.backward_btn = QToolButton(self)
+        self.backward_btn.setIcon(load_icon("rewind.svg"))
+        self.backward_btn.setText("Rewind")
+        self.backward_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        
+        self.play_pause_btn = QToolButton(self)
+        self.play_pause_btn.setIcon(load_icon("play.svg"))
+        self.play_pause_btn.setText("Play")
+        self.play_pause_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        
+        self.forward_btn = QToolButton(self)
+        self.forward_btn.setIcon(load_icon("forward.svg"))
+        self.forward_btn.setText("Forward")
+        self.forward_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        
+        self.next_btn = QToolButton(self)
+        self.next_btn.setIcon(load_icon("next.svg"))
+        self.next_btn.setText("Next")
+        self.next_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        
+        self.repeat_btn = QToolButton(self)
+        self.repeat_btn.setIcon(load_icon("repeat.svg"))
+        self.repeat_btn.setText("Off")
+        self.repeat_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        
+        self.shuffle_btn = QToolButton(self)
+        self.shuffle_btn.setIcon(load_icon("shuffle.svg"))
+        self.shuffle_btn.setText("Shuffle")
+        self.shuffle_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        
+        self.bookmarks_btn = QToolButton(self)
+        self.bookmarks_btn.setIcon(load_icon("bookmarks.svg"))
+        self.bookmarks_btn.setText("Bookmarks")
+        self.bookmarks_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        
+        self.screenshot_btn = QToolButton(self)
+        self.screenshot_btn.setIcon(load_icon("screenshot.svg"))
+        self.screenshot_btn.setText("Screenshot")
+        self.screenshot_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         button_specs = [
-            (self.previous_btn, 40, 40, "Previous Track"),
-            (self.backward_btn, 40, 40, "Backward"),
-            (self.play_pause_btn, 50, 50, "Play/Pause"),
-            (self.forward_btn, 40, 40, "Forward"),
-            (self.next_btn, 40, 40, "Next Track"),
-            (self.repeat_btn, 40, 40, "Repeat mode"),
-            (self.shuffle_btn, 40, 40, "Shuffle"),
-            (self.bookmarks_btn, 40, 40, "Bookmarks list"),
-            (self.screenshot_btn, 40, 40, "Take screenshot"),
+            (self.previous_btn, 120, 40, "Previous Track"),
+            (self.backward_btn, 110, 40, "Backward"),
+            (self.play_pause_btn, 100, 50, "Play/Pause"),
+            (self.forward_btn, 110, 40, "Forward"),
+            (self.next_btn, 100, 40, "Next Track"),
+            (self.repeat_btn, 90, 40, "Repeat mode"),
+            (self.shuffle_btn, 110, 40, "Shuffle"),
+            (self.bookmarks_btn, 130, 40, "Bookmarks list"),
+            (self.screenshot_btn, 130, 40, "Take screenshot"),
         ]
 
         for btn, w, h, tooltip in button_specs:
@@ -124,14 +163,15 @@ class PlayerControls(QWidget):
         self.seek_slider.setValue(0)
         self.seek_slider.setAccessibleName("Seek")
 
-        self.mute_btn = QPushButton("🔊", self)
+        self.mute_btn = QToolButton(self)
+        self.mute_btn.setIcon(load_icon("mute_off.svg"))
+        self.mute_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        self.mute_btn.setFixedSize(35, 35)
+        self.mute_btn.setToolTip("Mute/Unmute")
+        
         self.more_btn = QPushButton("⋯", self)
-        for btn, w, h, tooltip in [
-            (self.mute_btn, 35, 35, "Mute/Unmute"),
-            (self.more_btn, 35, 35, "More Options"),
-        ]:
-            btn.setFixedSize(w, h)
-            btn.setToolTip(tooltip)
+        self.more_btn.setFixedSize(35, 35)
+        self.more_btn.setToolTip("More Options")
         
         self.volume_slider = QSlider(Qt.Orientation.Horizontal, self)
         self.volume_slider.setAccessibleName("Volume")
@@ -155,6 +195,8 @@ class PlayerControls(QWidget):
         self.current_track_label = QLabel("No media loaded", self)
         self.current_track_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.current_track_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self.current_track_label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.current_track_label.customContextMenuRequested.connect(self.show_path_context_menu)
 
 
         self.separator1 = QFrame(self)
@@ -241,9 +283,14 @@ class PlayerControls(QWidget):
     def apply_styles(self):
         self.setStyleSheet(PLAYER_CONTROLS_STYLE)
         
+        # Apply QToolButton style to media control buttons
         for btn in [self.play_pause_btn, self.previous_btn, self.backward_btn,
-                   self.forward_btn, self.next_btn, self.repeat_btn, self.mute_btn, self.more_btn, self.shuffle_btn, self.bookmarks_btn, self.screenshot_btn]:
-            btn.setStyleSheet(BUTTON_STYLE)
+                   self.forward_btn, self.next_btn, self.repeat_btn, self.shuffle_btn, 
+                   self.bookmarks_btn, self.screenshot_btn, self.mute_btn]:
+            btn.setStyleSheet(TOOLBUTTON_STYLE)
+        
+        # Apply QPushButton style to more button
+        self.more_btn.setStyleSheet(BUTTON_STYLE)
             
         self.seek_slider.setStyleSheet(SLIDER_STYLE)
         self.volume_slider.setStyleSheet(SLIDER_STYLE)
@@ -319,20 +366,22 @@ class PlayerControls(QWidget):
         if self.is_playing == is_playing: return
         self.is_playing = is_playing
         if is_playing:
-            self.play_pause_btn.setText("⏸")
+            self.play_pause_btn.setIcon(load_icon("pause.svg"))
+            self.play_pause_btn.setText("Pause")
             self.play_pause_btn.setToolTip("Pause")
         else:
-            self.play_pause_btn.setText("▶")
+            self.play_pause_btn.setIcon(load_icon("play.svg"))
+            self.play_pause_btn.setText("Play")
             self.play_pause_btn.setToolTip("Play")
             
     def set_mute_state(self, is_muted):
         if self.is_muted == is_muted: return
         self.is_muted = is_muted
         if is_muted:
-            self.mute_btn.setText("🔇")
+            self.mute_btn.setIcon(load_icon("mute_on.svg"))
             self.mute_btn.setToolTip("Unmute")
         else:
-            self.mute_btn.setText("🔊")
+            self.mute_btn.setIcon(load_icon("mute_off.svg"))
             self.mute_btn.setToolTip("Mute")
             
     def set_repeat_state(self, is_repeat_on):
@@ -794,5 +843,45 @@ class PlayerControls(QWidget):
         if self._current_file:
             current_pos = float(self.get_seek_position())
             self.check_loop_position(current_pos)
+    
+    def show_path_context_menu(self, position):
+        """Show dynamic context menu for current file/URL"""
+        if not self._current_file:
+            return
+        
+        menu = QMenu(self)
+        
+        # Always show: Copy Path
+        copy_action = menu.addAction("Copy Path")
+        copy_action.triggered.connect(lambda: self._copy_current_path())
+        
+        # Windows only: Open in Explorer (if local file)
+        if is_local_file(self._current_file):
+            import sys
+            if sys.platform == "win32":
+                explorer_action = menu.addAction("Open in Explorer")
+                # Type is safe here - is_local_file already checked
+                explorer_action.triggered.connect(lambda p=self._current_file: open_file_location(p) if p else None)
+        
+        # Emit signal for parent to handle YouTube info
+        if is_youtube_url(self._current_file):
+            menu.addSeparator()
+            yt_info_action = menu.addAction("Show YouTube Info")
+            # Call parent method if it's PlayerWidget
+            yt_info_action.triggered.connect(self._show_youtube_info_dialog)
+        
+        menu.exec(self.current_track_label.mapToGlobal(position))
+    
+    def _copy_current_path(self):
+        """Copy current file path to clipboard"""
+        if self._current_file:
+            clipboard = QApplication.clipboard()
+            clipboard.setText(self._current_file)
+    
+    def _show_youtube_info_dialog(self):
+        """Show YouTube info dialog via parent"""
+        parent = self.parent()
+        if parent and hasattr(parent, 'show_youtube_info_dialog'):
+            parent.show_youtube_info_dialog()  # type: ignore
 
 

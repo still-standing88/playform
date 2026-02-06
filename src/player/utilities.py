@@ -52,9 +52,41 @@ def _run_command(args: list[str], timeout_s: float = 5.0) -> Tuple[int, str, str
         return 1, "", str(e)
 
 
+def _get_bin_ext() -> str:
+    return '.exe' if os.name == 'nt' else ''
+
+
+def _find_in_path(binary_name: str) -> Optional[str]:
+    full_name = binary_name + _get_bin_ext()
+    path_var = os.environ.get('PATH', '')
+    for path_dir in path_var.split(os.pathsep):
+        bin_path = os.path.join(path_dir, full_name)
+        if os.path.isfile(bin_path) and os.access(bin_path, os.X_OK):
+            return bin_path
+    return None
+
+
+def _verify_binary_exists(bin_path: str) -> bool:
+    if not bin_path or not os.path.exists(bin_path):
+        return False
+    if not os.path.isfile(bin_path):
+        return False
+    if os.name == 'nt':
+        return bin_path.lower().endswith('.exe')
+    return os.access(bin_path, os.X_OK)
+
+
 def resolve_ytdlp_binary_path() -> str:
+    prefs_dict_copy = {}
+    if hasattr(app_prefs, 'prefs'):
+        prefs_dict_copy = app_prefs.prefs.copy()
+    
+    ytdlp_path = _locate_ytdlp(prefs_dict_copy)
+    if ytdlp_path and _verify_binary_exists(ytdlp_path):
+        return os.path.normpath(ytdlp_path)
+    
     base = _get_pref_value("yt-dlp_path", "")
-    exe_name = "yt-dlp" + (".exe" if sys.platform == "win32" else "")
+    exe_name = "yt-dlp" + _get_bin_ext()
 
     if not base:
         return ""
@@ -63,12 +95,93 @@ def resolve_ytdlp_binary_path() -> str:
     if os.path.isdir(candidate):
         candidate = os.path.join(candidate, exe_name)
 
-    return os.path.normpath(candidate)
+    return os.path.normpath(candidate) if candidate else ""
+
+
+def _locate_ytdlp(prefs: dict) -> Optional[str]:
+    ytdlp_name = 'yt-dlp'
+    
+    pref_bin = prefs.get('yt-dlp_binary', '')
+    if pref_bin and _verify_binary_exists(pref_bin):
+        return pref_bin
+    
+    pref_path = prefs.get('yt-dlp_path', '')
+    if pref_path and os.path.isdir(pref_path):
+        ytdlp_candidate = os.path.join(pref_path, ytdlp_name + _get_bin_ext())
+        if _verify_binary_exists(ytdlp_candidate):
+            return ytdlp_candidate
+    
+    env_ytdlp = _find_in_path(ytdlp_name)
+    if env_ytdlp:
+        return env_ytdlp
+    
+    return None
 
 
 def resolve_ffmpeg_binary_path() -> str:
+    prefs_dict_copy = {}
+    if hasattr(app_prefs, 'prefs'):
+        prefs_dict_copy = app_prefs.prefs.copy()
+    
+    ffmpeg_path, _ = _locate_ffmpeg(prefs_dict_copy)
+    if ffmpeg_path and _verify_binary_exists(ffmpeg_path):
+        return os.path.normpath(ffmpeg_path)
+    
     path = _get_pref_value("ffmpeg_binary", "")
     return os.path.normpath(path) if path else ""
+
+
+def _locate_ffmpeg(prefs: dict) -> Tuple[Optional[str], Optional[str]]:
+    ffmpeg_name = 'ffmpeg'
+    ffprobe_name = 'ffprobe'
+    
+    ffmpeg_path = None
+    ffprobe_path = None
+    
+    pref_ffmpeg = prefs.get('ffmpeg_binary', '')
+    if pref_ffmpeg and _verify_binary_exists(pref_ffmpeg):
+        ffmpeg_path = pref_ffmpeg
+        pref_dir = os.path.dirname(pref_ffmpeg)
+        ffprobe_candidate = os.path.join(pref_dir, ffprobe_name + _get_bin_ext())
+        if _verify_binary_exists(ffprobe_candidate):
+            ffprobe_path = ffprobe_candidate
+    
+    pref_path = prefs.get('ffmpeg_path', '')
+    if not ffmpeg_path and pref_path and os.path.isdir(pref_path):
+        ffmpeg_candidate = os.path.join(pref_path, ffmpeg_name + _get_bin_ext())
+        ffprobe_candidate = os.path.join(pref_path, ffprobe_name + _get_bin_ext())
+        if _verify_binary_exists(ffmpeg_candidate):
+            ffmpeg_path = ffmpeg_candidate
+        if _verify_binary_exists(ffprobe_candidate):
+            ffprobe_path = ffprobe_candidate
+    
+    if not ffmpeg_path:
+        env_ffmpeg = _find_in_path(ffmpeg_name)
+        if env_ffmpeg:
+            ffmpeg_path = env_ffmpeg
+    
+    if not ffprobe_path:
+        env_ffprobe = _find_in_path(ffprobe_name)
+        if env_ffprobe:
+            ffprobe_path = env_ffprobe
+    
+    return ffmpeg_path, ffprobe_path
+
+
+def update_prefs_with_found_binaries(prefs: dict) -> dict:
+    ffmpeg_path, ffprobe_path = _locate_ffmpeg(prefs)
+    ytdlp_path = _locate_ytdlp(prefs)
+    
+    if ffmpeg_path:
+        prefs['ffmpeg_binary'] = ffmpeg_path
+        if ffprobe_path:
+            prefs['ffmpeg_path'] = os.path.dirname(ffmpeg_path)
+    
+    if ytdlp_path:
+        prefs['yt-dlp_binary'] = ytdlp_path
+        prefs['yt-dlp_path'] = os.path.dirname(ytdlp_path)
+    
+    return prefs
 
 
 def check_ytdlp() -> BinaryCheckResult:

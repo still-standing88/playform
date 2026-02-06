@@ -25,6 +25,7 @@ from .utilities import ensure_ytdlp_available
 from app_constance.styles import PLAYER_WIDGET_STYLE
 
 from utilities.functions import get_app_path, get_debug_level, get_parent_dir, get_vlclog_file, parse_vlc_args
+from utilities.functions import is_youtube_url, is_local_file, open_file_location
 from utilities.media_utils import format_time, seconds_to_microseconds, get_media_files_from_directory
 from utilities import signal_manager
 
@@ -44,6 +45,8 @@ class PlayerWidget(QWidget):
         self.url_extractor = None
         self._shortcuts:Dict[str, QShortcut] = {}
         self._key_event_filter = KeyEventFilter(self)
+        self._youtube_info_cache: Dict[str, str] = {}
+        self._last_subtitle_text: Optional[str] = None
         
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
@@ -70,6 +73,10 @@ class PlayerWidget(QWidget):
         self.subtitles_widget = SubtitlesWidget(self)
         self.filters_widget = FiltersWidget(self)
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
+        
+
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_path_context_menu)
         
     def layout_widgets(self):
         self.main_layout = QHBoxLayout(self)
@@ -185,7 +192,6 @@ class PlayerWidget(QWidget):
     def _on_play_pause_clicked(self):
         instance = self.player.primary_instance
         if not instance:
-            QMessageBox.warning(self, "Playback Error", "No media instance available.")
             return
         try:
             state = instance.get_playback_state()
@@ -203,7 +209,6 @@ class PlayerWidget(QWidget):
     def _on_mute_unmute_clicked(self):
         instance = self.player.primary_instance
         if not instance:
-            QMessageBox.warning(self, "Mute Error", "No media instance available.")
             return
         try:
             state = instance.get_mute_state()
@@ -214,6 +219,31 @@ class PlayerWidget(QWidget):
         except av_play.AVError as e:
             msg = f"Mute error: {getattr(e, 'message', str(e))}"
             QMessageBox.critical(self, "Mute Error", msg)
+
+    def _has_active_media_instance(self) -> bool:
+        try:
+            return bool(getattr(self, 'player', None) and self.player.primary_instance is not None)
+        except Exception:
+            return False
+
+    def _call_if_enabled(self, widget, callback: Callable[[], None]):
+        try:
+            if widget is not None and not widget.isEnabled():
+                return
+        except Exception:
+            return
+        try:
+            callback()
+        except Exception:
+            pass
+
+    def _call_if_media(self, callback: Callable[[], None]):
+        if not self._has_active_media_instance():
+            return
+        try:
+            callback()
+        except Exception:
+            pass
         
     @Slot()
     def _on_forward_clicked(self):
@@ -405,21 +435,56 @@ class PlayerWidget(QWidget):
     
     def close_current_media(self):
         try:
-            self.player_controls.save_last_position()
-            
             if self.player.primary_instance is not None:
-                self.player.primary_instance.stop()
-                self.player.primary_instance.release()
+                self.player_controls.save_last_position()
+                self.player.stop_playlist()
+                self.player.release()
+                self._init_player()
+                self._reset_ui_to_default()
+
+                #self.player.primary_instance.release()
             
-            self.player.stop_playlist()
-            self._reset_ui_to_default()
-            
-            self.subtitle_manager = SubtitleManager()
-            self.player_controls._current_file = None
-            self.player_controls._current_bookmark_index = -1
-            
-        except Exception:
+            #self.player.stop_playlist()
+            #self.subtitle_manager = SubtitleManager()
+            #self.player_controls._current_file = None
+            #self.player_controls._current_bookmark_index = -1
+            #self._youtube_info_cache.clear()
+        except Exception as e:
             pass
+
+
+    def show_path_context_menu(self, position):
+
+        from PySide6.QtWidgets import QMenu, QApplication
+        
+        current_file = self.player_controls._current_file
+        if not current_file:
+            return
+        
+        menu = QMenu(self)
+        
+
+        copy_action = menu.addAction("Copy Path")
+        copy_action.triggered.connect(lambda: self._copy_path_to_clipboard(current_file))
+        
+
+        if is_local_file(current_file):
+            import sys
+            if sys.platform == "win32":
+                explorer_action = menu.addAction("Open in Explorer")
+                explorer_action.triggered.connect(lambda: open_file_location(current_file))
+
+        if is_youtube_url(current_file):
+            menu.addSeparator()
+            yt_info_action = menu.addAction("Show YouTube Info")
+            yt_info_action.triggered.connect(self.show_youtube_info_dialog)
+        
+        menu.exec(self.mapToGlobal(position))
+    
+    def _copy_path_to_clipboard(self, path: str):
+        from PySide6.QtWidgets import QApplication
+        clipboard = QApplication.clipboard()
+        clipboard.setText(path)
 
     def _update_media_player_data(self):
         self.player_controls.load_bookmarks()
@@ -599,9 +664,19 @@ class PlayerWidget(QWidget):
                 self.player_controls.set_time_text(f"{format_time(pos)} / {format_time(length)}")
             
             current_subtitle = self.subtitle_manager.get_subtitle_at(seconds_to_microseconds(pos))
+            
+            self.subtitles_widget.highlight_subtitle_at_time(seconds_to_microseconds(pos))
+            
             if current_subtitle:
-                self.subtitles_widget.subtitles_list.clear()
-                self.subtitles_widget.subtitles_list.addItem(QListWidgetItem(current_subtitle))
+
+                from app_config import prefs
+                if prefs.prefs.get("enable_speech", False) and current_subtitle != self._last_subtitle_text:
+                    from utilities.speech import speech_manager
+                    speech_manager.output(current_subtitle, interrupt=False)
+                    self._last_subtitle_text = current_subtitle
+            elif self._last_subtitle_text is not None:
+
+                self._last_subtitle_text = None
 
         except (av_play.AVError, Exception):
             pass
@@ -638,9 +713,12 @@ class PlayerWidget(QWidget):
 
     def _load_subtitles_for_current_track(self):
         self.subtitles_widget.clear_subtitles()
+        self._last_subtitle_text = None
         instance = self.player.primary_instance
         if instance and av_play.is_path(instance.file_path):
-            self.subtitle_manager.load_for_video(instance.file_path)
+            if self.subtitle_manager.load_for_video(instance.file_path):
+
+                self.subtitles_widget.load_all_subtitles(self.subtitle_manager)
         self.filters_widget.reset_filters()
 
     def _reset_ui_to_default(self):
@@ -820,24 +898,24 @@ class PlayerWidget(QWidget):
         hotkeys = key_config.key_config["Player"]
         
         shortcuts: Dict[str, Callable] = {
-            hotkeys["Play/Pause"]: lambda: self.player_controls.playPauseClicked.emit(),
-            hotkeys["Backward"]: lambda: self.player_controls.backwardClicked.emit(),
-            hotkeys["Forward"]: lambda: self.player_controls.forwardClicked.emit(),
-            hotkeys["Stop"]: lambda: self.player_controls.stopRequested.emit(),
-            hotkeys["Mute/Unmute"]: lambda: self.player_controls.muteUnmuteClicked.emit(),
-            hotkeys["Previous"]: lambda: self.player_controls.previousClicked.emit(),
-            hotkeys["Next"]: lambda: self.player_controls.nextClicked.emit(),
-            hotkeys["Jump to beginning"]: lambda: self.player_controls.jumpToBeginningRequested.emit(),
-            hotkeys["Jump to the end"]: lambda: self.player_controls.jumpToEndRequested.emit(),
-            hotkeys["Toggle repeat"]: lambda: self.player_controls.repeatClicked.emit(),
-            hotkeys["Volume up"]: lambda: self.player_controls.volume_up(),
-            hotkeys["Volume down"]: lambda: self.player_controls.volume_down(),
+            hotkeys["Play/Pause"]: lambda: self._call_if_enabled(self.player_controls.play_pause_btn, self.player_controls.playPauseClicked.emit),
+            hotkeys["Backward"]: lambda: self._call_if_enabled(self.player_controls.backward_btn, self.player_controls.backwardClicked.emit),
+            hotkeys["Forward"]: lambda: self._call_if_enabled(self.player_controls.forward_btn, self.player_controls.forwardClicked.emit),
+            hotkeys["Stop"]: lambda: self._call_if_media(self.player_controls.stopRequested.emit),
+            hotkeys["Mute/Unmute"]: lambda: self._call_if_enabled(self.player_controls.mute_btn, self.player_controls.muteUnmuteClicked.emit),
+            hotkeys["Previous"]: lambda: self._call_if_enabled(self.player_controls.previous_btn, self.player_controls.previousClicked.emit),
+            hotkeys["Next"]: lambda: self._call_if_enabled(self.player_controls.next_btn, self.player_controls.nextClicked.emit),
+            hotkeys["Jump to beginning"]: lambda: self._call_if_enabled(self.player_controls.seek_slider, self.player_controls.jumpToBeginningRequested.emit),
+            hotkeys["Jump to the end"]: lambda: self._call_if_enabled(self.player_controls.seek_slider, self.player_controls.jumpToEndRequested.emit),
+            hotkeys["Toggle repeat"]: lambda: self._call_if_enabled(self.player_controls.repeat_btn, self.player_controls.repeatClicked.emit),
+            hotkeys["Volume up"]: lambda: self._call_if_enabled(self.player_controls.volume_slider, self.player_controls.volume_up),
+            hotkeys["Volume down"]: lambda: self._call_if_enabled(self.player_controls.volume_slider, self.player_controls.volume_down),
             hotkeys["Bookmarks list"]: lambda: self.player_controls.show_bookmarks_dialog(),
             hotkeys["New mark at current position"]: lambda: self.player_controls.add_bookmark_at_current_position(),
             hotkeys["Repeat loop start"]: lambda: self._on_repeat_start_shortcut(),
             hotkeys["Repeat loop end"]: lambda: self._on_repeat_end_shortcut(),
             hotkeys["Clear repeat loop"]: lambda: self.player_controls.clear_repeat_loop(),
-            hotkeys["Take snapshot"]: lambda: self.player_controls.screenshotRequested.emit(),
+            hotkeys["Take snapshot"]: lambda: self._call_if_media(self.player_controls.screenshotRequested.emit),
             hotkeys["Delete current bookmark"]: lambda: self.player_controls.delete_current_bookmark(),
             hotkeys["Fullscreen"]: lambda: self.player_controls.fullscreenToggled.emit(True),
             hotkeys["Exit fullscreen"]: lambda: self.player_controls.fullscreenToggled.emit(False),
@@ -855,6 +933,7 @@ class PlayerWidget(QWidget):
             hotkeys["Mark8 position"]: lambda: self.player_controls.jump_to_mark(7),
             hotkeys["Mark9 position"]: lambda: self.player_controls.jump_to_mark(8),
             hotkeys["Mark10 position"]: lambda: self.player_controls.jump_to_mark(9),
+            hotkeys["close media"]: lambda: self.close_current_media()
         }
         
         for shortcut in self._shortcuts.values():
@@ -910,13 +989,51 @@ class PlayerWidget(QWidget):
         ]
         self._key_event_filter.install_on_widgets(widgets)
 
+    def show_youtube_info_dialog(self):
 
+        current_file = self.player_controls._current_file
+        if not current_file:
+            return
+        
+        from utilities.functions import is_youtube_url
+        if not is_youtube_url(current_file):
+            return
+        
+        from gui.youtube_info_dialog import YouTubeInfoDialog
+        from PySide6.QtGui import QTextCursor
+        
+        dialog = YouTubeInfoDialog(current_file, parent=self)
+        
+
+        if current_file in self._youtube_info_cache:
+            dialog.cached_result = self._youtube_info_cache[current_file]
+            dialog.loading_widget.hide()
+            dialog.result_widget.show()
+            dialog.text_edit.setPlainText(dialog.cached_result)
+            cursor = dialog.text_edit.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
+            dialog.text_edit.setTextCursor(cursor)
+        else:
+
+            if dialog.worker:
+                dialog.worker.finished.connect(
+                    lambda json_str: self._cache_youtube_info(current_file, json_str)
+                )
+        
+        dialog.exec()
+    
+    def _cache_youtube_info(self, url: str, json_str: str):
+
+        self._youtube_info_cache[url] = json_str
 
     def closeEvent(self, event):
         try:
             if self.url_extractor and self.url_extractor.isRunning():
                 self.url_extractor.terminate()
                 self.url_extractor.wait()
+            
+
+            self._youtube_info_cache.clear()
             
             self.player_controls.save_last_position()
             if self.player.primary_instance is not None:

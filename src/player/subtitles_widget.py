@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem
 from PySide6.QtCore import Qt, Signal, Slot
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QColor
 
 from gui_controls.toggle_button import ToggleButton
 from gui_controls.player_key_event_filter import KeyEventFilter
@@ -13,6 +13,7 @@ class SubtitlesWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._key_event_filter = KeyEventFilter(self)
+        self._all_subtitles_loaded = False  # Track if we've loaded all subtitles
         
         self.setup_ui()
         self.connect_signals()
@@ -75,15 +76,45 @@ class SubtitlesWidget(QWidget):
         
     def clear_subtitles(self):
         self.subtitles_list.clear()
+        self._all_subtitles_loaded = False
+    
+    def load_all_subtitles(self, subtitle_manager):
+        """Load all subtitles from subtitle manager"""
+        self.subtitles_list.clear()
+        for sub in subtitle_manager.subtitles:
+            item = QListWidgetItem(sub.text)
+            item.setData(Qt.ItemDataRole.UserRole, sub.start)  # Store start time
+            self.subtitles_list.addItem(item)
+        self._all_subtitles_loaded = True
         
-    def highlight_subtitle_at_time(self, timestamp):
+    def highlight_subtitle_at_time(self, timestamp_usec):
+        """Highlight the subtitle at given timestamp"""
+        if not self._all_subtitles_loaded:
+            return
+        
         for i in range(self.subtitles_list.count()):
             item = self.subtitles_list.item(i)
             item_timestamp = item.data(Qt.ItemDataRole.UserRole)
-            if item_timestamp and item_timestamp <= timestamp:
-                self.subtitles_list.setCurrentItem(item)
-            else:
-                break
+            
+            # Clear previous highlight
+            item.setBackground(QColor(0, 0, 0, 0))  # Transparent
+            
+            # Check if this is the active subtitle
+            if item_timestamp is not None and item_timestamp <= timestamp_usec:
+                # Check if next subtitle exists and hasn't started yet
+                if i + 1 < self.subtitles_list.count():
+                    next_item = self.subtitles_list.item(i + 1)
+                    next_timestamp = next_item.data(Qt.ItemDataRole.UserRole)
+                    if next_timestamp and next_timestamp > timestamp_usec:
+                        # This is the current subtitle
+                        item.setBackground(QColor(255, 255, 0, 80))  # Yellow highlight
+                        self.subtitles_list.scrollToItem(item)
+                        break
+                else:
+                    # Last subtitle
+                    item.setBackground(QColor(255, 255, 0, 80))
+                    self.subtitles_list.scrollToItem(item)
+                    break
                 
     def _install_event_filter(self):
         widgets = [self.subtitles_list, self.toggle_btn]

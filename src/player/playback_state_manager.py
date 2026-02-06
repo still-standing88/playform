@@ -13,6 +13,10 @@ class PlaybackStateManager:
         self.repeat_loops: Dict[str, List[Tuple[Optional[float], Optional[float]]]] = {}
 
     @property
+    def playback_state_path(self) -> str:
+        return os.path.join(self._data_dir, "playback_state.json")
+
+    @property
     def bookmarks_path(self) -> str:
         return os.path.join(self._data_dir, "bookmarks.json")
 
@@ -25,30 +29,89 @@ class PlaybackStateManager:
         return os.path.join(self._data_dir, "last_positions.json")
 
     def load_all(self) -> None:
-        self.load_bookmarks()
-        self.load_last_positions()
-        self.load_repeat_loops()
+        if os.path.exists(self.playback_state_path):
+            self._load_consolidated()
+        else:
+            self._migrate_from_separate_files()
 
-    def save_bookmarks(self) -> None:
-        self._save_json(self.bookmarks_path, self.bookmarks)
+    def _load_consolidated(self) -> None:
+        data = self._load_json(self.playback_state_path, default={})
+        
+        self.bookmarks = {}
+        self.last_positions = {}
+        self.repeat_loops = {}
+        
+        for file_path, state in data.items():
+            if isinstance(state, dict):
+                if "bookmarks" in state and isinstance(state["bookmarks"], list):
+                    self.bookmarks[file_path] = state["bookmarks"]
+                if "last_position" in state and isinstance(state["last_position"], (int, float)):
+                    self.last_positions[file_path] = float(state["last_position"])
+                if "loops" in state and isinstance(state["loops"], list):
+                    self.repeat_loops[file_path] = [tuple(loop) if isinstance(loop, list) else loop for loop in state["loops"]]
 
-    def load_bookmarks(self) -> None:
-        self.bookmarks = cast(Dict[str, List[float]], self._load_json(self.bookmarks_path, default={}))
-
-    def save_repeat_loops(self) -> None:
-        self._save_json(self.repeat_loops_path, self.repeat_loops)
-
-    def load_repeat_loops(self) -> None:
-        self.repeat_loops = cast(
+    def _migrate_from_separate_files(self) -> None:
+        old_bookmarks = cast(Dict[str, List[float]], self._load_json(self.bookmarks_path, default={}))
+        old_positions = cast(Dict[str, float], self._load_json(self.last_positions_path, default={}))
+        old_loops = cast(
             Dict[str, List[Tuple[Optional[float], Optional[float]]]],
             self._load_json(self.repeat_loops_path, default={}),
         )
+        
+        self.bookmarks = old_bookmarks
+        self.last_positions = old_positions
+        self.repeat_loops = old_loops
+        
+        self._save_consolidated()
+        
+        try:
+            if os.path.exists(self.bookmarks_path):
+                os.remove(self.bookmarks_path)
+            if os.path.exists(self.last_positions_path):
+                os.remove(self.last_positions_path)
+            if os.path.exists(self.repeat_loops_path):
+                os.remove(self.repeat_loops_path)
+        except:
+            pass
+
+    def _save_consolidated(self) -> None:
+        all_files = set(self.bookmarks.keys()) | set(self.last_positions.keys()) | set(self.repeat_loops.keys())
+        
+        data = {}
+        for file_path in all_files:
+            state = {}
+            
+            if file_path in self.last_positions:
+                state["last_position"] = self.last_positions[file_path]
+            
+            if file_path in self.bookmarks:
+                state["bookmarks"] = self.bookmarks[file_path]
+            
+            if file_path in self.repeat_loops:
+                state["loops"] = self.repeat_loops[file_path]
+            
+            if state:
+                data[file_path] = state
+        
+        self._save_json(self.playback_state_path, data)
+
+    def save_bookmarks(self) -> None:
+        self._save_consolidated()
+
+    def load_bookmarks(self) -> None:
+        pass
+
+    def save_repeat_loops(self) -> None:
+        self._save_consolidated()
+
+    def load_repeat_loops(self) -> None:
+        pass
 
     def save_last_positions(self) -> None:
-        self._save_json(self.last_positions_path, self.last_positions)
+        self._save_consolidated()
 
     def load_last_positions(self) -> None:
-        self.last_positions = cast(Dict[str, float], self._load_json(self.last_positions_path, default={}))
+        pass
 
     def get_bookmarks(self, file_path: Optional[str]) -> List[float]:
         if not file_path:
