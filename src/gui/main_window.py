@@ -7,7 +7,7 @@ from typing import Optional
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QSplitter, 
     QMenuBar, QMenu, QStatusBar, QToolBar, QDockWidget, QLabel,
-    QFileDialog, QInputDialog, QSystemTrayIcon, QApplication, QMessageBox, QDialog,
+    QFileDialog, QInputDialog, QApplication, QMessageBox, QDialog,
     QPushButton
 )
 from PySide6.QtCore import Qt, Signal, QTimer, QUrl
@@ -56,6 +56,7 @@ from .managers.toolbar_manager import ToolbarManager
 from .managers.dock_manager import DockManager
 from .managers.tool_window_manager import ToolWindowManager
 from .managers.playlist_handler import PlaylistHandler
+from system_tray import SystemTrayIcon
 
 
 
@@ -123,16 +124,15 @@ class MainWindow(QMainWindow):
         self.toolbar_manager = ToolbarManager(self)
         self.dock_manager = DockManager(self)
         self.tool_manager = ToolWindowManager(self)
-        self.playlist_handler = PlaylistHandler(self)
+        self.tray = None
         
         self.setup_ui()
+        self.setup_statusbar()
         self.menu_manager.setup_menus()
         self.toolbar_manager.setup_toolbar()
-        self.setup_statusbar()
         self.dock_manager.setup_dock_widgets()
         self.dock_manager.restore_dock_session()
-        self.setup_main_layout()
-        self.setup_system_tray()
+        self.tray = SystemTrayIcon(self)
         self.connect_signals()
         self.set_shortcuts()
         
@@ -144,8 +144,16 @@ class MainWindow(QMainWindow):
             hotkeys["Open file"]: self.open_file_dialog,
             hotkeys["Open folder"]: self.open_folder_dialog,
             hotkeys["Open URL"]: self.open_url_dialog,
-            hotkeys["Show/Hide explorer"]: lambda: self.dock_manager.toggle_explorer(not self.explorer_dock.isVisible()) if self.explorer_dock else None,
-            hotkeys["Show/Hide player controls"]: lambda: self.dock_manager.toggle_player_minimize(self.player_dock.isVisible()) if self.player_dock else None,
+            hotkeys["Show/Hide explorer"]: self.toggle_explorer_shortcut,
+            hotkeys["Show/Hide player controls"]: self.toggle_player_shortcut,
+            hotkeys["Toggle playlists"]: self.toggle_playlists_shortcut,
+            hotkeys["Toggle podcasts"]: self.toggle_podcasts_shortcut,
+            hotkeys["Toggle radio"]: self.toggle_radio_shortcut,
+            hotkeys["Toggle recents/favorites"]: self.toggle_recents_favorites_shortcut,
+            hotkeys["Focus playlists"]: self.focus_playlists,
+            hotkeys["Focus podcasts"]: self.focus_podcasts,
+            hotkeys["Focus radio"]: self.focus_radio,
+            hotkeys["Focus recents/favorites"]: self.focus_recents_favorites,
             hotkeys["Hide window"]: self.hide_to_tray,
             hotkeys["Exit"]: self.close_application,
             hotkeys["Focus explorer"]: self.focus_explorer,
@@ -181,11 +189,91 @@ class MainWindow(QMainWindow):
 
     def focus_explorer(self):
         if self.explorer_dock and self.explorer_dock.isVisible():
-            self.explorer_widget.setFocus()
+            if self.explorer_widget:
+                self.explorer_widget.setFocus()
 
     def focus_player(self):
         if self.player_dock and self.player_dock.isVisible():
-            self.player_widget.setFocus()
+            if self.player_widget:
+                self.player_widget.setFocus()
+
+    def focus_playlists(self):
+        if self.playlists_dock and self.playlists_dock.isVisible():
+            if self.playlists_widget:
+                self.playlists_widget.setFocus()
+
+    def focus_podcasts(self):
+        if self.podcast_dock and self.podcast_dock.isVisible():
+            if self.podcast_widget:
+                self.podcast_widget.setFocus()
+
+    def focus_radio(self):
+        if self.radio_dock and self.radio_dock.isVisible():
+            if self.radio_widget:
+                self.radio_widget.setFocus()
+
+    def focus_recents_favorites(self):
+        if self.recents_favorites_dock and self.recents_favorites_dock.isVisible():
+            if self.recents_and_favorites_widget:
+                self.recents_and_favorites_widget.setFocus()
+    
+    def toggle_explorer_shortcut(self):
+        """Toggle explorer via menu action"""
+        if self.show_explorer_action:
+            self.show_explorer_action.trigger()  # type: ignore
+    
+    def toggle_player_shortcut(self):
+        """Toggle player minimize via menu action"""
+        if self.minimize_player_action:
+            self.minimize_player_action.trigger()  # type: ignore
+    
+    def toggle_playlists_shortcut(self):
+        """Toggle playlists via menu action"""
+        if self.playlists_dock:
+            is_visible = self.playlists_dock.isVisible()
+            self.playlists_dock.setVisible(not is_visible)
+            if self.show_playlists_action:
+                self.show_playlists_action.setChecked(not is_visible)
+            if not is_visible and self.playlists_widget:
+                self.playlists_widget.setFocus()
+    
+    def toggle_podcasts_shortcut(self):
+        """Toggle podcasts via menu action"""
+        if self.podcast_dock:
+            is_visible = self.podcast_dock.isVisible()
+            self.podcast_dock.setVisible(not is_visible)
+            if self.show_podcast_action:
+                self.show_podcast_action.setChecked(not is_visible)
+            if not is_visible and self.podcast_widget:
+                self.podcast_widget.setFocus()
+        elif self.show_podcast_action:
+            # Create dock if it doesn't exist
+            self.show_podcast_action.setChecked(True)
+            self.show_podcast_action.trigger()
+    
+    def toggle_radio_shortcut(self):
+        """Toggle radio via menu action"""
+        if self.radio_dock:
+            is_visible = self.radio_dock.isVisible()
+            self.radio_dock.setVisible(not is_visible)
+            if self.show_radio_action:
+                self.show_radio_action.setChecked(not is_visible)
+            if not is_visible and self.radio_widget:
+                self.radio_widget.setFocus()
+        elif self.show_radio_action:
+            # Create dock if it doesn't exist
+            self.show_radio_action.setChecked(True)
+            self.show_radio_action.trigger()
+    
+    def toggle_recents_favorites_shortcut(self):
+        """Toggle recents/favorites via menu action"""
+        if self.recents_favorites_dock:
+            is_visible = self.recents_favorites_dock.isVisible()
+            self.recents_favorites_dock.setVisible(not is_visible)
+            if self.show_recents_favorites_action:
+                self.show_recents_favorites_action.setChecked(not is_visible)
+            if not is_visible and self.recents_and_favorites_widget:
+                self.recents_and_favorites_widget.setFocus()
 
     def setup_ui(self):
         central_widget = QWidget()
@@ -226,54 +314,28 @@ class MainWindow(QMainWindow):
     def setup_statusbar(self):
         self.status_bar = QStatusBar()
         self.status_bar.setObjectName("statusBar")
+        self.status_bar.setSizeGripEnabled(True)
         self.setStatusBar(self.status_bar)
         
         self.status_label = QLabel("Ready")
         self.status_label.setObjectName("statusLabel")
-        self.status_bar.addWidget(self.status_label)
+        self.status_bar.addWidget(self.status_label, 1)
         
         self.media_info_label = QLabel("")
         self.media_info_label.setObjectName("mediaInfoLabel")
         self.status_bar.addPermanentWidget(self.media_info_label)
         
-
         self.show_tool_button = QPushButton("Show Tool")
         self.show_tool_button.setObjectName("showToolButton")
         self.show_tool_button.clicked.connect(self.show_hidden_tool)
         self.show_tool_button.setVisible(False)
         self.status_bar.addPermanentWidget(self.show_tool_button)
         
+        self.status_bar.show()
+        
         signal_manager.statusbar_message.connect(self._update_status_message)
         signal_manager.media_info_message.connect(self.media_info_label.setText)
         
-
-        
-    def setup_main_layout(self):
-        pass
-        
-    def setup_system_tray(self):
-        if QSystemTrayIcon.isSystemTrayAvailable():
-            self.tray_icon = QSystemTrayIcon(self)
-            self.tray_icon.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_MediaPlay))
-            
-            tray_menu = QMenu()
-            
-            self.show_hide_action = QAction("Hide", self)
-            self.show_hide_action.triggered.connect(self.toggle_window_visibility)
-            tray_menu.addAction(self.show_hide_action)
-            
-            tray_menu.addSeparator()
-            
-            exit_action = QAction("Exit", self)
-            exit_action.triggered.connect(self.close_application)
-            tray_menu.addAction(exit_action)
-            
-            self.tray_icon.setContextMenu(tray_menu)
-            self.tray_icon.activated.connect(self.tray_icon_activated)
-            self.tray_icon.show()
-        else:
-            self.tray_icon = None
-            
     def connect_signals(self):
         self.recents_and_favorites_widget.itemRequested.connect(self.play_file)
 
@@ -330,11 +392,18 @@ class MainWindow(QMainWindow):
         self.add_to_recents(file_path)
         self.menu_manager.update_recent_files_menu()
         self.fileOpened.emit(file_path)
+        self.close_media_action.setEnabled(True)
         
     def play_url(self, url: str):
         signal_manager.statusbar_message.emit(f"Loading URL: {url}")
         signal_manager.media_info_message.emit(url)
         self.urlOpened.emit(url)
+        self.close_media_action.setEnabled(True)
+    
+    def close_current_media(self):
+        if self.player_widget and hasattr(self.player_widget, 'close_current_media'):
+            self.player_widget.close_current_media()
+            self.close_media_action.setEnabled(False)
         
     def add_to_favorites(self, file_path: str):
         self.recents_and_favorites_widget.add_favorite(file_path)
@@ -666,33 +735,22 @@ class MainWindow(QMainWindow):
             signal_manager.statusbar_message.emit("Hotkeys updated")
             
     def hide_to_tray(self):
-        if self.tray_icon:
-            self.hide()
-            self.show_hide_action.setText("Show")
-            if hasattr(self.tray_icon, 'showMessage'):
-                self.tray_icon.showMessage(
-                    "PlayForm Media Player",
-                    "Application was minimized to tray",
-                    QSystemTrayIcon.MessageIcon.Information,
-                    2000
-                )
+        if self.tray:
+            self.tray.hide_window_to_tray()
         else:
             self.showMinimized()
             
     def toggle_window_visibility(self):
-        if self.isVisible() and not self.isMinimized():
-            self.hide()
-            self.show_hide_action.setText("Show")
+        if self.tray:
+            self.tray.toggle_window_visibility()
         else:
-            self.show()
-            self.raise_()
-            self.activateWindow()
-            self.show_hide_action.setText("Hide")
-            
-    def tray_icon_activated(self, reason):
-        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
-            self.toggle_window_visibility()
-            
+            if self.isVisible() and not self.isMinimized():
+                self.hide()
+            else:
+                self.show()
+                self.raise_()
+                self.activateWindow()
+    
     def has_active_tools(self):
         for tool_name, dialog in self.tool_dialogs.items():
             if dialog.is_tool_active():
@@ -707,12 +765,11 @@ class MainWindow(QMainWindow):
         return active_tools
     
     def confirm_close_with_active_tools(self):
-
         active_tools = self.get_active_tool_names()
         if not active_tools:
             return True
         
-        tools_text = ", ".join(active_tools)
+        tools_text = "\n".join(f"• {tool}" for tool in active_tools)
         reply = QMessageBox.question(
             self,
             "Active Tools",
@@ -730,12 +787,13 @@ class MainWindow(QMainWindow):
                 return
         
         self.save_window_state()
-
+        
+        if self.tray:
+            self.tray.cleanup()
+        
         for dialog in list(self.tool_dialogs.values()):
             dialog.close()
-            
-        if self.tray_icon:
-            self.tray_icon.hide()
+        
         QApplication.quit()
         
     def save_window_state(self):
@@ -773,11 +831,12 @@ class MainWindow(QMainWindow):
         if self.podcast_widget and hasattr(self.podcast_widget, 'close'):
             self.podcast_widget.close()
         
-        if self.tray_icon and self.tray_icon.isVisible():
+        if self.tray and self.tray.is_available():
             event.ignore()
             self.hide_to_tray()
         else:
             self.close_application()
+            event.accept()
             event.accept()
 
 
