@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QPushButton, QLabel, QTreeWidget, QTreeWidgetItem, QTextBrowser,
     QMenu, QMessageBox, QInputDialog, QProgressDialog, QHeaderView, QApplication
 )
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QShortcut, QKeySequence, QDesktopServices
 
 from urllib.parse import urlparse
@@ -19,6 +19,8 @@ from media_providers.podcasts.entry_detail_dialog import EntryDetailDialog
 
 
 class FeedWidget(QWidget):
+    play_requested = Signal(str)
+    
     COMMON_FIELDS = ['title', 'published', 'link']
     LONG_TEXT_FIELDS = ['summary', 'description', 'content']
     BLACKLIST = ['published_parsed', 'updated_parsed', 'guidislink', 
@@ -599,6 +601,17 @@ class FeedWidget(QWidget):
             QMessageBox.information(self, "Copied", f"Direct media link copied to clipboard:\n{media_url}")
         else:
             QMessageBox.warning(self, "Not Found", "No direct media link found for this entry.")
+    
+    def play_entry(self, item):
+        entry = item.data(0, Qt.ItemDataRole.UserRole)
+        if not entry:
+            return
+        
+        media_url = self.feed_mgr.get_direct_media_url(entry)
+        if media_url:
+            self.play_requested.emit(media_url)
+        else:
+            QMessageBox.warning(self, "No Media", "No direct media link found for this entry.")
 
     def copy_entry_field(self, item, field):
         entry = item.data(0, Qt.ItemDataRole.UserRole)

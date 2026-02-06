@@ -2,7 +2,7 @@ from typing import Optional, Dict, Any
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QGroupBox, QStatusBar, QMessageBox
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from radios import FilterBy
 from radios.models import Station
 from media_providers.radio.radio_service import RadioService
@@ -13,6 +13,8 @@ from app_constance.styles import RADIO_GROUP_BOX_STYLE
 
 
 class RadioBrowserWidget(QWidget):
+    play_requested = Signal(str)
+    
     def __init__(self, parent=None, user_agent: str = "PlayForm/1.0"):
         super().__init__(parent)
         self.user_agent = user_agent
@@ -180,10 +182,11 @@ class RadioBrowserWidget(QWidget):
         url = (station_data.url_resolved or station_data.url) if isinstance(station_data, Station) \
             else (station_data.get("url_resolved") or station_data.get("url", ""))
         
-        QMessageBox.information(self, "Play Station",
-            f"<b>Playing: {name}</b><br><br>Stream URL: {url}<br><br>"
-            "<i>(This is a demo. Integrate with a media player like VLC to play the stream.)</i>")
-        self.status_bar.showMessage(f"Playing: {name}")
+        if url:
+            self.play_requested.emit(url)
+            self.status_bar.showMessage(f"Playing: {name}")
+        else:
+            QMessageBox.warning(self, "No URL", f"No stream URL found for {name}")
 
     def _click_station(self, uuid: str):
         if self.click_thread and self.click_thread.isRunning():
