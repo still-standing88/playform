@@ -12,9 +12,12 @@ class ToolbarManager:
         self.main_window.toolbar = QToolBar("Main Toolbar")
         self.main_window.toolbar.setObjectName("mainToolbar")
         self.main_window.toolbar.setMovable(False)
+        self.main_window.toolbar.setFloatable(False)
+        self.main_window.toolbar.setIconSize(self.main_window.toolbar.iconSize())
+        self.main_window.toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self.main_window.toolbar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.main_window.toolbar.customContextMenuRequested.connect(self.show_toolbar_context_menu)
-        self.main_window.addToolBar(self.main_window.toolbar)
+        self.main_window.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.main_window.toolbar)
         
         self.main_window.toolbar.addAction(self.main_window.open_file_action)
         self.main_window.toolbar.addAction(self.main_window.open_folder_action)

@@ -105,33 +105,38 @@ class DockManager:
         self.update_focusable_widgets()
 
     def toggle_recents_favorites(self, checked):
-        self.main_window.recents_favorites_dock.setVisible(checked)
-        if checked:
-            self.main_window.recents_and_favorites_widget.setFocus()
+        if self.main_window.recents_favorites_dock:
+            self.main_window.recents_favorites_dock.setVisible(checked)
+            if checked and self.main_window.recents_and_favorites_widget:
+                self.main_window.recents_and_favorites_widget.setFocus()
     
     def toggle_explorer(self, checked):
-        self.main_window.explorer_dock.setVisible(checked)
-        if checked:
-            self.main_window.explorer_widget.setFocus()
+        if self.main_window.explorer_dock:
+            self.main_window.explorer_dock.setVisible(checked)
+            if checked and self.main_window.explorer_widget:
+                self.main_window.explorer_widget.setFocus()
         
     def toggle_player_minimize(self, checked):
-        if checked:
-            self.main_window.player_dock.hide()
-        else:
-            self.main_window.player_dock.show()
-            self.main_window.player_widget.setFocus()
+        if self.main_window.player_dock:
+            if checked:
+                self.main_window.player_dock.hide()
+            else:
+                self.main_window.player_dock.show()
+                if self.main_window.player_widget:
+                    self.main_window.player_widget.setFocus()
             
     def toggle_playlists(self, checked):
-        self.main_window.playlists_dock.setVisible(checked)
-        if checked:
-            self.main_window.playlists_widget.setFocus()
+        if self.main_window.playlists_dock:
+            self.main_window.playlists_dock.setVisible(checked)
+            if checked and self.main_window.playlists_widget:
+                self.main_window.playlists_widget.setFocus()
         
     def toggle_radio(self, checked):
         if self.main_window.radio_dock is None and checked:
             self._create_radio_dock()
         if self.main_window.radio_dock:
             self.main_window.radio_dock.setVisible(checked)
-            if checked:
+            if checked and self.main_window.radio_widget:
                 self.main_window.radio_widget.setFocus()
             self.update_focusable_widgets()
         
@@ -140,13 +145,14 @@ class DockManager:
             self._create_podcast_dock()
         if self.main_window.podcast_dock:
             self.main_window.podcast_dock.setVisible(checked)
-            if checked:
+            if checked and self.main_window.podcast_widget:
                 self.main_window.podcast_widget.setFocus()
             self.update_focusable_widgets()
     
     def _create_radio_dock(self):
         if self.main_window.radio_dock is None:
             self.main_window.radio_widget = RadioBrowserWidget(self.main_window)
+            self.main_window.radio_widget.play_requested.connect(self.main_window.urlOpened.emit)
             self.main_window.radio_dock = QDockWidget("Radio Browser", self.main_window)
             self.main_window.radio_dock.setObjectName("radioDock")
             self.main_window.radio_dock.setWidget(self.main_window.radio_widget)
@@ -158,6 +164,7 @@ class DockManager:
     def _create_podcast_dock(self):
         if self.main_window.podcast_dock is None:
             self.main_window.podcast_widget = FeedWidget(self.main_window)
+            self.main_window.podcast_widget.play_requested.connect(self.main_window.urlOpened.emit)
             self.main_window.podcast_dock = QDockWidget("Podcasts", self.main_window)
             self.main_window.podcast_dock.setObjectName("podcastDock")
             self.main_window.podcast_dock.setWidget(self.main_window.podcast_widget)

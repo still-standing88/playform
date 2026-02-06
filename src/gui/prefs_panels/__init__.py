@@ -55,12 +55,46 @@ class PreferencesDialog(QDialog):
         self.advanced_panel.load_settings(current_prefs)
             
     def save_preferences(self):
+        from PySide6.QtWidgets import QMessageBox
+        old_theme = prefs.prefs.get("color_theme", "system")
+        old_vlc_logging = prefs.prefs.get("vlc_logging", False)
+        old_vlc_args = prefs.prefs.get("vlc_args", "")
+        
         self.general_panel.save_settings(prefs.prefs)
         self.media_panel.save_settings(prefs.prefs)
         self.accessibility_panel.save_settings(prefs.prefs)
         self.advanced_panel.save_settings(prefs.prefs)
         
         prefs.save()
+        
+        new_theme = prefs.prefs.get("color_theme", "system")
+        new_vlc_logging = prefs.prefs.get("vlc_logging", False)
+        new_vlc_args = prefs.prefs.get("vlc_args", "")
+        
+        needs_restart = (
+            old_theme != new_theme or
+            old_vlc_logging != new_vlc_logging or 
+            old_vlc_args != new_vlc_args
+        )
+        
+        if needs_restart:
+            reply = QMessageBox.question(
+                self,
+                "Restart Required",
+                "Some options you modified require an application restart to take effect.\n\nWould you like to restart now?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+                from utilities.functions import set_restart_flag
+                set_restart_flag(True)
+                from PySide6.QtWidgets import QApplication
+                QApplication.quit()
+        
+        from player import reinit_ytdlp_settings
+        from player.utilities import update_prefs_with_found_binaries
+        update_prefs_with_found_binaries(prefs.prefs)
+        reinit_ytdlp_settings()
         
         if self.audio_device_callback:
             self.audio_device_callback(prefs.prefs["device"])

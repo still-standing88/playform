@@ -2,10 +2,10 @@ import os
 import sys
 import threading
 import locale
+
 from pathlib import Path
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont
-from app_constance.styles import get_dark_palette
 
 def setup_environment():
     from utilities.functions import get_parent_dir
@@ -21,10 +21,11 @@ def setup_environment():
     return BASE_DIR
 
 def setup_application_style(app):
+    from utilities.theme_manager import setup_theme
     app.setStyle('Fusion')
     font = QFont("Segoe UI", 9)
     app.setFont(font)
-    app.setPalette(get_dark_palette())
+    setup_theme(app)
 
 def initialize_app_guard(cli_args):
     import app_guard
@@ -32,7 +33,7 @@ def initialize_app_guard(cli_args):
     app_instance.init("PlayForm", lambda: None, False)
     
     if not app_instance.is_primary_instance():
-        if cli_args:
+        if cli_args and len(cli_args) > 1:
             app_instance.send_msg_request("cli-args", cli_args[1])
         app_instance.focus_window("Play Form")
         app_instance.release()

@@ -62,6 +62,17 @@ class AdvancedPanel(QWidget):
         ytdlp_layout_path.addWidget(self.ytdlp_browse_btn)
         self.ytdlp_layout.addRow("yt-dlp Path:", ytdlp_widget_path)
         
+        ffmpeg_widget_path = QWidget()
+        ffmpeg_layout_path = QHBoxLayout(ffmpeg_widget_path)
+        ffmpeg_layout_path.setContentsMargins(0, 0, 0, 0)
+        self.ffmpeg_path_edit = QLineEdit()
+        self.ffmpeg_path_edit.setReadOnly(True)
+        self.ffmpeg_browse_btn = QPushButton("Browse")
+        self.ffmpeg_browse_btn.clicked.connect(self.browse_ffmpeg_path)
+        ffmpeg_layout_path.addWidget(self.ffmpeg_path_edit)
+        ffmpeg_layout_path.addWidget(self.ffmpeg_browse_btn)
+        self.ytdlp_layout.addRow("FFmpeg Path:", ffmpeg_widget_path)
+        
         self.ytdlp_logging_check = QCheckBox("Enable yt-dlp Logging")
         self.ytdlp_logging_check.toggled.connect(self.toggle_ytdlp_logging_options)
         self.ytdlp_layout.addRow("yt-dlp Logging:", self.ytdlp_logging_check)
@@ -112,6 +123,11 @@ class AdvancedPanel(QWidget):
         dir_path = QFileDialog.getExistingDirectory(self, "Select yt-dlp Directory")
         if dir_path:
             self.ytdlp_path_edit.setText(dir_path)
+    
+    def browse_ffmpeg_path(self):
+        dir_path = QFileDialog.getExistingDirectory(self, "Select FFmpeg Directory")
+        if dir_path:
+            self.ffmpeg_path_edit.setText(dir_path)
         
     def load_settings(self, prefs):
         self.vlc_logging_check.setChecked(prefs["vlc_logging"])
@@ -119,6 +135,7 @@ class AdvancedPanel(QWidget):
         self.vlc_args_edit.setPlainText(prefs["vlc_args"])
         self.youtube_cookies_edit.setText(prefs["youtube_cookies"])
         self.ytdlp_path_edit.setText(prefs["yt-dlp_path"])
+        self.ffmpeg_path_edit.setText(prefs["ffmpeg_path"])
         self.ytdlp_logging_check.setChecked(prefs["yt-dlp_logging"])
         self.ytdlp_verbose_check.setChecked(prefs["yt-dlp_verbose_output"])
         
@@ -131,5 +148,6 @@ class AdvancedPanel(QWidget):
         prefs["vlc_args"] = self.vlc_args_edit.toPlainText().strip()
         prefs["youtube_cookies"] = self.youtube_cookies_edit.text()
         prefs["yt-dlp_path"] = self.ytdlp_path_edit.text()
+        prefs["ffmpeg_path"] = self.ffmpeg_path_edit.text()
         prefs["yt-dlp_logging"] = self.ytdlp_logging_check.isChecked()
         prefs["yt-dlp_verbose_output"] = self.ytdlp_verbose_check.isChecked()

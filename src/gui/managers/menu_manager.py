@@ -45,6 +45,13 @@ class MenuManager:
         
         self.main_window.file_menu.addSeparator()
         
+        self.main_window.close_media_action = QAction("&Close Media", self.main_window)
+        self.main_window.close_media_action.triggered.connect(self.main_window.close_current_media)
+        self.main_window.close_media_action.setEnabled(False)
+        self.main_window.file_menu.addAction(self.main_window.close_media_action)
+        
+        self.main_window.file_menu.addSeparator()
+        
         self.main_window.recent_files_menu = QMenu("&Recent Files", self.main_window)
         self.main_window.file_menu.addMenu(self.main_window.recent_files_menu)
         self.update_recent_files_menu()
