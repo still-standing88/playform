@@ -136,6 +136,9 @@ def open_explorer(path):
 def is_frozen():
     return getattr(sys, 'frozen', False) or hasattr(sys, '__compiled__') or 'nuitka' in sys.executable.lower()
 
+def is_dev_mode():
+    return not is_frozen()
+
 def get_app_path() -> str:
     if is_frozen():
         BASE_DIR = Path(sys.executable).parent
@@ -168,8 +171,11 @@ def get_restart_flag() -> bool:
     return os.environ.get("APP_RESTART", "0") == "1"
 
 def restart_app():
-    python = sys.executable
-    os.execv(python, [python] + sys.argv)
+    if is_frozen():
+        os.execl(sys.executable, sys.executable, *sys.argv[1:])
+    else:
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
 
 def initialize_com():
     if sys.platform == "win32":
@@ -187,3 +193,31 @@ def is_valid_vlc_args(text: str) -> bool:
 
 def parse_vlc_args(text: str) -> list[str]:
     return shlex.split(text, posix=True)
+
+def is_youtube_url(url: str) -> bool:
+    """Check if a URL is a YouTube URL"""
+    if not url:
+        return False
+    url_lower = url.lower()
+    return 'youtube.com' in url_lower or 'youtu.be' in url_lower
+
+def is_local_file(path: str) -> bool:
+    """Check if a path exists as an actual file"""
+    if not path:
+        return False
+    try:
+        return os.path.isfile(path)
+    except:
+        return False
+
+def open_file_location(path: str):
+    """Open file location in Windows Explorer or equivalent"""
+    if not is_local_file(path):
+        return
+    
+    if sys.platform == "win32":
+        sp.Popen(fr'explorer /select,"{path}"')
+    elif sys.platform == "darwin":  # macOS
+        sp.Popen(["open", "-R", path])
+    else:  # Linux
+        sp.Popen(["xdg-open", os.path.dirname(path)])
