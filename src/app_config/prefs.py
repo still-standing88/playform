@@ -39,31 +39,28 @@ def processData(path,mode,data="", target=""):
 def save():        
     processData(prefs_file, "write", prefs) # type: ignore
 
+def reset():
+    global prefs
+    prefs = prefs_dict.prefs.copy()
+    save()
 
-def ffmpegbin():
-    current_path = get_parent_dir()
-    import pyffmpeg
+def is_prefs_dict_valid():
+    if set(list(prefs.keys())) == set(list(prefs_dict.prefs.keys())):
+        return True
+    return False    
 
-    if prefs["ffmpeg_binary"] == "" or not os.path.exists(prefs["ffmpeg_binary"]):
-        if not os.path.exists(f"{current_path}/bin/") : os.makedirs(f"{current_path}/bin/")
-        ff = pyffmpeg.FFmpeg()
-        ff.enable_log = False
-        bin_path = ff.get_ffmpeg_bin()
-        dest_path = f"{current_path}/bin/"
-        shutil.copy(bin_path,dest_path)
-        bin_dir = os.path.dirname(bin_path)
-        ff.quit()
-        del ff
-        shutil.rmtree(bin_dir)
-        prefs["ffmpeg_binary"] = f"{dest_path}/{os.path.split(bin_path)[1]}"
-        save()
 
 def initialize():
     if not os.path.exists(data_path): os.makedirs(data_path)
     if not os.path.exists(sc_path): os.makedirs(sc_path)
     if not os.path.exists(playlist_path): os.makedirs(playlist_path)
     if os.path.exists(prefs_file):
-        processData(prefs_file, "read")
+        try:
+            processData(prefs_file, "read")
+            if not is_prefs_dict_valid():
+                reset()
+        except:
+            reset()
     elif not os.path.exists(prefs_file):
         save()
-    ffmpegbin()
+

@@ -30,8 +30,16 @@ def keysToDefault():
         for key  in keys:
             key_config[keyset][key] = keys[key]
 
+def is_valid_config():
+    for default_hotkeys_section, current_hotkeys_section in zip(list(default_keys.key_dict.keys()), list(key_config.keys())):
+        if default_hotkeys_section != current_hotkeys_section:
+            return False
+        for default_hotkey, current_hotkey in zip(list(default_keys.key_dict[default_hotkeys_section].keys()), list(key_config[current_hotkeys_section].keys())):
+            if default_hotkey != current_hotkey:
+                return False
+
 def saveConfig():
-    key_config_file = f"{os.getcwd()}\\data\\key_config.cfg"
+    key_config_file = f"{get_app_path()}/data/key_config.cfg"
     with open(key_config_file, "w") as config_file:
         key_config.write(config_file)
 
@@ -40,10 +48,14 @@ def load_keys():
     key_config_file = f"{current_path}/data/key_config.cfg"
     if os.path.exists(key_config_file) == True: 
         key_config.read(key_config_file)
+        if not is_valid_config():
+            keysToDefault()
+            saveConfig()
     else:
         keysToDefault()
-        with open(key_config_file,"w") as config_file:
-            key_config.write(config_file)
+        saveConfig()
+
+
 
 def apply_global_hotkeys():
     #for hotkey in hotkeys:
@@ -51,6 +63,8 @@ def apply_global_hotkeys():
     hotkeys.clear()
     #for hotkey in key_dict["Global"]:
         #hotkeys[hotkey] = keyboard.add_hotkey(key_config["Global"][hotkey],hotkeys_funcs[hotkey])
+
+
 
 def initialize(func_dict):
     global hotkeys_funcs
