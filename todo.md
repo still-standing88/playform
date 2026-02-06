@@ -15,7 +15,7 @@ The following outlines the final roadmap and features to be implemented before r
   - [ ] Include preference toggle to enable/disable caching.
 - [x] Add subtitle tools via `pysubs2`.
 - [ ] Add media data viewer (codec, bitrate, resolution, etc.) for both local files and URL streams.
-- [ ] Show YouTube video/playlist info (via `yt-dlp` JSON output).
+- [x] Show YouTube video/playlist info (via `yt-dlp` JSON output).
 - [ ] Add YouTube video/playlist downloader using `yt-dlp`.
   - [ ] Option to hide the download dialog to the status bar.
 
@@ -24,8 +24,8 @@ The following outlines the final roadmap and features to be implemented before r
 - [x] Integrate podcast and radio modules:
   - [x] Either separate sub-windows
   - [ ] Or a single window with tabbed interface.
-- [ ] Add check for `yt-dlp` presence in URL dialog.
-  - [ ] Warn user or block unsupported URLs if missing.
+- [x] Add check for `yt-dlp` presence in URL dialog.
+  - [x] Warn user or block unsupported URLs if missing.
 
 ## 🧰 Tools & Utilities
 
@@ -40,8 +40,8 @@ The following outlines the final roadmap and features to be implemented before r
 
 ## 🧩 Configuration & Data Management
 
-- [ ] Merge last positions, bookmarks, and repeat loops into a single JSON file.
-- [ ] Implement Dark/Light theme toggle in Preferences.
+- [x] Merge last positions, bookmarks, and repeat loops into a single JSON file.
+- [x] Implement Dark/Light theme toggle in Preferences.
 - [ ] Add language translation system, with live-switching capability.
 - [ ] Add file search and organization database for the Explorer view.
 - [ ] Implement startup wizard:
