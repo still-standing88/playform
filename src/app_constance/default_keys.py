@@ -15,6 +15,14 @@ key_dict = {
 "Show/Hide explorer": "Ctrl+E",
 "Show/Hide player controls": "Ctrl+H",
 "Show/Hide playlists": "Ctrl+L",
+"Toggle playlists": "Ctrl+1",
+"Toggle podcasts": "Ctrl+2",
+"Toggle radio": "Ctrl+3",
+"Toggle recents/favorites": "Ctrl+4",
+"Focus playlists": "Alt+1",
+"Focus podcasts": "Alt+2",
+"Focus radio": "Alt+3",
+"Focus recents/favorites": "Alt+4",
 "Hide window": "Alt+H",
 "Exit": "Alt+X",
 "Focus explorer": "Alt+E",
@@ -65,7 +73,8 @@ key_dict = {
 "Mark7 position": "Ctrl+7",
 "Mark8 position": "Ctrl+8",
 "Mark9 position": "Ctrl+9",
-"Mark10 position": "Ctrl+0"
+"Mark10 position": "Ctrl+0",
+"close media": "Ctrl+W"
 }
 }
 

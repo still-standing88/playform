@@ -60,6 +60,27 @@ BUTTON_STYLE = f"""
     QPushButton:disabled {{ background-color: {COLORS['button_disabled']}; }}
 """
 
+TOOLBUTTON_STYLE = """
+    QToolButton {
+        background-color: transparent;
+        border: none;
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+        padding: 4px;
+    }
+    QToolButton:hover {
+        background-color: rgba(255, 165, 0, 0.3);
+        border-radius: 4px;
+    }
+    QToolButton:pressed {
+        background-color: rgba(255, 165, 0, 0.5);
+    }
+    QToolButton:disabled {
+        color: rgba(255, 255, 255, 0.3);
+    }
+"""
+
 SLIDER_STYLE = f"""
     QSlider::groove:horizontal {{ border: 1px solid {COLORS['slider_groove_border']}; background: white; height: 8px; border-radius: 4px; }}
     QSlider::sub-page:horizontal {{ background: {COLORS['button_primary']}; border: 1px solid {COLORS['slider_sub_page_border']}; height: 8px; border-radius: 4px; }}
@@ -217,3 +238,22 @@ def get_dark_palette():
     dark_palette.setColor(QPalette.ColorRole.Highlight, APP_PALETTE_COLORS['highlight'])
     dark_palette.setColor(QPalette.ColorRole.HighlightedText, APP_PALETTE_COLORS['highlighted_text'])
     return dark_palette
+
+def get_light_palette():
+    light_palette = QPalette()
+    light_palette.setColor(QPalette.ColorRole.Window, QColor(240, 240, 240))
+    light_palette.setColor(QPalette.ColorRole.WindowText, QColor(0, 0, 0))
+    light_palette.setColor(QPalette.ColorRole.Base, QColor(255, 255, 255))
+    light_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(245, 245, 245))
+    light_palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 220))
+    light_palette.setColor(QPalette.ColorRole.ToolTipText, QColor(0, 0, 0))
+    light_palette.setColor(QPalette.ColorRole.Text, QColor(0, 0, 0))
+    light_palette.setColor(QPalette.ColorRole.Button, QColor(240, 240, 240))
+    light_palette.setColor(QPalette.ColorRole.ButtonText, QColor(0, 0, 0))
+    light_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, QColor(120, 120, 120))
+    light_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, QColor(120, 120, 120))
+    light_palette.setColor(QPalette.ColorRole.Link, QColor(0, 0, 255))
+    light_palette.setColor(QPalette.ColorRole.Highlight, QColor(0, 120, 215))
+    light_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
+    return light_palette
+
