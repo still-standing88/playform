@@ -21,7 +21,7 @@ from player.player_widget import PlayerWidget
 from playlist_manager.playlists_widget import PlaylistsWidget
 from playlist_manager.playlist_selection_dialog import PlaylistSelectionDialog
 from playlist_manager.playlist_create_dialog import PlaylistCreateDialog
-from .recents_and_favorites import RecentsAndFavoritesWidget
+from .recents_favorites import RecentsAndFavoritesWidget
 from .prefs_panels import PreferencesDialog
 from .hotkeys_dialog import HotkeysDialog
 from .url_dialog import URLDialog
@@ -47,7 +47,7 @@ from media_providers.radio import RadioBrowserWidget
 from media_providers.podcasts.feed_widget import FeedWidget
 from app_constance.styles import SECTION_LABEL_STYLE
 from utilities.session import dock_session
-from data.toolbar_config import toolbar_config
+from app_config.toolbar_config import toolbar_config
 from .toolbar_customize_dialog import ToolbarCustomizeDialog
 
 

@@ -56,6 +56,7 @@ class PreferencesDialog(QDialog):
             
     def save_preferences(self):
         from PySide6.QtWidgets import QMessageBox
+        from utilities.theme_manager import apply_theme
         old_theme = prefs.prefs.get("color_theme", "system")
         old_vlc_logging = prefs.prefs.get("vlc_logging", False)
         old_vlc_args = prefs.prefs.get("vlc_args", "")
@@ -71,8 +72,11 @@ class PreferencesDialog(QDialog):
         new_vlc_logging = prefs.prefs.get("vlc_logging", False)
         new_vlc_args = prefs.prefs.get("vlc_args", "")
         
+        # Apply theme change immediately without restart
+        if old_theme != new_theme:
+            apply_theme(new_theme)
+        
         needs_restart = (
-            old_theme != new_theme or
             old_vlc_logging != new_vlc_logging or 
             old_vlc_args != new_vlc_args
         )
