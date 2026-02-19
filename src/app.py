@@ -1,13 +1,19 @@
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer
+from app_info import APP_NAME, APP_VERSION, APP_PUBLISHER, APP_WEBSITE, setup_env
 
 def main():
     cli_args = sys.argv
-    
+
+    # Export metadata to env vars before anything else
+    setup_env()
+
     app = QApplication(sys.argv)
-    app.setApplicationName("PlayForm")
-    app.setApplicationVersion("1.0.0")
+    app.setApplicationName(APP_NAME)
+    app.setApplicationVersion(APP_VERSION)
+    app.setOrganizationName(APP_PUBLISHER)
+    app.setOrganizationDomain(APP_WEBSITE)
     
     from loading import LoadingSplash
     splash = LoadingSplash()

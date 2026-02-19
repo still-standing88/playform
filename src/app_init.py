@@ -8,6 +8,9 @@ from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont
 
 def setup_environment():
+    import app_info
+    app_info.setup_env()          # ensure env vars are set even when imported standalone
+
     from utilities.functions import get_parent_dir
     os.environ["VLC_LIB_PATH"] = os.path.join(get_parent_dir(), "lib")
     os.environ["USE_VLC"] = "1"
@@ -69,10 +72,15 @@ def create_main_window(splash, cli_args):
     splash.update_message("Creating main window...")
     from gui.main_window import MainWindow
     window = MainWindow()
-    
+
     if len(cli_args) > 1:
         QTimer.singleShot(100, lambda: window.play_file(cli_args[1]))
-    
+
+    # Start periodic update checker (first check fires after 3 s)
+    splash.update_message("Initializing update checker...")
+    from update_checker import UpdateChecker
+    UpdateChecker.instance(parent=window)
+
     return window
 
 def setup_ipc_handlers(app_instance, window):
