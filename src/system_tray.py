@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QSystemTrayIcon, QMenu
 from PySide6.QtGui import QAction
 from utilities.icon_loader import load_icon
+import os
 
 class SystemTrayIcon:
     def __init__(self, window):
@@ -19,6 +20,9 @@ class SystemTrayIcon:
         if icon.isNull():
             icon = self.window.style().standardIcon(self.window.style().StandardPixmap.SP_MediaPlay)
         self.tray_icon.setIcon(icon)
+
+        app_name = os.environ.get("APP_NAME", "PlayForm")
+        self.tray_icon.setToolTip(app_name)
         
         tray_menu = QMenu()
         

@@ -999,7 +999,7 @@ class PlayerWidget(QWidget):
         if not is_youtube_url(current_file):
             return
         
-        from gui.youtube_info_dialog import YouTubeInfoDialog
+        from gui.dialogs.youtube_info_dialog import YouTubeInfoDialog
         from PySide6.QtGui import QTextCursor
         
         dialog = YouTubeInfoDialog(current_file, parent=self)
