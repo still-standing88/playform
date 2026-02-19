@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QListWidget,
                                QMessageBox, QProgressBar, QFrame, QScrollArea)
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QClipboard
-from downloader import Downloader, DownloadStatus
+from downloader.downloader import Downloader, DownloadStatus
 from pathlib import Path
 
 
