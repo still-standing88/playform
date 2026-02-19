@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QMenu
 from PySide6.QtGui import QAction
 import os
+from app_config import key_config
 
 class MenuManager:
     def __init__(self, main_window):
@@ -26,9 +27,11 @@ class MenuManager:
         self.main_window.tools_menu.setObjectName("toolsMenu")
         self.setup_tools_menu()
         
-        self.main_window.about_menu = menubar.addMenu("&About")
-        self.main_window.about_menu.setObjectName("aboutMenu")
-        self.setup_about_menu()
+        self.main_window.options_menu = menubar.addMenu("&Options")
+        self.main_window.options_menu.setObjectName("optionsMenu")
+        # keep backward-compat alias
+        self.main_window.about_menu = self.main_window.options_menu
+        self.setup_options_menu()
         
     def setup_file_menu(self):
         self.main_window.open_file_action = QAction("&Open File...", self.main_window)
@@ -162,6 +165,12 @@ class MenuManager:
         self.main_window.thumbnail_generator_action.triggered.connect(self.main_window.tool_manager.open_thumbnail_generator)
         self.main_window.tools_menu.addAction(self.main_window.thumbnail_generator_action)
 
+        self.main_window.tools_menu.addSeparator()
+
+        self.main_window.show_downloader_action = QAction("&Download Manager", self.main_window)
+        self.main_window.show_downloader_action.triggered.connect(self.main_window.open_downloader)
+        self.main_window.tools_menu.addAction(self.main_window.show_downloader_action)
+
         self.main_window.subtitle_tools_menu = self.main_window.tools_menu.addMenu("&Subtitle Tools")
         self.main_window.subtitle_converter_action = QAction("Subtitle &Converter", self.main_window)
         self.main_window.subtitle_converter_action.triggered.connect(self.main_window.tool_manager.open_subtitle_converter)
@@ -182,14 +191,33 @@ class MenuManager:
         self.main_window.show_console_dock_action.triggered.connect(self.main_window.dock_manager.toggle_console_dock)
         self.main_window.debug_menu.addAction(self.main_window.show_console_dock_action)
         
-    def setup_about_menu(self):
+    def setup_options_menu(self):
         self.main_window.preferences_action = QAction("&Manage Preferences", self.main_window)
         self.main_window.preferences_action.triggered.connect(self.main_window.open_preferences)
-        self.main_window.about_menu.addAction(self.main_window.preferences_action)
-        
+        self.main_window.options_menu.addAction(self.main_window.preferences_action)
+
         self.main_window.hotkeys_action = QAction("Manage &Hotkeys", self.main_window)
         self.main_window.hotkeys_action.triggered.connect(self.main_window.open_hotkeys)
-        self.main_window.about_menu.addAction(self.main_window.hotkeys_action)
+        self.main_window.options_menu.addAction(self.main_window.hotkeys_action)
+
+        self.main_window.options_menu.addSeparator()
+
+        self.main_window.check_updates_action = QAction("Check for &Updates...", self.main_window)
+        self.main_window.check_updates_action.triggered.connect(self.main_window.check_for_updates)
+        self.main_window.options_menu.addAction(self.main_window.check_updates_action)
+
+        self.main_window.documentation_action = QAction("&Documentation", self.main_window)
+        self.main_window.documentation_action.setShortcut(
+            key_config.key_config["Main interface"].get("Documentation", "F1")
+        )
+        self.main_window.documentation_action.triggered.connect(self.main_window.open_documentation)
+        self.main_window.options_menu.addAction(self.main_window.documentation_action)
+
+        self.main_window.options_menu.addSeparator()
+
+        self.main_window.about_action = QAction("&About PlayForm...", self.main_window)
+        self.main_window.about_action.triggered.connect(self.main_window.open_about_dialog)
+        self.main_window.options_menu.addAction(self.main_window.about_action)
 
     def update_recent_files_menu(self):
         self.main_window.recent_files_menu.clear()

@@ -60,6 +60,7 @@ class PreferencesDialog(QDialog):
         old_theme = prefs.prefs.get("color_theme", "system")
         old_vlc_logging = prefs.prefs.get("vlc_logging", False)
         old_vlc_args = prefs.prefs.get("vlc_args", "")
+        old_debug_level = prefs.prefs.get("debug_level", 2)
         
         self.general_panel.save_settings(prefs.prefs)
         self.media_panel.save_settings(prefs.prefs)
@@ -71,6 +72,7 @@ class PreferencesDialog(QDialog):
         new_theme = prefs.prefs.get("color_theme", "system")
         new_vlc_logging = prefs.prefs.get("vlc_logging", False)
         new_vlc_args = prefs.prefs.get("vlc_args", "")
+        new_debug_level = prefs.prefs.get("debug_level", 2)
         
         # Apply theme change immediately without restart
         if old_theme != new_theme:
@@ -78,7 +80,8 @@ class PreferencesDialog(QDialog):
         
         needs_restart = (
             old_vlc_logging != new_vlc_logging or 
-            old_vlc_args != new_vlc_args
+            old_vlc_args != new_vlc_args or
+            old_debug_level != new_debug_level
         )
         
         if needs_restart:

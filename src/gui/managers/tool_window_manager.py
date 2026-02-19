@@ -5,7 +5,7 @@ from tools.tag_editor_ui import TagEditorUI
 from tools.thumbnail_generator_ui import ThumbnailGeneratorUI
 from tools.subtitle_converter_ui import SubtitleConverterUI
 from tools.subtitle_editor_ui import SubtitleEditorUI
-from gui.tool_dialog import ToolDialog
+from gui.dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
 from player.utilities import ensure_ffmpeg_available

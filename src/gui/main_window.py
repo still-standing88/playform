@@ -22,9 +22,9 @@ from playlist_manager.playlists_widget import PlaylistsWidget
 from playlist_manager.playlist_selection_dialog import PlaylistSelectionDialog
 from playlist_manager.playlist_create_dialog import PlaylistCreateDialog
 from .recents_favorites import RecentsAndFavoritesWidget
-from .prefs_panels import PreferencesDialog
-from .hotkeys_dialog import HotkeysDialog
-from .url_dialog import URLDialog
+from .dialogs.hotkeys_dialog import HotkeysDialog
+from .dialogs.url_dialog import URLDialog
+from .dialogs.prefs_dialog import PreferencesDialog
 from utilities.util_gui import menuItem, messageBox
 from utilities.media_utils import get_media_files_from_directory
 from utilities.speech import speech_manager
@@ -40,7 +40,7 @@ from tools.subtitle_editor_ui import SubtitleEditorUI
 from gui_controls.key_event_filter import ShortcutManager
 from app_config import key_config
 from app_constance.file_filter import file_filter
-from .tool_dialog import ToolDialog
+from .dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from tools.debug_console_dock import DebugConsoleDock
 from media_providers.radio import RadioBrowserWidget
@@ -48,7 +48,7 @@ from media_providers.podcasts.feed_widget import FeedWidget
 from app_constance.styles import SECTION_LABEL_STYLE
 from utilities.session import dock_session
 from app_config.toolbar_config import toolbar_config
-from .toolbar_customize_dialog import ToolbarCustomizeDialog
+from .dialogs.toolbar_customize_dialog import ToolbarCustomizeDialog
 
 
 from .managers.menu_manager import MenuManager
@@ -57,6 +57,9 @@ from .managers.dock_manager import DockManager
 from .managers.tool_window_manager import ToolWindowManager
 from .managers.playlist_handler import PlaylistHandler
 from system_tray import SystemTrayIcon
+from .dialogs.downloader_dialog import DownloaderDialog
+from .dialogs.about_dialog import AboutDialog
+from downloader.downloader import Downloader
 
 
 
@@ -75,6 +78,11 @@ class MainWindow(QMainWindow):
         self.tool_dialogs = {}
         self.active_tool_name = None
         self.show_tool_button: QPushButton
+
+        # Downloader singleton
+        self._shared_downloader: Optional[Downloader] = None
+        self._downloader_dialog: Optional[DownloaderDialog] = None
+        self.show_downloader_button: QPushButton
         
         self.radio_widget = None
         self.radio_dock = None
@@ -158,6 +166,7 @@ class MainWindow(QMainWindow):
             hotkeys["Exit"]: self.close_application,
             hotkeys["Focus explorer"]: self.focus_explorer,
             hotkeys["Focus player"]: self.focus_player,
+            hotkeys["Documentation"]: self.open_documentation,
             hotkeys["Hotkeys dialog"]: self.open_hotkeys,
             hotkeys["Prefrences Dialog"]: self.open_preferences,
             "F6": self.focus_next_widget,
@@ -330,6 +339,12 @@ class MainWindow(QMainWindow):
         self.show_tool_button.clicked.connect(self.show_hidden_tool)
         self.show_tool_button.setVisible(False)
         self.status_bar.addPermanentWidget(self.show_tool_button)
+
+        self.show_downloader_button = QPushButton("Show Downloader")
+        self.show_downloader_button.setObjectName("showDownloaderButton")
+        self.show_downloader_button.clicked.connect(self._show_minimized_downloader)
+        self.show_downloader_button.setVisible(False)
+        self.status_bar.addPermanentWidget(self.show_downloader_button)
         
         self.status_bar.show()
         
@@ -733,6 +748,90 @@ class MainWindow(QMainWindow):
         dialog = HotkeysDialog(self, reset_callback=self.reset_shortcuts_callback)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             signal_manager.statusbar_message.emit("Hotkeys updated")
+
+    # ------------------------------------------------------------------
+    # About & Options menu actions
+    # ------------------------------------------------------------------
+    def open_about_dialog(self):
+        dlg = AboutDialog(self)
+        dlg.exec()
+
+    def open_documentation(self):
+        """Open the local documentation index in the default web browser."""
+        import webbrowser
+        from pathlib import Path
+        from utilities.functions import get_parent_dir, is_dev_mode
+        from PySide6.QtWidgets import QMessageBox
+
+        base = Path(get_parent_dir())
+        if is_dev_mode():
+            doc_path = base / "docs" / "build" / "index.html"
+        else:
+            doc_path = base / "docs" / "index.html"
+
+        if doc_path.exists():
+            webbrowser.open(doc_path.as_uri())
+        else:
+            QMessageBox.information(
+                self,
+                "Documentation Not Found",
+                f"The documentation could not be found at:\n{doc_path}\n\n"
+                "Please visit the project website for help.",
+            )
+
+    def check_for_updates(self):
+        """Manually triggered update check (delegates to UpdateChecker)."""
+        from update_checker import UpdateChecker
+        checker = UpdateChecker.instance(self)
+        checker.check_now(silent=False)
+
+    # ------------------------------------------------------------------
+    # Singleton downloader dialog management
+    # ------------------------------------------------------------------
+    def _get_shared_downloader(self) -> Downloader:
+        """Return the singleton Downloader, creating it on first call."""
+        if self._shared_downloader is None:
+            from utilities.functions import get_app_path
+            import os
+            dest = os.path.join(get_app_path(), "downloads")
+            self._shared_downloader = Downloader(destination=dest)
+        return self._shared_downloader
+
+    def open_downloader(self):
+        """Open (or raise) the singleton downloader dialog."""
+        if self._downloader_dialog is not None:
+            # Dialog was minimized or still alive – bring it back
+            self._downloader_dialog.show_dialog()
+            self.show_downloader_button.setVisible(False)
+            signal_manager.statusbar_message.emit("Download Manager opened")
+            return
+
+        # First time (or after close) – create fresh dialog
+        dlg = DownloaderDialog(self._get_shared_downloader(), parent=self)
+        dlg.dialog_hidden.connect(self._on_downloader_hidden)
+        dlg.dialog_closed.connect(self._on_downloader_closed)
+        self._downloader_dialog = dlg
+        dlg.show_dialog()
+        self.show_downloader_button.setVisible(False)
+        signal_manager.statusbar_message.emit("Download Manager opened")
+
+    def _on_downloader_hidden(self):
+        """Called when dialog hides itself (Minimize button)."""
+        self.show_downloader_button.setVisible(True)
+        signal_manager.statusbar_message.emit("Download Manager minimized")
+
+    def _on_downloader_closed(self):
+        """Called when dialog is fully closed so it can be re-created next time."""
+        self._downloader_dialog = None
+        self.show_downloader_button.setVisible(False)
+        signal_manager.statusbar_message.emit("Download Manager closed")
+
+    def _show_minimized_downloader(self):
+        """Status-bar button: show the minimized dialog."""
+        if self._downloader_dialog is not None:
+            self._downloader_dialog.show_dialog()
+            self.show_downloader_button.setVisible(False)
+            signal_manager.statusbar_message.emit("Download Manager restored")
             
     def hide_to_tray(self):
         if self.tray:

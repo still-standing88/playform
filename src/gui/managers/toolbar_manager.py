@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QToolBar, QMenu, QDialog
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from app_config.toolbar_config import toolbar_config
-from gui.toolbar_customize_dialog import ToolbarCustomizeDialog
+from gui.dialogs.toolbar_customize_dialog import ToolbarCustomizeDialog
 
 class ToolbarManager:
     def __init__(self, main_window):
