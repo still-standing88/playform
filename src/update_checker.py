@@ -227,7 +227,7 @@ class UpdateChecker(QObject):
         self._repo      = os.environ.get("APP_GITHUB_REPO", "")
         self._version   = os.environ.get("APP_VERSION", "0.0.0")
         self._platform  = _current_platform()
-        self._parent_widget = parent   # QWidget used as dialog parent
+        self._parent_widget: QWidget | None = parent   # QWidget used as dialog parent
 
         self._nam       = QNetworkAccessManager(self)
         self._reply: QNetworkReply | None = None
@@ -261,7 +261,12 @@ class UpdateChecker(QObject):
         if not self._repo:
             return
         if self._reply and not self._reply.isFinished():
-            return   # already in progress
+            # A background check is already in flight. If the caller wants
+            # visible feedback (silent=False), promote the in-flight request
+            # so its result will show dialogs instead of being swallowed.
+            if not silent:
+                self._silent = False
+            return
 
         self._silent = silent
         url = f"https://api.github.com/repos/{self._repo}/releases/latest"
