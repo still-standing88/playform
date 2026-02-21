@@ -1,67 +1,75 @@
 import os
 import sys
+import subprocess
 from pathlib import Path
 
-def get_parent_dir():
+
+def get_project_root() -> Path:
     return Path(__file__).parent.parent
 
-def create_qrc_file():
-    parent_dir = get_parent_dir()
-    assets_dir = os.path.join(parent_dir, "assets", "icons")
-    
-    if not os.path.isdir(assets_dir):
-        print(f"Assets directory not found: {assets_dir}")
-        return False
-    
-    qrc_content = ['<RCC>', '  <qresource prefix="icons">']
-    
-    icon_files = [f for f in os.listdir(assets_dir) if os.path.isfile(os.path.join(assets_dir, f))]
-    
-    for icon_file in icon_files:
-        rel_path = os.path.join("assets", "icons", icon_file).replace('\\', '/')
-        qrc_content.append(f'    <file>../../{rel_path}</file>')
-    
-    qrc_content.extend(['  </qresource>', '</RCC>'])
-    
-    qrc_file_path = os.path.join(parent_dir, "src", "assets.qrc")
-    with open(qrc_file_path, 'w') as f:
-        f.write('\n'.join(qrc_content))
-    
-    print(f"Created {qrc_file_path}")
-    return True
 
-def compile_qrc():
-    parent_dir = get_parent_dir()
-    qrc_file = os.path.join(parent_dir, "src", "assets.qrc")
-    output_file = os.path.join(parent_dir, "src", "assets_rc.py")
-    
-    if not os.path.exists(qrc_file):
-        print(f"QRC file not found: {qrc_file}")
-        return False
-    
+def create_qrc_file() -> Path | None:
+    """Generate assets/resources.qrc with paths relative to the assets/ directory."""
+    project_root = get_project_root()
+    icons_dir = project_root / "assets" / "icons"
+
+    if not icons_dir.is_dir():
+        print(f"Icons directory not found: {icons_dir}")
+        return None
+
+    icon_files = sorted(
+        f.name for f in icons_dir.iterdir()
+        if f.is_file()
+    )
+
+    if not icon_files:
+        print("No icon files found in assets/icons/")
+        return None
+
+    lines = ['<RCC>', '  <qresource prefix="icons">']
+    for name in icon_files:
+        # Path is relative to the QRC file location (assets/)
+        lines.append(f'    <file>icons/{name}</file>')
+    lines += ['  </qresource>', '</RCC>', '']
+
+    qrc_path = project_root / "assets" / "resources.qrc"
+    qrc_path.write_text('\n'.join(lines), encoding='utf-8')
+    print(f"Created {qrc_path}")
+    return qrc_path
+
+
+def compile_qrc(qrc_path: Path) -> bool:
+    """Compile the QRC file to src/assets_rc.py using pyside6-rcc."""
+    project_root = get_project_root()
+    output_file = project_root / "src" / "assets_rc.py"
+
     try:
-        import subprocess
-        result = subprocess.run(['pyside6-rcc', qrc_file, '-o', output_file], 
-                              capture_output=True, text=True)
-        
+        result = subprocess.run(
+            ['pyside6-rcc', str(qrc_path), '-o', str(output_file)],
+            capture_output=True,
+            text=True,
+            cwd=str(qrc_path.parent),   # run from assets/ so relative paths resolve
+        )
         if result.returncode == 0:
             print(f"Compiled assets to {output_file}")
             return True
         else:
-            print(f"Error compiling QRC: {result.stderr}")
+            print(f"Error compiling QRC: {result.stderr.strip()}")
             return False
     except FileNotFoundError:
-        print("pyside6-rcc not found. Install PySide6 tools.")
+        print("pyside6-rcc not found. Make sure PySide6 is installed.")
         return False
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Unexpected error: {e}")
         return False
+
 
 if __name__ == "__main__":
     print("Creating QRC file...")
-    if create_qrc_file():
-        print("Compiling QRC to Python resource module...")
-        compile_qrc()
-    else:
-        print("Failed to create QRC file")
+    qrc = create_qrc_file()
+    if qrc is None:
+        sys.exit(1)
+
+    print("Compiling QRC to Python resource module...")
+    if not compile_qrc(qrc):
         sys.exit(1)
