@@ -32,7 +32,7 @@ def _base_args(output_dir) -> list[str]:
         "--no-debug-immortal-assumptions",
         "--include-package-data=qdarkstyle",
         "--nofollow-import-to=ffmpeg_binary",
-        "--nofollow-import-to=assets_rc",
+        #"--nofollow-import-to=assets_rc",
         "--enable-plugin=pyside6",
         f"--include-qt-plugins={','.join(QT_PLUGINS)}",
         "--report=compilation-report.xml",
@@ -46,7 +46,7 @@ def _windows_args(assets_dir, app_name) -> list[str]:
         "--assume-yes-for-downloads",
         f"--output-filename={app_name}.exe",
     ]
-    icon = assets_dir / f"{app_name.lower()}.ico"
+    icon = assets_dir / f"{app_name}.ico"
     if icon.exists():
         args.append(f"--windows-icon-from-ico={icon}")
     else:
@@ -60,7 +60,7 @@ def _darwin_args(assets_dir, app_name, version) -> list[str]:
         f"--macos-app-name={app_name}",
         f"--macos-app-version={version}",
     ]
-    icon = assets_dir / f"{app_name.lower()}.icns"
+    icon = assets_dir / f"{app_name}.icns"
     if icon.exists():
         args.append(f"--macos-app-icon={icon}")
     else:
