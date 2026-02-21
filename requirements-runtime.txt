@@ -1,9 +1,11 @@
-PySide6==6.9.1
-PySide6_Addons==6.9.1
-PySide6_Essentials==6.9.1
-shiboken6==6.9.1
+--only-binary=:all:
+PySide6==6.10.2
+PySide6_Addons==6.10.2
+PySide6_Essentials==6.10.2
+shiboken6==6.10.2
+QDarkStyle==3.2.3
 
-AVPlay==1.2.0
+AVPlay==1.2.4
 python-ffmpeg==2.0.12
 pyffmpeg==2.4.3
 music-tag==0.4.3
@@ -11,7 +13,7 @@ mutagen==1.47.0
 pysubs2
 pycaption
 py-youtube==1.1.7
-py-RadioBrowser
+radios
 feedparser
 
 httpx==0.28.1
@@ -21,11 +23,9 @@ requests==2.32.4
 urllib3==2.5.0
 certifi==2025.6.15
 
-SpeechCore==1.0.2
+SpeechCore
 
-SQLAlchemy==2.0.35
-
-pyqtdarktheme==2.1.0
+SQLAlchemy==2.0.46
 
 humanize==4.12.3
 hurry.filesize==0.9
