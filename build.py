@@ -1,13 +1,18 @@
 import sys
+import shutil
 import platform as _platform
 
 from invoke.tasks import task
 from invoke_config import *
 
 
-APP_NAME        = "aPlayForm"
+APP_NAME        = "PlayForm"
 APP_VERSION     = "1.0.0"
+APP_PUBLISHER   = "JoyBytes"
+APP_DESCRIPTION = "PlayForm Media Player"
+APP_COPYRIGHT   = f"Copyright (c) 2026 {APP_PUBLISHER}"
 ENTRY_POINT     = SRC_DIR / "app.py"
+UPDATER_ENTRY   = SRC_DIR / "updater.py"
 
 QT_PLUGINS = [
     "platforms",
@@ -23,6 +28,17 @@ def _detect_platform(override: str | None) -> str:
     return _platform.system().lower()
 
 
+def _join_cmd(args) -> str:
+    parts = []
+    for a in args:
+        s = str(a)
+        if any(c in s for c in (' ', '(', ')')):
+            parts.append(f'"{s}"')
+        else:
+            parts.append(s)
+    return " ".join(parts)
+
+
 def _base_args(output_dir) -> list[str]:
     """Options that are identical across all platforms."""
     return [
@@ -32,17 +48,18 @@ def _base_args(output_dir) -> list[str]:
         "--no-debug-immortal-assumptions",
         "--include-package-data=qdarkstyle",
         "--nofollow-import-to=ffmpeg_binary",
-        #"--nofollow-import-to=assets_rc",
+        "--nofollow-import-to=assets_rc",
         "--enable-plugin=pyside6",
         f"--include-qt-plugins={','.join(QT_PLUGINS)}",
         "--report=compilation-report.xml",
+        f"--user-package-configuration-file={ROOT_DIR / 'playform.nuitka-package.config.yml'}",
         f"--output-dir={output_dir}",
     ]
 
 
 def _windows_args(assets_dir, app_name) -> list[str]:
     args = [
-        "--windows-console-mode=disable",
+        #"--windows-console-mode=disable",
         "--assume-yes-for-downloads",
         f"--output-filename={app_name}.exe",
     ]
@@ -77,17 +94,33 @@ def _linux_args(app_name) -> list[str]:
 def compile_assets(c):
     """Compile Qt resource files (.qrc -> _rc.py)"""
     print("Compiling Qt resource files...")
-    c.run(f"python {SCRIPTS_DIR / 'compile_assets.py'}", pty=False)
+    c.run(f"python {SCRIPTS_DIR / 'compile_assets.py'}", pty=False, in_stream=False)
 
 
-@task(pre=[compile_assets])
-def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION):
+@task
+def build_assets_pyd(c):
+    """Compile assets_rc.py to a native .pyd module (output: dist/)"""
+    assets_rc = SRC_DIR / "assets_rc.py"
+    if not assets_rc.exists():
+        print("assets_rc.py not found, running compile_assets first...")
+        compile_assets(c)
+    print("Compiling assets_rc.py to .pyd module...")
+    c.run(
+        f"{sys.executable} -m nuitka --module {assets_rc} --output-dir={BIN_DIR} --remove-output",
+        pty=False,
+        in_stream=False,
+    )
+
+
+@task(pre=[build_assets_pyd])
+def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, compiler=None):
     """Compile the application with Nuitka.
 
     Args:
         target_platform: windows / linux / darwin  (auto-detected if omitted)
         app_name:        Output executable name     (default: APP_NAME)
         version:         App version string         (default: APP_VERSION)
+        compiler:        Nuitka compiler flag without leading -- (e.g. msvc, msvc=14.3, clang, mingw64)
     """
     plat = _detect_platform(target_platform)
     output_dir = BIN_DIR
@@ -102,6 +135,18 @@ def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION):
 
     args = _base_args(output_dir)
 
+    args += [
+        f"--company-name={APP_PUBLISHER}",
+        f"--product-name={app_name}",
+        f"--product-version={version}",
+        f"--file-version={version}",
+        f"--file-description={APP_DESCRIPTION}",
+        f"--copyright={APP_COPYRIGHT}",
+    ]
+
+    if compiler:
+        args.append(f"--{compiler}")
+
     if plat == "windows":
         args += _windows_args(ASSETS_DIR, app_name)
     elif plat == "darwin":
@@ -111,12 +156,89 @@ def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION):
 
     args.append(str(ENTRY_POINT))
 
-    cmd = " ".join(str(a) for a in args)
+    cmd = _join_cmd(args)
     print(f"\nNuitka command:\n  {cmd}\n")
-    c.run(cmd, pty=False)
+    c.run(cmd, pty=False, in_stream=False)
+
+    if plat == "darwin":
+        app_dist_dir = BIN_DIR / f"{app_name}.app" / "Contents" / "MacOS"
+    else:
+        app_dist_dir = BIN_DIR / "app.dist"
+
+    if app_dist_dir.exists():
+        for pyd_file in BIN_DIR.glob("assets_rc*.pyd"):
+            dest_pyd = app_dist_dir / pyd_file.name
+            shutil.move(str(pyd_file), str(dest_pyd))
+            print(f"Moved {pyd_file.name} -> {dest_pyd}")
+
+        (app_dist_dir / "bin").mkdir(exist_ok=True)
+
+        if plat == "windows":
+            for pdb in app_dist_dir.rglob("*.pdb"):
+                pdb.unlink()
+                print(f"Removed {pdb.name}")
+    else:
+        print(f"[warn] Output dir not found: {app_dist_dir}, skipping post-compile moves.")
 
 
 @task
-def build(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION):
-    """Alias that mirrors old 'build' task — calls compile."""
-    compile(c, target_platform=target_platform, app_name=app_name, version=version)
+def build(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, compiler=None):
+    compile(c, target_platform=target_platform, app_name=app_name, version=version, compiler=compiler)
+
+
+def _updater_base_args(output_dir) -> list[str]:
+    return [
+        sys.executable, "-m", "nuitka",
+        "--standalone",
+        "--deployment",
+        "--no-debug-immortal-assumptions",
+        "--report=updater-compilation-report.xml",
+        f"--output-dir={output_dir}",
+    ]
+
+
+def _updater_windows_args() -> list[str]:
+    return [
+        "--windows-console-mode=disable",
+        "--assume-yes-for-downloads",
+        "--output-filename=updater.exe",
+    ]
+
+
+def _updater_darwin_args() -> list[str]:
+    return ["--output-filename=updater"]
+
+
+def _updater_linux_args() -> list[str]:
+    return ["--output-filename=updater"]
+
+
+@task
+def compile_updater(c, target_platform=None):
+    plat = _detect_platform(target_platform)
+    output_dir = BIN_DIR
+
+    if not UPDATER_ENTRY.exists():
+        print(f"Error: updater entry point not found: {UPDATER_ENTRY}")
+        return
+
+    print(f"Compiling updater for platform: {plat}")
+    print(f"Entry point : {UPDATER_ENTRY}")
+    print(f"Output dir  : {output_dir}")
+
+    args = _updater_base_args(output_dir)
+
+    if plat == "windows":
+        args += _updater_windows_args()
+    elif plat == "darwin":
+        args += _updater_darwin_args()
+    else:
+        args += _updater_linux_args()
+
+    args.append(str(UPDATER_ENTRY))
+
+    cmd = _join_cmd(args)
+    print(f"\nNuitka command:\n  {cmd}\n")
+    c.run(cmd, pty=False, in_stream=False)
+
+
