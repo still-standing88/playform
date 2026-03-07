@@ -4,7 +4,6 @@ data/
 cache/
 logs/
 Screenshots/
-docs/
 __pycache__/
 venv/
 tst/
