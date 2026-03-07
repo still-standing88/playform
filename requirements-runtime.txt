@@ -5,7 +5,7 @@ PySide6_Essentials==6.10.2
 shiboken6==6.10.2
 QDarkStyle==3.2.3
 
-AVPlay==1.2.4
+AVPlay
 python-ffmpeg==2.0.12
 pyffmpeg==2.4.3
 music-tag==0.4.3
