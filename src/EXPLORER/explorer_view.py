@@ -6,7 +6,7 @@ from PySide6.QtGui import QKeyEvent, QKeySequence
 from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel
 from PySide6.QtCore import Qt as qt, Slot
 from av_play import AVMediaInstance, VLCVideoPlayer, AVPlaybackState
-import av_play
+from utilities.formats import image_extensions
 
 from app_config import prefs
 from gui_controls.key_event_filter import ShortcutManager
@@ -99,6 +99,10 @@ class ExplorerView(QListWidget):
     def create_playlist_from_folder(self):
         if self._focused_item_path:
             self._execute_callback("create_playlist_callback", self._focused_item_path)  # type: ignore[arg-type]
+
+    def _sort(self, mode: str):
+        self._explorer.set_sort(mode)
+        self.relist_contents()
 
     def add_to_library(self):
         if self._focused_item_path:
@@ -233,6 +237,13 @@ class ExplorerView(QListWidget):
         if item_info is None: return  # Guard against None
         menu = QMenu()
 
+        sort_menu = menu.addMenu("Sort by")
+        menuItem(sort_menu, "Name (A\u2013Z)",       lambda: self._sort("name_asc"),     self)
+        menuItem(sort_menu, "Name (Z\u2013A)",       lambda: self._sort("name_desc"),    self)
+        menuItem(sort_menu, "Newest first",           lambda: self._sort("date_newest"),  self)
+        menuItem(sort_menu, "Oldest first",           lambda: self._sort("date_oldest"),  self)
+        menu.addSeparator()
+
         if item_info.type == PathType.FOLDER:
             menuItem(menu, 'navigate to folder', self.forward, self)
         elif item_info.type == PathType.FILE:
@@ -271,8 +282,12 @@ class ExplorerView(QListWidget):
         self.set_item_info()
 
         if item_info.type == PathType.FILE and self._focused_item_path is not None:
+            img_path = self._focused_item_path if os.path.splitext(self._focused_item_path)[1].lower() in image_extensions else ""
+            self._execute_callback("image_preview_callback", img_path)
             self._pending_media_path = self._focused_item_path
             self._delayed_media_load()
+        else:
+            self._execute_callback("image_preview_callback", "")
 
         if self._just_launched: self._just_launched = False
 

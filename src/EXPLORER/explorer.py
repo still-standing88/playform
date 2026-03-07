@@ -40,6 +40,7 @@ class PathItem:
 class Explorer:
     __drives = []
     default_path = os.path.expanduser("~")
+    _sort_mode = "name_asc"
 
     @staticmethod
     def get_current(): return os.getcwd()
@@ -75,6 +76,10 @@ class Explorer:
     def get_prev_path(self): return self.root_path
 
     def set_default_path(self, path): self.default_path = path
+
+    def set_sort(self, mode: str):
+        self._sort_mode = mode
+        self.__retrieve_listing()
 
     def get_current_path(self): return self._current_path
 
@@ -137,3 +142,12 @@ class Explorer:
                 elif os.path.isfile(item_path) and os.path.splitext(item_path)[1] in self._file_extensions:
                     self.items[item] = PathItem(path=item_path, type=PathType.FILE, info=PathInfo(item_path))
                     self.files.append(item)
+
+        if self._sort_mode in ("date_newest", "date_oldest"):
+            rev = self._sort_mode == "date_newest"
+            self.folders.sort(key=lambda x: self.items[x].info.modify_date, reverse=rev)
+            self.files.sort(key=lambda x: self.items[x].info.modify_date, reverse=rev)
+        else:
+            rev = self._sort_mode == "name_desc"
+            self.folders.sort(key=lambda x: x.lower(), reverse=rev)
+            self.files.sort(key=lambda x: x.lower(), reverse=rev)

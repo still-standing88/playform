@@ -4,10 +4,11 @@ from PySide6.QtWidgets import (
     QSplitter, QGroupBox
 )
 from PySide6.QtCore import Qt as qt, QTimer, Slot
-from PySide6.QtGui import QKeyEvent, QPalette, QColor
+from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap
 
 from typing import Optional, Callable
-from av_play import VLCVideoPlayer, formats, AVMediaInstance, AVPlaybackState
+from av_play import VLCVideoPlayer, AVMediaInstance, AVPlaybackState
+from utilities.formats import formats, image_extensions
 from app_config import prefs
 from app_constance.vlc_args import log_args
 from app_constance.styles import COLORS
@@ -19,7 +20,7 @@ from .play_bar import PlayerBar
 from utilities.functions import get_vlclog_file, get_debug_level, initialize_com
 
 
-extensions = list(map(lambda ext: f".{ext}", formats["audio"] + formats["video"]))
+extensions = list(map(lambda ext: f".{ext}", formats["audio"] + formats["video"])) + list(image_extensions)
 
 class PathEdit(QTextEdit):
 
@@ -50,7 +51,8 @@ class ExplorerWidget(QWidget):
         
         self._callbacks = {**kw,
         "path_change_callback": self.update_path,
-        "library_callback": lambda path: self.add_to_library(path)
+        "library_callback": lambda path: self.add_to_library(path),
+        "image_preview_callback": self._on_image_preview,
         }
         vlc_args = log_args
         if prefs.prefs.get("vlc_logging", True):
@@ -101,8 +103,21 @@ class ExplorerWidget(QWidget):
         explorer_group = QGroupBox("Files")
         explorer_layout = QVBoxLayout(explorer_group)
 
+        files_splitter = QSplitter(qt.Orientation.Horizontal)
+
         self.explorer_view = ExplorerView(self._explorer, self._player, **{"parent": self, **self._callbacks})
-        explorer_layout.addWidget(self.explorer_view)
+        files_splitter.addWidget(self.explorer_view)
+
+        self.image_preview_label = QLabel()
+        self.image_preview_label.setAlignment(qt.AlignmentFlag.AlignCenter)
+        self.image_preview_label.setMinimumWidth(200)
+        self.image_preview_label.hide()
+        files_splitter.addWidget(self.image_preview_label)
+
+        files_splitter.setStretchFactor(0, 3)
+        files_splitter.setStretchFactor(1, 2)
+
+        explorer_layout.addWidget(files_splitter)
 
         self.library_view = LibraryView(self._user_db, self,
         navigate_callback=lambda path: self.explorer_view.change_path(path)
@@ -199,6 +214,21 @@ class ExplorerWidget(QWidget):
 
     def add_to_library(self, path):
         self.library_view.add_path(path)
+
+    def _on_image_preview(self, path: str):
+        if path:
+            pixmap = QPixmap(path)
+            if not pixmap.isNull():
+                scaled = pixmap.scaled(
+                    self.image_preview_label.width() or 400,
+                    self.image_preview_label.height() or 400,
+                    qt.AspectRatioMode.KeepAspectRatio,
+                    qt.TransformationMode.SmoothTransformation,
+                )
+                self.image_preview_label.setPixmap(scaled)
+                self.image_preview_label.show()
+                return
+        self.image_preview_label.hide()
 
     def reset_shortcuts(self):
         pass
