@@ -5,7 +5,7 @@ import app_guard
 
 from typing import Optional
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QSplitter, 
+    QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QSplitter, 
     QMenuBar, QMenu, QStatusBar, QToolBar, QDockWidget, QLabel,
     QFileDialog, QInputDialog, QApplication, QMessageBox, QDialog,
     QPushButton
@@ -30,7 +30,8 @@ from utilities.media_utils import get_media_files_from_directory
 from utilities.speech import speech_manager
 from utilities import signal_manager
 from player.utilities import ensure_ffmpeg_available
-from av_play import Playlist, PlaylistEntry, formats
+from av_play import Playlist, PlaylistEntry
+from utilities.formats import formats
 from tools.batch_converter_ui import BatchConverterUI
 from tools.extractor_ui import ExtractorUI
 from tools.tag_editor_ui import TagEditorUI
@@ -141,6 +142,7 @@ class MainWindow(QMainWindow):
         self.dock_manager.setup_dock_widgets()
         self.dock_manager.restore_dock_session()
         self.tray = SystemTrayIcon(self)
+        QApplication.instance()._tray_icon = self.tray.tray_icon
         self.connect_signals()
         self.set_shortcuts()
         
@@ -780,10 +782,16 @@ class MainWindow(QMainWindow):
             )
 
     def check_for_updates(self):
-        """Manually triggered update check (delegates to UpdateChecker)."""
         from update_checker import UpdateChecker
         checker = UpdateChecker.instance(self)
         checker.check_now(silent=False)
+
+    def open_utility_download_dialog(self):
+        from util_download_center import UtilityDownloadDialog
+        dlg = UtilityDownloadDialog(
+            downloader=self._get_shared_downloader(), parent=self
+        )
+        dlg.exec()
 
     # ------------------------------------------------------------------
     # Singleton downloader dialog management
