@@ -26,11 +26,26 @@ def create_qrc_file() -> Path | None:
         print("No icon files found in assets/icons/")
         return None
 
+    # Collect .png files from assets/ root (exclude .ico and .icns)
+    assets_dir = project_root / "assets"
+    app_images = sorted(
+        f.name for f in assets_dir.iterdir()
+        if f.is_file() and f.suffix.lower() == '.png'
+    )
+
     lines = ['<RCC>', '  <qresource prefix="icons">']
     for name in icon_files:
-        # Path is relative to the QRC file location (assets/)
-        lines.append(f'    <file>icons/{name}</file>')
-    lines += ['  </qresource>', '</RCC>', '']
+        # alias strips the icons/ prefix so Qt path is :/icons/<name>
+        lines.append(f'    <file alias="{name}">icons/{name}</file>')
+    lines.append('  </qresource>')
+
+    if app_images:
+        lines.append('  <qresource prefix="app">')
+        for name in app_images:
+            lines.append(f'    <file>{name}</file>')
+        lines.append('  </qresource>')
+
+    lines += ['</RCC>', '']
 
     qrc_path = project_root / "assets" / "resources.qrc"
     qrc_path.write_text('\n'.join(lines), encoding='utf-8')

@@ -20,6 +20,18 @@ def detect_platform():
         return 'unknown'
 
 
+def detect_arch():
+    machine = platform.machine().lower()
+    if machine in ('amd64', 'x86_64'):
+        return 'x64'
+    elif machine in ('arm64', 'aarch64'):
+        return 'arm64'
+    elif machine in ('i386', 'i686', 'x86'):
+        return 'x86'
+    else:
+        return machine if machine else 'unknown'
+
+
 def load_checksum_file(path):
     if os.path.exists(path):
         with open(path, 'r') as f:
@@ -116,7 +128,7 @@ def scan_folder(folder_path):
     return manifest_files
 
 
-def generate_manifest(folder, output, platform_override, version):
+def generate_manifest(folder, output, platform_override, version, arch_override=None):
     script_dir = Path(__file__).parent
     
     if folder is None:
@@ -131,9 +143,11 @@ def generate_manifest(folder, output, platform_override, version):
     
     detected_platform = detect_platform()
     target_platform = platform_override if platform_override else detected_platform
-    
+    detected_arch = detect_arch()
+    target_arch = arch_override if arch_override else detected_arch
+
     if output is None:
-        output = folder / f'{target_platform}-manifest.json'
+        output = folder / f'{target_platform}-{target_arch}-manifest.json'
     else:
         output = Path(output)
     
@@ -149,6 +163,7 @@ def generate_manifest(folder, output, platform_override, version):
     
     print(f"Manifest generated: {output}")
     print(f"Target platform: {target_platform}")
+    print(f"Target arch: {target_arch}")
     print(f"Version: {version}")
     print(f"Files tracked: {len(files)}")
 
@@ -158,10 +173,11 @@ def main():
     parser.add_argument('--folder', '-f', help='Folder to scan (default: ../release/ from script location)')
     parser.add_argument('--output', '-o', help='Output manifest path (default: <folder>/<platform>-manifest.json)')
     parser.add_argument('--platform', '-p', choices=['windows', 'macos', 'linux'], help='Target platform (default: auto-detect)')
+    parser.add_argument('--arch', '-a', choices=['x64', 'arm64', 'x86'], help='Target architecture (default: auto-detect)')
     parser.add_argument('--version', '-v', required=True, help='Version string (e.g., 1.2.3)')
-    
+
     args = parser.parse_args()
-    generate_manifest(args.folder, args.output, args.platform, args.version)
+    generate_manifest(args.folder, args.output, args.platform, args.version, args.arch)
 
 
 if __name__ == "__main__":
