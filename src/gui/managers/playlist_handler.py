@@ -1,7 +1,8 @@
 import os
 from PySide6.QtWidgets import QMessageBox
 from utilities.media_utils import get_media_files_from_directory
-from av_play import Playlist, PlaylistEntry, formats
+from av_play import Playlist, PlaylistEntry
+from utilities.formats import formats
 from utilities.util_gui import messageBox
 from utilities import signal_manager
 from playlist_manager.playlist_selection_dialog import PlaylistSelectionDialog

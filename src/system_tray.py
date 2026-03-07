@@ -16,7 +16,7 @@ class SystemTrayIcon:
         
         self.tray_icon = QSystemTrayIcon(self.window)
         
-        icon = load_icon("app_icon.png")
+        icon = load_icon("PlayForm.png")
         if icon.isNull():
             icon = self.window.style().standardIcon(self.window.style().StandardPixmap.SP_MediaPlay)
         self.tray_icon.setIcon(icon)

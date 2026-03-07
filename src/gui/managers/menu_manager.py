@@ -206,6 +206,10 @@ class MenuManager:
         self.main_window.check_updates_action.triggered.connect(self.main_window.check_for_updates)
         self.main_window.options_menu.addAction(self.main_window.check_updates_action)
 
+        self.main_window.get_utilities_action = QAction("Get/Update &Utilities...", self.main_window)
+        self.main_window.get_utilities_action.triggered.connect(self.main_window.open_utility_download_dialog)
+        self.main_window.options_menu.addAction(self.main_window.get_utilities_action)
+
         self.main_window.documentation_action = QAction("&Documentation", self.main_window)
         self.main_window.documentation_action.setShortcut(
             key_config.key_config["Main interface"].get("Documentation", "F1")

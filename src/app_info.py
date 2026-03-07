@@ -1,9 +1,3 @@
-"""
-app_info.py — Centralised application metadata.
-
-All constants are also available as environment variables after calling
-setup_env() (done automatically by app_init.setup_environment).
-"""
 
 import os
 
