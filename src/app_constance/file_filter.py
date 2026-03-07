@@ -1,4 +1,4 @@
-from av_play import formats, format_descriptions
+from utilities.formats import formats, format_descriptions
 
 def build_media_file_filter(format_descriptions: dict[str, dict[str, str]]) -> str:
     filter_parts = []
