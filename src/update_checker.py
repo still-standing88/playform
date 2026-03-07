@@ -1,21 +1,3 @@
-"""
-update_checker.py – Periodic GitHub-based update checker.
-
-Logic summary
-─────────────
-  • On startup and every 12 hours the checker hits:
-        GET https://api.github.com/repos/{REPO}/releases/latest
-  • It compares `tag_name` (e.g. "v1.2.3") against APP_VERSION.
-  • If a newer version exists it shows UpdateAvailableDialog.
-  • "Download Now" queues two files (platform manifest + zip)
-    into a dedicated, private Downloader instance in a temp dir.
-  • When all downloads finish a restart dialog is shown.
-  • "Download Later" merely dismisses the notification.
-
-Note: downloading and applying updates only works in frozen (binary)
-mode.  In dev mode the check still runs but the "apply" step is skipped.
-"""
-
 import os
 import sys
 import json
@@ -37,10 +19,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────
-
-_12H_MS = 12 * 60 * 60 * 1000       # 12 hours in milliseconds
-_CHECK_DELAY_MS = 3_000              # wait 3 s after startup before first check
+_12H_MS = 12 * 60 * 60 * 1000
+_CHECK_DELAY_MS = 3_000
 
 
 def _current_platform() -> str:
@@ -49,12 +29,10 @@ def _current_platform() -> str:
 
 
 def _strip_v(tag: str) -> str:
-    """Strip leading 'v' from a semver tag."""
     return tag.lstrip("vV")
 
 
 def _is_newer(remote_tag: str, local_version: str) -> bool:
-    """Return True when remote_tag represents a version newer than local."""
     try:
         remote = tuple(int(x) for x in _strip_v(remote_tag).split("."))
         local  = tuple(int(x) for x in _strip_v(local_version).split("."))
@@ -73,14 +51,9 @@ def _get_app_path() -> str:
     return get_app_path()
 
 
-# ══════════════════════════════════════════════════════════════════════════
-# Dialogs
-# ══════════════════════════════════════════════════════════════════════════
-
 class UpdateAvailableDialog(QDialog):
-    """Shows release info and lets the user choose to download now or later."""
 
-    download_now   = Signal(dict)      # emits the full release dict
+    download_now   = Signal(dict)
     download_later = Signal()
 
     def __init__(self, release: dict, parent=None, dev_mode: bool = False):
@@ -100,7 +73,6 @@ class UpdateAvailableDialog(QDialog):
         layout.setSpacing(8)
         layout.setContentsMargins(16, 12, 16, 12)
 
-        # ── Header ──────────────────────────────────────────────────
         current = os.environ.get("APP_VERSION", "")
         header = QLabel(
             f"<b>A new version of {os.environ.get('APP_NAME','PlayForm')} is available!</b><br>"
@@ -109,7 +81,6 @@ class UpdateAvailableDialog(QDialog):
         header.setWordWrap(True)
         layout.addWidget(header)
 
-        # ── Release notes ────────────────────────────────────────────
         notes_label = QLabel("<b>Release notes:</b>")
         layout.addWidget(notes_label)
 
@@ -118,7 +89,6 @@ class UpdateAvailableDialog(QDialog):
         notes.setMinimumHeight(160)
         layout.addWidget(notes, 1)
 
-        # ── File list ────────────────────────────────────────────────
         assets = release.get("assets", [])
         if assets:
             files_label = QLabel(f"<b>Release files ({len(assets)}):</b>")
@@ -132,7 +102,6 @@ class UpdateAvailableDialog(QDialog):
                 files_list.addItem(item)
             layout.addWidget(files_list)
 
-        # ── Buttons ──────────────────────────────────────────────────
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
@@ -165,7 +134,6 @@ class UpdateAvailableDialog(QDialog):
 
 
 class _DownloadProgressDialog(QDialog):
-    """Minimal dialog shown while update files are being downloaded."""
 
     cancelled = Signal()
 
@@ -196,74 +164,50 @@ class _DownloadProgressDialog(QDialog):
         self.reject()
 
 
-# ══════════════════════════════════════════════════════════════════════════
-# Main service
-# ══════════════════════════════════════════════════════════════════════════
-
 class UpdateChecker(QObject):
-    """Periodic GitHub-release update checker (singleton).
 
-    Instantiate once via UpdateChecker.instance(parent_widget).
-    """
-
-    update_available = Signal(dict)    # emits full release dict
+    update_available = Signal(dict)
     no_update        = Signal()
     check_error      = Signal(str)
-    download_ready   = Signal(str, str)  # (temp_dir, zip_filename)
+    download_ready   = Signal(str, str)
 
     _singleton = None
 
-    # ------------------------------------------------------------------
     @classmethod
     def instance(cls, parent=None) -> "UpdateChecker":
         if cls._singleton is None:
             cls._singleton = cls(parent)
         return cls._singleton
 
-    # ------------------------------------------------------------------
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self._repo      = os.environ.get("APP_GITHUB_REPO", "")
         self._version   = os.environ.get("APP_VERSION", "0.0.0")
         self._platform  = _current_platform()
-        self._parent_widget: QWidget | None = parent   # QWidget used as dialog parent
+        self._parent_widget: QWidget | None = parent
 
-        self._nam       = QNetworkAccessManager(self)
+        self._nam        = QNetworkAccessManager(self)
         self._reply: QNetworkReply | None = None
-        self._download_nam = QNetworkAccessManager(self)   # used only for manifest fetch
+        self._download_nam = QNetworkAccessManager(self)
 
-        # Private downloader for update files
         self._update_downloader = None
         self._progress_dialog: _DownloadProgressDialog | None = None
         self._pending_release: dict | None = None
         self._expected_count = 0
         self._finished_count = 0
 
-        # Periodic timer
         self._timer = QTimer(self)
         self._timer.setInterval(_12H_MS)
         self._timer.timeout.connect(self.check_now)
         self._timer.start()
 
-        # First check after a short delay
         QTimer.singleShot(_CHECK_DELAY_MS, self.check_now)
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
     def check_now(self, *, silent: bool = True):
-        """Trigger an immediate update check.
-
-        silent=True  → only show UI when update is found.
-        silent=False → also inform the user when already up-to-date.
-        """
         if not self._repo:
             return
         if self._reply and not self._reply.isFinished():
-            # A background check is already in flight. If the caller wants
-            # visible feedback (silent=False), promote the in-flight request
-            # so its result will show dialogs instead of being swallowed.
             if not silent:
                 self._silent = False
             return
@@ -277,9 +221,6 @@ class UpdateChecker(QObject):
         self._reply = self._nam.get(request)
         self._reply.finished.connect(self._on_api_reply)
 
-    # ------------------------------------------------------------------
-    # Private: API response handling
-    # ------------------------------------------------------------------
     @Slot()
     def _on_api_reply(self):
         reply = self._reply
@@ -287,22 +228,17 @@ class UpdateChecker(QObject):
             return
 
         try:
-            # Read the HTTP status code before checking reply.error() so that
-            # well-formed API error responses (e.g. 404 "Not Found") are handled
-            # gracefully rather than treated as connection failures.
             http_status = reply.attribute(
                 QNetworkRequest.Attribute.HttpStatusCodeAttribute
             )
 
             data = bytes(reply.readAll()).decode("utf-8", errors="replace")
 
-            # Try to parse JSON regardless of status – GitHub always sends JSON
             try:
                 release = json.loads(data)
             except json.JSONDecodeError:
                 release = {}
 
-            # 404 → no releases published yet (or repo not found)
             if http_status == 404 or (
                 reply.error() != QNetworkReply.NetworkError.NoError
                 and http_status is not None
@@ -318,7 +254,6 @@ class UpdateChecker(QObject):
                     )
                 return
 
-            # Real network / connection error (no HTTP status at all)
             if reply.error() != QNetworkReply.NetworkError.NoError:
                 err = reply.errorString()
                 self.check_error.emit(err)
@@ -353,21 +288,13 @@ class UpdateChecker(QObject):
             reply.deleteLater()
             self._reply = None
 
-    # ------------------------------------------------------------------
-    # Private: update dialog
-    # ------------------------------------------------------------------
     def _show_update_dialog(self, release: dict):
         dlg = UpdateAvailableDialog(release, self._parent_widget, dev_mode=_is_frozen() is False)
         dlg.download_now.connect(self._start_download)
         dlg.exec()
 
-    # ------------------------------------------------------------------
-    # Private: download flow
-    # ------------------------------------------------------------------
     @Slot(dict)
     def _start_download(self, release: dict):
-        # dev_mode guard is handled by the dialog (button is disabled), but
-        # defend here too in case someone connects the signal directly.
         if not _is_frozen():
             return
 
@@ -377,7 +304,6 @@ class UpdateChecker(QObject):
                                 "No downloadable assets found in this release.")
             return
 
-        # Find platform manifest asset
         manifest_name = f"{self._platform}-manifest.json"
         manifest_asset = next(
             (a for a in assets if a["name"] == manifest_name), None
@@ -389,8 +315,6 @@ class UpdateChecker(QObject):
             )
             return
 
-        # Find the zip asset: prefer one whose name contains the platform,
-        # fall back to the first .zip
         zip_asset = next(
             (a for a in assets
              if a["name"].endswith(".zip") and self._platform in a["name"].lower()),
@@ -403,7 +327,6 @@ class UpdateChecker(QObject):
                                 "No zip archive found in this release.")
             return
 
-        # Set up temp dir
         temp_dir = Path(_get_app_path()) / "update_temp"
         temp_dir.mkdir(parents=True, exist_ok=True)
         temp_dir_str = str(temp_dir)
@@ -415,10 +338,8 @@ class UpdateChecker(QObject):
         self._finished_count    = 0
         self._download_failed   = False
 
-        # Private Downloader for update files only
         from downloader.downloader import Downloader
         if self._update_downloader is not None:
-            # tear down old one
             try:
                 self._update_downloader.deleteLater()
             except Exception:
@@ -427,7 +348,6 @@ class UpdateChecker(QObject):
         self._update_downloader.download_finished.connect(self._on_update_file_finished)
         self._update_downloader.all_finished.connect(self._on_all_update_files_finished)
 
-        # Queue both downloads
         self._update_downloader.add_download(
             manifest_asset["browser_download_url"],
             destination=temp_dir_str,
@@ -439,7 +359,6 @@ class UpdateChecker(QObject):
             filename=zip_asset["name"]
         )
 
-        # Show progress dialog
         self._progress_dialog = _DownloadProgressDialog(self._parent_widget)
         self._progress_dialog.cancelled.connect(self._cancel_update_download)
         self._progress_dialog.set_message(
@@ -473,7 +392,6 @@ class UpdateChecker(QObject):
             )
             return
 
-        # All files downloaded – prompt restart
         app_name = os.environ.get("APP_NAME", "PlayForm")
         reply = QMessageBox.question(
             self._parent_widget,
@@ -494,11 +412,7 @@ class UpdateChecker(QObject):
             for item in list(all_dl["queue"]):
                 self._update_downloader.cancel_download(item)
 
-    # ------------------------------------------------------------------
-    # Private: restart & invoke updater
-    # ------------------------------------------------------------------
     def _apply_update_and_restart(self):
-        """Quit the app and hand control to the updater binary."""
         app_path = Path(_get_app_path())
         temp_dir = self._pending_temp_dir or str(app_path / "update_temp")
         zip_name = getattr(self, "_pending_zip_name", "update.zip")
@@ -535,6 +449,5 @@ class UpdateChecker(QObject):
             )
             return
 
-        # Quit the app so the updater can replace files
         from PySide6.QtWidgets import QApplication
         QApplication.quit()
