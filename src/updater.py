@@ -35,6 +35,18 @@ def detect_platform():
         return 'unknown'
 
 
+def detect_arch():
+    machine = platform_module.machine().lower()
+    if machine in ('amd64', 'x86_64'):
+        return 'x64'
+    elif machine in ('arm64', 'aarch64'):
+        return 'arm64'
+    elif machine in ('i386', 'i686', 'x86'):
+        return 'x86'
+    else:
+        return machine if machine else 'unknown'
+
+
 class Logger:
     def __init__(self, log_file="updater.log"):
         self.log_file = log_file
@@ -244,6 +256,8 @@ def update(temp_dir, zip_filename, install_dir=None):
     
     current_platform = detect_platform()
     logger.info(f"Detected platform: {current_platform}")
+    current_arch = detect_arch()
+    logger.info(f"Detected arch: {current_arch}")
     
     if install_dir is None:
         install_dir = Path(__file__).parent
@@ -300,7 +314,7 @@ def update(temp_dir, zip_filename, install_dir=None):
         logger.close()
         return False
     
-    manifest_filename = f"{current_platform}-manifest.json"
+    manifest_filename = f"{current_platform}-{current_arch}-manifest.json"
     manifest_path = temp_path / manifest_filename
     
     if not manifest_path.exists():
