@@ -14,8 +14,8 @@ from PySide6.QtCore import QUrl
 from pathlib import Path
 
 from utilities.util_structs import time_struct
-from pynotifier import NotificationClient, Notification
-from pynotifier.backends import platform
+#from pynotifier import NotificationClient, Notification
+#from pynotifier.backends import platform
 
 
 def copyText(text):
@@ -96,10 +96,21 @@ def fileProperties(filepath):
 
 
 def notifyer(msg_title,msg):
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance()
+
+    app._tray_icon.showMessage(
+        msg_title,
+        msg,
+        QSystemTrayIcon.MessageIcon.Information,
+        5000
+    )
+"""
     c = NotificationClient()
     c.register_backend(platform.Backend())
     notification = Notification(title=msg_title,message=msg)
     c.notify_all(notification)
+"""
 
 def numberList(minx,maxx,mode):
     numlist = []
@@ -195,14 +206,12 @@ def parse_vlc_args(text: str) -> list[str]:
     return shlex.split(text, posix=True)
 
 def is_youtube_url(url: str) -> bool:
-    """Check if a URL is a YouTube URL"""
     if not url:
         return False
     url_lower = url.lower()
     return 'youtube.com' in url_lower or 'youtu.be' in url_lower
 
 def is_local_file(path: str) -> bool:
-    """Check if a path exists as an actual file"""
     if not path:
         return False
     try:
@@ -211,13 +220,98 @@ def is_local_file(path: str) -> bool:
         return False
 
 def open_file_location(path: str):
-    """Open file location in Windows Explorer or equivalent"""
     if not is_local_file(path):
         return
-    
+
     if sys.platform == "win32":
         sp.Popen(fr'explorer /select,"{path}"')
-    elif sys.platform == "darwin":  # macOS
+    elif sys.platform == "darwin":
         sp.Popen(["open", "-R", path])
-    else:  # Linux
+    else:
         sp.Popen(["xdg-open", os.path.dirname(path)])
+
+
+def setup_vlc_macos():
+    bundle_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    lib_path = os.path.join(bundle_dir, "lib", "libvlc.dylib")
+    plugins_path = os.path.join(bundle_dir, "plugins")
+    os.environ["VLC_LIB_PATH"] = os.path.join(bundle_dir, "lib")
+    os.environ["VLC_PLUGIN_PATH"] = plugins_path
+    return lib_path, plugins_path
+
+
+def _get_linux_package_manager() -> str | None:
+    distro = ""
+    like = ""
+    try:
+        release = pform.freedesktop_os_release()
+        distro = release.get("ID", "")
+        like = release.get("ID_LIKE", "")
+    except Exception:
+        pass
+    if "debian" in like or distro in ("ubuntu", "debian", "mint", "linuxmint", "pop"):
+        return "apt"
+    elif "rhel" in like or "fedora" in like or distro in ("fedora", "rhel", "centos", "almalinux", "rocky"):
+        return "dnf"
+    elif distro == "arch" or "arch" in like:
+        return "pacman"
+    elif distro in ("opensuse", "opensuse-leap", "opensuse-tumbleweed") or "suse" in like:
+        return "zypper"
+    return None
+
+
+def _check_vlc_installed_linux() -> bool:
+    import shutil as _shutil
+    if _shutil.which("vlc"):
+        return True
+    lib_candidates = [
+        "/usr/lib/libvlc.so",
+        "/usr/lib/x86_64-linux-gnu/libvlc.so.5",
+        "/usr/lib64/libvlc.so.5",
+        "/usr/lib/aarch64-linux-gnu/libvlc.so.5",
+    ]
+    return any(os.path.exists(p) for p in lib_candidates)
+
+
+def ensure_vlc_linux():
+    if _check_vlc_installed_linux():
+        return
+    pm = _get_linux_package_manager()
+    if pm is None:
+        print("Warning: Could not detect package manager. Please install VLC manually.")
+        return
+    print("VLC libraries not found. Installing VLC...")
+    if pm == "apt":
+        packages = ["vlc", "libvlc-dev", "libvlccore-dev"]
+        install_cmd = ["apt-get", "install", "-y"] + packages
+    elif pm == "dnf":
+        packages = ["vlc", "vlc-devel"]
+        install_cmd = ["dnf", "install", "-y"] + packages
+    elif pm == "pacman":
+        packages = ["vlc"]
+        install_cmd = ["pacman", "-S", "--noconfirm"] + packages
+    elif pm == "zypper":
+        packages = ["vlc", "libvlc5"]
+        install_cmd = ["zypper", "install", "-y"] + packages
+    else:
+        print("Warning: Unsupported package manager. Please install VLC manually.")
+        return
+    try:
+        if os.getuid() != 0:
+            print(f"Root access required. Running with sudo: {' '.join(install_cmd)}")
+            result = sp.run(["sudo"] + install_cmd)
+        else:
+            result = sp.run(install_cmd)
+        if result.returncode == 0:
+            print("VLC installed successfully.")
+        else:
+            print("VLC installation failed. Please install it manually.")
+    except Exception as e:
+        print(f"Failed to install VLC: {e}")
+
+
+def setup_vlc_binaries():
+    if sys.platform == "darwin":
+        setup_vlc_macos()
+    elif sys.platform.startswith("linux"):
+        ensure_vlc_linux()
