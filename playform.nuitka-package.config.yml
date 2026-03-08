@@ -1,0 +1,10 @@
+# yamllint disable rule:line-length
+# yamllint disable rule:indentation
+
+- module-name: 'ffmpeg_binary'
+  options:
+    noinclude-custom-mode: 'ffmpeg_binary:nofollow'
+
+- module-name: 'assets_rc'
+  options:
+    noinclude-custom-mode: 'assets_rc:nofollow'
