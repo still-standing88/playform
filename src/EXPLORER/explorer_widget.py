@@ -47,7 +47,7 @@ class ExplorerWidget(QWidget):
         self._explorer = Explorer(extensions)
 
         super().__init__(kw.get("parent", None))
-        self.setWindowTitle("Explorer")
+        self.setWindowTitle(_("Explorer"))
         
         self._callbacks = {**kw,
         "path_change_callback": self.update_path,
@@ -74,12 +74,12 @@ class ExplorerWidget(QWidget):
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
-        title_label = QLabel("Explorer")
+        title_label = QLabel(_("Explorer"))
         main_layout.addWidget(title_label)
         main_splitter = QSplitter(qt.Orientation.Horizontal)
         main_layout.addWidget(main_splitter)
 
-        left_panel = QGroupBox("Library")
+        left_panel = QGroupBox(_("Library"))
         left_layout = QVBoxLayout(left_panel)
         
         main_splitter.addWidget(left_panel)
@@ -87,9 +87,9 @@ class ExplorerWidget(QWidget):
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
 
-        path_group = QGroupBox("Path")
+        path_group = QGroupBox(_("Path"))
         path_layout = QVBoxLayout(path_group)
-        self.parent_btn = QPushButton("Parent Directory")
+        self.parent_btn = QPushButton(_("Parent Directory"))
         self.parent_btn.clicked.connect(self.backward)
         path_layout.addWidget(self.parent_btn)
 
@@ -100,7 +100,7 @@ class ExplorerWidget(QWidget):
         
         content_splitter = QSplitter(qt.Orientation.Vertical)
         right_layout.addWidget(content_splitter)
-        explorer_group = QGroupBox("Files")
+        explorer_group = QGroupBox(_("Files"))
         explorer_layout = QVBoxLayout(explorer_group)
 
         files_splitter = QSplitter(qt.Orientation.Horizontal)
@@ -126,7 +126,7 @@ class ExplorerWidget(QWidget):
 
         content_splitter.addWidget(explorer_group)
         
-        preview_group = QGroupBox("Media Preview")
+        preview_group = QGroupBox(_("Media Preview"))
         preview_layout = QVBoxLayout(preview_group)
         self.video_widget = QFrame(self)
         self.vid_palette = self.video_widget.palette()
@@ -150,19 +150,19 @@ class ExplorerWidget(QWidget):
         main_splitter.addWidget(right_panel)
         
         controls_layout = QHBoxLayout()
-        self.autoplay_cb = QCheckBox("Auto Play")
+        self.autoplay_cb = QCheckBox(_("Auto Play"))
         self.autoplay_cb.stateChanged.connect(self.autoplayState)
         self.autoplay_cb.setChecked(prefs.prefs["autoplay"])
         controls_layout.addWidget(self.autoplay_cb)
         controls_layout.addStretch()
         
-        volume_label = QLabel("Volume:")
+        volume_label = QLabel(_("Volume:"))
         controls_layout.addWidget(volume_label)
         self.volume_spinbox = QSpinBox()
         self.volume_spinbox.setValue(100)
         self.volume_spinbox.setRange(0, 100)
         self.volume_spinbox.setSuffix("%")
-        self.volume_spinbox.setAccessibleName("volume")
+        self.volume_spinbox.setAccessibleName(_("volume"))
         self.volume_spinbox.valueChanged.connect(self.volumeChange)
         controls_layout.addWidget(self.volume_spinbox)
         
@@ -172,7 +172,7 @@ class ExplorerWidget(QWidget):
         if prefs.prefs['repeat'] == True:
             if self._instance is not None:
                 try:
-                    if self._instance.get_playback_state == AVPlaybackState.AV_STATE_STOPPED:
+                    if self._instance.get_playback_state() == AVPlaybackState.AV_STATE_STOPPED:
                         self._instance.play()
                 except:
                     pass

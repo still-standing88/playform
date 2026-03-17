@@ -212,8 +212,8 @@ class ExplorerView(QListWidget):
         if self.currentItem() is None: return
         current_item = self.currentItem().text()
         item_info:Optional[PathInfo] = self._explorer.items.get(current_item, None)
-        if item_info is None: return  # Guard against None
-        info = f"Type extension: {item_info.info.ext}\rDate modified: {item_info.info.modify_date}{"\rsize: " + item_info.info.size if item_info.type == PathType.FILE else ""}"
+        if item_info is None: return
+        info = f"{_("Type extension")}: {item_info.info.ext}\r{_("Date modified")}: {item_info.info.modify_date}{f"\r{_("size")}: " + item_info.info.size if item_info.type == PathType.FILE else ""}"
         infoText  = QLabel(info,self)
         infoText.adjustSize()
         self.setItemWidget(self.currentItem(),infoText)
@@ -237,26 +237,26 @@ class ExplorerView(QListWidget):
         if item_info is None: return  # Guard against None
         menu = QMenu()
 
-        sort_menu = menu.addMenu("Sort by")
-        menuItem(sort_menu, "Name (A\u2013Z)",       lambda: self._sort("name_asc"),     self)
-        menuItem(sort_menu, "Name (Z\u2013A)",       lambda: self._sort("name_desc"),    self)
-        menuItem(sort_menu, "Newest first",           lambda: self._sort("date_newest"),  self)
-        menuItem(sort_menu, "Oldest first",           lambda: self._sort("date_oldest"),  self)
+        sort_menu = menu.addMenu(_("Sort by"))
+        menuItem(sort_menu, _("Name (A\u2013Z)"),       lambda: self._sort("name_asc"),     self)
+        menuItem(sort_menu, _("Name (Z\u2013A)"),       lambda: self._sort("name_desc"),    self)
+        menuItem(sort_menu, _("Newest first"),           lambda: self._sort("date_newest"),  self)
+        menuItem(sort_menu, _("Oldest first"),           lambda: self._sort("date_oldest"),  self)
         menu.addSeparator()
 
         if item_info.type == PathType.FOLDER:
-            menuItem(menu, 'navigate to folder', self.forward, self)
+            menuItem(menu, _("navigate to folder"), self.forward, self)
         elif item_info.type == PathType.FILE:
-                menuItem(menu, 'Open', self.open_file, self)
+                menuItem(menu, _("Open"), self.open_file, self)
 
-                menuItem(menu,"copy path",self.copy_path,self)
+                menuItem(menu,_("copy path"),self.copy_path,self)
 
         if item_info.type == PathType.FOLDER:
-            menuItem(menu, 'Add to library', self.add_to_library, self)
-            menuItem(menu, 'Create playlist from folder', self.create_playlist_from_folder, self)
+            menuItem(menu, _("Add to library"), self.add_to_library, self)
+            menuItem(menu, _("Create playlist from folder"), self.create_playlist_from_folder, self)
         elif item_info.type == PathType.FILE:
-                menuItem(menu, 'Add to playlist', self.add_to_playlist, self)
-                menuItem(menu, 'Add to favorites', self.add_to_favorites, self)
+                menuItem(menu, _("Add to playlist"), self.add_to_playlist, self)
+                menuItem(menu, _("Add to favorites"), self.add_to_favorites, self)
 
         menu.exec()
 

@@ -21,18 +21,18 @@ class LibraryView(QTreeWidget):
 
         contextMenu(self, self.context_menu)
         self.setColumnCount(1)
-        self.setHeaderLabels(['folder'])
+        self.setHeaderLabels([_("folder")])
 
         self._folder_paths:List[str] = []
         self.lib = QTreeWidgetItem(self)
-        self.lib.setText(0, 'library')
+        self.lib.setText(0, "library")
         self.insertTopLevelItem(0, self.lib)
         self.listContents()
 
 
     def add_path(self, path:str):
         if path in self._folder_paths:
-            messageBox('path in library', 'this path already existsin the library')
+            messageBox('path in library', _("This path already exists in the library."))
             return 0
 
         self._user_db.add_library_folder(path)
@@ -45,7 +45,7 @@ class LibraryView(QTreeWidget):
     def modify(self):
         path = self.currentItem().text(0)
         if path in self._folder_paths:
-            d = EditDialog(self.edit_callback, self.parent, path)
+            d = EditDialog(self.edit_callback, self.parent(), path)
             d.exec()
 
     def delete(self):
@@ -81,12 +81,12 @@ class LibraryView(QTreeWidget):
 
     def add_callback(self, path:str):
         if os.path.exists(path) == False:
-            messageBox('error', 'path not found')
+            messageBox(_("Error"), _("Path not found."))
             return 0
 
         name = os.path.basename(path)
         if path in self._folder_paths:
-            messageBox('error', 'path already exists')
+            messageBox(_("Error"), _("Path already exists."))
             return 0
 
         self._user_db.add_library_folder(path)
@@ -95,7 +95,7 @@ class LibraryView(QTreeWidget):
 
     def edit_callback(self, path:str):
         if os.path.exists(path) == False:
-            messageBox('error', 'path not found')
+            messageBox(_("Error"), _("Path not found."))
             return 0
 
 
@@ -125,11 +125,12 @@ class LibraryView(QTreeWidget):
         self._user_db.clear_library_folders()
 
     def context_menu(self, event):
+        if self.currentItem() is None: return
         item = self.currentItem().text(0)
         menu = QMenu()
-        menuItem(menu, 'Add new', self.new, self)
+        menuItem(menu, _("Add new"), self.new, self)
         if self.currentItem().text(0) != "library":
             #menuItem(menu, 'modify path', self.modify, self)
-            menuItem(menu, 'Remove', self.delete, self)
-            menuItem(menu, 'Clear library', self.clear_library, self)
+            menuItem(menu, _("Remove"), self.delete, self)
+            menuItem(menu, _("Clear library"), self.clear_library, self)
         menu.exec()

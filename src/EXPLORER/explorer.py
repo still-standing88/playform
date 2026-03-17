@@ -20,7 +20,6 @@ class PathInfo:
 
     @staticmethod
     def get_modified_date(path):
-        modify_date = os.path.getmtime(path)
         return dt.date.fromtimestamp(os.path.getmtime(path))
 
     def __init__(self, path):
@@ -52,10 +51,11 @@ class Explorer:
     def list_drives():
         return [f"{letter}:" for letter in string.ascii_uppercase if os.path.exists(f"{letter}:")]
 
-    def __init__(self, file_extensions=[]):
-        self._file_extensions = file_extensions
+    def __init__(self, file_extensions=None):
+        self._file_extensions = file_extensions if file_extensions is not None else []
         self._current_path = self.get_current()
         self._root_path = self.get_root(self._current_path)
+        self._prev_path = self._current_path
         self.items = {}
         self.folders = []
         self.files = []
@@ -73,7 +73,7 @@ class Explorer:
     def root_path(self):
         return self._root_path
 
-    def get_prev_path(self): return self.root_path
+    def get_prev_path(self): return self._prev_path
 
     def set_default_path(self, path): self.default_path = path
 
@@ -96,7 +96,7 @@ class Explorer:
         if self._current_path == "drives" and path in self.items:
             self._current_path = self.items[path].path
         elif ((path in self.items and os.path.exists(path)) or
-            (path in self.items and os.path.exists(f"{self._current_path}/{path}")) or
+            (path in self.items and os.path.exists(os.path.join(self._current_path, path))) or
             os.path.exists(path)):
             if path in self.items:
                 self._current_path = self.items[path].path
@@ -109,7 +109,8 @@ class Explorer:
         self.__retrieve_listing()
 
     def backward(self):
-        if len(self._current_path) <= 3 and self._current_path.endswith(":\\"):
+        normalized = os.path.normpath(self._current_path)
+        if len(normalized) <= 3 and normalized.endswith(":\\"):
             self._prev_path = self._current_path
             self._current_path = "drives"
             self._root_path = "drives"
@@ -133,15 +134,26 @@ class Explorer:
                 self.items[drive] = PathItem(path=drive + "\\", type=PathType.FOLDER, info=PathInfo(drive + "\\"))
                 self.folders.append(drive)
         else:
-            contents = os.listdir(self._current_path)
+            try:
+                contents = os.listdir(self._current_path)
+            except (PermissionError, FileNotFoundError, OSError):
+                self._current_path = self.default_path
+                self._root_path = self.get_root(self._current_path)
+                try:
+                    contents = os.listdir(self._current_path)
+                except (PermissionError, FileNotFoundError, OSError):
+                    return
             for item in contents:
                 item_path = os.path.join(self._current_path, item)
-                if os.path.isdir(item_path):
-                    self.items[item] = PathItem(path=item_path, type=PathType.FOLDER, info=PathInfo(item_path))
-                    self.folders.append(item)
-                elif os.path.isfile(item_path) and os.path.splitext(item_path)[1] in self._file_extensions:
-                    self.items[item] = PathItem(path=item_path, type=PathType.FILE, info=PathInfo(item_path))
-                    self.files.append(item)
+                try:
+                    if os.path.isdir(item_path):
+                        self.items[item] = PathItem(path=item_path, type=PathType.FOLDER, info=PathInfo(item_path))
+                        self.folders.append(item)
+                    elif os.path.isfile(item_path) and os.path.splitext(item_path)[1] in self._file_extensions:
+                        self.items[item] = PathItem(path=item_path, type=PathType.FILE, info=PathInfo(item_path))
+                        self.files.append(item)
+                except (PermissionError, OSError):
+                    continue
 
         if self._sort_mode in ("date_newest", "date_oldest"):
             rev = self._sort_mode == "date_newest"

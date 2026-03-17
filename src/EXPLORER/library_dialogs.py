@@ -20,22 +20,22 @@ class libraryDialog(QDialog):
 
         self.ui()
         self.layout()
-        self.setLayout(self.Layout)
+
 
     def ui(self):
-        self.pathLabel = QLabel('path', self)
+        self.pathLabel = QLabel(_("path"), self)
         self.path_field = QPlainTextEdit(self)
         self.path_field.setReadOnly(False)
         self.path_field.setTabChangesFocus(True)
-        self.brows_button = QPushButton('brows', self)
-        self.confirm_button = QPushButton('confirm', self)
-        self.cancel_button = QPushButton('cancel', self)
+        self.brows_button = QPushButton(_("Browse"), self)
+        self.confirm_button = QPushButton(_("confirm"), self)
+        self.cancel_button = QPushButton(_("cancel"), self)
         self.brows_button.clicked.connect(self.onBrows)
         self.confirm_button.clicked.connect(self.onConfirm)
         self.cancel_button.clicked.connect(self.close)
 
     def layout(self):
-        self.Layout = QVBoxLayout()
+        self.Layout = QVBoxLayout(self)
         topLayout = QHBoxLayout()
         pathLayout = QVBoxLayout()
         pathLayout.addWidget(self.pathLabel)
@@ -66,11 +66,11 @@ class NewDialog(libraryDialog):
 
 
     def __init__(self, on_confirm_callback, parent=None,path=None):
-        super().__init__("Add new path to library", parent, path, on_confirm_callback)
+        super().__init__(_("Add new path to library"), parent, path, on_confirm_callback)
 
 
 class EditDialog(libraryDialog):
 
     def __init__(self, on_confirm_callback, parent=None,path=None):
-        super().__init__("Add existing path", parent, path, on_confirm_callback)
+        super().__init__(_("Add existing path"), parent, path, on_confirm_callback)
         self.path_field.setPlainText(self.path) # type: ignore
