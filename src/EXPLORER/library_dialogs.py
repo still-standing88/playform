@@ -53,12 +53,14 @@ class libraryDialog(QDialog):
         path_dialog = QFileDialog.getExistingDirectory(self)
         if path_dialog:
             self.path = path_dialog
-        self.path_field.setPlainText(self.path) # type: ignore
+            self.path_field.setPlainText(path_dialog)
 
     @Slot()
     def onConfirm(self):
+        entered_path = self.path_field.toPlainText().strip()
+        self.path = entered_path
         if self.on_confirm_callback:
-            self.on_confirm_callback(self.path) # type: ignore
+            self.on_confirm_callback(entered_path)
         self.close()
 
 
@@ -73,4 +75,4 @@ class EditDialog(libraryDialog):
 
     def __init__(self, on_confirm_callback, parent=None,path=None):
         super().__init__(_("Add existing path"), parent, path, on_confirm_callback)
-        self.path_field.setPlainText(self.path) # type: ignore
+        self.path_field.setPlainText(self.path or "")

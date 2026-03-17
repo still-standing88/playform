@@ -94,11 +94,17 @@ class PlayerBar(QWidget):
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             w = self.width()
+            h = self.height()
             x = event.pos().x()
+            y = event.pos().y()
             center = w / 2
             margin = 40  # clickable center zone
 
-            if abs(x - center) < margin:
+            if w > 0 and y >= h - 6:
+                self._progress = max(0.0, min(1.0, x / w))
+                self.seekRequested.emit(self._progress)
+                self.update()
+            elif abs(x - center) < margin:
                 # Toggle play/pause
                 self._isPlaying = not self._isPlaying
                 self.playPauseToggled.emit(self._isPlaying)
@@ -107,11 +113,6 @@ class PlayerBar(QWidget):
                 self.backwardTriggered.emit()
             elif x > center + margin:
                 self.forwardTriggered.emit()
-            else:
-                # Seek
-                self._progress = x / w
-                self.seekRequested.emit(self._progress)
-                self.update()
 
     def mouseMoveEvent(self, event):
         self._hover_pos = event.pos().x()
