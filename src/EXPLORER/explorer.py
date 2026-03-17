@@ -49,10 +49,18 @@ class Explorer:
 
     @staticmethod
     def list_drives():
-        return [f"{letter}:" for letter in string.ascii_uppercase if os.path.exists(f"{letter}:")]
+        if os.name == "nt":
+            return [f"{letter}:" for letter in string.ascii_uppercase if os.path.exists(f"{letter}:\\")]
+        return [os.path.sep]
+
+    @staticmethod
+    def _is_windows_drive_root(path: str) -> bool:
+        normalized = os.path.normpath(path)
+        drive, tail = os.path.splitdrive(normalized)
+        return os.name == "nt" and bool(drive) and tail in ("\\", "/")
 
     def __init__(self, file_extensions=None):
-        self._file_extensions = file_extensions if file_extensions is not None else []
+        self._file_extensions = [ext.lower() for ext in file_extensions] if file_extensions is not None else []
         self._current_path = self.get_current()
         self._root_path = self.get_root(self._current_path)
         self._prev_path = self._current_path
@@ -110,7 +118,7 @@ class Explorer:
 
     def backward(self):
         normalized = os.path.normpath(self._current_path)
-        if len(normalized) <= 3 and normalized.endswith(":\\"):
+        if self._is_windows_drive_root(normalized):
             self._prev_path = self._current_path
             self._current_path = "drives"
             self._root_path = "drives"
@@ -120,7 +128,8 @@ class Explorer:
         else:
             self._current_path = self.default_path
             self._prev_path = self._current_path
-        self._root_path = self.get_root(self._current_path)
+        if self._current_path != "drives":
+            self._root_path = self.get_root(self._current_path)
         self.__retrieve_listing()
 
     def __retrieve_listing(self):
@@ -131,7 +140,8 @@ class Explorer:
         if self._current_path == "drives":
             drives = self.list_drives()
             for drive in drives:
-                self.items[drive] = PathItem(path=drive + "\\", type=PathType.FOLDER, info=PathInfo(drive + "\\"))
+                drive_path = drive + "\\" if os.name == "nt" else drive
+                self.items[drive] = PathItem(path=drive_path, type=PathType.FOLDER, info=PathInfo(drive_path))
                 self.folders.append(drive)
         else:
             try:
@@ -149,7 +159,7 @@ class Explorer:
                     if os.path.isdir(item_path):
                         self.items[item] = PathItem(path=item_path, type=PathType.FOLDER, info=PathInfo(item_path))
                         self.folders.append(item)
-                    elif os.path.isfile(item_path) and os.path.splitext(item_path)[1] in self._file_extensions:
+                    elif os.path.isfile(item_path) and os.path.splitext(item_path)[1].lower() in self._file_extensions:
                         self.items[item] = PathItem(path=item_path, type=PathType.FILE, info=PathInfo(item_path))
                         self.files.append(item)
                 except (PermissionError, OSError):
