@@ -206,7 +206,7 @@ class ExplorerView(QListWidget):
     @Slot(float)
     def on_playbar_seek(self, position: float):
         if self._instance is not None:
-            self._instance.set_position(int(position))
+            self._instance.set_position(position)
 
     def set_item_info(self):
         if self.currentItem() is None: return
