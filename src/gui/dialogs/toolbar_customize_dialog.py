@@ -9,7 +9,7 @@ class ToolbarCustomizeDialog(QDialog):
     
     def __init__(self, available_tools, selected_tools, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Customize Toolbar")
+        self.setWindowTitle(_("Customize Toolbar"))
         self.setModal(True)
         self.resize(600, 400)
         
@@ -22,13 +22,13 @@ class ToolbarCustomizeDialog(QDialog):
     def setup_ui(self):
         layout = QVBoxLayout(self)
         
-        info_label = QLabel("Select tools to display on the toolbar:")
+        info_label = QLabel(_("Select tools to display on the toolbar:"))
         layout.addWidget(info_label)
         
         lists_layout = QHBoxLayout()
         
         available_layout = QVBoxLayout()
-        available_label = QLabel("Available Tools:")
+        available_label = QLabel(_("Available Tools:"))
         self.available_list = QListWidget()
         self.available_list.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
         available_layout.addWidget(available_label)
@@ -37,21 +37,21 @@ class ToolbarCustomizeDialog(QDialog):
         
         buttons_layout = QVBoxLayout()
         buttons_layout.addStretch()
-        self.add_button = QPushButton("Add →")
+        self.add_button = QPushButton(_("Add"))
         self.add_button.clicked.connect(self.add_selected)
         buttons_layout.addWidget(self.add_button)
         
-        self.remove_button = QPushButton("← Remove")
+        self.remove_button = QPushButton(_("Remove"))
         self.remove_button.clicked.connect(self.remove_selected)
         buttons_layout.addWidget(self.remove_button)
         
         buttons_layout.addSpacing(20)
         
-        self.move_up_button = QPushButton("Move Up")
+        self.move_up_button = QPushButton(_("Move Up"))
         self.move_up_button.clicked.connect(self.move_up)
         buttons_layout.addWidget(self.move_up_button)
         
-        self.move_down_button = QPushButton("Move Down")
+        self.move_down_button = QPushButton(_("Move Down"))
         self.move_down_button.clicked.connect(self.move_down)
         buttons_layout.addWidget(self.move_down_button)
         
@@ -59,7 +59,7 @@ class ToolbarCustomizeDialog(QDialog):
         lists_layout.addLayout(buttons_layout)
         
         selected_layout = QVBoxLayout()
-        selected_label = QLabel("Toolbar Tools:")
+        selected_label = QLabel(_("Toolbar Tools:"))
         self.selected_list = QListWidget()
         self.selected_list.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
         selected_layout.addWidget(selected_label)
@@ -71,15 +71,15 @@ class ToolbarCustomizeDialog(QDialog):
         dialog_buttons_layout = QHBoxLayout()
         dialog_buttons_layout.addStretch()
         
-        self.reset_button = QPushButton("Reset to Default")
+        self.reset_button = QPushButton(_("Reset to Default"))
         self.reset_button.clicked.connect(self.reset_to_default)
         dialog_buttons_layout.addWidget(self.reset_button)
         
-        self.ok_button = QPushButton("OK")
+        self.ok_button = QPushButton(_("OK"))
         self.ok_button.clicked.connect(self.accept)
         dialog_buttons_layout.addWidget(self.ok_button)
         
-        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button = QPushButton(_("Cancel"))
         self.cancel_button.clicked.connect(self.reject)
         dialog_buttons_layout.addWidget(self.cancel_button)
         

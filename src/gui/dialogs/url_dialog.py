@@ -11,7 +11,7 @@ class URLDialog(QDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Open URL")
+        self.setWindowTitle(_("Open URL"))
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setMinimumSize(400, 120)
         self.setup_ui()
@@ -20,7 +20,7 @@ class URLDialog(QDialog):
     def setup_ui(self):
         layout = QVBoxLayout(self)
         
-        label = QLabel("Enter or select a media URL:")
+        label = QLabel(_("Enter or select a media URL:"))
         layout.addWidget(label)
         
         self.url_combo = QComboBox()
@@ -30,12 +30,12 @@ class URLDialog(QDialog):
         
         button_layout = QHBoxLayout()
         
-        self.open_button = QPushButton("Open")
+        self.open_button = QPushButton(_("Open"))
         self.open_button.clicked.connect(self.open_url)
         self.open_button.setDefault(True)
         button_layout.addWidget(self.open_button)
         
-        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button = QPushButton(_("Cancel"))
         self.cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(self.cancel_button)
         
@@ -72,11 +72,11 @@ class URLDialog(QDialog):
         url = self.url_combo.currentText().strip()
         
         if not url:
-            QMessageBox.warning(self, "Invalid URL", "Please enter a URL.")
+            QMessageBox.warning(self, _("No URL"), _("Please enter a URL."))
             return
             
         if not self.is_valid_url(url):
-            QMessageBox.warning(self, "Invalid URL", f"'{url}' is not a valid URL.")
+            QMessageBox.warning(self, _("Invalid URL"), f"'{url}' {_("is not a valid URL. Check the URL format and try again.")}")
             return
 
         if not ensure_ytdlp_available(self, show_message=True):

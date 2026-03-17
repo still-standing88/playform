@@ -12,7 +12,7 @@ class HotkeysDialog(QDialog):
         self.reset_callback = reset_callback
         self.current_editor = None
         self.current_editor_item = None
-        self.setWindowTitle("Hotkeys Configuration")
+        self.setWindowTitle(_("Hotkeys Configuration"))
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(700, 500)
         self.setMinimumSize(600, 400)
@@ -23,7 +23,7 @@ class HotkeysDialog(QDialog):
         layout = QVBoxLayout(self)
         self.tree = QTreeWidget()
         self.tree.setColumnCount(2)
-        self.tree.setHeaderLabels(["Action", "Shortcut"])
+        self.tree.setHeaderLabels([_("Action"), _("Shortcut")])
         self.tree.setAlternatingRowColors(True)
         self.tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.tree.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
@@ -36,13 +36,13 @@ class HotkeysDialog(QDialog):
         layout.addWidget(self.tree)
 
         button_layout = QHBoxLayout()
-        self.reset_button = QPushButton("Reset to Default")
+        self.reset_button = QPushButton(_("Reset to Default"))
         self.reset_button.clicked.connect(self.reset_to_default)
-        self.apply_button = QPushButton("Apply")
+        self.apply_button = QPushButton(_("Apply"))
         self.apply_button.clicked.connect(self.apply_changes)
-        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button = QPushButton(_("Cancel"))
         self.cancel_button.clicked.connect(self.reject)
-        self.ok_button = QPushButton("OK")
+        self.ok_button = QPushButton(_("OK"))
         self.ok_button.clicked.connect(self.accept)
         button_layout.addWidget(self.reset_button)
         button_layout.addStretch()
@@ -97,9 +97,11 @@ class HotkeysDialog(QDialog):
         
         existing_text = item.text(1)
         editor = QKeySequenceEdit()
+        editor_tooltip = _("Shortcut editor. Press the desired key combination; press Enter or change focus to accept.")
         editor.setKeySequence(QKeySequence(existing_text))
         editor.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        editor.setAccessibleDescription("Shortcut editor. Press the desired key combination; press Enter or change focus to accept.")
+        editor.setAccessibleDescription(editor_tooltip)
+        editor.setToolTip(editor_tooltip)
         editor.editingFinished.connect(self.finish_editing)
         
         self.current_editor = editor
@@ -120,7 +122,7 @@ class HotkeysDialog(QDialog):
             action_text = item.text(0)
             key_config.key_config[category][action_text] = new_seq
             item.setText(1, new_seq)
-            desc = f"{action_text} in {category}, current shortcut: {new_seq}"
+            desc = f"{action_text} {_("in")} {category}, {_("current shortcut")}: {new_seq}"
             item.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole, desc)
             item.setData(1, Qt.ItemDataRole.AccessibleDescriptionRole, desc)
         
@@ -137,8 +139,8 @@ class HotkeysDialog(QDialog):
     def reset_to_default(self):
         reply = QMessageBox.question(
             self,
-            "Reset to Default",
-            "Are you sure you want to reset all hotkeys to default?",
+            _("Reset to Default"),
+            _("Are you sure you want to reset all hotkeys to default?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         

@@ -29,15 +29,14 @@ class ToolDialog(QDialog):
         title_bar.addWidget(title_label)
         title_bar.addStretch()
         
-        hide_btn = QPushButton("Hide")
+        hide_btn = QPushButton(_("Hide"))
         hide_btn.setFixedSize(60, 25)
-        hide_btn.setToolTip("Hide this dialog")
+
         hide_btn.clicked.connect(self.hide_and_unlock)
         title_bar.addWidget(hide_btn)
         
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(_("Close"))
         close_btn.setFixedSize(60, 25)
-        close_btn.setToolTip("Close this dialog")
         close_btn.clicked.connect(self.close_dialog)
         title_bar.addWidget(close_btn)
         
@@ -74,8 +73,8 @@ class ToolDialog(QDialog):
         if self.is_tool_active():
             QMessageBox.warning(
                 self, 
-                "Tool Active", 
-                f"The {self.title} is currently processing. Please wait for it to complete or cancel the operation before closing."
+                _("Tool Active"), 
+                f"{self.title} {_("is currently processing. Please wait for it to complete or cancel the operation before closing.")}"
             )
         else:
             self.accept()
@@ -84,8 +83,8 @@ class ToolDialog(QDialog):
         if self.is_tool_active():
             QMessageBox.warning(
                 self, 
-                "Tool Active", 
-                f"The {self.title} is currently processing. Please wait for it to complete or cancel the operation before closing."
+                _("Tool Active"), 
+                f" {self.title} {_("is currently processing. Please wait for it to complete or cancel the operation before closing.")}"
             )
             event.ignore()
         else:

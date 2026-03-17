@@ -11,14 +11,14 @@ from PySide6.QtGui import QDesktopServices
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(f"About {os.environ.get('APP_NAME', 'PlayForm')}")
+        self.setWindowTitle(f"{_("About")} {os.environ.get('APP_NAME', 'PlayForm')}")
         self.setModal(True)
         self.setMinimumWidth(420)
         self.setMaximumWidth(520)
-        self._build_ui()
+        self.ui()
 
-    # ------------------------------------------------------------------
-    def _build_ui(self):
+
+    def ui(self):
         name        = os.environ.get("APP_NAME", "PlayForm")
         version     = os.environ.get("APP_VERSION", "")
         description = os.environ.get("APP_DESCRIPTION", "")
@@ -31,23 +31,21 @@ class AboutDialog(QDialog):
         layout.setSpacing(8)
         layout.setContentsMargins(20, 16, 20, 16)
 
-        # ── App name + version ──────────────────────────────────────
+
         name_label = QLabel(f"<b style='font-size:16pt'>{name}</b>")
         name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(name_label)
 
         if version:
-            ver_label = QLabel(f"Version {version}")
+            ver_label = QLabel(f"{_("Version")} {version}")
             ver_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(ver_label)
 
-        # ── Separator ───────────────────────────────────────────────
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
         sep.setFrameShadow(QFrame.Shadow.Sunken)
         layout.addWidget(sep)
 
-        # ── Description ─────────────────────────────────────────────
         if description:
             desc_label = QLabel(description)
             desc_label.setWordWrap(True)
@@ -56,11 +54,11 @@ class AboutDialog(QDialog):
 
         layout.addSpacing(4)
 
-        # ── Info rows ───────────────────────────────────────────────
+
         for label_text, value in [
-            ("Publisher", publisher),
-            ("License", license_),
-            ("Copyright", copyright_),
+            (_("Publisher"), publisher),
+            (_("License"), license_),
+            (_("Copyright"), copyright_),
         ]:
             if value:
                 row = QHBoxLayout()
@@ -72,10 +70,9 @@ class AboutDialog(QDialog):
                 row.addWidget(val, 1)
                 layout.addLayout(row)
 
-        # ── Website link ────────────────────────────────────────────
         if website:
             row = QHBoxLayout()
-            lbl = QLabel("<b>Website:</b>")
+            lbl = QLabel(f"<b>{_("Website")}:</b>")
             lbl.setFixedWidth(90)
             link = QLabel(f'<a href="{website}">{website}</a>')
             link.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
@@ -86,10 +83,9 @@ class AboutDialog(QDialog):
 
         layout.addSpacing(8)
 
-        # ── Close button ─────────────────────────────────────────────
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(_("Close"))
         close_btn.setFixedWidth(80)
         close_btn.clicked.connect(self.accept)
         btn_layout.addWidget(close_btn)
