@@ -189,7 +189,7 @@ class Downloader(QObject):
         
         item._file = QFile(str(item.filepath))
         if not item._file.open(QIODevice.WriteOnly):
-            item.error_message = f"Cannot open file for writing: {item.filepath}"
+            item.error_message = f"{_("Cannot open file for writing")}: {item.filepath}"
             item.set_status(DownloadStatus.FAILED)
             item.error_occurred.emit(item.error_message)
             self.failed_downloads.append(item)
@@ -226,8 +226,8 @@ class Downloader(QObject):
         if error == QNetworkReply.OperationCanceledError:
             return
         
-        error_string = item._reply.errorString() if item._reply else "Unknown error"
-        item.error_message = f"Network error: {error_string}"
+        error_string = item._reply.errorString() if item._reply else _("Unknown error")
+        item.error_message = f"{_("Network error")}: {error_string}"
         item.error_occurred.emit(item.error_message)
     
     def _on_finished(self, item):
@@ -255,7 +255,7 @@ class Downloader(QObject):
             return
         
         if item._redirect_count >= item._max_redirects:
-            item.error_message = "Too many redirects"
+            item.error_message = _("Too many redirects")
             item.set_status(DownloadStatus.FAILED)
             item.finished.emit(False)
             
@@ -298,11 +298,11 @@ class Downloader(QObject):
     def _handle_retry(self, item):
         if item.retry_count < item.max_retries:
             item.retry_count += 1
-            item.error_message += f" (Retry {item.retry_count}/{item.max_retries})"
+            item.error_message += f" ({_("Retry")} {item.retry_count}/{item.max_retries})"
             
             QTimer.singleShot(2000, lambda: self._retry_download_internal(item))
         else:
-            item.error_message += " (Max retries reached)"
+            item.error_message += _(" (Max retries reached)")
     
     def _retry_download_internal(self, item):
         if item in self.failed_downloads:

@@ -100,7 +100,7 @@ class DownloaderWidget(QWidget):
         self.update_timer.start(1000)
     
     def setup_ui(self):
-        self.setWindowTitle("Download Manager")
+        self.setWindowTitle(_("Download Manager"))
         self.setMinimumSize(600, 400)
         
         main_layout = QHBoxLayout()
@@ -112,15 +112,15 @@ class DownloaderWidget(QWidget):
         self.list_widget.customContextMenuRequested.connect(self.show_context_menu)
         self.list_widget.currentItemChanged.connect(self.on_selection_changed)
         
-        left_layout.addWidget(QLabel("Downloads:"))
+        left_layout.addWidget(QLabel(_("Downloads:")))
         left_layout.addWidget(self.list_widget)
         
         button_layout = QHBoxLayout()
         
-        self.minimize_btn = QPushButton("Minimize")
+        self.minimize_btn = QPushButton(_("Minimize"))
         self.minimize_btn.clicked.connect(self.showMinimized)
         
-        self.close_btn = QPushButton("Close")
+        self.close_btn = QPushButton(_("Close"))
         self.close_btn.clicked.connect(self.close_with_confirmation)
         
         button_layout.addWidget(self.minimize_btn)
@@ -131,14 +131,14 @@ class DownloaderWidget(QWidget):
         
         right_layout = QVBoxLayout()
         
-        self.info_label = QLabel("No download selected")
+        self.info_label = QLabel(_("No download selected"))
         self.info_label.setWordWrap(True)
         self.info_label.setAlignment(Qt.AlignTop)
         self.info_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.info_label.setFocusPolicy(Qt.TabFocus)
         self.info_label.setMinimumHeight(100)
         
-        self.more_info_btn = QPushButton("More Info")
+        self.more_info_btn = QPushButton(_("More Info"))
         self.more_info_btn.setCheckable(True)
         self.more_info_btn.clicked.connect(self.toggle_more_info)
         self.more_info_btn.setEnabled(False)
@@ -155,7 +155,7 @@ class DownloaderWidget(QWidget):
         
         self.more_info_scroll.setWidget(self.more_info_content)
         
-        right_layout.addWidget(QLabel("Download Info:"))
+        right_layout.addWidget(QLabel(_("Download Info:)"))
         right_layout.addWidget(self.info_label)
         right_layout.addWidget(self.more_info_btn)
         right_layout.addWidget(self.more_info_scroll, 1)
@@ -220,7 +220,7 @@ class DownloaderWidget(QWidget):
     def on_selection_changed(self, current, previous):
         if not current:
             self.current_item = None
-            self.info_label.setText("No download selected")
+            self.info_label.setText(_("No download selected"))
             self.more_info_btn.setEnabled(False)
             self.more_info_btn.setChecked(False)
             self.more_info_scroll.setVisible(False)
@@ -241,14 +241,14 @@ class DownloaderWidget(QWidget):
         
         info = self.current_item.get_info()
         
-        text = f"<b>Filename:</b> {info['filename']}<br>"
-        text += f"<b>Status:</b> {info['status']}<br>"
-        text += f"<b>Progress:</b> {DownloadListItem.format_size(info['downloaded_size'])} / "
+        text = f"""<b>{_("Filename")}:</b> {info['filename']}<br>"
+        text += f"<b>{_("Status")}:</b> {info['status']}<br>"
+        text += f"<b>{_("Progress")}:</b> {DownloadListItem.format_size(info['downloaded_size'])} / "
         text += f"{DownloadListItem.format_size(info['total_size'])}<br>"
-        text += f"<b>Speed:</b> {DownloadListItem.format_size(info['speed'])}/s"
+        text += f"<b>{_("Speed")}:</b> {DownloadListItem.format_size(info['speed'])}/s"
         
         if info['error']:
-            text += f"<br><b style='color: red;'>Error:</b> {info['error']}"
+            text += f"<br><b style='color: red;'>{_("Error")}:</b> {info['error']}"
         
         self.info_label.setText(text)
     
@@ -258,13 +258,13 @@ class DownloaderWidget(QWidget):
         
         info = self.current_item.get_info()
         
-        text = f"<b>URL:</b><br>{info['url']}<br><br>"
-        text += f"<b>Destination:</b><br>{info['destination']}<br><br>"
-        text += f"<b>Full Path:</b><br>{info['filepath']}<br><br>"
-        text += f"<b>Retry Count:</b> {info['retry_count']}<br>"
+        text = f"<b>{_("URL")}:</b><br>{info['url']}<br><br>"
+        text += f"<b>{_("Destination")}:</b><br>{info['destination']}<br><br>"
+        text += f"<b>{_("Full Path")}:</b><br>{info['filepath']}<br><br>"
+        text += f"<b>{_("Retry Count")}:</b> {info['retry_count']}<br>"
         
         if info['error']:
-            text += f"<br><b>Error Details:</b><br>{info['error']}"
+            text += f"<br><b>{_("Error Details")}:</b><br>{info['error']}"
         
         self.more_info_content.setText(text)
     
@@ -290,22 +290,22 @@ class DownloaderWidget(QWidget):
         
         menu = QMenu(self)
         
-        copy_url_action = QAction("Copy URL", self)
+        copy_url_action = QAction(_("Copy URL"), self)
         copy_url_action.triggered.connect(lambda: self.copy_to_clipboard(download_item.url))
         
-        copy_dest_action = QAction("Copy Destination", self)
+        copy_dest_action = QAction(_("Copy Destination"), self)
         copy_dest_action.triggered.connect(lambda: self.copy_to_clipboard(str(download_item.filepath)))
         
         menu.addAction(copy_url_action)
         menu.addAction(copy_dest_action)
         
         if download_item.status == DownloadStatus.DOWNLOADING:
-            cancel_action = QAction("Cancel Download", self)
+            cancel_action = QAction(_("Cancel Download"), self)
             cancel_action.triggered.connect(lambda: self.downloader.cancel_download(download_item))
             menu.addAction(cancel_action)
         
         if download_item.status == DownloadStatus.FAILED:
-            retry_action = QAction("Retry Download", self)
+            retry_action = QAction(_("Retry Download"), self)
             retry_action.triggered.connect(lambda: self.downloader.retry_download(download_item))
             menu.addAction(retry_action)
         
@@ -320,12 +320,12 @@ class DownloaderWidget(QWidget):
         
         if active_downloads:
             msg_box = QMessageBox(self)
-            msg_box.setWindowTitle("Downloads in Progress")
-            msg_box.setText(f"{len(active_downloads)} download(s) are still in progress.")
-            msg_box.setInformativeText("What would you like to do?")
+            msg_box.setWindowTitle(_("Downloads in Progress"))
+            msg_box.setText(f"{len(active_downloads)} {_("download(s) are still in progress.")}")
+            msg_box.setInformativeText(_("What would you like to do?"))
             
-            abort_btn = msg_box.addButton("Abort Downloads", QMessageBox.DestructiveRole)
-            cancel_btn = msg_box.addButton("Cancel", QMessageBox.RejectRole)
+            abort_btn = msg_box.addButton(_("Abort Downloads"), QMessageBox.DestructiveRole)
+            cancel_btn = msg_box.addButton(_("Cancel"), QMessageBox.RejectRole)
             
             msg_box.setDefaultButton(cancel_btn)
             msg_box.exec()
