@@ -9,6 +9,8 @@ from playlist_manager.playlist_selection_dialog import PlaylistSelectionDialog
 from playlist_manager.playlist_create_dialog import PlaylistCreateDialog
 
 class PlaylistHandler:
+
+
     def __init__(self, main_window):
         self.main_window = main_window
         
@@ -18,8 +20,8 @@ class PlaylistHandler:
         if not media_files:
             QMessageBox.information(
                 self.main_window, 
-                "No Media Found", 
-                f"No supported media files were found in the selected folder:\n{folder_path}\n\nSupported formats include audio and video files."
+                _("No Media Found"), 
+                f"{_('No supported media files were found in the selected folder:')}\n{folder_path}\n\n{_('Supported formats include audio and video files.')}"
             )
             return
         
@@ -36,8 +38,8 @@ class PlaylistHandler:
         
         if not playlist_manager.list_playlists():
             reply = QMessageBox.question(
-                self.main_window, "No Playlists",
-                "No playlists exist. Would you like to create a new playlist?",
+                self.main_window, _("No Playlists"),
+                _("No playlists exist. Would you like to create a new playlist?"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             if reply == QMessageBox.StandardButton.Yes:
@@ -52,7 +54,7 @@ class PlaylistHandler:
         
     def create_playlist_from_folder(self, folder_path: str):
         if not os.path.isdir(folder_path):
-            messageBox("Error", "Selected path is not a directory")
+            messageBox(_("Error"), _("Selected path is not a directory"))
             return
             
         audio_formats = [ext.lower() for ext in formats.get("audio", [])]
@@ -61,11 +63,11 @@ class PlaylistHandler:
         media_files = get_media_files_from_directory(folder_path, audio_formats, video_formats)
         
         if not media_files:
-            messageBox("No Media Files", "No supported media files found in the selected folder")
+            messageBox(_("No Media Files"), _("No supported media files found in the selected folder"))
             return
             
         folder_name = os.path.basename(folder_path)
-        playlist_name = f"Playlist from {folder_name}"
+        playlist_name = f"{_('Playlist from {folder_name}')}"
         
         playlist = Playlist(title=playlist_name)
         for file_path in media_files:
@@ -78,7 +80,7 @@ class PlaylistHandler:
         
         self.main_window.player_widget.load_playlist(playlist, start_index=0, auto_play=True)
         
-        signal_manager.statusbar_message.emit(f"Created and loaded playlist '{playlist_name}' with {len(media_files)} tracks")
+        signal_manager.statusbar_message.emit(f"{_('Created and loaded playlist')} '{playlist_name}' {_('with')} {len(media_files)} {_('tracks')}")
         
     def add_file_to_playlist(self, file_path: str, playlist_name: str):
         playlist = self.main_window.playlists_widget.playlist_manager.get_playlist(playlist_name)
@@ -88,9 +90,9 @@ class PlaylistHandler:
             self.main_window.playlists_widget.save_playlists_data()
             
             filename = os.path.basename(file_path)
-            signal_manager.statusbar_message.emit(f"Added '{filename}' to playlist '{playlist_name}'")
+            signal_manager.statusbar_message.emit(f"{_('Added')} '{filename}' {_('to playlist')} '{playlist_name}'")
         else:
-            messageBox("Error", f"Playlist '{playlist_name}' not found")
+            messageBox(_("Error"), f"Playlist '{playlist_name}' not found")
             
     def create_new_playlist_with_file(self, file_path: str):
         dialog = PlaylistCreateDialog(self.main_window)
@@ -106,4 +108,4 @@ class PlaylistHandler:
         self.main_window.playlists_widget.playlist_manager.playlists[name] = playlist
         self.main_window.playlists_widget.add_playlist_to_list(name)
         self.main_window.playlists_widget.save_playlists_data()
-        signal_manager.statusbar_message.emit(f"Created new playlist '{name}'")
+        signal_manager.statusbar_message.emit(f"{_('Created new playlist')} '{name}'")
