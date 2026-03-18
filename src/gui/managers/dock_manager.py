@@ -10,7 +10,7 @@ class DockManager:
         self.main_window = main_window
         
     def setup_dock_widgets(self):
-        self.recents_favorites_dock = QDockWidget("Recents & Favorites", self.main_window)
+        self.recents_favorites_dock = QDockWidget(_("Recents & Favorites"), self.main_window)
         self.recents_favorites_dock.setObjectName("recentsFavoritesDock")
         self.recents_favorites_dock.setWidget(self.main_window.recents_and_favorites_widget)
         self.recents_favorites_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
@@ -19,7 +19,7 @@ class DockManager:
         self.main_window.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.recents_favorites_dock)
         self.main_window.recents_favorites_dock = self.recents_favorites_dock
         
-        self.explorer_dock = QDockWidget("Explorer", self.main_window)
+        self.explorer_dock = QDockWidget(_("Explorer"), self.main_window)
         self.explorer_dock.setObjectName("explorerDock")
         self.explorer_dock.setWidget(self.main_window.explorer_widget)
         self.explorer_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
@@ -29,7 +29,7 @@ class DockManager:
         self.main_window.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.explorer_dock)
         self.main_window.explorer_dock = self.explorer_dock
         
-        self.player_dock = QDockWidget("Player", self.main_window)
+        self.player_dock = QDockWidget(_("Player"), self.main_window)
         self.player_dock.setObjectName("playerDock")
         self.player_dock.setWidget(self.main_window.player_widget)
         self.player_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
@@ -38,7 +38,7 @@ class DockManager:
         self.main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.player_dock)
         self.main_window.player_dock = self.player_dock
         
-        self.playlists_dock = QDockWidget("Playlists", self.main_window)
+        self.playlists_dock = QDockWidget(_("Playlists"), self.main_window)
         self.playlists_dock.setObjectName("playlistsDock")
         self.playlists_dock.setWidget(self.main_window.playlists_widget)
         self.playlists_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
@@ -49,7 +49,7 @@ class DockManager:
         self.main_window.playlists_dock = self.playlists_dock
 
         self.debug_console_dock = DebugConsoleDock(self.main_window)
-        self.debug_console_dock.setObjectName("debugConsoleDock")
+        self.debug_console_dock.setObjectName(_("debugConsoleDock"))
         self.main_window.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.debug_console_dock)
         self.debug_console_dock.hide()
         if hasattr(self.debug_console_dock, 'visibilityChanged'):
@@ -153,7 +153,7 @@ class DockManager:
         if self.main_window.radio_dock is None:
             self.main_window.radio_widget = RadioBrowserWidget(self.main_window)
             self.main_window.radio_widget.play_requested.connect(self.main_window.urlOpened.emit)
-            self.main_window.radio_dock = QDockWidget("Radio Browser", self.main_window)
+            self.main_window.radio_dock = QDockWidget(_("Radio Browser"), self.main_window)
             self.main_window.radio_dock.setObjectName("radioDock")
             self.main_window.radio_dock.setWidget(self.main_window.radio_widget)
             self.main_window.radio_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
@@ -165,7 +165,7 @@ class DockManager:
         if self.main_window.podcast_dock is None:
             self.main_window.podcast_widget = FeedWidget(self.main_window)
             self.main_window.podcast_widget.play_requested.connect(self.main_window.urlOpened.emit)
-            self.main_window.podcast_dock = QDockWidget("Podcasts", self.main_window)
+            self.main_window.podcast_dock = QDockWidget(_("Podcasts"), self.main_window)
             self.main_window.podcast_dock.setObjectName("podcastDock")
             self.main_window.podcast_dock.setWidget(self.main_window.podcast_widget)
             self.main_window.podcast_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
