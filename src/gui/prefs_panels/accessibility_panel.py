@@ -13,10 +13,10 @@ class AccessibilityPanel(QWidget):
     def setup_ui(self):
         layout = QVBoxLayout(self)
         
-        speech_group = QGroupBox("Speech Settings")
+        speech_group = QGroupBox(_("Speech Settings"))
         speech_layout = QFormLayout(speech_group)
         
-        self.enable_speech_check = QCheckBox("Enable speech accessibility feedback")
+        self.enable_speech_check = QCheckBox(_("Enable speech accessibility feedback"))
         self.enable_speech_check.toggled.connect(self.on_speech_toggled)
         speech_layout.addRow(self.enable_speech_check)
         
@@ -37,13 +37,13 @@ class AccessibilityPanel(QWidget):
         
         self.prefer_sapi_check = None
         if sys.platform != "win32":
-            self.voice_settings_btn = QPushButton("Voice Settings")
+            self.voice_settings_btn = QPushButton(_("Voice Settings"))
             self.voice_settings_btn.clicked.connect(self.open_voice_settings)
             speech_layout.addRow("Configure Voice:", self.voice_settings_btn)
         else:
             self.voice_settings_btn = None
             
-        self.interrupt_check = QCheckBox("Interrupt previous speech")
+        self.interrupt_check = QCheckBox(_("Interrupt previous speech"))
         speech_layout.addRow("Speech Interrupt:", self.interrupt_check)
         
         layout.addWidget(speech_group)

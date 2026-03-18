@@ -11,21 +11,21 @@ class GeneralPanel(QWidget):
         
         self.language_combo = QComboBox()
         self.language_combo.addItems(app_languages)
-        layout.addRow("Language:", self.language_combo)
+        layout.addRow(_("Language:"), self.language_combo)
         
         self.screenshot_format_combo = QComboBox()
         self.screenshot_format_combo.addItems(screenshot_formats)
-        layout.addRow("Screenshot Format:", self.screenshot_format_combo)
+        layout.addRow(_("Screenshot Format:"), self.screenshot_format_combo)
         
         self.theme_combo = QComboBox()
         self.theme_combo.addItems(["system", "light", "dark"])
-        layout.addRow("Theme:", self.theme_combo)
+        layout.addRow(_("Theme:"), self.theme_combo)
         
-        self.auto_update_check = QCheckBox("Auto check for updates")
-        layout.addRow("Auto Updates:", self.auto_update_check)
+        self.auto_update_check = QCheckBox(_("Auto check for updates"))
+        layout.addRow(_("Auto Updates:"), self.auto_update_check)
         
-        self.save_urls_check = QCheckBox("Save URLs")
-        layout.addRow("Save URLs:", self.save_urls_check)
+        self.save_urls_check = QCheckBox(_("Save URLs"))
+        layout.addRow(_("Save URLs:"), self.save_urls_check)
         
     def load_settings(self, prefs):
         if prefs["language"].upper() in app_languages:

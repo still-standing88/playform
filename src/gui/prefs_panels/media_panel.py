@@ -11,15 +11,15 @@ class MediaPanel(QWidget):
         
         self.volume_offset_spin = QSpinBox()
         self.volume_offset_spin.setRange(1, 20)
-        layout.addRow("Volume Offset:", self.volume_offset_spin)
+        layout.addRow(_("Volume Offset:"), self.volume_offset_spin)
         
         self.seek_offset_spin = QSpinBox()
         self.seek_offset_spin.setRange(1, 60)
-        layout.addRow("Seek Offset:", self.seek_offset_spin)
+        layout.addRow(_("Seek Offset:"), self.seek_offset_spin)
         
         self.audio_device_combo = QComboBox()
         self.audio_device_combo.addItems(self.audio_devices)
-        layout.addRow("Audio Device:", self.audio_device_combo)
+        layout.addRow(_("Audio Device:"), self.audio_device_combo)
         
     def load_settings(self, prefs):
         self.volume_offset_spin.setValue(prefs["offset"]["volume"])

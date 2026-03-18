@@ -11,16 +11,16 @@ class AdvancedPanel(QWidget):
     def setup_ui(self):
         layout = QVBoxLayout(self)
         
-        vlc_group = QGroupBox("VLC Settings")
+        vlc_group = QGroupBox(_("VLC Settings"))
         vlc_layout = QFormLayout(vlc_group)
         
-        self.vlc_logging_check = QCheckBox("Enable VLC Logging")
+        self.vlc_logging_check = QCheckBox(_("Enable VLC Logging"))
         self.vlc_logging_check.toggled.connect(self.toggle_vlc_logging_options)
-        vlc_layout.addRow("VLC Logging:", self.vlc_logging_check)
+        vlc_layout.addRow(_("VLC Logging:"), self.vlc_logging_check)
         
         self.debug_level_spin = QSpinBox()
         self.debug_level_spin.setRange(0, 2)
-        vlc_layout.addRow("Debug Level:", self.debug_level_spin)
+        vlc_layout.addRow(_("Debug Level:"), self.debug_level_spin)
         self.debug_level_row = vlc_layout.rowCount() - 1
         
         self.vlc_args_edit = QTextEdit()
@@ -33,11 +33,11 @@ class AdvancedPanel(QWidget):
             original_focus_out(e)
         self.vlc_args_edit.focusOutEvent = custom_focus_out
         
-        vlc_layout.addRow("VLC Arguments:", self.vlc_args_edit)
+        vlc_layout.addRow(_("VLC Arguments:"), self.vlc_args_edit)
         
         layout.addWidget(vlc_group)
         
-        ytdlp_group = QGroupBox("yt-dlp Settings")
+        ytdlp_group = QGroupBox(_("yt-dlp Settings"))
         self.ytdlp_layout = QFormLayout(ytdlp_group)
         
         cookies_widget = QWidget()
@@ -45,40 +45,40 @@ class AdvancedPanel(QWidget):
         cookies_layout.setContentsMargins(0, 0, 0, 0)
         self.youtube_cookies_edit = QLineEdit()
         self.youtube_cookies_edit.setReadOnly(True)
-        self.cookies_browse_btn = QPushButton("Browse")
+        self.cookies_browse_btn = QPushButton(_("Browse"))
         self.cookies_browse_btn.clicked.connect(self.browse_cookies_file)
         cookies_layout.addWidget(self.youtube_cookies_edit)
         cookies_layout.addWidget(self.cookies_browse_btn)
-        self.ytdlp_layout.addRow("Cookies File:", cookies_widget)
+        self.ytdlp_layout.addRow(_("Cookies File:"), cookies_widget)
         
         ytdlp_widget_path = QWidget()
         ytdlp_layout_path = QHBoxLayout(ytdlp_widget_path)
         ytdlp_layout_path.setContentsMargins(0, 0, 0, 0)
         self.ytdlp_path_edit = QLineEdit()
         self.ytdlp_path_edit.setReadOnly(True)
-        self.ytdlp_browse_btn = QPushButton("Browse")
+        self.ytdlp_browse_btn = QPushButton(_("Browse"))
         self.ytdlp_browse_btn.clicked.connect(self.browse_ytdlp_path)
         ytdlp_layout_path.addWidget(self.ytdlp_path_edit)
         ytdlp_layout_path.addWidget(self.ytdlp_browse_btn)
-        self.ytdlp_layout.addRow("yt-dlp Path:", ytdlp_widget_path)
+        self.ytdlp_layout.addRow(_("yt-dlp Path:"), ytdlp_widget_path)
         
         ffmpeg_widget_path = QWidget()
         ffmpeg_layout_path = QHBoxLayout(ffmpeg_widget_path)
         ffmpeg_layout_path.setContentsMargins(0, 0, 0, 0)
         self.ffmpeg_path_edit = QLineEdit()
         self.ffmpeg_path_edit.setReadOnly(True)
-        self.ffmpeg_browse_btn = QPushButton("Browse")
+        self.ffmpeg_browse_btn = QPushButton(_("Browse"))
         self.ffmpeg_browse_btn.clicked.connect(self.browse_ffmpeg_path)
         ffmpeg_layout_path.addWidget(self.ffmpeg_path_edit)
         ffmpeg_layout_path.addWidget(self.ffmpeg_browse_btn)
-        self.ytdlp_layout.addRow("FFmpeg Path:", ffmpeg_widget_path)
+        self.ytdlp_layout.addRow(_("FFmpeg Path:"), ffmpeg_widget_path)
         
-        self.ytdlp_logging_check = QCheckBox("Enable yt-dlp Logging")
+        self.ytdlp_logging_check = QCheckBox(_("Enable yt-dlp Logging"))
         self.ytdlp_logging_check.toggled.connect(self.toggle_ytdlp_logging_options)
-        self.ytdlp_layout.addRow("yt-dlp Logging:", self.ytdlp_logging_check)
+        self.ytdlp_layout.addRow(_("yt-dlp Logging:"), self.ytdlp_logging_check)
         
-        self.ytdlp_verbose_check = QCheckBox("Enable Verbose Output")
-        self.ytdlp_layout.addRow("Verbose Output:", self.ytdlp_verbose_check)
+        self.ytdlp_verbose_check = QCheckBox(_("Enable Verbose Output"))
+        self.ytdlp_layout.addRow(_("Verbose Output:"), self.ytdlp_verbose_check)
         self.ytdlp_verbose_row = self.ytdlp_layout.rowCount() - 1
         
         layout.addWidget(ytdlp_group)
@@ -107,25 +107,25 @@ class AdvancedPanel(QWidget):
     def validate_vlc_args(self):
         text = self.vlc_args_edit.toPlainText().strip()
         if text and not is_valid_vlc_args(text):
-            QMessageBox.warning(self, "Invalid VLC Arguments", 
-                              "The VLC arguments are not valid. Please check the syntax.")
+            QMessageBox.warning(self, _("Invalid VLC Arguments"), 
+                              _("The VLC arguments are not valid. Please check the syntax."))
             self.vlc_args_edit.setFocus()
             return False
         return True
         
     def browse_cookies_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select Cookies File", 
+        file_path, __ = QFileDialog.getOpenFileName(self, _("Select Cookies File"), 
                                                  "", "Text Files (*.txt);;All Files (*)")
         if file_path:
             self.youtube_cookies_edit.setText(file_path)
             
     def browse_ytdlp_path(self):
-        dir_path = QFileDialog.getExistingDirectory(self, "Select yt-dlp Directory")
+        dir_path = QFileDialog.getExistingDirectory(self, _("Select yt-dlp Directory"))
         if dir_path:
             self.ytdlp_path_edit.setText(dir_path)
     
     def browse_ffmpeg_path(self):
-        dir_path = QFileDialog.getExistingDirectory(self, "Select FFmpeg Directory")
+        dir_path = QFileDialog.getExistingDirectory(self, _("Select FFmpeg Directory"))
         if dir_path:
             self.ffmpeg_path_edit.setText(dir_path)
         

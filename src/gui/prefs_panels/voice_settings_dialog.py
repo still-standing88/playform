@@ -7,7 +7,7 @@ from utilities.speech import speech_manager
 class VoiceSettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Voice Settings")
+        self.setWindowTitle(_("Voice Settings"))
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setMinimumSize(400, 250)
         self.setup_ui()
@@ -20,20 +20,20 @@ class VoiceSettingsDialog(QDialog):
         
         self.voice_combo = QComboBox()
         self.populate_voices()
-        form_layout.addRow("Voice:", self.voice_combo)
+        form_layout.addRow(_("Voice:"), self.voice_combo)
         
         self.volume_spin = QDoubleSpinBox()
         self.volume_spin.setRange(0.0, 100.0)
         self.volume_spin.setSingleStep(1.0)
         self.volume_spin.setDecimals(1)
-        form_layout.addRow("Volume:", self.volume_spin)
+        form_layout.addRow(_("Volume:"), self.volume_spin)
         
         self.rate_spin = QDoubleSpinBox()
         self.rate_spin.setRange(0.1, 10.0)
         self.rate_spin.setSingleStep(0.1)
         self.rate_spin.setDecimals(1)
         self.rate_spin.setToolTip("Speed")
-        form_layout.addRow("Rate:", self.rate_spin)
+        form_layout.addRow(_("Rate:"), self.rate_spin)
         
         layout.addLayout(form_layout)
         
@@ -57,7 +57,7 @@ class VoiceSettingsDialog(QDialog):
         try:
             index = self.voice_combo.currentIndex()
             speech_manager.set_voice(index)
-            speech_manager.output(f"Voice changed to {voice_name}", True)
+            speech_manager.output(f"{_('Voice changed to {voice_name}')}", True)
         except:
             pass
             
