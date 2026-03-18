@@ -9,7 +9,7 @@ class ToolbarManager:
         self.main_window = main_window
         
     def setup_toolbar(self):
-        self.main_window.toolbar = QToolBar("Main Toolbar")
+        self.main_window.toolbar = QToolBar(_("Main Toolbar"))
         self.main_window.toolbar.setObjectName("mainToolbar")
         self.main_window.toolbar.setMovable(False)
         self.main_window.toolbar.setFloatable(False)
@@ -35,7 +35,7 @@ class ToolbarManager:
     
     def show_toolbar_context_menu(self, pos):
         menu = QMenu(self.main_window)
-        customize_action = QAction("Customize Toolbar...", self.main_window)
+        customize_action = QAction(_("Customize Toolbar..."), self.main_window)
         customize_action.triggered.connect(self.open_toolbar_customize_dialog)
         menu.addAction(customize_action)
         menu.exec(self.main_window.toolbar.mapToGlobal(pos))
