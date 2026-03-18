@@ -14,13 +14,13 @@ class RecentsWidget(QListWidget):
         self.user_db = user_db
         self.max_recent_files = 50
         self.path_mapping = {}
-        self.setAccessibleName("Recent files list")
-        self.setAccessibleDescription("List of recently opened media files")
+        self.setAccessibleName(_("Recent files list"))
+        self.setAccessibleDescription(_("List of recently opened media files"))
         self.setAlternatingRowColors(True)
         self.setDragDropMode(QListWidget.DragDropMode.NoDragDrop)
         
         self.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
-        self.setToolTip("Double-click or press Enter on a file to open it")
+        self.setToolTip(_("Double-click or press Enter on a file to open it"))
         
         self.load_recents()
         
@@ -34,7 +34,7 @@ class RecentsWidget(QListWidget):
                 self.path_mapping[filename] = recent_path
                 self.addItem(filename)
         except Exception as e:
-            print(f"Error loading recents: {e}")
+            messageBox(_("Error"), f"{_('Error loading recents: {e}')}") # print(f"Error loading recents: {e}")
     
     def add_recent(self, file_path: str):
         try:
@@ -57,12 +57,12 @@ class RecentsWidget(QListWidget):
                     del self.path_mapping[removed_item.text()]
                 
         except Exception as e:
-            messageBox("Error", f"Failed to add recent file: {e}")
-    
+            messageBox(_("Error"), f"{_('Failed to add recent file: {e}')}")
+
     @Slot()
     def clear_recents(self):
-        reply = QMessageBox.question(self, "Clear Recent Files", 
-                                   "Are you sure you want to clear all recent files?",
+        reply = QMessageBox.question(self, _("Clear Recent Files"), 
+                                   _("Are you sure you want to clear all recent files?"),
                                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if reply == QMessageBox.StandardButton.Yes:
             try:
@@ -70,12 +70,12 @@ class RecentsWidget(QListWidget):
                 self.clear()
                 self.path_mapping.clear()
             except Exception as e:
-                messageBox("Error", f"Failed to clear recent files: {e}")
-    
+                messageBox(_("Error"), f"{_('Failed to clear recent files: {e}')}")
+
     def show_context_menu(self, position):
         menu = QMenu(self)
         
-        clear_action = QAction("Clear All Recent Files", self)
+        clear_action = QAction(_("Clear All Recent Files"), self)
         clear_action.triggered.connect(self.clear_recents)
         menu.addAction(clear_action)
         
