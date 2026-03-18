@@ -17,26 +17,26 @@ class ToolWindowManager:
     def open_batch_converter(self):
         if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
             return
-        self.open_tool_dialog("batch_converter", BatchConverterUI(), "Batch Converter")
+        self.open_tool_dialog("batch_converter", BatchConverterUI(), _("Batch Converter"))
         
     def open_extractor(self):
         if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
             return
-        self.open_tool_dialog("extractor", ExtractorUI(), "Media Extractor")
+        self.open_tool_dialog("extractor", ExtractorUI(), _("Media Extractor"))
         
     def open_tag_editor(self):
-        self.open_tool_dialog("tag_editor", TagEditorUI(), "Tag Editor")
+        self.open_tool_dialog("tag_editor", TagEditorUI(), _("Tag Editor"))
         
     def open_thumbnail_generator(self):
         if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
             return
-        self.open_tool_dialog("thumbnail_generator", ThumbnailGeneratorUI(), "Thumbnail Generator")
+        self.open_tool_dialog("thumbnail_generator", ThumbnailGeneratorUI(), _("Thumbnail Generator"))
     
     def open_subtitle_converter(self):
-        self.open_tool_dialog("subtitle_converter", SubtitleConverterUI(), "Subtitle Converter")
+        self.open_tool_dialog("subtitle_converter", SubtitleConverterUI(), _("Subtitle Converter"))
     
     def open_subtitle_editor(self):
-        self.open_tool_dialog("subtitle_editor", SubtitleEditorUI(), "Subtitle Editor")
+        self.open_tool_dialog("subtitle_editor", SubtitleEditorUI(), _("Subtitle Editor"))
         
     def open_tool_dialog(self, tool_name, tool_widget, title):
         if self.main_window.active_tool_name and self.main_window.active_tool_name != tool_name:
@@ -45,8 +45,8 @@ class ToolWindowManager:
                 if active_dialog.isVisible() or self.main_window.show_tool_button.isVisible():
                     QMessageBox.information(
                         self.main_window,
-                        "Tool Already Open",
-                        f"'{active_dialog.title}' is already open. Please close it before opening another tool.",
+                        _("Tool Already Open"),
+                        f"'{active_dialog.title}' {_('is already open. Please close it before opening another tool.')}",
                         QMessageBox.StandardButton.Ok
                     )
                     return
@@ -63,12 +63,12 @@ class ToolWindowManager:
             dialog.show_dialog()
         
         self.main_window.active_tool_name = tool_name
-        signal_manager.statusbar_message.emit(f"Opened {title}")
+        signal_manager.statusbar_message.emit(f"{_('Opened')} {title}")
     
     def on_tool_hidden(self, tool_name, title):
-        self.main_window.show_tool_button.setText(f"Show {title}")
+        self.main_window.show_tool_button.setText(f"{_('Show')} {title}")
         self.main_window.show_tool_button.setVisible(True)
-        signal_manager.statusbar_message.emit(f"{title} hidden")
+        signal_manager.statusbar_message.emit(f"{title} {_('hidden')}")
     
     def on_tool_closed(self, tool_name):
         if tool_name in self.main_window.tool_dialogs:
@@ -76,14 +76,14 @@ class ToolWindowManager:
         if self.main_window.active_tool_name == tool_name:
             self.main_window.active_tool_name = None
         self.main_window.show_tool_button.setVisible(False)
-        signal_manager.statusbar_message.emit("Tool closed")
+        signal_manager.statusbar_message.emit(_("Tool closed"))
     
     def show_hidden_tool(self):
         if self.main_window.active_tool_name and self.main_window.active_tool_name in self.main_window.tool_dialogs:
             dialog = self.main_window.tool_dialogs[self.main_window.active_tool_name]
             dialog.show_dialog()
             self.main_window.show_tool_button.setVisible(False)
-            signal_manager.statusbar_message.emit(f"Showing {dialog.title}")
+            signal_manager.statusbar_message.emit(f"{_('Showing')} {dialog.title}")
 
     def has_active_tools(self):
         for tool_name, dialog in self.main_window.tool_dialogs.items():
@@ -106,9 +106,8 @@ class ToolWindowManager:
         tools_text = ", ".join(active_tools)
         reply = QMessageBox.question(
             self.main_window,
-            "Active Tools",
-            f"The following tools are currently active:\n{tools_text}\n\n"
-            "Closing the application will stop these processes. Do you want to continue?",
+            _("Active Tools"),
+            f"{_('The following tools are currently active:')}\n{tools_text}\n\n{_('Closing the application will stop these processes. Do you want to continue?')}",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
