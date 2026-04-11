@@ -19,7 +19,7 @@ class RadioTreeWidget(QTreeWidget):
         
     def _setup_ui(self):
         self.setColumnCount(5)
-        self.setHeaderLabels(["Name", "Country", "Language(s)", "Codec", "Bitrate"])
+        self.setHeaderLabels([_("Name"), _("Country"), _("Language(s)"), _("Codec"), _("Bitrate")])
         self.setAlternatingRowColors(True)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.setStyleSheet(RADIO_TREE_STYLE)
@@ -31,8 +31,8 @@ class RadioTreeWidget(QTreeWidget):
         header.setSectionsMovable(False)
         header.setSectionsClickable(False)
         
-        self.setAccessibleName("Radio stations list")
-        self.setAccessibleDescription("List of radio stations. Right-click or double-click for options.")
+        self.setAccessibleName(_("Radio stations list"))
+        self.setAccessibleDescription(_("List of radio stations. Right-click or double-click for options."))
         
         self.customContextMenuRequested.connect(self._show_context_menu)
         self.itemDoubleClicked.connect(self._on_item_double_clicked)
@@ -52,10 +52,17 @@ class RadioTreeWidget(QTreeWidget):
             item.setText(4, str(station.bitrate) if station.bitrate else "")
             item.setData(0, Qt.ItemDataRole.UserRole, station)
             
-            tags_str = ", ".join(station.tags) if station.tags else "None"
-            desc = (f"Station: {station.name}. Country: {station.country or 'N/A'}. "
-                   f"Language: {lang_str or 'N/A'}. Tags: {tags_str}. "
-                   f"Codec: {station.codec or 'N/A'}. Bitrate: {station.bitrate or 'N/A'}.")
+            tags_str = ", ".join(station.tags) if station.tags else _("None")
+            desc = _(
+                "Station: {name}. Country: {country}. Language: {language}. Tags: {tags}. Codec: {codec}. Bitrate: {bitrate}."
+            ).format(
+                name=station.name,
+                country=station.country or _("N/A"),
+                language=lang_str or _("N/A"),
+                tags=tags_str,
+                codec=station.codec or _("N/A"),
+                bitrate=station.bitrate or _("N/A"),
+            )
             item.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole, desc)
             self.addTopLevelItem(item)
 
@@ -69,15 +76,18 @@ class RadioTreeWidget(QTreeWidget):
             lang_data = fav.get("language", [])
             lang_str = ", ".join(lang_data) if isinstance(lang_data, list) else str(lang_data)
             
-            item.setText(0, fav.get("name", "Unknown"))
+            item.setText(0, fav.get("name", _("Unknown")))
             item.setText(1, fav.get("country", ""))
             item.setText(2, lang_str)
             item.setText(3, fav.get("codec", ""))
             item.setText(4, str(fav.get("bitrate", "")))
             item.setData(0, Qt.ItemDataRole.UserRole, fav)
             
-            desc = (f"Favorite Station: {fav.get('name', 'Unknown')}. "
-                   f"Country: {fav.get('country', 'N/A')}. Language: {lang_str or 'N/A'}.")
+            desc = _("Favorite Station: {name}. Country: {country}. Language: {language}.").format(
+                name=fav.get("name", _("Unknown")),
+                country=fav.get("country", _("N/A")),
+                language=lang_str or _("N/A"),
+            )
             item.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole, desc)
             self.addTopLevelItem(item)
 
@@ -96,28 +106,28 @@ class RadioTreeWidget(QTreeWidget):
         
         menu = QMenu(self)
         
-        play_action = menu.addAction("Play Station")
+        play_action = menu.addAction(_("Play Station"))
         play_action.triggered.connect(lambda: self.play_requested.emit(station_data))
         
-        click_action = menu.addAction("Register Click")
+        click_action = menu.addAction(_("Register Click"))
         click_action.triggered.connect(lambda: self.click_requested.emit(uuid))
         
         menu.addSeparator()
         
         is_fav = self._is_favorite_item(station_data)
         if is_fav:
-            fav_action = menu.addAction("Remove from Favorites")
+            fav_action = menu.addAction(_("Remove from Favorites"))
             fav_action.triggered.connect(lambda: self.favorite_removed.emit(uuid))
         else:
-            fav_action = menu.addAction("Add to Favorites")
+            fav_action = menu.addAction(_("Add to Favorites"))
             fav_action.triggered.connect(lambda: self.favorite_added.emit(station_data))
         
         menu.addSeparator()
         
-        info_action = menu.addAction("Station Information")
+        info_action = menu.addAction(_("Station Information"))
         info_action.triggered.connect(lambda: self.info_requested.emit(station_data))
         
-        copy_action = menu.addAction("Copy Stream URL")
+        copy_action = menu.addAction(_("Copy Stream URL"))
         copy_action.triggered.connect(lambda: self._copy_url(station_data))
         
         menu.exec(self.viewport().mapToGlobal(position))

@@ -13,7 +13,7 @@ class EntryDetailDialog(QDialog):
     def __init__(self, entry, parent=None):
         super().__init__(parent)
         self.entry = entry
-        self.setWindowTitle("Full Entry Details")
+        self.setWindowTitle(_("Full Entry Details"))
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(700, 500)
         self.setMinimumSize(600, 400)
@@ -39,11 +39,11 @@ class EntryDetailDialog(QDialog):
         
         btn_layout = QHBoxLayout()
         
-        copy_btn = QPushButton("Copy to Clipboard")
+        copy_btn = QPushButton(_("Copy to Clipboard"))
         copy_btn.clicked.connect(self.copy_to_clipboard)
         btn_layout.addWidget(copy_btn)
         
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(_("Close"))
         close_btn.clicked.connect(self.accept)
         btn_layout.addWidget(close_btn)
         
@@ -52,7 +52,7 @@ class EntryDetailDialog(QDialog):
     def display_entry(self):
         html_parts = []
         html_parts.append("<div style='font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;'>")
-        html_parts.append("<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry Data</h2>")
+        html_parts.append(_("<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry Data</h2>"))
         
         attrs = {}
 
@@ -89,7 +89,7 @@ class EntryDetailDialog(QDialog):
 
     def format_value(self, value):
         if value is None:
-            return "<em style='color: #999;'>None</em>"
+            return _("<em style='color: #999;'>None</em>")
         
         if isinstance(value, str):
             if value.startswith('http://') or value.startswith('https://'):
@@ -108,10 +108,14 @@ class EntryDetailDialog(QDialog):
         
         if isinstance(value, (list, tuple)):
             if not value:
-                return "<em style='color: #999;'>Empty</em>"
+                return _("<em style='color: #999;'>Empty</em>")
             items = [str(item) for item in value[:10]]
             if len(value) > 10:
-                items.append(f"<em>... and {len(value) - 10} more</em>")
+                items.append(
+                    _("<em>... and {count} more</em>").format(
+                        count=len(value) - 10
+                    )
+                )
             return "<br>".join(f"• {item}" for item in items)
         
         return str(value)
@@ -119,7 +123,7 @@ class EntryDetailDialog(QDialog):
     def copy_to_clipboard(self):
         text_parts = []
         text_parts.append("=" * 60)
-        text_parts.append("FULL ENTRY DATA")
+        text_parts.append(_("FULL ENTRY DATA"))
         text_parts.append("=" * 60)
         text_parts.append("")
         
@@ -153,11 +157,15 @@ class EntryDetailDialog(QDialog):
         
         clipboard = QApplication.clipboard()
         clipboard.setText('\n'.join(text_parts))
-        QMessageBox.information(self, "Copied", "Entry data copied to clipboard")
+        QMessageBox.information(
+            self,
+            _("Copied"),
+            _("Entry data copied to clipboard"),
+        )
 
     def format_value_as_text(self, value):
         if value is None:
-            return "None"
+            return _("None")
         
         if isinstance(value, str):
             return value
@@ -172,10 +180,10 @@ class EntryDetailDialog(QDialog):
         
         if isinstance(value, (list, tuple)):
             if not value:
-                return "Empty"
+                return _("Empty")
             items = [str(item) for item in value[:50]]
             if len(value) > 50:
-                items.append(f"... and {len(value) - 50} more")
+                items.append(_("... and {count} more").format(count=len(value) - 50))
             return "\n  ".join(f"• {item}" for item in items)
         
         return str(value)

@@ -45,13 +45,13 @@ class FeedWidget(QWidget):
         main_layout.setSpacing(5)
         
         search_layout = QHBoxLayout()
-        search_label = QLabel("Search:")
+        search_label = QLabel(_("Search:"))
         self.search_box = QLineEdit()
-        self.search_box.setPlaceholderText("Type and press Enter to search entries...")
+        self.search_box.setPlaceholderText(_("Type and press Enter to search entries..."))
         self.search_box.returnPressed.connect(self.perform_search)
-        search_btn = QPushButton("Search")
+        search_btn = QPushButton(_("Search"))
         search_btn.clicked.connect(self.perform_search)
-        clear_btn = QPushButton("Clear")
+        clear_btn = QPushButton(_("Clear"))
         clear_btn.clicked.connect(self.clear_search)
         
         search_layout.addWidget(search_label)
@@ -65,7 +65,7 @@ class FeedWidget(QWidget):
         feed_container = QWidget()
         feed_layout = QVBoxLayout(feed_container)
         feed_layout.setContentsMargins(0, 0, 0, 0)
-        feed_label = QLabel("<b>Feeds</b>")
+        feed_label = QLabel(_("<b>Feeds</b>"))
         feed_layout.addWidget(feed_label)
         
         self.feed_list = QListWidget()
@@ -73,8 +73,8 @@ class FeedWidget(QWidget):
         self.feed_list.customContextMenuRequested.connect(self.show_feed_context_menu)
         self.feed_list.setAlternatingRowColors(True)
         self.feed_list.currentItemChanged.connect(self.on_feed_changed)
-        self.feed_list.setAccessibleName("Feed List")
-        self.feed_list.setAccessibleDescription("List of RSS feeds. Right-click for options.")
+        self.feed_list.setAccessibleName(_("Feed List"))
+        self.feed_list.setAccessibleDescription(_("List of RSS feeds. Right-click for options."))
         feed_layout.addWidget(self.feed_list)
         
         splitter.addWidget(feed_container)
@@ -82,25 +82,25 @@ class FeedWidget(QWidget):
         entry_container = QWidget()
         entry_layout = QVBoxLayout(entry_container)
         entry_layout.setContentsMargins(0, 0, 0, 0)
-        entry_label = QLabel("<b>Entries</b>")
+        entry_label = QLabel(_("<b>Entries</b>"))
         entry_layout.addWidget(entry_label)
         
         self.entry_tree = QTreeWidget()
         self.entry_tree.setColumnCount(3)
-        self.entry_tree.setHeaderLabels(["Title", "Published", "Link"])
+        self.entry_tree.setHeaderLabels([_("Title"), _("Published"), _("Link")])
         self.entry_tree.setAlternatingRowColors(True)
         self.entry_tree.setRootIsDecorated(False)
         self.entry_tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.entry_tree.customContextMenuRequested.connect(self.show_entry_context_menu)
         self.entry_tree.currentItemChanged.connect(self.on_entry_changed)
-        self.entry_tree.setAccessibleName("Entry Tree")
-        self.entry_tree.setAccessibleDescription("Tree of feed entries with title, date, and link. Right-click for options.")
+        self.entry_tree.setAccessibleName(_("Entry Tree"))
+        self.entry_tree.setAccessibleDescription(_("Tree of feed entries with title, date, and link. Right-click for options."))
         self.entry_tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.entry_tree.header().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.entry_tree.header().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         entry_layout.addWidget(self.entry_tree, 2)
         
-        detail_label = QLabel("<b>Summary/Description</b>")
+        detail_label = QLabel(_("<b>Summary/Description</b>"))
         entry_layout.addWidget(detail_label)
         
         self.detail_text = QTextBrowser()
@@ -112,8 +112,8 @@ class FeedWidget(QWidget):
             Qt.TextInteractionFlag.LinksAccessibleByMouse |
             Qt.TextInteractionFlag.LinksAccessibleByKeyboard
         )
-        self.detail_text.setAccessibleName("Entry Detail Text")
-        self.detail_text.setAccessibleDescription("Summary and description of selected entry")
+        self.detail_text.setAccessibleName(_("Entry Detail Text"))
+        self.detail_text.setAccessibleDescription(_("Summary and description of selected entry"))
         entry_layout.addWidget(self.detail_text, 1)
         
         splitter.addWidget(entry_container)
@@ -151,15 +151,15 @@ class FeedWidget(QWidget):
                 return True, None
             elif parsed and parsed.get('bozo', 0):
                 exception = parsed.get('bozo_exception')
-                return False, str(exception) if exception else "Invalid feed format"
-            return False, "Failed to parse feed"
+                return False, str(exception) if exception else _("Invalid feed format")
+            return False, _("Failed to parse feed")
         except Exception as e:
             return False, str(e)
 
     def show_feed_context_menu(self, pos):
         menu = QMenu(self)
         
-        add_action = QAction("Add Feed", self)
+        add_action = QAction(_("Add Feed"), self)
         add_action.triggered.connect(self.add_feed)
         menu.addAction(add_action)
         
@@ -167,26 +167,26 @@ class FeedWidget(QWidget):
         if item:
             menu.addSeparator()
             
-            refresh_action = QAction("Refresh Feed", self)
+            refresh_action = QAction(_("Refresh Feed"), self)
             refresh_action.triggered.connect(self.refresh_current_feed)
             menu.addAction(refresh_action)
             
-            update_url_action = QAction("Update Feed URL", self)
+            update_url_action = QAction(_("Update Feed URL"), self)
             update_url_action.triggered.connect(self.update_feed_url)
             menu.addAction(update_url_action)
             
-            remove_action = QAction("Remove Feed", self)
+            remove_action = QAction(_("Remove Feed"), self)
             remove_action.triggered.connect(self.remove_feed)
             menu.addAction(remove_action)
         
         if self.feed_list.count() > 0:
             menu.addSeparator()
             
-            refresh_all_action = QAction("Refresh All Feeds", self)
+            refresh_all_action = QAction(_("Refresh All Feeds"), self)
             refresh_all_action.triggered.connect(self.refresh_all_feeds)
             menu.addAction(refresh_all_action)
             
-            clear_action = QAction("Clear All Feeds", self)
+            clear_action = QAction(_("Clear All Feeds"), self)
             clear_action.triggered.connect(self.clear_all_feeds)
             menu.addAction(clear_action)
         
@@ -199,68 +199,68 @@ class FeedWidget(QWidget):
         
         menu = QMenu(self)
         
-        sort_menu = menu.addMenu("Sort By")
+        sort_menu = menu.addMenu(_("Sort By"))
         
-        sort_title_asc = QAction("Title (Ascending A-Z)", self)
+        sort_title_asc = QAction(_("Title (Ascending A-Z)"), self)
         sort_title_asc.triggered.connect(lambda: self.sort_entries('title', False))
         sort_menu.addAction(sort_title_asc)
         
-        sort_title_desc = QAction("Title (Descending Z-A)", self)
+        sort_title_desc = QAction(_("Title (Descending Z-A)"), self)
         sort_title_desc.triggered.connect(lambda: self.sort_entries('title', True))
         sort_menu.addAction(sort_title_desc)
         
         sort_menu.addSeparator()
         
-        sort_date_newest = QAction("Date (Newest First)", self)
+        sort_date_newest = QAction(_("Date (Newest First)"), self)
         sort_date_newest.triggered.connect(lambda: self.sort_entries('published_parsed', True))
         sort_menu.addAction(sort_date_newest)
         
-        sort_date_oldest = QAction("Date (Oldest First)", self)
+        sort_date_oldest = QAction(_("Date (Oldest First)"), self)
         sort_date_oldest.triggered.connect(lambda: self.sort_entries('published_parsed', False))
         sort_menu.addAction(sort_date_oldest)
         
         menu.addSeparator()
         
-        copy_menu = menu.addMenu("Copy")
+        copy_menu = menu.addMenu(_("Copy"))
         
-        copy_title = QAction("Title", self)
+        copy_title = QAction(_("Title"), self)
         copy_title.triggered.connect(lambda: self.copy_entry_field(item, 'title'))
         copy_menu.addAction(copy_title)
         
-        copy_link = QAction("Page Link", self)
+        copy_link = QAction(_("Page Link"), self)
         copy_link.triggered.connect(lambda: self.copy_entry_field(item, 'link'))
         copy_menu.addAction(copy_link)
         
-        copy_media = QAction("Direct Media Link", self)
+        copy_media = QAction(_("Direct Media Link"), self)
         copy_media.triggered.connect(lambda: self.copy_direct_media_link(item))
         copy_menu.addAction(copy_media)
         
         menu.addSeparator()
         
-        full_entry_action = QAction("View Full Entry Dump", self)
+        full_entry_action = QAction(_("View Full Entry Dump"), self)
         full_entry_action.triggered.connect(lambda: self.show_full_entry(item))
         menu.addAction(full_entry_action)
         
-        open_link_action = QAction("Open Link in Browser", self)
+        open_link_action = QAction(_("Open Link in Browser"), self)
         open_link_action.triggered.connect(lambda: self.open_entry_link(item))
         menu.addAction(open_link_action)
         
         menu.exec(self.entry_tree.viewport().mapToGlobal(pos))
 
     def add_feed(self):
-        url, ok = QInputDialog.getText(self, "Add Feed", "Enter feed URL:")
+        url, ok = QInputDialog.getText(self, _("Add Feed"), _("Enter feed URL:"))
         if not ok or not url:
             return
         
         if not self.validate_url(url):
-            QMessageBox.warning(self, "Invalid URL", "Please enter a valid HTTP/HTTPS URL")
+            QMessageBox.warning(self, _("Invalid URL"), _("Please enter a valid HTTP/HTTPS URL"))
             return
         
         if url in self.feed_mgr.get_feed_list():
-            QMessageBox.warning(self, "Duplicate", "Feed already exists")
+            QMessageBox.warning(self, _("Duplicate"), _("Feed already exists"))
             return
         
-        progress = QProgressDialog("Validating feed...", "Cancel", 0, 0, self)
+        progress = QProgressDialog(_("Validating feed..."), _("Cancel"), 0, 0, self)
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.show()
         
@@ -268,12 +268,16 @@ class FeedWidget(QWidget):
         progress.close()
         
         if not valid:
-            QMessageBox.critical(self, "Invalid Feed", f"Feed validation failed:\n{error}")
+            QMessageBox.critical(
+                self,
+                _("Invalid Feed"),
+                _("Feed validation failed:\n{error}").format(error=error),
+            )
             self.feed_mgr.remove_feed(url)
             return
         
         self.feed_mgr.add_feed(url)
-        QMessageBox.information(self, "Success", "Feed added successfully")
+        QMessageBox.information(self, _("Success"), _("Feed added successfully"))
         self.load_feeds()
 
     def remove_feed(self):
@@ -284,8 +288,8 @@ class FeedWidget(QWidget):
         url = item.data(Qt.ItemDataRole.UserRole)
         reply = QMessageBox.question(
             self,
-            "Confirm Removal",
-            f"Remove feed:\n{url}?",
+            _("Confirm Removal"),
+            _("Remove feed:\n{url}?").format(url=url),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         
@@ -299,7 +303,7 @@ class FeedWidget(QWidget):
             return
         
         url = item.data(Qt.ItemDataRole.UserRole)
-        progress = QProgressDialog("Refreshing feed...", "Cancel", 0, 0, self)
+        progress = QProgressDialog(_("Refreshing feed..."), _("Cancel"), 0, 0, self)
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.show()
         
@@ -307,27 +311,31 @@ class FeedWidget(QWidget):
             result = self.feed_mgr.refresh_feed(url, force=True)
             progress.close()
             if result:
-                QMessageBox.information(self, "Success", "Feed refreshed successfully")
+                QMessageBox.information(self, _("Success"), _("Feed refreshed successfully"))
                 self.load_feed_entries(url)
             else:
-                QMessageBox.warning(self, "Error", "Failed to refresh feed")
+                QMessageBox.warning(self, _("Error"), _("Failed to refresh feed"))
         except Exception as e:
             progress.close()
-            QMessageBox.critical(self, "Error", f"Refresh failed:\n{str(e)}")
+            QMessageBox.critical(
+                self,
+                _("Error"),
+                _("Refresh failed:\n{error}").format(error=str(e)),
+            )
 
     def refresh_all_feeds(self):
         feeds = self.feed_mgr.get_feed_list()
         if not feeds:
             return
         
-        progress = QProgressDialog("Refreshing feeds...", "Cancel", 0, len(feeds), self)
+        progress = QProgressDialog(_("Refreshing feeds..."), _("Cancel"), 0, len(feeds), self)
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         
         for i, url in enumerate(feeds):
             if progress.wasCanceled():
                 break
             progress.setValue(i)
-            progress.setLabelText(f"Refreshing:\n{url[:60]}...")
+            progress.setLabelText(_("Refreshing:\n{url}...").format(url=url[:60]))
             try:
                 self.feed_mgr.refresh_feed(url, force=True)
             except:
@@ -343,16 +351,16 @@ class FeedWidget(QWidget):
             return
         
         old_url = item.data(Qt.ItemDataRole.UserRole)
-        new_url, ok = QInputDialog.getText(self, "Update Feed URL", "Enter new URL:", text=old_url)
+        new_url, ok = QInputDialog.getText(self, _("Update Feed URL"), _("Enter new URL:"), text=old_url)
         
         if not ok or not new_url or new_url == old_url:
             return
         
         if not self.validate_url(new_url):
-            QMessageBox.warning(self, "Invalid URL", "Please enter a valid HTTP/HTTPS URL")
+            QMessageBox.warning(self, _("Invalid URL"), _("Please enter a valid HTTP/HTTPS URL"))
             return
         
-        progress = QProgressDialog("Validating new feed URL...", "Cancel", 0, 0, self)
+        progress = QProgressDialog(_("Validating new feed URL..."), _("Cancel"), 0, 0, self)
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.show()
         
@@ -360,19 +368,23 @@ class FeedWidget(QWidget):
         progress.close()
         
         if not valid:
-            QMessageBox.critical(self, "Invalid Feed", f"Feed validation failed:\n{error}")
+            QMessageBox.critical(
+                self,
+                _("Invalid Feed"),
+                _("Feed validation failed:\n{error}").format(error=error),
+            )
             self.feed_mgr.remove_feed(new_url)
             return
         
         self.feed_mgr.update_feed_url(old_url, new_url)
-        QMessageBox.information(self, "Success", "Feed URL updated successfully")
+        QMessageBox.information(self, _("Success"), _("Feed URL updated successfully"))
         self.load_feeds()
 
     def clear_all_feeds(self):
         reply = QMessageBox.question(
             self,
-            "Confirm Clear All",
-            "Delete all feeds and cache?",
+            _("Confirm Clear All"),
+            _("Delete all feeds and cache?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -433,7 +445,7 @@ class FeedWidget(QWidget):
             self.all_entries = []
             self.filtered_entries = []
             self.update_entry_tree()
-            self.detail_text.setPlainText("No entries found for this feed.")
+            self.detail_text.setPlainText(_("No entries found for this feed."))
 
     def perform_search(self):
         query = self.search_box.text().strip()
@@ -492,13 +504,13 @@ class FeedWidget(QWidget):
             except:
                 pass
         
-        return str(date_val) if date_val else "N/A"
+            return str(date_val) if date_val else _("N/A")
 
     def update_entry_tree(self):
         self.entry_tree.clear()
         
         for entry in self.filtered_entries:
-            title = self.get_entry_value(entry, 'title') or "Untitled"
+            title = self.get_entry_value(entry, 'title') or _("Untitled")
             published = self.format_date(entry)
             link = self.get_entry_value(entry, 'link') or ""
             
@@ -508,7 +520,11 @@ class FeedWidget(QWidget):
             item = QTreeWidgetItem([title_display, published, link_display])
             item.setData(0, Qt.ItemDataRole.UserRole, entry)
             
-            desc = f"Entry: {title}, Published: {published}, Link: {link}"
+            desc = _("Entry: {title}, Published: {published}, Link: {link}").format(
+                title=title,
+                published=published,
+                link=link,
+            )
             item.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole, desc)
             
             self.entry_tree.addTopLevelItem(item)
@@ -518,7 +534,7 @@ class FeedWidget(QWidget):
             if item:
                 self.entry_tree.setCurrentItem(item)
         else:
-            self.detail_text.setPlainText("No entries match your search.")
+            self.detail_text.setPlainText(_("No entries match your search."))
 
     def on_entry_changed(self, current, previous):
         if not current:
@@ -574,7 +590,7 @@ class FeedWidget(QWidget):
         if len(html_parts) > 2:
             self.detail_text.setHtml(''.join(html_parts))
         else:
-            self.detail_text.setHtml("<p><em>No summary or description available.</em></p>")
+            self.detail_text.setHtml(_("<p><em>No summary or description available.</em></p>"))
 
     def show_full_entry(self, item):
         entry = item.data(0, Qt.ItemDataRole.UserRole)
@@ -598,9 +614,15 @@ class FeedWidget(QWidget):
         if media_url:
             clipboard = QApplication.clipboard()
             clipboard.setText(media_url)
-            QMessageBox.information(self, "Copied", f"Direct media link copied to clipboard:\n{media_url}")
+            QMessageBox.information(
+                self,
+                _("Copied"),
+                _("Direct media link copied to clipboard:\n{media_url}").format(
+                    media_url=media_url
+                ),
+            )
         else:
-            QMessageBox.warning(self, "Not Found", "No direct media link found for this entry.")
+            QMessageBox.warning(self, _("Not Found"), _("No direct media link found for this entry."))
     
     def play_entry(self, item):
         entry = item.data(0, Qt.ItemDataRole.UserRole)
@@ -611,7 +633,7 @@ class FeedWidget(QWidget):
         if media_url:
             self.play_requested.emit(media_url)
         else:
-            QMessageBox.warning(self, "No Media", "No direct media link found for this entry.")
+            QMessageBox.warning(self, _("No Media"), _("No direct media link found for this entry."))
 
     def copy_entry_field(self, item, field):
         entry = item.data(0, Qt.ItemDataRole.UserRole)

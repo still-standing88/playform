@@ -39,7 +39,7 @@ class RadioBrowserWidget(QWidget):
         self.filter_widget = RadioFilterWidget(self)
         layout.addWidget(self.filter_widget)
         
-        results_group = QGroupBox("Results")
+        results_group = QGroupBox(_("Results"))
         results_group.setStyleSheet(RADIO_GROUP_BOX_STYLE)
         results_layout = QVBoxLayout()
         results_layout.setContentsMargins(5, 5, 5, 5)
@@ -51,7 +51,7 @@ class RadioBrowserWidget(QWidget):
         
         self.status_bar = QStatusBar()
         layout.addWidget(self.status_bar)
-        self.status_bar.showMessage("Ready - Enter search term or select filters")
+        self.status_bar.showMessage(_("Ready - Enter search term or select filters"))
 
     def _connect_signals(self):
         self.filter_widget.search_requested.connect(self._perform_search)
@@ -70,7 +70,9 @@ class RadioBrowserWidget(QWidget):
         if self.search_thread and self.search_thread.isRunning():
             return
         
-        self.status_bar.showMessage(f"Searching for '{search_name}'...")
+        self.status_bar.showMessage(
+            _("Searching for '{search_name}'...").format(search_name=search_name)
+        )
         self._set_buttons_enabled(False)
         
         self.search_thread = RadioWorker(self.service, 'search', params)
@@ -83,13 +85,18 @@ class RadioBrowserWidget(QWidget):
             return
         
         filter_map = {
-            "Country": FilterBy.COUNTRY_EXACT, 
-            "Language": FilterBy.LANGUAGE_EXACT,
-            "Tag": FilterBy.TAG_EXACT, 
-            "Codec": FilterBy.CODEC_EXACT,
+            _("Country"): FilterBy.COUNTRY_EXACT,
+            _("Language"): FilterBy.LANGUAGE_EXACT,
+            _("Tag"): FilterBy.TAG_EXACT,
+            _("Codec"): FilterBy.CODEC_EXACT,
         }
         
-        self.status_bar.showMessage(f"Filtering by {filter_type}: {filter_value}...")
+        self.status_bar.showMessage(
+            _("Filtering by {filter_type}: {filter_value}...").format(
+                filter_type=filter_type,
+                filter_value=filter_value,
+            )
+        )
         self._set_buttons_enabled(False)
         
         params['filter_by'] = filter_map[filter_type]
@@ -104,7 +111,7 @@ class RadioBrowserWidget(QWidget):
         if self.search_thread and self.search_thread.isRunning():
             return
         
-        self.status_bar.showMessage("Loading favorites...")
+        self.status_bar.showMessage(_("Loading favorites..."))
         self._set_buttons_enabled(False)
         
         self.search_thread = RadioWorker(self.service, 'favorites', {})
@@ -117,15 +124,19 @@ class RadioBrowserWidget(QWidget):
             return
         
         op_map = {
-            "Country": ('countries', self.countries_loaded, self._on_countries_loaded),
-            "Language": ('languages', self.languages_loaded, self._on_languages_loaded),
-            "Tag": ('tags', self.tags_loaded, self._on_tags_loaded)
+            _("Country"): ('countries', self.countries_loaded, self._on_countries_loaded),
+            _("Language"): ('languages', self.languages_loaded, self._on_languages_loaded),
+            _("Tag"): ('tags', self.tags_loaded, self._on_tags_loaded),
         }
         
         if filter_type in op_map:
             op, loaded, callback = op_map[filter_type]
             if not loaded:
-                self.status_bar.showMessage(f"Loading {filter_type.lower()}...")
+                self.status_bar.showMessage(
+                    _("Loading {filter_type}...").format(
+                        filter_type=filter_type.lower()
+                    )
+                )
                 self._set_buttons_enabled(False)
                 self.filter_load_thread = RadioWorker(self.service, op, {})
                 self.filter_load_thread.finished.connect(callback)
@@ -137,21 +148,30 @@ class RadioBrowserWidget(QWidget):
     def _on_countries_loaded(self, countries):
         self.filter_widget.set_countries(countries)
         self.countries_loaded = True
-        self.status_bar.showMessage(f"Loaded {len(countries)} countries", 3000)
+        self.status_bar.showMessage(
+            _("Loaded {count} countries").format(count=len(countries)),
+            3000,
+        )
         self._set_buttons_enabled(True)
         self.filter_load_thread = None
 
     def _on_languages_loaded(self, languages):
         self.filter_widget.set_languages(languages)
         self.languages_loaded = True
-        self.status_bar.showMessage(f"Loaded {len(languages)} languages", 3000)
+        self.status_bar.showMessage(
+            _("Loaded {count} languages").format(count=len(languages)),
+            3000,
+        )
         self._set_buttons_enabled(True)
         self.filter_load_thread = None
 
     def _on_tags_loaded(self, tags):
         self.filter_widget.set_tags(tags)
         self.tags_loaded = True
-        self.status_bar.showMessage(f"Loaded top {len(tags[:250])} tags", 3000)
+        self.status_bar.showMessage(
+            _("Loaded top {count} tags").format(count=len(tags[:250])),
+            3000,
+        )
         self._set_buttons_enabled(True)
         self.filter_load_thread = None
 
@@ -161,41 +181,56 @@ class RadioBrowserWidget(QWidget):
     def _display_results(self, stations):
         if not stations:
             self.tree_widget.clear()
-            self.status_bar.showMessage("No results found")
+            self.status_bar.showMessage(_("No results found"))
             self._set_buttons_enabled(True)
             self.search_thread = None
             return
         
         self.tree_widget.display_stations(stations)
-        self.status_bar.showMessage(f"Found {len(stations)} stations")
+        self.status_bar.showMessage(
+            _("Found {count} stations").format(count=len(stations))
+        )
         self._set_buttons_enabled(True)
         self.search_thread = None
 
     def _display_favorites(self, favorites):
         self.tree_widget.display_favorites(favorites)
-        self.status_bar.showMessage(f"Showing {len(favorites)} favorite stations")
+        self.status_bar.showMessage(
+            _("Showing {count} favorite stations").format(count=len(favorites))
+        )
         self._set_buttons_enabled(True)
         self.search_thread = None
 
     def _play_station(self, station_data):
-        name = station_data.name if isinstance(station_data, Station) else station_data.get("name", "Unknown")
+        name = station_data.name if isinstance(station_data, Station) else station_data.get("name", _("Unknown"))
         url = (station_data.url_resolved or station_data.url) if isinstance(station_data, Station) \
             else (station_data.get("url_resolved") or station_data.get("url", ""))
         
         if url:
             self.play_requested.emit(url)
-            self.status_bar.showMessage(f"Playing: {name}")
+            self.status_bar.showMessage(_("Playing: {name}").format(name=name))
         else:
-            QMessageBox.warning(self, "No URL", f"No stream URL found for {name}")
+            QMessageBox.warning(
+                self,
+                _("No URL"),
+                _("No stream URL found for {name}").format(name=name),
+            )
 
     def _click_station(self, uuid: str):
         if self.click_thread and self.click_thread.isRunning():
-            self.status_bar.showMessage("Click already in progress", 2000)
+            self.status_bar.showMessage(_("Click already in progress"), 2000)
             return
         
         self.click_thread = RadioWorker(self.service, 'click', {'uuid': uuid})
-        self.click_thread.finished.connect(lambda: self.status_bar.showMessage("Click registered successfully", 3000))
-        self.click_thread.error.connect(lambda e: self.status_bar.showMessage(f"Click failed: {e}", 4000))
+        self.click_thread.finished.connect(
+            lambda: self.status_bar.showMessage(_("Click registered successfully"), 3000)
+        )
+        self.click_thread.error.connect(
+            lambda e: self.status_bar.showMessage(
+                _("Click failed: {error}").format(error=e),
+                4000,
+            )
+        )
         
         self.click_thread.finished.connect(lambda: setattr(self, 'click_thread', None))
         self.click_thread.error.connect(lambda: setattr(self, 'click_thread', None))
@@ -221,47 +256,61 @@ class RadioBrowserWidget(QWidget):
             "favicon": station_data.favicon,
         }
         self.service.add_favorite(station_dict)
-        self.status_bar.showMessage(f"Added '{station_data.name}' to favorites")
+        self.status_bar.showMessage(
+            _("Added '{name}' to favorites").format(name=station_data.name)
+        )
 
     def _remove_favorite(self, uuid: str):
         self.service.remove_favorite(uuid)
-        self.status_bar.showMessage(f"Removed station from favorites")
+        self.status_bar.showMessage(_("Removed station from favorites"))
 
     def _show_station_info(self, station_data):
         if isinstance(station_data, Station):
             info = [
-                f"<b>Name:</b> {station_data.name}",
-                f"<b>Country:</b> {station_data.country or 'N/A'}",
-                f"<b>Language:</b> {', '.join(station_data.language) if station_data.language else 'N/A'}",
-                f"<b>Tags:</b> {', '.join(station_data.tags) if station_data.tags else 'None'}",
-                f"<b>Codec:</b> {station_data.codec or 'N/A'}",
-                f"<b>Bitrate:</b> {station_data.bitrate or 'N/A'} kbps",
-                f"<b>Votes:</b> {station_data.votes}",
-                f"<b>Homepage:</b> {station_data.homepage or 'N/A'}",
+                _("<b>Name:</b> {name}").format(name=station_data.name),
+                _("<b>Country:</b> {country}").format(country=station_data.country or _("N/A")),
+                _("<b>Language:</b> {language}").format(
+                    language=', '.join(station_data.language) if station_data.language else _("N/A")
+                ),
+                _("<b>Tags:</b> {tags}").format(
+                    tags=', '.join(station_data.tags) if station_data.tags else _("None")
+                ),
+                _("<b>Codec:</b> {codec}").format(codec=station_data.codec or _("N/A")),
+                _("<b>Bitrate:</b> {bitrate} kbps").format(bitrate=station_data.bitrate or _("N/A")),
+                _("<b>Votes:</b> {votes}").format(votes=station_data.votes),
+                _("<b>Homepage:</b> {homepage}").format(homepage=station_data.homepage or _("N/A")),
             ]
         else:
             info = [
-                f"<b>Name:</b> {station_data.get('name', 'Unknown')}",
-                f"<b>Country:</b> {station_data.get('country', 'N/A')}",
-                f"<b>Language:</b> {', '.join(station_data.get('language', [])) if isinstance(station_data.get('language'), list) else station_data.get('language', 'N/A')}",
-                f"<b>Codec:</b> {station_data.get('codec', 'N/A')}",
-                f"<b>Bitrate:</b> {station_data.get('bitrate', 'N/A')} kbps",
+                _("<b>Name:</b> {name}").format(name=station_data.get('name', _("Unknown"))),
+                _("<b>Country:</b> {country}").format(country=station_data.get('country', _("N/A"))),
+                _("<b>Language:</b> {language}").format(
+                    language=', '.join(station_data.get('language', []))
+                    if isinstance(station_data.get('language'), list)
+                    else station_data.get('language', _("N/A"))
+                ),
+                _("<b>Codec:</b> {codec}").format(codec=station_data.get('codec', _("N/A"))),
+                _("<b>Bitrate:</b> {bitrate} kbps").format(bitrate=station_data.get('bitrate', _("N/A"))),
             ]
-        QMessageBox.information(self, "Station Information", "<br>".join(info))
+        QMessageBox.information(self, _("Station Information"), "<br>".join(info))
 
     def _clear_cache(self):
-        reply = QMessageBox.question(self, "Clear Cache", "Clear all cached data?",
+        reply = QMessageBox.question(self, _("Clear Cache"), _("Clear all cached data?"),
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if reply == QMessageBox.StandardButton.Yes:
             self.service.clear_cache()
             self.countries_loaded = False
             self.languages_loaded = False
             self.tags_loaded = False
-            self.status_bar.showMessage("Cache cleared successfully", 3000)
+            self.status_bar.showMessage(_("Cache cleared successfully"), 3000)
 
     def _handle_error(self, error_msg: str):
-        QMessageBox.warning(self, "Error", f"An error occurred:\n{error_msg}")
-        self.status_bar.showMessage("Error occurred", 4000)
+        QMessageBox.warning(
+            self,
+            _("Error"),
+            _("An error occurred:\n{error}").format(error=error_msg),
+        )
+        self.status_bar.showMessage(_("Error occurred"), 4000)
         self._set_buttons_enabled(True)
         self.filter_load_thread = self.search_thread = None
 
