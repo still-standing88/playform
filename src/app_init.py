@@ -46,31 +46,23 @@ def initialize_app_guard(cli_args):
     return app_instance, False
 
 def initialize_modules(splash):
-    splash.update_message("Loading configuration...")
+    splash.update_message(_("Loading configuration..."))
     import app_config
     from app_config import key_config
     
-    splash.update_message("Loading database...")
+    splash.update_message(_("Loading database..."))
     import app_db
     
-    splash.update_message("Initializing locale...")
+    splash.update_message(_("Initializing locale..."))
     locale.setlocale(locale.LC_NUMERIC, 'C')
-    
-    splash.update_message("Loading key configuration...")
     key_config.load_keys()
-    
-    splash.update_message("Initializing speech engine...")
     from utilities.speech import speech_manager
     threading.Thread(target=speech_manager.init, daemon=True).start()
-    
-    splash.update_message("Loading speech configuration...")
     from app_config import load_speech_config
     load_speech_config()
-    
     return app_db, key_config
 
 def create_main_window(splash, cli_args):
-    splash.update_message("Creating main window...")
     from gui.main_window import MainWindow
     window = MainWindow()
 
@@ -79,7 +71,6 @@ def create_main_window(splash, cli_args):
 
     from update_checker import UpdateChecker
     UpdateChecker.instance(parent=window)
-
     return window
 
 def setup_ipc_handlers(app_instance, window):
