@@ -20,7 +20,7 @@ class SubtitlesWidget(QWidget):
         self._install_event_filter()
         
         self.subtitles_list.setVisible(False)
-        self.toggle_btn.setText("Show subtitles")
+        self.toggle_btn.setText(_("Show subtitles"))
         self.toggle_btn.setActuated(True)
         
     def setup_ui(self):
@@ -30,22 +30,22 @@ class SubtitlesWidget(QWidget):
         
         header_layout = QHBoxLayout()
         
-        self.title_label = QLabel("Subtitles", self)
+        self.title_label = QLabel(_("Subtitles"), self)
         self.title_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
-        self.title_label.setAccessibleName("Subtitles section")
+        self.title_label.setAccessibleName(_("Subtitles section"))
         header_layout.addWidget(self.title_label)
         
         header_layout.addStretch()
         
-        self.toggle_btn = ToggleButton("Hide Subtitles", self)
+        self.toggle_btn = ToggleButton(_("Hide Subtitles"), self)
         self.toggle_btn.setFixedSize(60, 25)
         header_layout.addWidget(self.toggle_btn)
         
         layout.addLayout(header_layout)
         
         self.subtitles_list = QListWidget(self)
-        self.subtitles_list.setAccessibleName("Subtitles display")
-        self.subtitles_list.setAccessibleDescription("Current video subtitles")
+        self.subtitles_list.setAccessibleName(_("Subtitles display"))
+        self.subtitles_list.setAccessibleDescription(_("Current video subtitles"))
         self.subtitles_list.setAlternatingRowColors(True)
         self.subtitles_list.setMaximumHeight(150)
         
@@ -61,9 +61,9 @@ class SubtitlesWidget(QWidget):
         self.subtitles_list.setVisible(not hidden)
         
         if hidden:
-            self.toggle_btn.setText("Show subtitles")
+            self.toggle_btn.setText(_("Show subtitles"))
         else:
-            self.toggle_btn.setText("Hide subtitles")
+            self.toggle_btn.setText(_("Hide subtitles"))
             
         self.subtitlesToggled.emit(not hidden)
         

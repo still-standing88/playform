@@ -90,66 +90,66 @@ class PlayerControls(QWidget):
         self.time_update_timer.start()
         
     def setup_ui(self):
-        self.toggle_controls_btn = ToggleButton("Minimize", self)
+        self.toggle_controls_btn = ToggleButton(_("Minimize"), self)
         self.toggle_controls_btn.setFixedSize(30, 30)
-        self.toggle_controls_btn.setToolTip("Minimize/Maximize Controls")
+        self.toggle_controls_btn.setToolTip(_("Minimize/Maximize Controls"))
         
         # Create media control buttons with icons
         self.previous_btn = QToolButton(self)
         self.previous_btn.setIcon(load_icon("previous.svg"))
-        self.previous_btn.setText("Previous")
+        self.previous_btn.setText(_("Previous"))
         self.previous_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         
         self.backward_btn = QToolButton(self)
         self.backward_btn.setIcon(load_icon("rewind.svg"))
-        self.backward_btn.setText("Rewind")
+        self.backward_btn.setText(_("Rewind"))
         self.backward_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         
         self.play_pause_btn = QToolButton(self)
         self.play_pause_btn.setIcon(load_icon("play.svg"))
-        self.play_pause_btn.setText("Play")
+        self.play_pause_btn.setText(_("Play"))
         self.play_pause_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         
         self.forward_btn = QToolButton(self)
         self.forward_btn.setIcon(load_icon("forward.svg"))
-        self.forward_btn.setText("Forward")
+        self.forward_btn.setText(_("Forward"))
         self.forward_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         
         self.next_btn = QToolButton(self)
         self.next_btn.setIcon(load_icon("next.svg"))
-        self.next_btn.setText("Next")
+        self.next_btn.setText(_("Next"))
         self.next_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         
         self.repeat_btn = QToolButton(self)
         self.repeat_btn.setIcon(load_icon("repeat.svg"))
-        self.repeat_btn.setText("Off")
+        self.repeat_btn.setText(_("Off"))
         self.repeat_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         
         self.shuffle_btn = QToolButton(self)
         self.shuffle_btn.setIcon(load_icon("shuffle.svg"))
-        self.shuffle_btn.setText("Shuffle")
+        self.shuffle_btn.setText(_("Shuffle"))
         self.shuffle_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         
         self.bookmarks_btn = QToolButton(self)
         self.bookmarks_btn.setIcon(load_icon("bookmarks.svg"))
-        self.bookmarks_btn.setText("Bookmarks")
+        self.bookmarks_btn.setText(_("Bookmarks"))
         self.bookmarks_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         
         self.screenshot_btn = QToolButton(self)
         self.screenshot_btn.setIcon(load_icon("screenshot.svg"))
-        self.screenshot_btn.setText("Screenshot")
+        self.screenshot_btn.setText(_("Screenshot"))
         self.screenshot_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         button_specs = [
-            (self.previous_btn, 120, 40, "Previous Track"),
-            (self.backward_btn, 110, 40, "Backward"),
-            (self.play_pause_btn, 100, 50, "Play/Pause"),
-            (self.forward_btn, 110, 40, "Forward"),
-            (self.next_btn, 100, 40, "Next Track"),
-            (self.repeat_btn, 90, 40, "Repeat mode"),
-            (self.shuffle_btn, 110, 40, "Shuffle"),
-            (self.bookmarks_btn, 130, 40, "Bookmarks list"),
-            (self.screenshot_btn, 130, 40, "Take screenshot"),
+            (self.previous_btn, 120, 40, _("Previous Track")),
+            (self.backward_btn, 110, 40, _("Backward")),
+            (self.play_pause_btn, 100, 50, _("Play/Pause")),
+            (self.forward_btn, 110, 40, _("Forward")),
+            (self.next_btn, 100, 40, _("Next Track")),
+            (self.repeat_btn, 90, 40, _("Repeat mode")),
+            (self.shuffle_btn, 110, 40, _("Shuffle")),
+            (self.bookmarks_btn, 130, 40, _("Bookmarks list")),
+            (self.screenshot_btn, 130, 40, _("Take screenshot")),
         ]
 
         for btn, w, h, tooltip in button_specs:
@@ -161,20 +161,20 @@ class PlayerControls(QWidget):
         self.seek_slider.setMaximum(100)
         self.seek_slider.setSingleStep(prefs.prefs["offset"]["seek"])
         self.seek_slider.setValue(0)
-        self.seek_slider.setAccessibleName("Seek")
+        self.seek_slider.setAccessibleName(_("Seek"))
 
         self.mute_btn = QToolButton(self)
         self.mute_btn.setIcon(load_icon("mute_off.svg"))
         self.mute_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self.mute_btn.setFixedSize(35, 35)
-        self.mute_btn.setToolTip("Mute/Unmute")
+        self.mute_btn.setToolTip(_("Mute/Unmute"))
         
         self.more_btn = QPushButton("⋯", self)
         self.more_btn.setFixedSize(35, 35)
-        self.more_btn.setToolTip("More Options")
+        self.more_btn.setToolTip(_("More Options"))
         
         self.volume_slider = QSlider(Qt.Orientation.Horizontal, self)
-        self.volume_slider.setAccessibleName("Volume")
+        self.volume_slider.setAccessibleName(_("Volume"))
 
         sliders = [
             (self.volume_slider, 0, 100, prefs.prefs["offset"]["volume"], 100, 80),
@@ -192,7 +192,7 @@ class PlayerControls(QWidget):
         self.time_label.setMinimumWidth(100)
         self.time_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
 
-        self.current_track_label = QLabel("No media loaded", self)
+        self.current_track_label = QLabel(_("No media loaded"), self)
         self.current_track_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.current_track_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.current_track_label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -306,11 +306,11 @@ class PlayerControls(QWidget):
             widget.setVisible(not minimized)
             
         if minimized:
-            self.toggle_controls_btn.setText("Maximize")
-            self.toggle_controls_btn.setToolTip("Maximize Controls")
+            self.toggle_controls_btn.setText(_("Maximize"))
+            self.toggle_controls_btn.setToolTip(_("Maximize Controls"))
         else:
-            self.toggle_controls_btn.setText("Minimize")
-            self.toggle_controls_btn.setToolTip("Minimize Controls")
+            self.toggle_controls_btn.setText(_("Minimize"))
+            self.toggle_controls_btn.setToolTip(_("Minimize Controls"))
             
         self.controlsToggled.emit(not minimized)
     
@@ -318,7 +318,7 @@ class PlayerControls(QWidget):
     def show_more_menu(self):
         menu = QMenu(self)
         
-        speed_menu = menu.addMenu("⚡ Speed")
+        speed_menu = menu.addMenu(_("Speed"))
         from PySide6.QtGui import QActionGroup
         speed_group = QActionGroup(speed_menu)
         speed_group.setExclusive(True)
@@ -331,17 +331,17 @@ class PlayerControls(QWidget):
             action.triggered.connect(self._create_speed_handler(speed))
             speed_group.addAction(action)
 
-        aspect_menu = menu.addMenu("Aspect Ratio")
+        aspect_menu = menu.addMenu(_("Aspect Ratio"))
         for ratio in video_aspect_ratios:
             a = aspect_menu.addAction(ratio)
             a.triggered.connect(lambda r=ratio: self.aspectRatioChanged.emit(r))
 
-        scale_menu = menu.addMenu("Scale")
+        scale_menu = menu.addMenu(_("Scale"))
         for s in video_scales:
             a = scale_menu.addAction(s)
             a.triggered.connect(lambda v=s: self.scaleChanged.emit(float(v)))
         
-        fullscreen_action = menu.addAction("⛶ Fullscreen")
+        fullscreen_action = menu.addAction(_("Fullscreen"))
         fullscreen_action_state = lambda: fullscreen_action.setChecked(self.is_fullscreen)
         fullscreen_action.setCheckable(True)
         fullscreen_action.setChecked(self.is_fullscreen)
@@ -367,22 +367,22 @@ class PlayerControls(QWidget):
         self.is_playing = is_playing
         if is_playing:
             self.play_pause_btn.setIcon(load_icon("pause.svg"))
-            self.play_pause_btn.setText("Pause")
-            self.play_pause_btn.setToolTip("Pause")
+            self.play_pause_btn.setText(_("Pause"))
+            self.play_pause_btn.setToolTip(_("Pause"))
         else:
             self.play_pause_btn.setIcon(load_icon("play.svg"))
-            self.play_pause_btn.setText("Play")
-            self.play_pause_btn.setToolTip("Play")
+            self.play_pause_btn.setText(_("Play"))
+            self.play_pause_btn.setToolTip(_("Play"))
             
     def set_mute_state(self, is_muted):
         if self.is_muted == is_muted: return
         self.is_muted = is_muted
         if is_muted:
             self.mute_btn.setIcon(load_icon("mute_on.svg"))
-            self.mute_btn.setToolTip("Unmute")
+            self.mute_btn.setToolTip(_("Unmute"))
         else:
             self.mute_btn.setIcon(load_icon("mute_off.svg"))
-            self.mute_btn.setToolTip("Mute")
+            self.mute_btn.setToolTip(_("Mute"))
             
     def set_repeat_state(self, is_repeat_on):
         if self.is_repeat_on == is_repeat_on: return
@@ -397,16 +397,16 @@ class PlayerControls(QWidget):
         mode = mode.lower()
         if mode == "off":
             self.set_repeat_state(False)
-            self.repeat_btn.setText("🔁Off")
-            self.repeat_btn.setToolTip("Repeat off")
+            self.repeat_btn.setText(_("Repeat: Off"))
+            self.repeat_btn.setToolTip(_("Repeat off"))
         elif mode == "all":
             self.set_repeat_state(True)
-            self.repeat_btn.setText("🔁All")
-            self.repeat_btn.setToolTip("Repeat all")
+            self.repeat_btn.setText(_("Repeat: All"))
+            self.repeat_btn.setToolTip(_("Repeat all"))
         elif mode == "one":
             self.set_repeat_state(True)
-            self.repeat_btn.setText("🔁One")
-            self.repeat_btn.setToolTip("Repeat one")
+            self.repeat_btn.setText(_("Repeat: One"))
+            self.repeat_btn.setToolTip(_("Repeat one"))
             
     def set_shuffle_state(self, is_shuffle_on):
         if self.is_shuffle_on == is_shuffle_on: return
@@ -420,11 +420,11 @@ class PlayerControls(QWidget):
 
     def _update_shuffle_text(self):
         if self.is_shuffle_on:
-            self.shuffle_btn.setText("🔀On")
-            self.shuffle_btn.setToolTip("Shuffle on")
+            self.shuffle_btn.setText(_("Shuffle: On"))
+            self.shuffle_btn.setToolTip(_("Shuffle on"))
         else:
-            self.shuffle_btn.setText("🔀Off")
-            self.shuffle_btn.setToolTip("Shuffle off")
+            self.shuffle_btn.setText(_("Shuffle: Off"))
+            self.shuffle_btn.setToolTip(_("Shuffle off"))
             
     def set_seek_range(self, minimum, maximum):
         self.seek_slider.setRange(minimum, maximum)
@@ -814,7 +814,13 @@ class PlayerControls(QWidget):
             for i, bookmark in enumerate(self._bookmarks[self._current_file]):
                 minutes = int(bookmark // 60)
                 seconds = int(bookmark % 60)
-                dlg.bookmarks_list.addItem(f"Mark {i+1}: {minutes:02d}:{seconds:02d}")
+                dlg.bookmarks_list.addItem(
+                    _("Mark {index}: {minutes:02d}:{seconds:02d}").format(
+                        index=i + 1,
+                        minutes=minutes,
+                        seconds=seconds,
+                    )
+                )
     
     @Slot()
     def volume_up(self):
@@ -852,21 +858,21 @@ class PlayerControls(QWidget):
         menu = QMenu(self)
         
         # Always show: Copy Path
-        copy_action = menu.addAction("Copy Path")
+        copy_action = menu.addAction(_("Copy Path"))
         copy_action.triggered.connect(lambda: self._copy_current_path())
         
         # Windows only: Open in Explorer (if local file)
         if is_local_file(self._current_file):
             import sys
             if sys.platform == "win32":
-                explorer_action = menu.addAction("Open in Explorer")
+                explorer_action = menu.addAction(_("Open in Explorer"))
                 # Type is safe here - is_local_file already checked
                 explorer_action.triggered.connect(lambda p=self._current_file: open_file_location(p) if p else None)
         
         # Emit signal for parent to handle YouTube info
         if is_youtube_url(self._current_file):
             menu.addSeparator()
-            yt_info_action = menu.addAction("Show YouTube Info")
+            yt_info_action = menu.addAction(_("Show YouTube Info"))
             # Call parent method if it's PlayerWidget
             yt_info_action.triggered.connect(self._show_youtube_info_dialog)
         

@@ -20,7 +20,7 @@ class FiltersWidget(QWidget):
 		self._install_event_filter()
 		
 		self.controls_container.setVisible(False)
-		self.toggle_btn.setText("Show Filters")
+		self.toggle_btn.setText(_("Show Filters"))
 		self.toggle_btn.setActuated(True)
 		self.reset_filters()
 
@@ -31,13 +31,13 @@ class FiltersWidget(QWidget):
 
 		header_layout = QHBoxLayout()
 
-		self.title_label = QLabel("Filters", self)
+		self.title_label = QLabel(_("Filters"), self)
 		self.title_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
 		header_layout.addWidget(self.title_label)
 
 		header_layout.addStretch()
 
-		self.toggle_btn = ToggleButton("Hide Filters", self)
+		self.toggle_btn = ToggleButton(_("Hide Filters"), self)
 		self.toggle_btn.setFixedSize(60, 25)
 		header_layout.addWidget(self.toggle_btn)
 
@@ -52,28 +52,28 @@ class FiltersWidget(QWidget):
 		row2 = QHBoxLayout()
 
 		self.brightness_spin = QDoubleSpinBox(self)
-		self._setup_dspin(self.brightness_spin, 0.0, 2.0, 0.1, 1.0, "Brightness")
-		row1.addWidget(QLabel("Brightness", self))
+		self._setup_dspin(self.brightness_spin, 0.0, 2.0, 0.1, 1.0, _("Brightness"))
+		row1.addWidget(QLabel(_("Brightness"), self))
 		row1.addWidget(self.brightness_spin, 1)
 
 		self.contrast_spin = QDoubleSpinBox(self)
-		self._setup_dspin(self.contrast_spin, 0.0, 2.0, 0.1, 1.0, "Contrast")
-		row1.addWidget(QLabel("Contrast", self))
+		self._setup_dspin(self.contrast_spin, 0.0, 2.0, 0.1, 1.0, _("Contrast"))
+		row1.addWidget(QLabel(_("Contrast"), self))
 		row1.addWidget(self.contrast_spin, 1)
 
 		self.gamma_spin = QDoubleSpinBox(self)
-		self._setup_dspin(self.gamma_spin, 0.1, 10.0, 0.1, 1.0, "Gamma")
-		row2.addWidget(QLabel("Gamma", self))
+		self._setup_dspin(self.gamma_spin, 0.1, 10.0, 0.1, 1.0, _("Gamma"))
+		row2.addWidget(QLabel(_("Gamma"), self))
 		row2.addWidget(self.gamma_spin, 1)
 
 		self.hue_spin = QSpinBox(self)
-		self._setup_ispin(self.hue_spin, -180, 180, 0, "Hue")
-		row2.addWidget(QLabel("Hue", self))
+		self._setup_ispin(self.hue_spin, -180, 180, 0, _("Hue"))
+		row2.addWidget(QLabel(_("Hue"), self))
 		row2.addWidget(self.hue_spin, 1)
 
 		self.saturation_spin = QDoubleSpinBox(self)
-		self._setup_dspin(self.saturation_spin, 0.0, 3.0, 0.1, 1.0, "Saturation")
-		row2.addWidget(QLabel("Saturation", self))
+		self._setup_dspin(self.saturation_spin, 0.0, 3.0, 0.1, 1.0, _("Saturation"))
+		row2.addWidget(QLabel(_("Saturation"), self))
 		row2.addWidget(self.saturation_spin, 1)
 
 		controls_layout.addLayout(row1)
@@ -111,9 +111,9 @@ class FiltersWidget(QWidget):
 	def toggle_filters(self, hidden: bool):
 		self.controls_container.setVisible(not hidden)
 		if hidden:
-			self.toggle_btn.setText("Show Filters")
+			self.toggle_btn.setText(_("Show Filters"))
 		else:
-			self.toggle_btn.setText("Hide Filters")
+			self.toggle_btn.setText(_("Hide Filters"))
 
 	def _on_value_changed(self, name: str, value: float):
 		if self._building:

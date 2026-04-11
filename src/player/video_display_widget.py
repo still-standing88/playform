@@ -17,8 +17,8 @@ class VideoDisplayWidget(QWidget):
         self._original_layout:Optional[LayoutType] = None
         self._original_position:int = -1
 
-        self.setWindowTitle("Video Display")
-        self.setAccessibleName("Video Display Area")
+        self.setWindowTitle(_("Video Display"))
+        self.setAccessibleName(_("Video Display Area"))
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.vid_palette = self.palette()
         self.vid_palette.setColor(QPalette.ColorRole.Window, COLORS['black'])
@@ -35,14 +35,14 @@ class VideoDisplayWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         
-        self.placeholder_label = QLabel("Video Display Area", self)
+        self.placeholder_label = QLabel(_("Video Display Area"), self)
         self.placeholder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.placeholder_label.setStyleSheet(VIDEO_PLACEHOLDER_STYLE)
         self.placeholder_label.setMinimumSize(640, 360)
-        self.placeholder_label.setAccessibleName("Video display area")
-        self.placeholder_label.setAccessibleDescription("Main video playback area")
+        self.placeholder_label.setAccessibleName(_("Video display area"))
+        self.placeholder_label.setAccessibleDescription(_("Main video playback area"))
         
-        self.loading_label = QLabel("Extracting URL...", self)
+        self.loading_label = QLabel(_("Extracting URL..."), self)
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.loading_label.setStyleSheet(VIDEO_LOADING_STYLE)
         self.loading_label.hide()
@@ -84,7 +84,7 @@ class VideoDisplayWidget(QWidget):
             self.show()
             self._fullscreen = False
 
-    def show_loading(self, message: str = "Extracting URL..."):
+    def show_loading(self, message: str = _("Extracting URL...")):
         self.loading_label.setText(message)
         self.loading_label.show()
         self.loading_label.raise_()

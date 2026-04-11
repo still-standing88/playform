@@ -10,7 +10,7 @@ class BookmarksDialog(QDialog):
 
     def __init__(self, bookmarks: List[float], parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Bookmarks")
+        self.setWindowTitle(_("Bookmarks"))
         self.setModal(True)
         self.resize(300, 400)
         
@@ -20,7 +20,13 @@ class BookmarksDialog(QDialog):
         for i, bookmark in enumerate(bookmarks):
             minutes = int(bookmark // 60)
             seconds = int(bookmark % 60)
-            self.bookmarks_list.addItem(f"Mark {i+1}: {minutes:02d}:{seconds:02d}")
+            self.bookmarks_list.addItem(
+                _("Mark {index}: {minutes:02d}:{seconds:02d}").format(
+                    index=i + 1,
+                    minutes=minutes,
+                    seconds=seconds,
+                )
+            )
         self.bookmarks_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.bookmarks_list.customContextMenuRequested.connect(self._open_context_menu)
         
@@ -37,8 +43,8 @@ class BookmarksDialog(QDialog):
 
     def _open_context_menu(self, pos):
         menu = QMenu(self)
-        delete_action = menu.addAction("Delete selected")
-        clear_action = menu.addAction("Clear all")
+        delete_action = menu.addAction(_("Delete selected"))
+        clear_action = menu.addAction(_("Clear all"))
         action = menu.exec(self.bookmarks_list.mapToGlobal(pos))
         if action == delete_action:
             idx = self.get_selected_bookmark_index()

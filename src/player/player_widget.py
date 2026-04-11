@@ -68,7 +68,7 @@ class PlayerWidget(QWidget):
         self.player_controls = PlayerControls(self)
         self.video_display = VideoDisplayWidget(parent = self, on_close_callback=self._update_fullscreen_state)
         self.timeline = SegmentTimelineWidget(self)
-        self.timeline.setAccessibleDescription("Segment Timeline Widget")
+        self.timeline.setAccessibleDescription(_("Segment Timeline Widget"))
 
         self.subtitles_widget = SubtitlesWidget(self)
         self.filters_widget = FiltersWidget(self)
@@ -203,7 +203,7 @@ class PlayerWidget(QWidget):
                     instance.play()
         except av_play.AVError as e:
             msg = f"Playback error: {getattr(e, 'message', str(e))}"
-            QMessageBox.critical(self, "Playback Error", msg)
+            QMessageBox.critical(self, _("Playback Error"), msg)
         
     @Slot()
     def _on_mute_unmute_clicked(self):
@@ -218,7 +218,7 @@ class PlayerWidget(QWidget):
                 instance.mute()
         except av_play.AVError as e:
             msg = f"Mute error: {getattr(e, 'message', str(e))}"
-            QMessageBox.critical(self, "Mute Error", msg)
+            QMessageBox.critical(self, _("Mute Error"), msg)
 
     def _has_active_media_instance(self) -> bool:
         try:
@@ -336,7 +336,7 @@ class PlayerWidget(QWidget):
                 instance.set_position(position)
             except av_play.AVError as e:
                 msg = f"Seek error: {getattr(e, 'message', str(e))}"
-                QMessageBox.critical(self, "Seek Error", msg)
+                QMessageBox.critical(self, _("Seek Error"), msg)
         
     @Slot(int)
     def _on_volume_changed(self, volume):
@@ -346,7 +346,7 @@ class PlayerWidget(QWidget):
                 instance.set_volume(float(volume))
             except av_play.AVError as e:
                 msg = f"Volume error: {getattr(e, 'message', str(e))}"
-                QMessageBox.critical(self, "Volume Error", msg)
+                QMessageBox.critical(self, _("Volume Error"), msg)
 
     @Slot()
     def _on_volume_up(self):
@@ -358,7 +358,7 @@ class PlayerWidget(QWidget):
                 instance.set_volume(new_volume)
             except av_play.AVError as e:
                 msg = f"Volume error: {getattr(e, 'message', str(e))}"
-                QMessageBox.critical(self, "Volume Error", msg)
+                QMessageBox.critical(self, _("Volume Error"), msg)
     
     def _on_volume_down(self):
         instance = self.player.primary_instance
@@ -369,7 +369,7 @@ class PlayerWidget(QWidget):
                 instance.set_volume(new_volume)
             except av_play.AVError as e:
                 msg = f"Volume error: {getattr(e, 'message', str(e))}"
-                QMessageBox.critical(self, "Volume Error", msg)
+                QMessageBox.critical(self, _("Volume Error"), msg)
     
     @Slot()
     def _on_jump_to_beginning(self):
@@ -379,7 +379,7 @@ class PlayerWidget(QWidget):
                 instance.set_position(0)
             except av_play.AVError as e:
                 msg = f"Seek error: {getattr(e, 'message', str(e))}"
-                QMessageBox.critical(self, "Seek Error", msg)
+                QMessageBox.critical(self, _("Seek Error"), msg)
     
     @Slot()
     def _on_jump_to_end(self):
@@ -390,7 +390,7 @@ class PlayerWidget(QWidget):
                 instance.set_position(length )
             except av_play.AVError as e:
                 msg = f"Seek error: {getattr(e, 'message', str(e))}"
-                QMessageBox.critical(self, "Seek Error", msg)
+                QMessageBox.critical(self, _("Seek Error"), msg)
     
     @Slot()
     def _on_stop(self):
@@ -401,7 +401,7 @@ class PlayerWidget(QWidget):
                 instance.stop()
             except av_play.AVError as e:
                 msg = f"Stop error: {getattr(e, 'message', str(e))}"
-                QMessageBox.critical(self, "Stop Error", msg)
+                QMessageBox.critical(self, _("Stop Error"), msg)
 
     @Slot(float)
     def _on_speed_changed(self, speed):
@@ -429,9 +429,13 @@ class PlayerWidget(QWidget):
             file_date = str(dt.datetime.now().strftime("%y-%d-%m-%I-%M-%S%p"))
             image_path = os.path.join(get_app_path(), "Screenshots", f"screenshot-{file_date}.{image_format}")
             self.player.take_screenshot(image_path)
-            signal_manager.statusbar_message.emit(f"Screenshot saved: {os.path.basename(image_path)}")
+            signal_manager.statusbar_message.emit(
+                _("Screenshot saved: {filename}").format(
+                    filename=os.path.basename(image_path)
+                )
+            )
         except Exception:
-            signal_manager.statusbar_message.emit("Failed to take screenshot")
+            signal_manager.statusbar_message.emit(_("Failed to take screenshot"))
     
     def close_current_media(self):
         try:
@@ -464,19 +468,19 @@ class PlayerWidget(QWidget):
         menu = QMenu(self)
         
 
-        copy_action = menu.addAction("Copy Path")
+        copy_action = menu.addAction(_("Copy Path"))
         copy_action.triggered.connect(lambda: self._copy_path_to_clipboard(current_file))
         
 
         if is_local_file(current_file):
             import sys
             if sys.platform == "win32":
-                explorer_action = menu.addAction("Open in Explorer")
+                explorer_action = menu.addAction(_("Open in Explorer"))
                 explorer_action.triggered.connect(lambda: open_file_location(current_file))
 
         if is_youtube_url(current_file):
             menu.addSeparator()
-            yt_info_action = menu.addAction("Show YouTube Info")
+            yt_info_action = menu.addAction(_("Show YouTube Info"))
             yt_info_action.triggered.connect(self.show_youtube_info_dialog)
         
         menu.exec(self.mapToGlobal(position))
@@ -722,7 +726,7 @@ class PlayerWidget(QWidget):
         self.filters_widget.reset_filters()
 
     def _reset_ui_to_default(self):
-        self.player_controls.set_current_track("No media loaded")
+        self.player_controls.set_current_track(_("No media loaded"))
         self.player_controls.set_time_text("00:00 / 00:00")
         self.player_controls.set_seek_range(0, 100)
         self.player_controls.set_seek_position(0)
@@ -732,7 +736,9 @@ class PlayerWidget(QWidget):
         self.filters_widget.reset_filters()
 
     def load_file(self, file_path: str):
-        signal_manager.statusbar_message.emit(f"Loading: {os.path.basename(file_path)}")
+        signal_manager.statusbar_message.emit(
+            _("Loading: {filename}").format(filename=os.path.basename(file_path))
+        )
         #if self.loading: return
         #self.loading = True
         try:
@@ -762,7 +768,7 @@ class PlayerWidget(QWidget):
             self._reset_ui_to_default()
 
     def load_url(self, url: str):
-        signal_manager.statusbar_message.emit(f"Loading URL: {url}")
+        signal_manager.statusbar_message.emit(_("Loading URL: {url}").format(url=url))
 
         if not ensure_ytdlp_available(self, show_message=True):
             self._reset_ui_to_default()
@@ -786,7 +792,11 @@ class PlayerWidget(QWidget):
         if playlist is None or len(playlist) == 0:
             self._reset_ui_to_default()
             return
-        signal_manager.statusbar_message.emit(f"Loading playlist: {playlist.title or 'Untitled'}")
+        signal_manager.statusbar_message.emit(
+            _("Loading playlist: {title}").format(
+                title=playlist.title or _("Untitled")
+            )
+        )
         try:
             if self.player.primary_instance is not None:
                 try:
@@ -855,7 +865,7 @@ class PlayerWidget(QWidget):
     @Slot()
     def _on_url_extraction_started(self):
         logger.info("URL extraction started, showing loading message")
-        self.video_display.show_loading("Extracting URL...")
+        self.video_display.show_loading(_("Extracting URL..."))
         self.player_controls.set_controls_enabled(False)
         
     @Slot(object)
@@ -867,15 +877,15 @@ class PlayerWidget(QWidget):
         try:
             if isinstance(result, list):
                 logger.info(f"Creating playlist from {len(result)} URLs")
-                playlist = av_play.Playlist(title="Extracted Playlist")
+                playlist = av_play.Playlist(title=_("Extracted Playlist"))
                 for i, url in enumerate(result):
-                    title = f"Track {i+1}"
+                    title = _("Track {index}").format(index=i + 1)
                     playlist.add_entry(av_play.PlaylistEntry(location=url, title=title))
                 self.load_playlist(playlist)
             else:
                 logger.info("Creating single entry playlist from extracted URL")
-                playlist = av_play.Playlist(title="Extracted URL")
-                playlist.add_entry(av_play.PlaylistEntry(location=result, title="Streaming URL"))
+                playlist = av_play.Playlist(title=_("Extracted URL"))
+                playlist.add_entry(av_play.PlaylistEntry(location=result, title=_("Streaming URL")))
                 self.load_playlist(playlist)
         except Exception as e:
             logger.error(f"Failed to load extracted URL(s): {e}")
@@ -889,8 +899,8 @@ class PlayerWidget(QWidget):
         self._reset_ui_to_default()
         
         msg = QMessageBox(self)
-        msg.setWindowTitle("URL Extraction Failed")
-        msg.setText(f"Failed to extract URL:\n{error_msg}")
+        msg.setWindowTitle(_("URL Extraction Failed"))
+        msg.setText(_("Failed to extract URL:\n{error}").format(error=error_msg))
         msg.setIcon(QMessageBox.Icon.Warning)
         msg.exec()
 
