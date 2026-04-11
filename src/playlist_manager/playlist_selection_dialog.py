@@ -10,7 +10,7 @@ class PlaylistSelectionDialog(QDialog):
     def __init__(self, playlist_manager: PlaylistManager, parent=None):
         super().__init__(parent)
         self.playlist_manager = playlist_manager
-        self.setWindowTitle("Select Playlist")
+        self.setWindowTitle(_("Select Playlist"))
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(400, 300)
         self.setup_ui()
@@ -21,7 +21,7 @@ class PlaylistSelectionDialog(QDialog):
         layout.setSpacing(10)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        label = QLabel("Select a playlist to add the file to:")
+        label = QLabel(_("Select a playlist to add the file to:"))
         layout.addWidget(label)
         
         self.playlists_list = QListWidget()
@@ -31,11 +31,11 @@ class PlaylistSelectionDialog(QDialog):
         buttons_layout = QHBoxLayout()
         buttons_layout.addStretch()
         
-        cancel_button = QPushButton("Cancel")
+        cancel_button = QPushButton(_("Cancel"))
         cancel_button.clicked.connect(self.reject)
         buttons_layout.addWidget(cancel_button)
         
-        select_button = QPushButton("Select")
+        select_button = QPushButton(_("Select"))
         select_button.clicked.connect(self.accept_selection)
         select_button.setDefault(True)
         buttons_layout.addWidget(select_button)
@@ -47,7 +47,7 @@ class PlaylistSelectionDialog(QDialog):
         playlists = self.playlist_manager.list_playlists()
         
         if not playlists:
-            no_playlists_label = QLabel("No playlists available. Create a playlist first.")
+            no_playlists_label = QLabel(_("No playlists available. Create a playlist first."))
             no_playlists_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             no_playlists_label.setStyleSheet("color: gray; font-style: italic;")
         else:
@@ -62,7 +62,11 @@ class PlaylistSelectionDialog(QDialog):
             self.playlist_selected.emit(playlist_name)
             self.accept()
         else:
-            QMessageBox.warning(self, "Warning", "Please select a playlist")
+            QMessageBox.warning(
+                self,
+                _("Warning"),
+                _("Please select a playlist"),
+            )
             
     def get_selected_playlist(self):
         current_item = self.playlists_list.currentItem()

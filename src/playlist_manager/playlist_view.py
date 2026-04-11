@@ -22,10 +22,10 @@ class PlaylistView(QWidget):
         layout.setContentsMargins(5, 5, 5, 5)
         
         self.list_ctrl = Listctrl(self)
-        self.list_ctrl.column(0, "File Name")
-        self.list_ctrl.column(1, "Title")
-        self.list_ctrl.column(2, "Artist")
-        self.list_ctrl.column(3, "Album")
+        self.list_ctrl.column(0, _("File Name"))
+        self.list_ctrl.column(1, _("Title"))
+        self.list_ctrl.column(2, _("Artist"))
+        self.list_ctrl.column(3, _("Album"))
         
         self.list_ctrl.itemDoubleClicked.connect(self.on_item_activated)
         self.list_ctrl.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -36,17 +36,17 @@ class PlaylistView(QWidget):
     def setup_context_menu(self):
         self.context_menu = QMenu(self)
         
-        add_tracks_action = QAction("Add Tracks", self)
+        add_tracks_action = QAction(_("Add Tracks"), self)
         add_tracks_action.triggered.connect(self.add_tracks)
         self.context_menu.addAction(add_tracks_action)
         
-        delete_action = QAction("Delete", self)
+        delete_action = QAction(_("Delete"), self)
         delete_action.triggered.connect(self.delete_selected)
         self.context_menu.addAction(delete_action)
         
         self.context_menu.addSeparator()
         
-        clear_action = QAction("Clear Tracks", self)
+        clear_action = QAction(_("Clear Tracks"), self)
         clear_action.triggered.connect(self.clear_tracks)
         self.context_menu.addAction(clear_action)
         
@@ -64,10 +64,10 @@ class PlaylistView(QWidget):
         if not self.current_playlist:
             return
             
-        self.list_ctrl.column(0, "File Name")
-        self.list_ctrl.column(1, "Title")
-        self.list_ctrl.column(2, "Artist")
-        self.list_ctrl.column(3, "Album")
+        self.list_ctrl.column(0, _("File Name"))
+        self.list_ctrl.column(1, _("Title"))
+        self.list_ctrl.column(2, _("Artist"))
+        self.list_ctrl.column(3, _("Album"))
         
         for entry in self.current_playlist.entries:
             import os
@@ -93,12 +93,12 @@ class PlaylistView(QWidget):
     @Slot()
     def add_tracks(self):
         if not self.current_playlist:
-            QMessageBox.warning(self, "Warning", "No playlist selected")
+            QMessageBox.warning(self, _("Warning"), _("No playlist selected"))
             return
             
         file_dialog = QFileDialog(self)
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
-        file_dialog.setNameFilter("Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)")
+        file_dialog.setNameFilter(_("Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)"))
         
         if file_dialog.exec():
             files = file_dialog.selectedFiles()
@@ -106,7 +106,9 @@ class PlaylistView(QWidget):
                 entry = PlaylistEntry(location=file_path)
                 self.current_playlist.add_entry(entry)
             self.refresh_view()
-            signal_manager.statusbar_message.emit(f"Added {len(files)} track(s) to playlist")
+            signal_manager.statusbar_message.emit(
+                _("Added {count} track(s) to playlist").format(count=len(files))
+            )
             
     @Slot()
     def delete_selected(self):
@@ -118,16 +120,16 @@ class PlaylistView(QWidget):
             index = current_row - 1
             self.current_playlist.remove_entry(index)
             self.refresh_view()
-            signal_manager.statusbar_message.emit("Track removed from playlist")
+            signal_manager.statusbar_message.emit(_("Track removed from playlist"))
             
     @Slot()
     def clear_tracks(self):
         if not self.current_playlist:
             return
             
-        reply = QMessageBox.question(self, "Confirm", "Clear all tracks?",
+        reply = QMessageBox.question(self, _("Confirm"), _("Clear all tracks?"),
                                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if reply == QMessageBox.StandardButton.Yes:
             self.current_playlist.clear()
             self.refresh_view()
-            signal_manager.statusbar_message.emit("Playlist cleared")
+            signal_manager.statusbar_message.emit(_("Playlist cleared"))

@@ -9,7 +9,7 @@ class PlaylistEditDialog(QDialog):
     
     def __init__(self, playlist_name, playlist, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Edit Playlist")
+        self.setWindowTitle(_("Edit Playlist"))
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(400, 150)
         self.original_name = playlist_name
@@ -23,9 +23,9 @@ class PlaylistEditDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
         
         name_layout = QHBoxLayout()
-        name_layout.addWidget(QLabel("Name:"))
+        name_layout.addWidget(QLabel(_("Name:")))
         self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText("Enter playlist name")
+        self.name_edit.setPlaceholderText(_("Enter playlist name"))
         name_layout.addWidget(self.name_edit)
         layout.addLayout(name_layout)
         
@@ -34,11 +34,11 @@ class PlaylistEditDialog(QDialog):
         buttons_layout = QHBoxLayout()
         buttons_layout.addStretch()
         
-        cancel_button = QPushButton("Cancel")
+        cancel_button = QPushButton(_("Cancel"))
         cancel_button.clicked.connect(self.reject)
         buttons_layout.addWidget(cancel_button)
         
-        confirm_button = QPushButton("Confirm")
+        confirm_button = QPushButton(_("Confirm"))
         confirm_button.clicked.connect(self.confirm_update)
         confirm_button.setDefault(True)
         buttons_layout.addWidget(confirm_button)
@@ -54,7 +54,11 @@ class PlaylistEditDialog(QDialog):
     def confirm_update(self):
         name = self.name_edit.text().strip()
         if not name:
-            QMessageBox.warning(self, "Warning", "Please enter a playlist name")
+            QMessageBox.warning(
+                self,
+                _("Warning"),
+                _("Please enter a playlist name"),
+            )
             self.name_edit.setFocus()
             return
             

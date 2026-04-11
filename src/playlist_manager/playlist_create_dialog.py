@@ -11,7 +11,7 @@ class PlaylistCreateDialog(QDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Create Playlist")
+        self.setWindowTitle(_("Create Playlist"))
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(600, 400)
         self.tracks = []
@@ -23,21 +23,21 @@ class PlaylistCreateDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
         
         name_layout = QHBoxLayout()
-        name_layout.addWidget(QLabel("Name:"))
+        name_layout.addWidget(QLabel(_("Name:")))
         self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText("Enter playlist name")
+        self.name_edit.setPlaceholderText(_("Enter playlist name"))
         name_layout.addWidget(self.name_edit)
         layout.addLayout(name_layout)
         
         tracks_layout = QVBoxLayout()
-        tracks_label = QLabel("Tracks:")
+        tracks_label = QLabel(_("Tracks:"))
         tracks_layout.addWidget(tracks_label)
         
         self.tracks_list = QListWidget()
         self.tracks_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         tracks_layout.addWidget(self.tracks_list)
         
-        browse_button = QPushButton("Browse & Add Tracks")
+        browse_button = QPushButton(_("Browse & Add Tracks"))
         browse_button.clicked.connect(self.browse_tracks)
         tracks_layout.addWidget(browse_button)
         
@@ -46,11 +46,11 @@ class PlaylistCreateDialog(QDialog):
         buttons_layout = QHBoxLayout()
         buttons_layout.addStretch()
         
-        cancel_button = QPushButton("Cancel")
+        cancel_button = QPushButton(_("Cancel"))
         cancel_button.clicked.connect(self.reject)
         buttons_layout.addWidget(cancel_button)
         
-        confirm_button = QPushButton("Create")
+        confirm_button = QPushButton(_("Create"))
         confirm_button.clicked.connect(self.confirm_creation)
         confirm_button.setDefault(True)
         buttons_layout.addWidget(confirm_button)
@@ -63,7 +63,7 @@ class PlaylistCreateDialog(QDialog):
     def browse_tracks(self):
         file_dialog = QFileDialog(self)
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
-        file_dialog.setNameFilter("Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)")
+        file_dialog.setNameFilter(_("Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)"))
         
         if file_dialog.exec():
             files = file_dialog.selectedFiles()
@@ -77,7 +77,11 @@ class PlaylistCreateDialog(QDialog):
     def confirm_creation(self):
         name = self.name_edit.text().strip()
         if not name:
-            QMessageBox.warning(self, "Warning", "Please enter a playlist name")
+            QMessageBox.warning(
+                self,
+                _("Warning"),
+                _("Please enter a playlist name"),
+            )
             self.name_edit.setFocus()
             return
             

@@ -30,10 +30,10 @@ class PlaylistsWidget(QWidget):
         layout.setSpacing(10)
         
         header_layout = QHBoxLayout()
-        header_layout.addWidget(QLabel("Playlists"))
+        header_layout.addWidget(QLabel(_("Playlists")))
         header_layout.addStretch()
         
-        self.create_button = QPushButton("Create Playlist")
+        self.create_button = QPushButton(_("Create Playlist"))
         self.create_button.clicked.connect(self.create_playlist)
         header_layout.addWidget(self.create_button)
         
@@ -124,13 +124,19 @@ class PlaylistsWidget(QWidget):
     @Slot(str, object)
     def on_playlist_created(self, name, playlist):
         if name in [self.playlists_list.item(i).text() for i in range(self.playlists_list.count())]:
-            QMessageBox.warning(self, "Warning", f"Playlist '{name}' already exists")
+            QMessageBox.warning(
+                self,
+                _("Warning"),
+                _("Playlist '{name}' already exists").format(name=name),
+            )
             return
             
         self.playlist_manager.playlists[name] = playlist
         self.add_playlist_to_list(name)
         self.save_playlists_data()
-        signal_manager.statusbar_message.emit(f"Playlist '{name}' created")
+        signal_manager.statusbar_message.emit(
+            _("Playlist '{name}' created").format(name=name)
+        )
         
         for i in range(self.playlists_list.count()):
             if self.playlists_list.item(i).text() == name:
@@ -152,7 +158,13 @@ class PlaylistsWidget(QWidget):
     def on_playlist_updated(self, old_name, new_name):
         if old_name != new_name:
             if new_name in [self.playlists_list.item(i).text() for i in range(self.playlists_list.count())]:
-                QMessageBox.warning(self, "Warning", f"Playlist '{new_name}' already exists")
+                QMessageBox.warning(
+                    self,
+                    _("Warning"),
+                    _("Playlist '{new_name}' already exists").format(
+                        new_name=new_name
+                    ),
+                )
                 return
                 
             playlist = self.playlist_manager.get_playlist(old_name)
@@ -166,7 +178,9 @@ class PlaylistsWidget(QWidget):
                         break
                         
         self.save_playlists_data()
-        signal_manager.statusbar_message.emit(f"Playlist '{new_name}' updated")
+        signal_manager.statusbar_message.emit(
+            _("Playlist '{new_name}' updated").format(new_name=new_name)
+        )
         
     @Slot(object)
     def on_playlist_selected(self, item):
