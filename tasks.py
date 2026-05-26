@@ -58,6 +58,34 @@ def _copy_dir(src, dest):
         print(f"Copied {src} -> {dest}")
 
 
+def _run_python_script(c, script_name, *args):
+    script = SCRIPTS_DIR / script_name
+    cmd = " ".join([f'"{sys.executable}"', f'"{script}"', *[f'"{arg}"' for arg in args]])
+    c.run(cmd, pty=False, in_stream=False)
+
+
+def _sync_translation_files(app_dist_dir):
+    _copy_dir(ROOT_DIR / "lang", app_dist_dir / "lang")
+
+
+@task
+def translate_gen(c):
+    print("Generating translation template...")
+    _run_python_script(c, "translate_gen.py")
+
+
+@task
+def translate_compile(c):
+    print("Compiling translation catalogs...")
+    _run_python_script(c, "translate_compile.py")
+
+
+@task
+def translate_creat(c, language):
+    print(f"Creating translation catalog for {language}...")
+    _run_python_script(c, "translate_creat.py", language)
+
+
 @task
 def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_VERSION, compiler=None):
     plat = _detect_plat(target_platform)
@@ -88,7 +116,7 @@ def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_
     else:
         print(f"[warn] updater.dist not found after compile: {updater_dist}")
 
-    _copy_dir(ROOT_DIR / "lang", app_dist_dir / "lang")
+    _sync_translation_files(app_dist_dir)
     _copy_dir(ROOT_DIR / "bin",  app_dist_dir / "bin")
     _copy_dir(ROOT_DIR / "lib",  app_dist_dir / "lib")
 
@@ -103,6 +131,8 @@ def bundle(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_V
     plat = _detect_plat(target_platform)
     app_dist_dir = _app_dist_dir(plat)
     private_key = key or str(ROOT_DIR / "private_key.pem")
+
+    _sync_translation_files(app_dist_dir)
 
     app_bin     = app_dist_dir / _binary_name(app_name, plat)
     updater_bin = app_dist_dir / _binary_name("updater", plat)
@@ -138,6 +168,9 @@ namespace.add_task(install_req)
 namespace.add_task(dev_install)
 namespace.add_task(clear_cache)
 namespace.add_task(run_app)
+namespace.add_task(translate_gen)
+namespace.add_task(translate_compile)
+namespace.add_task(translate_creat)
 namespace.add_task(compile)
 namespace.add_task(bundle)
 namespace.add_task(release)
