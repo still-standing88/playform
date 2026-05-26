@@ -93,6 +93,7 @@ class FeedWidget(QWidget):
         self.entry_tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.entry_tree.customContextMenuRequested.connect(self.show_entry_context_menu)
         self.entry_tree.currentItemChanged.connect(self.on_entry_changed)
+        self.entry_tree.itemDoubleClicked.connect(lambda item, _column: self.play_entry(item))
         self.entry_tree.setAccessibleName(_("Entry Tree"))
         self.entry_tree.setAccessibleDescription(_("Tree of feed entries with title, date, and link. Right-click for options."))
         self.entry_tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
@@ -236,7 +237,11 @@ class FeedWidget(QWidget):
         copy_menu.addAction(copy_media)
         
         menu.addSeparator()
-        
+
+        play_entry_action = QAction(_("Play Entry"), self)
+        play_entry_action.triggered.connect(lambda: self.play_entry(item))
+        menu.addAction(play_entry_action)
+
         full_entry_action = QAction(_("View Full Entry Dump"), self)
         full_entry_action.triggered.connect(lambda: self.show_full_entry(item))
         menu.addAction(full_entry_action)
