@@ -3,7 +3,8 @@ import logging
 import json
 import requests
 from typing import Optional, List, Union
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, parse_qsl, urlencode, urlunparse
+from gettext import gettext as _
 
 headers={ "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" }
 logger = logging.getLogger(__name__)
@@ -116,6 +117,39 @@ def fetch_full_info(url: str, cookies: Optional[str] = None):
     
     return json.loads(result.stdout.strip())
 
+def run_ytdlp_flat_playlist(url: str, cookies: Optional[str] = None):
+    from app_config import prefs
+
+    cmd = [YTDLP_PATH, '--flat-playlist', '--dump-json']
+
+    if cookies:
+        cmd.extend(['--cookies', cookies])
+    else:
+        cookies_file = prefs.prefs.get("youtube_cookies")
+        if cookies_file:
+            cmd.extend(['--cookies', cookies_file])
+
+    if YTDLP_VERBOSE:
+        cmd.append('--verbose')
+
+    cmd.append(url)
+
+    if YTDLP_LOG_FILE:
+        with open(YTDLP_LOG_FILE, 'a') as log:
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            log.write(f"Command: {' '.join(cmd)}\n")
+            log.write(f"STDOUT:\n{result.stdout}\n")
+            log.write(f"STDERR:\n{result.stderr}\n")
+            log.write("-" * 80 + "\n")
+    else:
+        result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise ValueError(f"yt-dlp failed: {result.stderr}")
+
+    lines = [line for line in result.stdout.strip().split('\n') if line]
+    return [json.loads(line) for line in lines]
+
 def is_supported(url: str) -> bool:
     cmd = [YTDLP_PATH, '--dump-json', '--no-playlist', '--skip-download', url]
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -137,7 +171,22 @@ def has_playlist_param(url: str) -> bool:
     except:
         return False
 
+def normalize_playlist_url(url: str) -> str:
+    try:
+        parsed = urlparse(url)
+        params = parse_qsl(parsed.query, keep_blank_values=True)
+        has_list = any(key == "list" and value for key, value in params)
+        if not has_list:
+            return url
+
+        normalized_params = [(key, value) for key, value in params if key.lower() != "index"]
+        normalized_query = urlencode(normalized_params, doseq=True)
+        return urlunparse(parsed._replace(query=normalized_query))
+    except Exception:
+        return url
+
 def is_playlist(url: str) -> bool:
+    url = normalize_playlist_url(url)
     url_lower = url.lower()
     
     if has_playlist_param(url_lower):
@@ -180,7 +229,98 @@ def get_best_format(info) -> str:
     
     raise ValueError("No playable formats found")
 
+def resolve_media_url(url: str, cookies: Optional[str] = None) -> str:
+    try:
+        info = run_ytdlp(url, as_playlist=False, cookies=cookies)
+        if isinstance(info, list):
+            info = info[0]
+        return get_best_format(info)
+    except Exception:
+        try:
+            res = requests.get(url, allow_redirects=True, stream=True, timeout=15, headers=headers)
+            resolved_url = res.url
+            res.close()
+            return resolved_url
+        except Exception:
+            return url
+
+def build_url_playlist_result(url: str, cookies: Optional[str] = None) -> dict:
+    url = normalize_playlist_url(url)
+    if is_playlist(url):
+        entries = []
+        flat_entries = run_ytdlp_flat_playlist(url, cookies=cookies)
+        playlist_title = _("Extracted Playlist")
+
+        for info in flat_entries:
+            source_url = info.get("webpage_url") or info.get("original_url") or info.get("url")
+            if not source_url:
+                continue
+
+            playlist_title = (
+                info.get("playlist_title")
+                or info.get("playlist")
+                or playlist_title
+            )
+            entries.append(
+                {
+                    "location": source_url,
+                    "title": info.get("title") or _("Streaming URL"),
+                    "metadata": {
+                        "original_location": source_url,
+                        "requires_resolution": True,
+                    },
+                }
+            )
+
+        if not entries:
+            raise ValueError(_("No playable entries found in playlist"))
+
+        return {
+            "title": playlist_title,
+            "entries": entries,
+            "start_index": 0,
+        }
+
+    try:
+        info = run_ytdlp(url, as_playlist=False, cookies=cookies)
+        if isinstance(info, list):
+            info = info[0]
+        source_url = info.get("webpage_url") or info.get("original_url") or url
+        title = info.get("title") or _("Streaming URL")
+        return {
+            "title": title,
+            "entries": [
+                {
+                    "location": source_url,
+                    "title": title,
+                    "metadata": {
+                        "original_location": source_url,
+                        "requires_resolution": True,
+                    },
+                }
+            ],
+            "start_index": 0,
+        }
+    except Exception:
+        resolved_url = resolve_media_url(url, cookies=cookies)
+        return {
+            "title": _("Streaming URL"),
+            "entries": [
+                {
+                    "location": url,
+                    "title": _("Streaming URL"),
+                    "metadata": {
+                        "original_location": url,
+                        "requires_resolution": False,
+                        "resolved_location": resolved_url,
+                    },
+                }
+            ],
+            "start_index": 0,
+        }
+
 def extract(url: str, cookies: Optional[str] = None) -> Union[str, List[str]]:
+    url = normalize_playlist_url(url)
     if not is_supported(url):
         logger.info("Attempting to resolve direct URL redirection if any")
         res = requests.get(url, allow_redirects=True, stream=True, timeout=15, headers=headers)

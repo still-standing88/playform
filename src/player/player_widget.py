@@ -21,6 +21,7 @@ from gui_controls.toggle_button import ToggleButton
 from .subtitles import SubtitleManager
 from .filters_widget import FiltersWidget
 from .url_extractor import UrlExtractor
+from .url_resolution_manager import UrlResolutionManager
 from .utilities import ensure_ytdlp_available
 from app_constance.styles import PLAYER_WIDGET_STYLE
 
@@ -47,6 +48,12 @@ class PlayerWidget(QWidget):
         self._key_event_filter = KeyEventFilter(self)
         self._youtube_info_cache: Dict[str, str] = {}
         self._last_subtitle_text: Optional[str] = None
+        self._source_playlist: Optional[av_play.Playlist] = None
+        self._runtime_playlist: Optional[av_play.Playlist] = None
+        self._pending_playlist_start: Optional[dict] = None
+        self._pending_navigation: Optional[dict] = None
+        self._navigation_token = 0
+        self._last_playlist_index = -1
         
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
@@ -55,6 +62,7 @@ class PlayerWidget(QWidget):
         
         self.player:av_play.VLCVideoPlayer = av_play.VLCVideoPlayer()
         self.subtitle_manager = SubtitleManager()
+        self.url_resolution_manager = UrlResolutionManager(self)
         self._loading = False
         
 
@@ -184,6 +192,8 @@ class PlayerWidget(QWidget):
         self.player_controls.aspectRatioChanged.connect(self._on_aspect_ratio_changed)
         self.player_controls.scaleChanged.connect(self._on_scale_changed)
         self.player_controls.screenshotRequested.connect(self._on_screenshot)
+        self.url_resolution_manager.resolved.connect(self._on_url_entry_resolved)
+        self.url_resolution_manager.failed.connect(self._on_url_entry_resolution_failed)
 
     def apply_styles(self):
         self.setStyleSheet(PLAYER_WIDGET_STYLE)
@@ -262,14 +272,12 @@ class PlayerWidget(QWidget):
     @Slot()
     def _on_previous_clicked(self):
         if self.player:
-            self.player.previous()
-            self.filters_widget.reset_filters()
+            self._prepare_previous_track()
         
     @Slot()
     def _on_next_clicked(self):
         if self.player:
-            self.player.next()
-            self.filters_widget.reset_filters()
+            self._prepare_next_track()
         
     @Slot()
     def _on_repeat_clicked(self):
@@ -490,6 +498,259 @@ class PlayerWidget(QWidget):
         clipboard = QApplication.clipboard()
         clipboard.setText(path)
 
+    def _get_playlist_entry(self, playlist: Optional[av_play.Playlist], index: int):
+        if playlist is None or index < 0 or index >= len(playlist):
+            return None
+        try:
+            return playlist.get_entry(index)
+        except Exception:
+            return None
+
+    def _get_source_entry(self, index: int):
+        return self._get_playlist_entry(self._source_playlist, index)
+
+    def _get_runtime_entry(self, index: int):
+        return self._get_playlist_entry(self._runtime_playlist, index)
+
+    def _get_entry_metadata(self, entry) -> dict:
+        if entry is None:
+            return {}
+        metadata = getattr(entry, "metadata", None)
+        if isinstance(metadata, dict):
+            return metadata
+        return {}
+
+    def _get_entry_original_location(self, entry) -> str:
+        metadata = self._get_entry_metadata(entry)
+        return metadata.get("original_location") or getattr(entry, "location", "")
+
+    def _entry_requires_resolution(self, entry) -> bool:
+        if entry is None:
+            return False
+        metadata = self._get_entry_metadata(entry)
+        if "requires_resolution" in metadata:
+            return bool(metadata.get("requires_resolution"))
+        return bool(getattr(entry, "location", "") and av_play.is_url(getattr(entry, "location", "")))
+
+    def _get_display_title_for_entry(self, entry) -> str:
+        if entry is None:
+            return _("No media loaded")
+        title = getattr(entry, "title", "") or ""
+        if title:
+            return title
+        location = self._get_entry_original_location(entry)
+        if av_play.is_path(location):
+            return os.path.basename(location)
+        return location or _("Streaming URL")
+
+    def _build_runtime_playlist(self, playlist: av_play.Playlist) -> av_play.Playlist:
+        runtime_playlist = av_play.Playlist(title=playlist.title)
+        for entry in playlist.entries:
+            metadata = dict(self._get_entry_metadata(entry))
+            original_location = metadata.get("original_location") or entry.location
+            if "requires_resolution" not in metadata:
+                metadata["requires_resolution"] = av_play.is_url(original_location)
+            metadata["original_location"] = original_location
+            if metadata["requires_resolution"]:
+                runtime_location = metadata.get("resolved_location") or original_location
+                metadata["resolution_state"] = "resolved" if metadata.get("resolved_location") else "unresolved"
+            else:
+                runtime_location = metadata.get("resolved_location") or original_location
+                metadata["resolved_location"] = runtime_location
+                metadata["resolution_state"] = "resolved"
+            runtime_playlist.add_entry(
+                av_play.PlaylistEntry(
+                    location=runtime_location,
+                    title=entry.title,
+                    artist=entry.artist,
+                    album=entry.album,
+                    duration=entry.duration,
+                    metadata=metadata,
+                )
+            )
+        return runtime_playlist
+
+    def _update_runtime_entries_for_url(self, original_url: str, resolved_url: Optional[str] = None, error: Optional[str] = None):
+        if self._runtime_playlist is None:
+            return
+        for entry in self._runtime_playlist.entries:
+            metadata = self._get_entry_metadata(entry)
+            if metadata.get("original_location") != original_url:
+                continue
+            if resolved_url:
+                metadata["resolved_location"] = resolved_url
+                metadata["resolution_state"] = "resolved"
+                entry.location = resolved_url
+            elif error:
+                metadata["resolution_state"] = "failed"
+                metadata["resolution_error"] = error
+
+    def _ensure_runtime_entry_resolved(self, index: int, block: bool = False) -> bool:
+        runtime_entry = self._get_runtime_entry(index)
+        if runtime_entry is None:
+            return False
+
+        metadata = self._get_entry_metadata(runtime_entry)
+        original_location = metadata.get("original_location") or runtime_entry.location
+        if not original_location:
+            return True
+
+        if not self._entry_requires_resolution(runtime_entry):
+            metadata["resolved_location"] = runtime_entry.location
+            metadata["resolution_state"] = "resolved"
+            return True
+
+        cached_location = self.url_resolution_manager.get_cached(original_location)
+        if cached_location:
+            self._update_runtime_entries_for_url(original_location, resolved_url=cached_location)
+            return True
+
+        resolved_location = metadata.get("resolved_location")
+        if resolved_location:
+            metadata["resolution_state"] = "resolved"
+            runtime_entry.location = resolved_location
+            return True
+
+        if block:
+            signal_manager.statusbar_message.emit(
+                _("Resolving stream URL: {url}").format(url=original_location)
+            )
+            resolved_location = self.url_resolution_manager.resolve_blocking(original_location)
+            self._update_runtime_entries_for_url(original_location, resolved_url=resolved_location)
+            return True
+
+        metadata["resolution_state"] = "resolving"
+        self.url_resolution_manager.request(original_location)
+        return False
+
+    def _get_next_playlist_index(self, current_index: int) -> Optional[int]:
+        playlist = self._runtime_playlist
+        if playlist is None or len(playlist) == 0:
+            return None
+
+        repeat_mode = self.player.get_playlist_repeat_mode()
+        shuffle_mode = self.player.get_playlist_shuffle_mode()
+
+        if repeat_mode == av_play.AVPlaylistRepeatMode.REPEAT_ONE:
+            return current_index
+
+        if shuffle_mode == av_play.AVPlaylistShuffleMode.SHUFFLE:
+            shuffle_order = list(getattr(self.player, "_shuffle_order", []))
+            if not shuffle_order:
+                return None
+            try:
+                current_pos = shuffle_order.index(current_index)
+                current_pos += 1
+                if current_pos >= len(shuffle_order):
+                    if repeat_mode == av_play.AVPlaylistRepeatMode.REPEAT_ALL:
+                        current_pos = 0
+                    else:
+                        return None
+                return shuffle_order[current_pos]
+            except ValueError:
+                return shuffle_order[0]
+
+        next_index = current_index + 1
+        if next_index >= len(playlist):
+            if repeat_mode == av_play.AVPlaylistRepeatMode.REPEAT_ALL:
+                return 0
+            return None
+        return next_index
+
+    def _get_previous_playlist_index(self, current_index: int) -> Optional[int]:
+        playlist = self._runtime_playlist
+        if playlist is None or len(playlist) == 0:
+            return None
+
+        if self.player.get_playlist_shuffle_mode() == av_play.AVPlaylistShuffleMode.SHUFFLE:
+            shuffle_order = list(getattr(self.player, "_shuffle_order", []))
+            if not shuffle_order:
+                return None
+            try:
+                current_pos = shuffle_order.index(current_index)
+                current_pos = max(0, current_pos - 1)
+                return shuffle_order[current_pos]
+            except ValueError:
+                return shuffle_order[0]
+
+        return max(0, current_index - 1)
+
+    def _prepare_playlist_index(self, index: Optional[int]):
+        if index is None:
+            return
+        try:
+            self._ensure_runtime_entry_resolved(index, block=True)
+        except Exception as e:
+            logger.warning(f"Failed to resolve playlist entry {index}: {e}")
+
+    def _prepare_next_track(self):
+        current_index = self.player.get_current_track_index()
+        target_index = self._get_next_playlist_index(current_index)
+        if target_index is None:
+            return
+        if self._ensure_runtime_entry_resolved(target_index, block=False):
+            self.player.next()
+            self.filters_widget.reset_filters()
+        else:
+            self._navigation_token += 1
+            self._pending_navigation = {
+                "direction": "next",
+                "target_index": target_index,
+                "token": self._navigation_token,
+                "source_index": current_index,
+            }
+            self._loading = True
+            signal_manager.statusbar_message.emit(_("Resolving next stream..."))
+
+    def _prepare_previous_track(self):
+        current_index = self.player.get_current_track_index()
+        target_index = self._get_previous_playlist_index(current_index)
+        if target_index is None:
+            return
+        if self._ensure_runtime_entry_resolved(target_index, block=False):
+            self.player.previous()
+            self.filters_widget.reset_filters()
+        else:
+            self._navigation_token += 1
+            self._pending_navigation = {
+                "direction": "previous",
+                "target_index": target_index,
+                "token": self._navigation_token,
+                "source_index": current_index,
+            }
+            self._loading = True
+            signal_manager.statusbar_message.emit(_("Resolving previous stream..."))
+
+    def _request_upcoming_track_resolution(self, current_index: Optional[int] = None):
+        if current_index is None:
+            current_index = self.player.get_current_track_index()
+        next_index = self._get_next_playlist_index(current_index)
+        if next_index is None:
+            return
+        try:
+            self._ensure_runtime_entry_resolved(next_index, block=False)
+        except Exception as e:
+            logger.warning(f"Failed to queue playlist resolution for {next_index}: {e}")
+
+    def _sync_current_track_display(self, index: Optional[int] = None):
+        if index is None:
+            index = self.player.get_current_track_index()
+        entry = self._get_source_entry(index)
+        if entry is None:
+            entry = self._get_runtime_entry(index)
+        if entry is not None:
+            self.player_controls.set_current_track(self._get_display_title_for_entry(entry))
+
+    def _get_current_media_context(self) -> Optional[str]:
+        current_index = self.player.get_current_track_index()
+        entry = self._get_source_entry(current_index)
+        if entry is None:
+            entry = self._get_runtime_entry(current_index)
+        if entry is None:
+            instance = self.player.primary_instance
+            return instance.file_path if instance else None
+        return self._get_entry_original_location(entry) or getattr(entry, "location", None)
+
     def _update_media_player_data(self):
         self.player_controls.load_bookmarks()
         self.player_controls.load_last_positions()
@@ -620,15 +881,8 @@ class PlayerWidget(QWidget):
         self.player_controls.fullscreenToggled.emit(state)
 
     def _update_current_track(self, index):
-        if self.player is not None and self.player.primary_instance is not None and self.player.current_playlist is not None:
-            try:
-                entry = self.player.current_playlist.get_entry(index)
-                if entry:
-                    self.player_controls.set_current_track(os.path.basename(entry.location))
-                    self._load_subtitles_for_current_track()
-                    self.filters_widget.reset_filters()
-            except av_play.AVError:
-                pass
+        if self.player is not None and self.player.current_playlist is not None:
+            self._prepare_playlist_index(self._get_next_playlist_index(index))
 
     @Slot()
     def _update_player_state(self):
@@ -644,7 +898,6 @@ class PlayerWidget(QWidget):
             
             if state == av_play.AVPlaybackState.AV_STATE_NOTHING and self._last_known_state == av_play.AVPlaybackState.AV_STATE_PLAYING:
                 self._last_known_state = state
-                if not self._loading: self.player.next()
                 self._load_subtitles_for_current_track()
                 self.filters_widget.reset_filters()
                 self._update_current_file()
@@ -655,7 +908,11 @@ class PlayerWidget(QWidget):
             self.player_controls.set_play_pause_state(state == av_play.AVPlaybackState.AV_STATE_PLAYING)
             self.player_controls.set_mute_state(instance.get_mute_state() == av_play.AVMuteState.AV_AUDIO_MUTED)
             self.player_controls.set_volume(int(instance.get_volume()))
-            self.player_controls.set_current_track(os.path.basename(instance.file_path))
+            self._sync_current_track_display()
+            current_index = self.player.get_current_track_index()
+            if current_index != self._last_playlist_index:
+                self._last_playlist_index = current_index
+                self._request_upcoming_track_resolution(current_index)
             
             if length > 0:
                 self.player_controls.set_controls_enabled(True)
@@ -688,7 +945,8 @@ class PlayerWidget(QWidget):
     def _update_current_file(self):
         instance = self.player.primary_instance
         if instance:
-            self.player_controls.set_current_file(instance.file_path)
+            current_file = self._get_current_media_context() or instance.file_path
+            self.player_controls.set_current_file(current_file)
             self._update_media_player_data()
 
     def seek_to_last_pos(self, event:object):
@@ -726,6 +984,11 @@ class PlayerWidget(QWidget):
         self.filters_widget.reset_filters()
 
     def _reset_ui_to_default(self):
+        self._source_playlist = None
+        self._runtime_playlist = None
+        self._pending_playlist_start = None
+        self._pending_navigation = None
+        self._last_playlist_index = -1
         self.player_controls.set_current_track(_("No media loaded"))
         self.player_controls.set_time_text("00:00 / 00:00")
         self.player_controls.set_seek_range(0, 100)
@@ -789,6 +1052,33 @@ class PlayerWidget(QWidget):
             logger.error(f"Failed to start URL extraction: {e}")
             self._reset_ui_to_default()
 
+    def _start_loaded_playlist(self, start_index: int = 0, auto_play: bool = True):
+        try:
+            if self.player.primary_instance is not None:
+                try:
+                    self.player.primary_instance.release()
+                    self.player._primary_instance = None
+                except Exception as e:
+                    pass
+            self.player.stop_playlist()
+            self._loading = True
+            self.player.load_playlist(self._runtime_playlist, auto_play=False, start_index=start_index)
+            self.player._play_playlist_track()
+            self.video_display.hide_loading()
+            self.player_controls.set_controls_enabled(True)
+            self._load_subtitles_for_current_track()
+            self._update_current_file()
+            self._sync_current_track_display(start_index)
+            self._last_playlist_index = start_index
+            self._request_upcoming_track_resolution(start_index)
+            self._update_player_state()
+        except Exception as e:
+            logger.error(f"Failed to start playlist: {e}")
+            self._reset_ui_to_default()
+        finally:
+            self._loading = False
+            self._pending_playlist_start = None
+
     def load_playlist(self, playlist: av_play.Playlist, start_index: int = 0, auto_play: bool = True):
         if playlist is None or len(playlist) == 0:
             self._reset_ui_to_default()
@@ -799,47 +1089,28 @@ class PlayerWidget(QWidget):
             )
         )
         try:
-            if self.player.primary_instance is not None:
+            self._pending_navigation = None
+            self._pending_playlist_start = None
+            self._source_playlist = playlist
+            self._runtime_playlist = self._build_runtime_playlist(playlist)
+            self._last_playlist_index = -1
+            if self._ensure_runtime_entry_resolved(start_index, block=False):
+                self._start_loaded_playlist(start_index=start_index, auto_play=auto_play)
+            else:
                 try:
-                    self.player.primary_instance.release()
-                    self.player._primary_instance = None
-                except Exception as e:
+                    self.player.stop_playlist()
+                except Exception:
                     pass
-            self.player.stop_playlist()
-            self._loading = True
-            #self.player.load_playlist(playlist, auto_play=False)
-            #if start_index >0:
-            self.player.load_playlist(playlist, auto_play=False, start_index = start_index)
-            #self.player.pause_playlist()
-            #self.player.jump_to_track(start_index-1)
-            self.player._play_playlist_track()
-            #else:
-                #self.player.load_playlist(playlist, auto_play=auto_play)
-
-
-            #instance = self.player.primary_instance
-            #if start_index < len(playlist):# and start_index != 0:
-                #try:
-                    #jump_method = getattr(self.player, 'jump_to_track', None)
-                    #if jump_method and callable(jump_method):
-                        #jump_method(start_index-1)
-                    #else:
-                        #self.player._current_playlist_index = start_index-1
-                        #if auto_play:
-                            #self.player._play_playlist_track()
-                #except Exception:
-                    #self.player._current_playlist_index = start_index-1
-                    #if auto_play:
-                        #self.player._play_playlist_track()
-
-            #self.player.jump_to_track(start_index)
-            self._load_subtitles_for_current_track()
-            self._update_current_file()
-            self._update_player_state()
+                self._loading = True
+                self._pending_playlist_start = {
+                    "start_index": start_index,
+                    "auto_play": auto_play,
+                }
+                self.video_display.show_loading(_("Resolving stream..."))
+                self.player_controls.set_controls_enabled(False)
+                signal_manager.statusbar_message.emit(_("Resolving stream..."))
         except Exception as e:
             self._reset_ui_to_default()
-        finally:
-            self._loading = False
 
     def change_path(self, path: str):
         if not path: return
@@ -877,18 +1148,24 @@ class PlayerWidget(QWidget):
         self.player_controls.set_controls_enabled(True)
         
         try:
-            if isinstance(result, list):
-                logger.info(f"Creating playlist from {len(result)} URLs")
-                playlist = av_play.Playlist(title=_("Extracted Playlist"))
-                for i, url in enumerate(result):
-                    title = _("Track {index}").format(index=i + 1)
-                    playlist.add_entry(av_play.PlaylistEntry(location=url, title=title))
-                self.load_playlist(playlist)
-            else:
-                logger.info("Creating single entry playlist from extracted URL")
-                playlist = av_play.Playlist(title=_("Extracted URL"))
-                playlist.add_entry(av_play.PlaylistEntry(location=result, title=_("Streaming URL")))
-                self.load_playlist(playlist)
+            if not isinstance(result, dict):
+                raise ValueError(_("Invalid URL extraction result"))
+
+            playlist = av_play.Playlist(title=result.get("title") or _("Extracted URL"))
+            for entry in result.get("entries", []):
+                metadata = dict(entry.get("metadata") or {})
+                playlist.add_entry(
+                    av_play.PlaylistEntry(
+                        location=entry.get("location", ""),
+                        title=entry.get("title"),
+                        artist=entry.get("artist"),
+                        album=entry.get("album"),
+                        duration=entry.get("duration"),
+                        metadata=metadata,
+                    )
+                )
+
+            self.load_playlist(playlist, start_index=result.get("start_index", 0))
         except Exception as e:
             logger.error(f"Failed to load extracted URL(s): {e}")
             self._reset_ui_to_default()
@@ -906,6 +1183,71 @@ class PlayerWidget(QWidget):
         msg.setText(_("Failed to extract URL:\n{error}").format(error=error_msg))
         msg.setIcon(QMessageBox.Icon.Warning)
         msg.exec()
+
+    @Slot(str, str)
+    def _on_url_entry_resolved(self, original_url: str, resolved_url: str):
+        self._update_runtime_entries_for_url(original_url, resolved_url=resolved_url)
+
+        pending_start = self._pending_playlist_start
+        if pending_start:
+            start_entry = self._get_runtime_entry(pending_start.get("start_index", 0))
+            if start_entry and self._get_entry_original_location(start_entry) == original_url:
+                self._start_loaded_playlist(
+                    start_index=pending_start.get("start_index", 0),
+                    auto_play=pending_start.get("auto_play", True),
+                )
+                return
+
+        pending_navigation = self._pending_navigation
+        if pending_navigation:
+            target_entry = self._get_runtime_entry(pending_navigation.get("target_index", -1))
+            if target_entry and self._get_entry_original_location(target_entry) == original_url:
+                current_index = self.player.get_current_track_index()
+                if current_index != pending_navigation.get("source_index"):
+                    self._pending_navigation = None
+                    self._loading = False
+                    return
+                direction = pending_navigation.get("direction")
+                self._pending_navigation = None
+                self._loading = False
+                if direction == "next":
+                    self.player.next()
+                elif direction == "previous":
+                    self.player.previous()
+                self.filters_widget.reset_filters()
+                self._update_current_file()
+                self._sync_current_track_display()
+                return
+
+        current_index = self.player.get_current_track_index()
+        current_entry = self._get_runtime_entry(current_index)
+        if current_entry and self._get_entry_original_location(current_entry) == original_url:
+            self._update_current_file()
+            self._sync_current_track_display(current_index)
+
+    @Slot(str, str)
+    def _on_url_entry_resolution_failed(self, original_url: str, error_msg: str):
+        self._update_runtime_entries_for_url(original_url, error=error_msg)
+        logger.error(f"URL entry resolution failed for {original_url}: {error_msg}")
+        signal_manager.statusbar_message.emit(_("URL resolution failed"))
+
+        pending_start = self._pending_playlist_start
+        if pending_start:
+            start_entry = self._get_runtime_entry(pending_start.get("start_index", 0))
+            if start_entry and self._get_entry_original_location(start_entry) == original_url:
+                self.video_display.hide_loading()
+                self.player_controls.set_controls_enabled(True)
+                self._pending_playlist_start = None
+                self._reset_ui_to_default()
+                return
+
+        pending_navigation = self._pending_navigation
+        if pending_navigation:
+            target_entry = self._get_runtime_entry(pending_navigation.get("target_index", -1))
+            if target_entry and self._get_entry_original_location(target_entry) == original_url:
+                self._pending_navigation = None
+                self._loading = False
+                self.player_controls.set_controls_enabled(True)
 
     def set_shortcuts(self):
         hotkeys = key_config.key_config["Player"]
@@ -1044,6 +1386,7 @@ class PlayerWidget(QWidget):
             if self.url_extractor and self.url_extractor.isRunning():
                 self.url_extractor.terminate()
                 self.url_extractor.wait()
+            self.url_resolution_manager.stop()
             
 
             self._youtube_info_cache.clear()
