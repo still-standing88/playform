@@ -1,4 +1,5 @@
 import os
+from gettext import gettext as _
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout,
     QLabel, QComboBox, QCheckBox, QPushButton, QListWidget, QFileDialog,
@@ -26,7 +27,7 @@ class SubtitleConverterThread(QThread):
         if not self._is_running:
             return
         
-        self.progress.emit("Starting conversion...")
+        self.progress.emit(_("Starting conversion..."))
         result = convert_and_clean_subtitles(self.file_paths, self.output_dir, self.options)
         
         if result.startswith("Success"):
@@ -48,13 +49,13 @@ class SubtitleConverterUI(QWidget):
     def init_ui(self):
         main_layout = QVBoxLayout(self)
 
-        file_group = QGroupBox("Files for Conversion (Batch)")
+        file_group = QGroupBox(_("Files for Conversion (Batch)"))
         file_layout = QVBoxLayout()
         self.file_list_widget = QListWidget()
         file_buttons_layout = QHBoxLayout()
-        add_files_button = QPushButton("Add Files")
+        add_files_button = QPushButton(_("Add Files"))
         add_files_button.clicked.connect(self.add_files)
-        clear_files_button = QPushButton("Clear")
+        clear_files_button = QPushButton(_("Clear"))
         clear_files_button.clicked.connect(self.clear_files)
         file_buttons_layout.addWidget(add_files_button)
         file_buttons_layout.addWidget(clear_files_button)
@@ -62,7 +63,7 @@ class SubtitleConverterUI(QWidget):
         file_layout.addLayout(file_buttons_layout)
         file_group.setLayout(file_layout)
 
-        options_group = QGroupBox("Conversion Options")
+        options_group = QGroupBox(_("Conversion Options"))
         options_layout = QFormLayout()
         self.output_format_combo = QComboBox()
         self.output_format_combo.addItems(["srt", "ass", "ssa", "microdvd", "json", "mpl2", "tmp", "vtt"])
@@ -74,29 +75,29 @@ class SubtitleConverterUI(QWidget):
         self.output_encoding_combo.setEditable(True)
         self.output_encoding_combo.addItems(COMMON_ENCODINGS)
         self.output_encoding_combo.setCurrentText("utf-8")
-        self.clean_checkbox = QCheckBox("Remove miscellaneous events")
-        options_layout.addRow("Output Format:", self.output_format_combo)
-        options_layout.addRow("Input Encoding:", self.input_encoding_combo)
-        options_layout.addRow("Output Encoding:", self.output_encoding_combo)
+        self.clean_checkbox = QCheckBox(_("Remove miscellaneous events"))
+        options_layout.addRow(_("Output Format:"), self.output_format_combo)
+        options_layout.addRow(_("Input Encoding:"), self.input_encoding_combo)
+        options_layout.addRow(_("Output Encoding:"), self.output_encoding_combo)
         options_layout.addRow(self.clean_checkbox)
         options_group.setLayout(options_layout)
 
-        advanced_group = QGroupBox("Advanced Format Options")
+        advanced_group = QGroupBox(_("Advanced Format Options"))
         advanced_group.setCheckable(True)
         advanced_group.setChecked(False)
         advanced_layout = QVBoxLayout()
-        srt_group = QGroupBox("SRT")
+        srt_group = QGroupBox(_("SRT"))
         srt_layout = QFormLayout()
-        self.srt_keep_unknown_html_tags_check = QCheckBox("Keep unknown HTML tags (input)")
-        self.srt_keep_html_tags_check = QCheckBox("Keep all HTML tags (input)")
-        self.srt_keep_ssa_tags_check = QCheckBox("Keep SSA tags (output)")
+        self.srt_keep_unknown_html_tags_check = QCheckBox(_("Keep unknown HTML tags (input)"))
+        self.srt_keep_html_tags_check = QCheckBox(_("Keep all HTML tags (input)"))
+        self.srt_keep_ssa_tags_check = QCheckBox(_("Keep SSA tags (output)"))
         srt_layout.addRow(self.srt_keep_unknown_html_tags_check)
         srt_layout.addRow(self.srt_keep_html_tags_check)
         srt_layout.addRow(self.srt_keep_ssa_tags_check)
         srt_group.setLayout(srt_layout)
-        microdvd_group = QGroupBox("MicroDVD")
+        microdvd_group = QGroupBox(_("MicroDVD"))
         microdvd_layout = QFormLayout()
-        self.sub_no_write_fps_declaration_check = QCheckBox("Omit FPS declaration (output)")
+        self.sub_no_write_fps_declaration_check = QCheckBox(_("Omit FPS declaration (output)"))
         microdvd_layout.addRow(self.sub_no_write_fps_declaration_check)
         microdvd_group.setLayout(microdvd_layout)
         advanced_layout.addWidget(srt_group)
@@ -104,10 +105,10 @@ class SubtitleConverterUI(QWidget):
         advanced_group.setLayout(advanced_layout)
 
         action_layout = QHBoxLayout()
-        self.convert_button = QPushButton("Convert")
+        self.convert_button = QPushButton(_("Convert"))
         self.convert_button.setEnabled(False)
         self.convert_button.clicked.connect(self.run_conversion)
-        self.status_label = QLabel("Ready")
+        self.status_label = QLabel(_("Ready"))
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         action_layout.addWidget(self.convert_button)
         action_layout.addWidget(self.status_label)
@@ -119,8 +120,8 @@ class SubtitleConverterUI(QWidget):
         main_layout.addStretch()
 
     def add_files(self):
-        file_filter = "Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt *.vtt);;All Files (*)"
-        files, _ = QFileDialog.getOpenFileNames(self, "Select Subtitle Files", filter=file_filter)
+        file_filter = _("Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt *.vtt);;All Files (*)")
+        files, selected_filter = QFileDialog.getOpenFileNames(self, _("Select Subtitle Files"), filter=file_filter)
         if files:
             detected_encoding = detect_encoding(files[0])
             self.input_encoding_combo.setCurrentText(detected_encoding)
@@ -135,15 +136,15 @@ class SubtitleConverterUI(QWidget):
     def clear_files(self):
         self.file_paths.clear()
         self.file_list_widget.clear()
-        self.status_label.setText("Ready")
+        self.status_label.setText(_("Ready"))
         self.convert_button.setEnabled(False)
 
     def run_conversion(self):
         if not self.file_paths:
-            self.status_label.setText("Error: No files selected.")
+            self.status_label.setText(_("Error: No files selected."))
             return
 
-        output_dir = QFileDialog.getExistingDirectory(self, "Select Output Directory")
+        output_dir = QFileDialog.getExistingDirectory(self, _("Select Output Directory"))
         if not output_dir:
             return
 
@@ -158,7 +159,7 @@ class SubtitleConverterUI(QWidget):
             "sub_no_write_fps_declaration": self.sub_no_write_fps_declaration_check.isChecked()
         }
         
-        self.status_label.setText("Processing...")
+        self.status_label.setText(_("Processing..."))
         self.convert_button.setEnabled(False)
         
         self.thread = SubtitleConverterThread(self.file_paths, output_dir, options)
@@ -167,18 +168,20 @@ class SubtitleConverterUI(QWidget):
         self.thread.error.connect(self.on_error)
         self.thread.start()
         
-        signal_manager.statusbar_message.emit(f"Converting {len(self.file_paths)} subtitle file(s)")
+        signal_manager.statusbar_message.emit(
+            _("Converting {count} subtitle file(s)").format(count=len(self.file_paths))
+        )
 
     def on_progress(self, message):
         self.status_label.setText(message)
 
     def on_finished(self):
-        QMessageBox.information(self, "Success", "Subtitle conversion completed successfully.")
+        QMessageBox.information(self, _("Success"), _("Subtitle conversion completed successfully."))
         self.convert_button.setEnabled(True)
-        signal_manager.statusbar_message.emit("Subtitle conversion completed")
+        signal_manager.statusbar_message.emit(_("Subtitle conversion completed"))
 
     def on_error(self, error_message):
-        self.status_label.setText("Error occurred")
-        QMessageBox.warning(self, "Conversion Error", error_message)
+        self.status_label.setText(_("Error occurred"))
+        QMessageBox.warning(self, _("Conversion Error"), error_message)
         self.convert_button.setEnabled(True)
-        signal_manager.statusbar_message.emit("Subtitle conversion failed")
+        signal_manager.statusbar_message.emit(_("Subtitle conversion failed"))

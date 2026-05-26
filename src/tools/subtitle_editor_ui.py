@@ -1,4 +1,5 @@
 import os
+from gettext import gettext as _
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout,
     QLabel, QLineEdit, QComboBox, QCheckBox, QPushButton, QFileDialog,
@@ -29,7 +30,7 @@ class SubtitleEditorThread(QThread):
         if not self._is_running:
             return
         
-        self.progress.emit("Processing subtitle file...")
+        self.progress.emit(_("Processing subtitle file..."))
         result = process_subtitles([self.file_path], self.output_dir, self.options)
         
         if result.startswith("Success"):
@@ -56,19 +57,19 @@ class SubtitleEditorUI(QWidget):
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
 
-        file_group = QGroupBox("Current File")
+        file_group = QGroupBox(_("Current File"))
         file_layout = QVBoxLayout()
         
-        self.current_file_label = QLabel("No file loaded.")
+        self.current_file_label = QLabel(_("No file loaded."))
         font = self.current_file_label.font()
         font.setBold(True)
         self.current_file_label.setFont(font)
         self.current_file_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         file_buttons_layout = QHBoxLayout()
-        add_file_button = QPushButton("Load File")
+        add_file_button = QPushButton(_("Load File"))
         add_file_button.clicked.connect(self.add_file)
-        clear_file_button = QPushButton("Clear")
+        clear_file_button = QPushButton(_("Clear"))
         clear_file_button.clicked.connect(self.clear_file)
         file_buttons_layout.addWidget(add_file_button)
         file_buttons_layout.addWidget(clear_file_button)
@@ -85,13 +86,13 @@ class SubtitleEditorUI(QWidget):
             lambda: self.load_file_for_preview(None, None)
         )
         encoding_layout = QFormLayout()
-        encoding_layout.addRow("Input File Encoding:", self.input_encoding_combo)
+        encoding_layout.addRow(_("Input File Encoding:"), self.input_encoding_combo)
 
         tabs = QTabWidget()
         timing_tab = self.create_timing_tab()
         text_tab = self.create_text_tab()
-        tabs.addTab(timing_tab, "Timing Editor")
-        tabs.addTab(text_tab, "Text Editor")
+        tabs.addTab(timing_tab, _("Timing Editor"))
+        tabs.addTab(text_tab, _("Text Editor"))
 
         left_layout.addWidget(file_group)
         left_layout.addLayout(encoding_layout)
@@ -99,11 +100,11 @@ class SubtitleEditorUI(QWidget):
         
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
-        preview_group = QGroupBox("File Content Preview (Live)")
+        preview_group = QGroupBox(_("File Content Preview (Live)"))
         preview_layout = QVBoxLayout()
         self.preview_table = QTableWidget()
         self.preview_table.setColumnCount(4)
-        self.preview_table.setHorizontalHeaderLabels(["No.", "Start", "End", "Text"])
+        self.preview_table.setHorizontalHeaderLabels([_("No."), _("Start"), _("End"), _("Text")])
         self.preview_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.preview_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         self.preview_table.verticalHeader().setVisible(False)
@@ -113,10 +114,10 @@ class SubtitleEditorUI(QWidget):
         right_layout.addWidget(preview_group)
 
         action_layout = QHBoxLayout()
-        self.apply_button = QPushButton("Apply Changes")
+        self.apply_button = QPushButton(_("Apply Changes"))
         self.apply_button.setEnabled(False)
         self.apply_button.clicked.connect(self.run_processing)
-        self.status_label = QLabel("Ready")
+        self.status_label = QLabel(_("Ready"))
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         action_layout.addWidget(self.apply_button)
         action_layout.addWidget(self.status_label)
@@ -134,9 +135,9 @@ class SubtitleEditorUI(QWidget):
         tab = QWidget()
         layout = QFormLayout(tab)
         self.shift_edit = QLineEdit()
-        self.shift_edit.setPlaceholderText("e.g., 1.5s or -1m10s")
-        layout.addRow("Shift Time:", self.shift_edit)
-        self.transform_fps_check = QCheckBox("Enable Framerate Transformation")
+        self.shift_edit.setPlaceholderText(_("e.g., 1.5s or -1m10s"))
+        layout.addRow(_("Shift Time:"), self.shift_edit)
+        self.transform_fps_check = QCheckBox(_("Enable Framerate Transformation"))
         self.from_fps_spin = QDoubleSpinBox()
         self.to_fps_spin = QDoubleSpinBox()
         self.from_fps_spin.setRange(0.01, 1000.0)
@@ -144,19 +145,19 @@ class SubtitleEditorUI(QWidget):
         self.from_fps_spin.setValue(23.976)
         self.to_fps_spin.setValue(25.000)
         layout.addRow(self.transform_fps_check)
-        layout.addRow("From FPS:", self.from_fps_spin)
-        layout.addRow("To FPS:", self.to_fps_spin)
+        layout.addRow(_("From FPS:"), self.from_fps_spin)
+        layout.addRow(_("To FPS:"), self.to_fps_spin)
         return tab
 
     def create_text_tab(self):
         tab = QWidget()
         main_layout = QVBoxLayout(tab)
-        op_group = QGroupBox("Text Operation")
+        op_group = QGroupBox(_("Text Operation"))
         op_layout = QHBoxLayout()
-        self.op_none_radio = QRadioButton("None")
-        self.op_find_replace_radio = QRadioButton("Find and Replace")
-        self.op_prefix_suffix_radio = QRadioButton("Add Prefix/Suffix")
-        self.op_change_case_radio = QRadioButton("Change Case")
+        self.op_none_radio = QRadioButton(_("None"))
+        self.op_find_replace_radio = QRadioButton(_("Find and Replace"))
+        self.op_prefix_suffix_radio = QRadioButton(_("Add Prefix/Suffix"))
+        self.op_change_case_radio = QRadioButton(_("Change Case"))
         op_layout.addWidget(self.op_none_radio)
         op_layout.addWidget(self.op_find_replace_radio)
         op_layout.addWidget(self.op_prefix_suffix_radio)
@@ -169,23 +170,23 @@ class SubtitleEditorUI(QWidget):
         fr_layout = QFormLayout(fr_widget)
         self.find_edit = QLineEdit()
         self.replace_edit = QLineEdit()
-        self.case_sensitive_check = QCheckBox("Case Sensitive")
-        fr_layout.addRow("Find:", self.find_edit)
-        fr_layout.addRow("Replace With:", self.replace_edit)
+        self.case_sensitive_check = QCheckBox(_("Case Sensitive"))
+        fr_layout.addRow(_("Find:"), self.find_edit)
+        fr_layout.addRow(_("Replace With:"), self.replace_edit)
         fr_layout.addRow(self.case_sensitive_check)
         self.op_stack.addWidget(fr_widget)
         ps_widget = QWidget()
         ps_layout = QFormLayout(ps_widget)
         self.prefix_edit = QLineEdit()
         self.suffix_edit = QLineEdit()
-        ps_layout.addRow("Prefix:", self.prefix_edit)
-        ps_layout.addRow("Suffix:", self.suffix_edit)
+        ps_layout.addRow(_("Prefix:"), self.prefix_edit)
+        ps_layout.addRow(_("Suffix:"), self.suffix_edit)
         self.op_stack.addWidget(ps_widget)
         cc_widget = QWidget()
         cc_layout = QFormLayout(cc_widget)
         self.case_style_combo = QComboBox()
         self.case_style_combo.addItems(["UPPERCASE", "lowercase", "Title Case"])
-        cc_layout.addRow("Style:", self.case_style_combo)
+        cc_layout.addRow(_("Style:"), self.case_style_combo)
         self.op_stack.addWidget(cc_widget)
         
         for radio in [self.op_none_radio, self.op_find_replace_radio, self.op_prefix_suffix_radio, self.op_change_case_radio]:
@@ -205,8 +206,8 @@ class SubtitleEditorUI(QWidget):
         return tab
 
     def add_file(self):
-        file_filter = "Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt *.vtt);;All Files (*)"
-        file, _ = QFileDialog.getOpenFileName(self, "Select Subtitle File", filter=file_filter)
+        file_filter = _("Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt *.vtt);;All Files (*)")
+        file, selected_filter = QFileDialog.getOpenFileName(self, _("Select Subtitle File"), filter=file_filter)
         if file:
             self.file_path = file
             self.current_file_label.setText(os.path.basename(file))
@@ -214,14 +215,14 @@ class SubtitleEditorUI(QWidget):
             self.input_encoding_combo.setCurrentText(detected_encoding)
             self.load_file_for_preview(None, None)
             self.apply_button.setEnabled(True)
-            self.status_label.setText("File loaded successfully")
+            self.status_label.setText(_("File loaded successfully"))
 
     def clear_file(self):
         self.file_path = None
-        self.current_file_label.setText("No file loaded.")
+        self.current_file_label.setText(_("No file loaded."))
         self.original_events = []
         self.preview_table.setRowCount(0)
-        self.status_label.setText("Ready")
+        self.status_label.setText(_("Ready"))
         self.apply_button.setEnabled(False)
         self.reset_editor_fields()
 
@@ -251,7 +252,7 @@ class SubtitleEditorUI(QWidget):
         
         self.original_events = events
         self.update_preview_table(events)
-        self.status_label.setText(f"Loaded {len(events)} subtitle events")
+        self.status_label.setText(_("Loaded {count} subtitle events").format(count=len(events)))
 
     def update_preview_with_text_edits(self):
         if not self.original_events:
@@ -300,10 +301,10 @@ class SubtitleEditorUI(QWidget):
 
     def run_processing(self):
         if not self.file_path:
-            QMessageBox.warning(self, "No File", "Please load a subtitle file first.")
+            QMessageBox.warning(self, _("No File"), _("Please load a subtitle file first."))
             return
 
-        output_dir = QFileDialog.getExistingDirectory(self, "Select Output Directory")
+        output_dir = QFileDialog.getExistingDirectory(self, _("Select Output Directory"))
         if not output_dir:
             return
 
@@ -330,7 +331,7 @@ class SubtitleEditorUI(QWidget):
             "case_style": self.case_style_combo.currentText()
         }
 
-        self.status_label.setText("Processing...")
+        self.status_label.setText(_("Processing..."))
         self.apply_button.setEnabled(False)
         
         self.thread = SubtitleEditorThread(self.file_path, output_dir, options)
@@ -339,18 +340,18 @@ class SubtitleEditorUI(QWidget):
         self.thread.error.connect(self.on_error)
         self.thread.start()
         
-        signal_manager.statusbar_message.emit("Processing subtitle file")
+        signal_manager.statusbar_message.emit(_("Processing subtitle file"))
 
     def on_progress(self, message):
         self.status_label.setText(message)
 
     def on_finished(self):
-        QMessageBox.information(self, "Success", "Subtitle processing completed successfully.")
+        QMessageBox.information(self, _("Success"), _("Subtitle processing completed successfully."))
         self.apply_button.setEnabled(True)
-        signal_manager.statusbar_message.emit("Subtitle processing completed")
+        signal_manager.statusbar_message.emit(_("Subtitle processing completed"))
 
     def on_error(self, error_message):
-        self.status_label.setText("Error occurred")
-        QMessageBox.warning(self, "Processing Error", error_message)
+        self.status_label.setText(_("Error occurred"))
+        QMessageBox.warning(self, _("Processing Error"), error_message)
         self.apply_button.setEnabled(True)
-        signal_manager.statusbar_message.emit("Subtitle processing failed")
+        signal_manager.statusbar_message.emit(_("Subtitle processing failed"))

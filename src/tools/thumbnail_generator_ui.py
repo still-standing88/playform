@@ -1,4 +1,5 @@
 import os
+from gettext import gettext as _
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit,
     QFileDialog, QComboBox, QProgressDialog, QMessageBox
@@ -39,50 +40,50 @@ class ThumbnailGeneratorUI(QWidget):
         self.main_layout = QVBoxLayout(self)
 
         self.input_path = QLineEdit()
-        self.input_path.setAccessibleName("Video file input path")
+        self.input_path.setAccessibleName(_("Video file input path"))
         self.input_path.textChanged.connect(self.update_action_buttons)
-        self.browse_button = QPushButton("Browse Video")
+        self.browse_button = QPushButton(_("Browse Video"))
         self.browse_button.clicked.connect(self.browse_video)
         input_layout = QHBoxLayout()
-        input_layout.addWidget(QLabel("Video File:"))
+        input_layout.addWidget(QLabel(_("Video File:")))
         input_layout.addWidget(self.input_path)
         input_layout.addWidget(self.browse_button)
         self.main_layout.addLayout(input_layout)
 
         self.mode_combo = QComboBox()
-        self.mode_combo.setAccessibleName("Thumbnail generation mode")
+        self.mode_combo.setAccessibleName(_("Thumbnail generation mode"))
         self.mode_combo.addItems([
-            "Manual Frame Selection",
-            "Automatic Thumbnail Filter",
-            "Select from Scene Changes"
+            _("Manual Frame Selection"),
+            _("Automatic Thumbnail Filter"),
+            _("Select from Scene Changes")
         ])
         self.mode_combo.currentIndexChanged.connect(self.update_options)
-        self.main_layout.addWidget(QLabel("Generation Mode:"))
+        self.main_layout.addWidget(QLabel(_("Generation Mode:")))
         self.main_layout.addWidget(self.mode_combo)
 
         self.manual_options_widget = QWidget()
         manual_layout = QVBoxLayout(self.manual_options_widget)
         manual_layout.setContentsMargins(0,0,0,0)
-        manual_layout.addWidget(QLabel("Timestamp (HH:MM:SS):"))
+        manual_layout.addWidget(QLabel(_("Timestamp (HH:MM:SS):")))
         self.timestamp_edit = QLineEdit("00:00:15")
-        self.timestamp_edit.setAccessibleName("Timestamp for manual frame selection")
+        self.timestamp_edit.setAccessibleName(_("Timestamp for manual frame selection"))
         manual_layout.addWidget(self.timestamp_edit)
         self.main_layout.addWidget(self.manual_options_widget)
 
         self.scene_options_widget = QWidget()
         scene_layout = QVBoxLayout(self.scene_options_widget)
         scene_layout.setContentsMargins(0,0,0,0)
-        scene_layout.addWidget(QLabel("Number of Images to Generate:"))
+        scene_layout.addWidget(QLabel(_("Number of Images to Generate:")))
         self.num_frames_edit = QLineEdit("5")
-        self.num_frames_edit.setAccessibleName("Number of images to generate from scene changes")
+        self.num_frames_edit.setAccessibleName(_("Number of images to generate from scene changes"))
         scene_layout.addWidget(self.num_frames_edit)
-        scene_layout.addWidget(QLabel("Scene Change Threshold (0.0-1.0):"))
+        scene_layout.addWidget(QLabel(_("Scene Change Threshold (0.0-1.0):")))
         self.scene_threshold_edit = QLineEdit("0.4")
-        self.scene_threshold_edit.setAccessibleName("Scene change detection threshold")
+        self.scene_threshold_edit.setAccessibleName(_("Scene change detection threshold"))
         scene_layout.addWidget(self.scene_threshold_edit)
         self.main_layout.addWidget(self.scene_options_widget)
 
-        self.generate_button = QPushButton("Generate Thumbnail(s)")
+        self.generate_button = QPushButton(_("Generate Thumbnail(s)"))
         self.generate_button.setEnabled(False)
         self.generate_button.clicked.connect(self.generate_thumbnail)
         self.main_layout.addWidget(self.generate_button)
@@ -93,7 +94,7 @@ class ThumbnailGeneratorUI(QWidget):
         self.update_action_buttons()
 
     def browse_video(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select Video File")
+        file_path, selected_filter = QFileDialog.getOpenFileName(self, _("Select Video File"))
         if file_path:
             self.input_path.setText(file_path)
             self.update_action_buttons()
@@ -105,10 +106,10 @@ class ThumbnailGeneratorUI(QWidget):
     def generate_thumbnail(self):
         input_video = self.input_path.text()
         if not input_video or not os.path.exists(input_video):
-            QMessageBox.warning(self, "Warning", "Please select a valid input video file.")
+            QMessageBox.warning(self, _("Warning"), _("Please select a valid input video file."))
             return
 
-        output_dir = QFileDialog.getExistingDirectory(self, "Select Output Directory")
+        output_dir = QFileDialog.getExistingDirectory(self, _("Select Output Directory"))
         if not output_dir:
             return
 
@@ -138,7 +139,7 @@ class ThumbnailGeneratorUI(QWidget):
                 output_options['frames:v'] = int(num_frames)
                 ffmpeg.input(input_video).output(output_pattern, **output_options)
 
-            self.progress_dialog = QProgressDialog("Starting generation...", "Cancel", 0, 0, self)
+            self.progress_dialog = QProgressDialog(_("Starting generation..."), _("Cancel"), 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModality.WindowModal)
             
             self.thread = FFmpegTaskThread(ffmpeg)
@@ -148,11 +149,11 @@ class ThumbnailGeneratorUI(QWidget):
             self.progress_dialog.canceled.connect(self.thread.terminate)
             self.thread.start()
             self.progress_dialog.show()
-            signal_manager.statusbar_message.emit("Starting thumbnail generation")
+            signal_manager.statusbar_message.emit(_("Starting thumbnail generation"))
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to start process: {e}")
-            signal_manager.statusbar_message.emit("Failed to start thumbnail generation")
+            QMessageBox.critical(self, _("Error"), _("Failed to start process: {error}").format(error=e))
+            signal_manager.statusbar_message.emit(_("Failed to start thumbnail generation"))
 
     def update_progress(self, progress: Progress):
         if self.progress_dialog:
@@ -167,14 +168,14 @@ class ThumbnailGeneratorUI(QWidget):
     def on_finished(self, output):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
-            QMessageBox.information(self, "Success", "Thumbnail generation completed successfully.")
-            signal_manager.statusbar_message.emit("Thumbnail generation completed")
+            QMessageBox.information(self, _("Success"), _("Thumbnail generation completed successfully."))
+            signal_manager.statusbar_message.emit(_("Thumbnail generation completed"))
 
     def on_error(self, message):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
-            QMessageBox.critical(self, "Error", f"An error occurred: {message}")
-            signal_manager.statusbar_message.emit("Thumbnail generation failed")
+            QMessageBox.critical(self, _("Error"), _("An error occurred: {message}").format(message=message))
+            signal_manager.statusbar_message.emit(_("Thumbnail generation failed"))
     
     def update_action_buttons(self):
         path = self.input_path.text()

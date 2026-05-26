@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from gettext import gettext as _
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -19,7 +20,7 @@ from log_handler.handlers import LoggingStreamRedirect
 class DebugConsoleDock(QDockWidget):
 
     def __init__(self, parent=None):
-        super().__init__("Debug Console", parent)
+        super().__init__(_("Debug Console"), parent)
         
         self.setObjectName("debugConsoleDock")
 
@@ -27,7 +28,7 @@ class DebugConsoleDock(QDockWidget):
         container.setObjectName("debugConsoleContainer")
         self.setWidget(container)
         layout = QVBoxLayout(container)
-        info = QLabel("Console output. Tab key won't insert tabs inside editor.")
+        info = QLabel(_("Console output. Tab key won't insert tabs inside editor."))
         info.setObjectName("consoleInfoLabel")
         layout.addWidget(info)
 
@@ -40,8 +41,8 @@ class DebugConsoleDock(QDockWidget):
         )
 
         self.console.setTabChangesFocus(True)
-        self.console.setAccessibleName("Console Output")
-        self.console.setAccessibleDescription("Read-only console output viewer")
+        self.console.setAccessibleName(_("Console Output"))
+        self.console.setAccessibleDescription(_("Read-only console output viewer"))
         layout.addWidget(self.console, 1)
 
 
@@ -58,7 +59,7 @@ class DebugConsoleDock(QDockWidget):
         sys.stdout = self.stdout_redirect
         sys.stderr = self.stderr_redirect
 
-        print("Debug console initialized.")
+        print(_("Debug console initialized."))
 
 
 

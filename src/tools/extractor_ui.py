@@ -1,4 +1,5 @@
 import os
+from gettext import gettext as _
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit,
     QFileDialog, QComboBox, QProgressDialog, QMessageBox, QGroupBox
@@ -45,12 +46,12 @@ class ExtractorUI(QWidget):
         self.main_layout = QVBoxLayout(self)
 
         self.input_path = QLineEdit()
-        self.input_path.setAccessibleName("Video file for extraction")
+        self.input_path.setAccessibleName(_("Video file for extraction"))
         self.input_path.textChanged.connect(self.update_action_buttons)
-        self.browse_button = QPushButton("Browse Video")
+        self.browse_button = QPushButton(_("Browse Video"))
         self.browse_button.clicked.connect(self.browse_video)
         input_layout = QHBoxLayout()
-        input_layout.addWidget(QLabel("Video File:"))
+        input_layout.addWidget(QLabel(_("Video File:")))
         input_layout.addWidget(self.input_path)
         input_layout.addWidget(self.browse_button)
         self.main_layout.addLayout(input_layout)
@@ -62,29 +63,29 @@ class ExtractorUI(QWidget):
         self.update_action_buttons()
 
     def setup_audio_extraction_group(self):
-        audio_group = QGroupBox("Audio Extraction")
+        audio_group = QGroupBox(_("Audio Extraction"))
         audio_layout = QVBoxLayout()
 
         self.audio_format_combo = QComboBox()
-        self.audio_format_combo.setAccessibleName("Audio output format")
+        self.audio_format_combo.setAccessibleName(_("Audio output format"))
         self.audio_formats = get_audio_formats_map()
         self.audio_format_combo.addItems(list(self.audio_formats.keys()))
-        audio_layout.addWidget(QLabel("Output Format:"))
+        audio_layout.addWidget(QLabel(_("Output Format:")))
         audio_layout.addWidget(self.audio_format_combo)
 
         time_layout = QHBoxLayout()
         self.audio_start_time = QLineEdit("00:00:00")
-        self.audio_start_time.setAccessibleName("Audio extraction start time")
+        self.audio_start_time.setAccessibleName(_("Audio extraction start time"))
         self.audio_end_time = QLineEdit()
-        self.audio_end_time.setPlaceholderText("e.g., 00:01:30 or 90")
-        self.audio_end_time.setAccessibleName("Audio extraction end time or duration")
-        time_layout.addWidget(QLabel("Start Time (HH:MM:SS):"))
+        self.audio_end_time.setPlaceholderText(_("e.g., 00:01:30 or 90"))
+        self.audio_end_time.setAccessibleName(_("Audio extraction end time or duration"))
+        time_layout.addWidget(QLabel(_("Start Time (HH:MM:SS):")))
         time_layout.addWidget(self.audio_start_time)
-        time_layout.addWidget(QLabel("End Time or Duration (optional):"))
+        time_layout.addWidget(QLabel(_("End Time or Duration (optional):")))
         time_layout.addWidget(self.audio_end_time)
         audio_layout.addLayout(time_layout)
 
-        self.extract_audio_button = QPushButton("Extract Audio")
+        self.extract_audio_button = QPushButton(_("Extract Audio"))
         self.extract_audio_button.setEnabled(False)
         self.extract_audio_button.clicked.connect(self.extract_audio)
         audio_layout.addWidget(self.extract_audio_button)
@@ -93,27 +94,27 @@ class ExtractorUI(QWidget):
         self.main_layout.addWidget(audio_group)
 
     def setup_image_extraction_group(self):
-        image_group = QGroupBox("Image Extraction")
+        image_group = QGroupBox(_("Image Extraction"))
         image_layout = QVBoxLayout()
 
         self.image_mode_combo = QComboBox()
-        self.image_mode_combo.setAccessibleName("Image extraction mode")
-        self.image_mode_combo.addItems(["Extract All Frames", "Extract Range", "Extract 1 Image Per Second"])
-        image_layout.addWidget(QLabel("Extraction Mode:"))
+        self.image_mode_combo.setAccessibleName(_("Image extraction mode"))
+        self.image_mode_combo.addItems([_("Extract All Frames"), _("Extract Range"), _("Extract 1 Image Per Second")])
+        image_layout.addWidget(QLabel(_("Extraction Mode:")))
         image_layout.addWidget(self.image_mode_combo)
 
         time_layout = QHBoxLayout()
         self.image_start_time = QLineEdit("00:00:00")
-        self.image_start_time.setAccessibleName("Image extraction start time")
+        self.image_start_time.setAccessibleName(_("Image extraction start time"))
         self.image_duration = QLineEdit("5")
-        self.image_duration.setAccessibleName("Image extraction duration in seconds")
-        time_layout.addWidget(QLabel("Start Time (HH:MM:SS):"))
+        self.image_duration.setAccessibleName(_("Image extraction duration in seconds"))
+        time_layout.addWidget(QLabel(_("Start Time (HH:MM:SS):")))
         time_layout.addWidget(self.image_start_time)
-        time_layout.addWidget(QLabel("Duration (seconds):"))
+        time_layout.addWidget(QLabel(_("Duration (seconds):")))
         time_layout.addWidget(self.image_duration)
         image_layout.addLayout(time_layout)
 
-        self.extract_images_button = QPushButton("Extract Images")
+        self.extract_images_button = QPushButton(_("Extract Images"))
         self.extract_images_button.setEnabled(False)
         self.extract_images_button.clicked.connect(self.extract_images)
         image_layout.addWidget(self.extract_images_button)
@@ -122,13 +123,13 @@ class ExtractorUI(QWidget):
         self.main_layout.addWidget(image_group)
 
     def browse_video(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select Video File")
+        file_path, selected_filter = QFileDialog.getOpenFileName(self, _("Select Video File"))
         if file_path:
             self.input_path.setText(file_path)
             self.update_action_buttons()
 
     def run_ffmpeg_task(self, ffmpeg_instance, title):
-        self.progress_dialog = QProgressDialog(title, "Cancel", 0, 0, self)
+        self.progress_dialog = QProgressDialog(title, _("Cancel"), 0, 0, self)
         self.progress_dialog.setWindowModality(Qt.WindowModality.WindowModal)
 
         self.thread = FFmpegTaskThread(ffmpeg_instance)
@@ -143,10 +144,10 @@ class ExtractorUI(QWidget):
     def extract_audio(self):
         input_video = self.input_path.text()
         if not input_video or not os.path.exists(input_video):
-            QMessageBox.warning(self, "Warning", "Please select a valid input video file.")
+            QMessageBox.warning(self, _("Warning"), _("Please select a valid input video file."))
             return
 
-        output_dir = QFileDialog.getExistingDirectory(self, "Select Output Directory")
+        output_dir = QFileDialog.getExistingDirectory(self, _("Select Output Directory"))
         if not output_dir:
             return
 
@@ -171,16 +172,16 @@ class ExtractorUI(QWidget):
                 output_options['t'] = end_time_or_duration
 
         ffmpeg.input(input_video, **input_options).output(output_path, **output_options)
-        self.run_ffmpeg_task(ffmpeg, "Extracting Audio...")
-        signal_manager.statusbar_message.emit("Starting audio extraction")
+        self.run_ffmpeg_task(ffmpeg, _("Extracting Audio..."))
+        signal_manager.statusbar_message.emit(_("Starting audio extraction"))
 
     def extract_images(self):
         input_video = self.input_path.text()
         if not input_video or not os.path.exists(input_video):
-            QMessageBox.warning(self, "Warning", "Please select a valid input video file.")
+            QMessageBox.warning(self, _("Warning"), _("Please select a valid input video file."))
             return
 
-        output_dir = QFileDialog.getExistingDirectory(self, "Select Output Directory for Images")
+        output_dir = QFileDialog.getExistingDirectory(self, _("Select Output Directory for Images"))
         if not output_dir:
             return
 
@@ -203,8 +204,8 @@ class ExtractorUI(QWidget):
             output_options['vf'] = 'fps=1'
             ffmpeg.input(input_video).output(output_pattern, **output_options)
 
-        self.run_ffmpeg_task(ffmpeg, "Extracting Images...")
-        signal_manager.statusbar_message.emit("Starting image extraction")
+        self.run_ffmpeg_task(ffmpeg, _("Extracting Images..."))
+        signal_manager.statusbar_message.emit(_("Starting image extraction"))
 
     def update_progress(self, progress: Progress):
         if self.progress_dialog:
@@ -223,14 +224,14 @@ class ExtractorUI(QWidget):
     def on_finished(self, output):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
-            QMessageBox.information(self, "Success", "Extraction completed successfully.")
-            signal_manager.statusbar_message.emit("Extraction completed successfully")
+            QMessageBox.information(self, _("Success"), _("Extraction completed successfully."))
+            signal_manager.statusbar_message.emit(_("Extraction completed successfully"))
 
     def on_error(self, message):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
-            QMessageBox.critical(self, "Error", f"An error occurred: {message}")
-            signal_manager.statusbar_message.emit("Extraction failed")
+            QMessageBox.critical(self, _("Error"), _("An error occurred: {message}").format(message=message))
+            signal_manager.statusbar_message.emit(_("Extraction failed"))
 
     def update_action_buttons(self):
         path = self.input_path.text()

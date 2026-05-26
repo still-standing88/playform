@@ -1,5 +1,6 @@
 import os
 import music_tag
+from gettext import gettext as _
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit,
     QFileDialog, QListWidget, QGridLayout, QMessageBox, QTextEdit
@@ -23,18 +24,18 @@ class TagEditorUI(QWidget):
         left_panel.addWidget(self.file_list)
 
         button_layout = QHBoxLayout()
-        self.add_button = QPushButton("Add Files")
+        self.add_button = QPushButton(_("Add Files"))
         self.add_button.clicked.connect(self.add_files)
-        self.remove_button = QPushButton("Remove File")
+        self.remove_button = QPushButton(_("Remove File"))
         self.remove_button.clicked.connect(self.remove_file)
         button_layout.addWidget(self.add_button)
         button_layout.addWidget(self.remove_button)
         left_panel.addLayout(button_layout)
 
-        self.save_button = QPushButton("Save Current File")
+        self.save_button = QPushButton(_("Save Current File"))
         self.save_button.setEnabled(False)
         self.save_button.clicked.connect(self.save_current)
-        self.save_all_button = QPushButton("Save All Files")
+        self.save_all_button = QPushButton(_("Save All Files"))
         self.save_all_button.setEnabled(False)
         self.save_all_button.clicked.connect(self.save_all)
         left_panel.addWidget(self.save_button)
@@ -62,8 +63,8 @@ class TagEditorUI(QWidget):
             row += 1
 
         self.lyrics_edit = QTextEdit()
-        self.lyrics_edit.setAccessibleName("Lyrics tag editor")
-        self.grid_layout.addWidget(QLabel("Lyrics:"), row, 0)
+        self.lyrics_edit.setAccessibleName(_("Lyrics tag editor"))
+        self.grid_layout.addWidget(QLabel(_("Lyrics:")), row, 0)
         self.grid_layout.addWidget(self.lyrics_edit, row, 1)
         self.tag_widgets['lyrics'] = self.lyrics_edit
         self.lyrics_edit.textChanged.connect(self.update_tag_data)
@@ -75,8 +76,8 @@ class TagEditorUI(QWidget):
         self.update_buttons_state()
 
     def add_files(self):
-        files, _ = QFileDialog.getOpenFileNames(self, "Select Audio Files",
-            filter="Audio Files (*.mp3 *.flac *.m4a *.aac *.aiff *.dsf *.ogg *.opus *.wav *.wv)")
+        files, selected_filter = QFileDialog.getOpenFileNames(self, _("Select Audio Files"),
+            filter=_("Audio Files (*.mp3 *.flac *.m4a *.aac *.aiff *.dsf *.ogg *.opus *.wav *.wv)"))
         for file_path in files:
             if file_path not in self.opened_files:
                 try:
@@ -84,10 +85,12 @@ class TagEditorUI(QWidget):
                     self.dirty_flags[file_path] = False
                     self.file_list.addItem(os.path.basename(file_path))
                 except Exception as e:
-                    QMessageBox.warning(self, "Error", f"Could not load {file_path}: {e}")
+                    QMessageBox.warning(self, _("Error"), _("Could not load {file}: {error}").format(file=file_path, error=e))
         self.update_buttons_state()
         if files:
-            signal_manager.statusbar_message.emit(f"Loaded {len(files)} file(s) for tag editing")
+            signal_manager.statusbar_message.emit(
+                _("Loaded {count} file(s) for tag editing").format(count=len(files))
+            )
 
     def remove_file(self):
         current_item = self.file_list.currentItem()
@@ -166,34 +169,38 @@ class TagEditorUI(QWidget):
         if not self.current_file or not self.current_path:
             return
         if not self.dirty_flags.get(self.current_path, False):
-            QMessageBox.information(self, "Info", "No changes to save.")
+            QMessageBox.information(self, _("Info"), _("No changes to save."))
             return
         try:
             self.current_file.save()
             self.dirty_flags[self.current_path] = False
-            QMessageBox.information(self, "Success", "Tags saved successfully.")
-            signal_manager.statusbar_message.emit(f"Tags saved for {os.path.basename(self.current_path)}")
+            QMessageBox.information(self, _("Success"), _("Tags saved successfully."))
+            signal_manager.statusbar_message.emit(
+                _("Tags saved for {filename}").format(filename=os.path.basename(self.current_path))
+            )
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to save tags: {e}")
-            signal_manager.statusbar_message.emit("Failed to save tags")
+            QMessageBox.critical(self, _("Error"), _("Failed to save tags: {error}").format(error=e))
+            signal_manager.statusbar_message.emit(_("Failed to save tags"))
 
     def save_all(self):
         try:
             to_save = [p for p, d in self.dirty_flags.items() if d and p in self.opened_files]
             if not to_save:
-                QMessageBox.information(self, "Info", "No changes to save.")
+                QMessageBox.information(self, _("Info"), _("No changes to save."))
                 return
             for p in to_save:
                 self.opened_files[p].save()
                 self.dirty_flags[p] = False
             if len(to_save) == 1:
-                QMessageBox.information(self, "Success", "1 file saved.")
+                QMessageBox.information(self, _("Success"), _("1 file saved."))
             else:
-                QMessageBox.information(self, "Success", f"{len(to_save)} files saved.")
-            signal_manager.statusbar_message.emit(f"Tags saved for {len(to_save)} file(s)")
+                QMessageBox.information(self, _("Success"), _("{count} files saved.").format(count=len(to_save)))
+            signal_manager.statusbar_message.emit(
+                _("Tags saved for {count} file(s)").format(count=len(to_save))
+            )
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred while saving all files: {e}")
-            signal_manager.statusbar_message.emit("Failed to save tags")
+            QMessageBox.critical(self, _("Error"), _("An error occurred while saving all files: {error}").format(error=e))
+            signal_manager.statusbar_message.emit(_("Failed to save tags"))
 
     def update_buttons_state(self):
         has_files = self.file_list.count() > 0

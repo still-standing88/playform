@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional
+from gettext import gettext as _
 
 from PySide6.QtCore import Qt, QEvent
 from PySide6.QtWidgets import (
@@ -17,7 +18,7 @@ from PySide6.QtWidgets import (
 	QMessageBox,
 )
 
-from utilities import get_app_path
+from utilities.functions import get_logs_dir
 
 
 class _TabKeyBlocker(QWidget):
@@ -32,12 +33,11 @@ class _TabKeyBlocker(QWidget):
 class LogsViewerDialog(QDialog):
 	def __init__(self, parent=None, logs_dir: Optional[Path] = None):
 		super().__init__(parent)
-		self.setWindowTitle("Logs Viewer")
+		self.setWindowTitle(_("Logs Viewer"))
 		self.resize(900, 600)
 
 
-		app_path = Path(get_app_path())
-		self.logs_dir = logs_dir or (app_path / "logs")
+		self.logs_dir = logs_dir or Path(get_logs_dir())
 		self.logs_dir.mkdir(parents=True, exist_ok=True)
 
 		self._tab_blocker = _TabKeyBlocker()
@@ -48,12 +48,12 @@ class LogsViewerDialog(QDialog):
 		root.addLayout(content, 1)
 
 		left_panel = QVBoxLayout()
-		self.info_label = QLabel(f"Logs folder: {self.logs_dir}")
+		self.info_label = QLabel(_("Logs folder: {path}").format(path=self.logs_dir))
 		left_panel.addWidget(self.info_label)
 
 		self.files_list = QListWidget()
-		self.files_list.setAccessibleName("Logs Files List")
-		self.files_list.setAccessibleDescription("List of log files in the application's logs folder")
+		self.files_list.setAccessibleName(_("Logs Files List"))
+		self.files_list.setAccessibleDescription(_("List of log files in the application's logs folder"))
 		left_panel.addWidget(self.files_list, 1)
 		content.addLayout(left_panel, 1)
 
@@ -64,14 +64,14 @@ class LogsViewerDialog(QDialog):
 		self.viewer.setTextInteractionFlags(
 			Qt.TextInteractionFlag.TextSelectableByKeyboard | Qt.TextInteractionFlag.TextSelectableByMouse
 		)
-		self.viewer.setAccessibleName("Log File Viewer")
-		self.viewer.setAccessibleDescription("Displays the contents of the selected log file")
+		self.viewer.setAccessibleName(_("Log File Viewer"))
+		self.viewer.setAccessibleDescription(_("Displays the contents of the selected log file"))
 		self.viewer.installEventFilter(self._tab_blocker)
 		right_panel.addWidget(self.viewer, 1)
 
 		buttons_row = QHBoxLayout()
 		buttons_row.addStretch(1)
-		self.close_btn = QPushButton("Close")
+		self.close_btn = QPushButton(_("Close"))
 		self.close_btn.clicked.connect(self.accept)
 		buttons_row.addWidget(self.close_btn)
 		right_panel.addLayout(buttons_row)
@@ -94,8 +94,8 @@ class LogsViewerDialog(QDialog):
 
 		if not log_files:
 
-			self.viewer.setPlainText("There aren't any log files yet.")
-			no_item = QListWidgetItem("(no log files)")
+			self.viewer.setPlainText(_("There aren't any log files yet."))
+			no_item = QListWidgetItem(_("(no log files)"))
 			no_item.setFlags(no_item.flags() & ~Qt.ItemFlag.ItemIsEnabled)
 			self.files_list.addItem(no_item)
 			return
@@ -117,6 +117,6 @@ class LogsViewerDialog(QDialog):
 			
 			text = path.read_text(encoding="utf-8", errors="replace")
 		except Exception as e:
-			text = f"Failed to read file: {path}\nError: {e}"
+			text = _("Failed to read file: {path}\nError: {error}").format(path=path, error=e)
 		self.viewer.setPlainText(text)
 

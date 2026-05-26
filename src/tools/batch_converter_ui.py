@@ -1,4 +1,5 @@
 import os
+from gettext import gettext as _
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QFileDialog, QComboBox, QProgressDialog, QMessageBox, QListWidget,
@@ -58,7 +59,12 @@ class FFmpegBatchThread(QThread):
 
                 @ffmpeg.on("progress")
                 def on_progress(progress: Progress):
-                    self.file_progress.emit(f"Time: {progress.time}, Speed: {progress.speed:.2f}x")
+                    self.file_progress.emit(
+                        _("Time: {time}, Speed: {speed:.2f}x").format(
+                            time=progress.time,
+                            speed=progress.speed,
+                        )
+                    )
 
                 ffmpeg.execute()
             except FFmpegError as e:
@@ -69,7 +75,7 @@ class FFmpegBatchThread(QThread):
                 continue
         
         if self._is_running:
-            self.overall_progress.emit(total_files, total_files, "Done")
+            self.overall_progress.emit(total_files, total_files, _("Done"))
             self.finished.emit()
 
     def stop(self):
@@ -89,9 +95,9 @@ class BatchConverterUI(QWidget):
         self.main_layout.addWidget(self.file_list)
 
         button_layout = QHBoxLayout()
-        self.add_files_button = QPushButton("Add Files")
+        self.add_files_button = QPushButton(_("Add Files"))
         self.add_files_button.clicked.connect(self.add_files)
-        self.remove_files_button = QPushButton("Remove Selected")
+        self.remove_files_button = QPushButton(_("Remove Selected"))
         self.remove_files_button.clicked.connect(self.remove_files)
         button_layout.addWidget(self.add_files_button)
         button_layout.addWidget(self.remove_files_button)
@@ -99,7 +105,7 @@ class BatchConverterUI(QWidget):
 
         self.setup_conversion_options()
 
-        self.start_button = QPushButton("Start Batch Conversion")
+        self.start_button = QPushButton(_("Start Batch Conversion"))
         self.start_button.setEnabled(False)
         self.start_button.clicked.connect(self.start_conversion)
         self.main_layout.addWidget(self.start_button)
@@ -107,33 +113,33 @@ class BatchConverterUI(QWidget):
         self.update_buttons_state()
 
     def setup_conversion_options(self):
-        options_group = QGroupBox("Conversion Options")
+        options_group = QGroupBox(_("Conversion Options"))
         options_layout = QVBoxLayout()
 
         self.type_combo = QComboBox()
-        self.type_combo.setAccessibleName("Conversion type (audio or video)")
+        self.type_combo.setAccessibleName(_("Conversion type (audio or video)"))
         self.type_combo.addItems(["Audio", "Video"])
         self.type_combo.currentIndexChanged.connect(self.update_format_combo)
-        options_layout.addWidget(QLabel("Conversion Type:"))
+        options_layout.addWidget(QLabel(_("Conversion Type:")))
         options_layout.addWidget(self.type_combo)
 
         self.format_combo = QComboBox()
-        self.format_combo.setAccessibleName("Target format")
-        options_layout.addWidget(QLabel("Target Format:"))
+        self.format_combo.setAccessibleName(_("Target format"))
+        options_layout.addWidget(QLabel(_("Target Format:")))
         options_layout.addWidget(self.format_combo)
 
         self.samplerate_combo = QComboBox()
-        self.samplerate_combo.setAccessibleName("Audio sample rate")
+        self.samplerate_combo.setAccessibleName(_("Audio sample rate"))
         self.samplerate_combo.setEditable(True)
         self.samplerate_combo.addItems(get_common_sample_rates())
         self.samplerate_combo.setCurrentText("44100")
-        options_layout.addWidget(QLabel("Sample Rate (Audio):"))
+        options_layout.addWidget(QLabel(_("Sample Rate (Audio):")))
         options_layout.addWidget(self.samplerate_combo)
 
         self.bitrate_combo = QComboBox()
-        self.bitrate_combo.setAccessibleName("Target bitrate")
+        self.bitrate_combo.setAccessibleName(_("Target bitrate"))
         self.bitrate_combo.setEditable(True)
-        options_layout.addWidget(QLabel("Bitrate:"))
+        options_layout.addWidget(QLabel(_("Bitrate:")))
         options_layout.addWidget(self.bitrate_combo)
         
         options_group.setLayout(options_layout)
@@ -157,7 +163,7 @@ class BatchConverterUI(QWidget):
             self.samplerate_combo.setEnabled(False)
 
     def add_files(self):
-        files, _ = QFileDialog.getOpenFileNames(self, "Select files to convert")
+        files, selected_filter = QFileDialog.getOpenFileNames(self, _("Select files to convert"))
         self.file_list.addItems(files)
         self.update_buttons_state()
 
@@ -169,10 +175,10 @@ class BatchConverterUI(QWidget):
     def start_conversion(self):
         files = [self.file_list.item(i).text() for i in range(self.file_list.count())]
         if not files:
-            QMessageBox.warning(self, "Warning", "No files to convert.")
+            QMessageBox.warning(self, _("Warning"), _("No files to convert."))
             return
 
-        output_dir = QFileDialog.getExistingDirectory(self, "Select Output Directory")
+        output_dir = QFileDialog.getExistingDirectory(self, _("Select Output Directory"))
         if not output_dir:
             return
 
@@ -189,7 +195,7 @@ class BatchConverterUI(QWidget):
             options['bitrate'] = self.bitrate_combo.currentText()
         options['extension'] = get_container_from_format(format_name)
 
-        self.progress_dialog = QProgressDialog("Batch Converting...", "Cancel", 0, len(files), self)
+        self.progress_dialog = QProgressDialog(_("Batch Converting..."), _("Cancel"), 0, len(files), self)
         self.progress_dialog.setWindowModality(Qt.WindowModality.WindowModal)
 
         self.thread = FFmpegBatchThread(files, output_dir, options)
@@ -200,7 +206,9 @@ class BatchConverterUI(QWidget):
         self.progress_dialog.canceled.connect(self.thread.stop)
         self.thread.start()
         self.progress_dialog.show()
-        signal_manager.statusbar_message.emit(f"Starting batch conversion of {len(files)} files")
+        signal_manager.statusbar_message.emit(
+            _("Starting batch conversion of {count} files").format(count=len(files))
+        )
 
     def update_buttons_state(self):
         has_files = self.file_list.count() > 0
@@ -208,7 +216,13 @@ class BatchConverterUI(QWidget):
 
     def update_progress(self, value, total, filename):
         if self.progress_dialog:
-            self.progress_dialog.setLabelText(f"Converting file {value+1} of {total}: {filename}")
+            self.progress_dialog.setLabelText(
+                _("Converting file {current} of {total}: {filename}").format(
+                    current=value + 1,
+                    total=total,
+                    filename=filename,
+                )
+            )
             self.progress_dialog.setValue(value)
 
     def update_file_progress(self, progress_str):
@@ -220,11 +234,16 @@ class BatchConverterUI(QWidget):
     def on_finished(self):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.setValue(self.progress_dialog.maximum())
-            QMessageBox.information(self, "Success", "Batch conversion completed.")
+            QMessageBox.information(self, _("Success"), _("Batch conversion completed."))
             self.progress_dialog.close()
-            signal_manager.statusbar_message.emit("Batch conversion completed successfully")
+            signal_manager.statusbar_message.emit(_("Batch conversion completed successfully"))
 
     def on_error(self, filename, message):
-        error_msg = f"Failed to convert {os.path.basename(filename)}:\n{message}"
-        QMessageBox.warning(self, "Conversion Error", error_msg)
-        signal_manager.statusbar_message.emit(f"Error converting {os.path.basename(filename)}")
+        error_msg = _("Failed to convert {filename}:\n{message}").format(
+            filename=os.path.basename(filename),
+            message=message,
+        )
+        QMessageBox.warning(self, _("Conversion Error"), error_msg)
+        signal_manager.statusbar_message.emit(
+            _("Error converting {filename}").format(filename=os.path.basename(filename))
+        )
