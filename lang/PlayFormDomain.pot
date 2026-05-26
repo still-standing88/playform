@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PlayForm 1.0.0\n"
 "Report-Msgid-Bugs-To: support@joybytes.dev\n"
-"POT-Creation-Date: 2026-05-22 18:57+0200\n"
+"POT-Creation-Date: 2026-05-26 15:47+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Still Standing <support@joybytes.dev>\n"
 "Language-Team: Joybytes <support@joybytes.dev>\n"
@@ -388,9 +388,6 @@ msgstr ""
 msgid "Browse"
 msgstr ""
 
-msgid "Browse & Add Tracks"
-msgstr ""
-
 msgid "Browse Video"
 msgstr ""
 
@@ -442,7 +439,7 @@ msgstr ""
 msgid "Clear all cached data?"
 msgstr ""
 
-msgid "Clear all tracks?"
+msgid "Clear all tracks from this playlist?"
 msgstr ""
 
 msgid "Clear cache button"
@@ -553,6 +550,13 @@ msgstr ""
 msgid "Copyright"
 msgstr ""
 
+msgid ""
+"Could not import playlist:\n"
+"{path}\n"
+"\n"
+"{error}"
+msgstr ""
+
 msgid "Could not load {file}: {error}"
 msgstr ""
 
@@ -590,6 +594,9 @@ msgstr ""
 msgid "Current video subtitles"
 msgstr ""
 
+msgid "Customize &Toolbar..."
+msgstr ""
+
 msgid "Customize Toolbar"
 msgstr ""
 
@@ -611,13 +618,19 @@ msgstr ""
 msgid "Debug console initialized."
 msgstr ""
 
-msgid "Delete"
+msgid "Delete Selected"
 msgstr ""
 
 msgid "Delete all feeds and cache?"
 msgstr ""
 
 msgid "Delete selected"
+msgstr ""
+
+msgid "Delete the selected track?"
+msgstr ""
+
+msgid "Delete the selected {count} tracks?"
 msgstr ""
 
 msgid "Direct Media Link"
@@ -1047,6 +1060,15 @@ msgstr ""
 msgid "Image extraction start time"
 msgstr ""
 
+msgid "Import Failed"
+msgstr ""
+
+msgid "Import Playlist"
+msgstr ""
+
+msgid "Imported playlist '{name}'"
+msgstr ""
+
 msgid "Info"
 msgstr ""
 
@@ -1069,6 +1091,9 @@ msgid "Invalid Feed"
 msgstr ""
 
 msgid "Invalid URL"
+msgstr ""
+
+msgid "Invalid URL extraction result"
 msgstr ""
 
 msgid "Invalid VLC Arguments"
@@ -1218,6 +1243,9 @@ msgstr ""
 msgid "Minimize/Maximize Controls"
 msgstr ""
 
+msgid "Missing Playlist"
+msgstr ""
+
 msgid "More Info"
 msgstr ""
 
@@ -1326,6 +1354,9 @@ msgstr ""
 msgid "No platform manifest found for '{platform}' in this release."
 msgstr ""
 
+msgid "No playable entries found in playlist"
+msgstr ""
+
 msgid "No playlist selected"
 msgstr ""
 
@@ -1402,6 +1433,9 @@ msgstr ""
 msgid "Open &Folder..."
 msgstr ""
 
+msgid "Open &Playlist..."
+msgstr ""
+
 msgid "Open &URL..."
 msgstr ""
 
@@ -1412,6 +1446,9 @@ msgid "Open Link in Browser"
 msgstr ""
 
 msgid "Open Media File"
+msgstr ""
+
+msgid "Open Playlist"
 msgstr ""
 
 msgid "Open URL"
@@ -1456,6 +1493,9 @@ msgstr ""
 msgid "Play"
 msgstr ""
 
+msgid "Play Entry"
+msgstr ""
+
 msgid "Play Station"
 msgstr ""
 
@@ -1465,9 +1505,6 @@ msgstr ""
 msgid "Playback Error"
 msgstr ""
 
-msgid "Player"
-msgstr ""
-
 msgid "Playing"
 msgstr ""
 
@@ -1475,6 +1512,13 @@ msgid "Playing: {name}"
 msgstr ""
 
 msgid "Playlist '{name}' already exists"
+msgstr ""
+
+msgid ""
+"Playlist '{name}' could not be found at:\n"
+"{path}\n"
+"\n"
+"Remove it from the playlist list?"
 msgstr ""
 
 msgid "Playlist '{name}' created"
@@ -1489,10 +1533,19 @@ msgstr ""
 msgid "Playlist '{playlist_name}' not found"
 msgstr ""
 
-msgid "Playlist cleared"
+msgid "Playlist Files (*.json *.m3u *.m3u8 *.pls *.xspf);;All Files (*)"
 msgstr ""
 
 msgid "Playlist from {folder_name}"
+msgstr ""
+
+msgid "Playlist order updated"
+msgstr ""
+
+msgid "Playlist sorted"
+msgstr ""
+
+msgid "Playlist tracks list"
 msgstr ""
 
 msgid "Playlists"
@@ -1633,7 +1686,18 @@ msgstr ""
 msgid "Remove miscellaneous events"
 msgstr ""
 
+msgid "Removed missing playlist '{name}'"
+msgstr ""
+
 msgid "Removed station from favorites"
+msgstr ""
+
+msgid "Removed {count} track(s) from playlist"
+msgstr ""
+
+msgid ""
+"Reorder tracks by dragging them or pressing Shift+Up / Shift+Down. Right-"
+"click for more options."
 msgstr ""
 
 msgid "Repeat all"
@@ -1664,6 +1728,18 @@ msgid "Replace With:"
 msgstr ""
 
 msgid "Reset to Default"
+msgstr ""
+
+msgid "Resolving next stream..."
+msgstr ""
+
+msgid "Resolving previous stream..."
+msgstr ""
+
+msgid "Resolving stream URL: {url}"
+msgstr ""
+
+msgid "Resolving stream..."
 msgstr ""
 
 msgid "Restart Required"
@@ -1882,6 +1958,9 @@ msgid ""
 "Some options you modified require an application restart to take effect.\n"
 "\n"
 "Would you like to restart now?"
+msgstr ""
+
+msgid "Sort"
 msgstr ""
 
 msgid "Sort By"
@@ -2149,12 +2228,6 @@ msgstr ""
 msgid "Toolbar Tools:"
 msgstr ""
 
-msgid "Track removed from playlist"
-msgstr ""
-
-msgid "Track {index}"
-msgstr ""
-
 msgid "Tracks:"
 msgstr ""
 
@@ -2169,6 +2242,12 @@ msgid "Type and press Enter to search entries..."
 msgstr ""
 
 msgid "URL Extraction Failed"
+msgstr ""
+
+msgid "URL extraction failed"
+msgstr ""
+
+msgid "URL resolution failed"
 msgstr ""
 
 msgid "Unknown"
@@ -2328,6 +2407,9 @@ msgid "{count} download(s) are still in progress."
 msgstr ""
 
 msgid "{count} files saved."
+msgstr ""
+
+msgid "{label} (Descending)"
 msgstr ""
 
 msgid "{title} hidden"

@@ -1,0 +1,2489 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PlayForm 1.0.0\n"
+"Report-Msgid-Bugs-To: support@joybytes.dev\n"
+"POT-Creation-Date: 2026-05-26 15:47+0200\n"
+"PO-Revision-Date: 2026-05-25 14:59+0200\n"
+"Last-Translator: \n"
+"Language-Team: ar\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.4.4\n"
+
+msgid " (Max retries reached)"
+msgstr "(لقد وصلت إلى الحد الأقصى لعدد المحاولات.)"
+
+msgid "&About PlayForm..."
+msgstr "حول PlayForm..."
+
+msgid "&Backward"
+msgstr "رجوع إلى الخلف"
+
+msgid "&Batch Converter"
+msgstr "محول الدفعات"
+
+msgid "&Check for Updates..."
+msgstr "التحقق من التحديثات..."
+
+msgid "&Close Media"
+msgstr "إغلاق الوسائط"
+
+msgid "&Debug"
+msgstr "تصحيح الأخطاء"
+
+msgid "&Documentation"
+msgstr "دليل المستخدم"
+
+msgid "&Download Manager"
+msgstr "مدير التنزيلات"
+
+msgid "&Exit"
+msgstr "خروج"
+
+msgid "&File"
+msgstr "ملف"
+
+msgid "&Forward"
+msgstr "تقدم إلى الأمام"
+
+msgid "&Manage Hotkeys"
+msgstr "إدارة الاختصارات"
+
+msgid "&Manage Preferences"
+msgstr "إدارة التفضيلات"
+
+msgid "&Media"
+msgstr "وسائط"
+
+msgid "&Media Extractor"
+msgstr "مستخرج الوسائط"
+
+msgid "&Minimize Player"
+msgstr "تصغير المشغل"
+
+msgid "&Minimize to Taskbar"
+msgstr "تصغير إلى جهة الإشعارات"
+
+msgid "&Mute/Unmute"
+msgstr "كتم الصوت/إلغاء كتم الصوت"
+
+msgid "&Next"
+msgstr "التالي"
+
+msgid "&Open File..."
+msgstr "فتح ملف..."
+
+msgid "&Options"
+msgstr "الخيارات"
+
+msgid "&Play/Pause"
+msgstr "تشغيل/إيقاف مؤقت"
+
+msgid "&Previous"
+msgstr "السابق"
+
+msgid "&Recent Files"
+msgstr "الملفات الأخيرة"
+
+msgid "&Stop"
+msgstr "إيقاف"
+
+msgid "&Subtitle Tools"
+msgstr "أدوات subtitles"
+
+msgid "&Tag Editor"
+msgstr "محرر معلومات الوسائط"
+
+msgid "&Thumbnail Generator"
+msgstr "مولد الصور المصغرة"
+
+msgid "&Tools"
+msgstr "أدوات"
+
+msgid "&View"
+msgstr "عرض"
+
+msgid "&View Logsâ¦"
+msgstr "الإطلاع على السجلا تlogs..."
+
+msgid ""
+"'{title}' is already open. Please close it before opening another tool."
+msgstr "\"{title}\" مفتوح بالفعل. يرجى إغلاقه قبل فتح أداة أخرى."
+
+msgid "(no log files)"
+msgstr "(no log files)"
+
+msgid "... and {count} more"
+msgstr "... و{count} المزيد"
+
+msgid "0 B / 0 B"
+msgstr "0 ب / 0 ب"
+
+msgid "0 B/s"
+msgstr "0 ب/ث"
+
+msgid "1 file saved."
+msgstr "تم حفظ ملف واحد."
+
+msgid ""
+"<b>A new version of {app} is available!</b><br>Your version: "
+"<b>{current}</b> -> New version: <b>{new}</b>"
+msgstr ""
+"<b>إصدار جديد من {app} متاح!</b><br>الإصدار الخاص بك: <b>{current}</b> -> "
+"الإصدار الجديد: <b>{new}</b>"
+
+msgid "<b>Bitrate:</b> {bitrate} kbps"
+msgstr "<b>معدل البت:</b> {bitrate} كيلوبت في الثانية"
+
+msgid "<b>Codec:</b> {codec}"
+msgstr "<b>الترميز:</b> {codec}"
+
+msgid "<b>Country:</b> {country}"
+msgstr "<b>البلد:</b> {country}"
+
+msgid "<b>Description:</b>"
+msgstr "<b>الوصف:</b>"
+
+msgid "<b>Entries</b>"
+msgstr ""
+
+msgid "<b>Feeds</b>"
+msgstr "<b>الخلاصات</b>"
+
+msgid "<b>Homepage:</b> {homepage}"
+msgstr "<b>الصفحة الرئيسية:</b> {homepage}"
+
+msgid "<b>Language:</b> {language}"
+msgstr "<b>اللغة:</b> {language}"
+
+msgid "<b>Name:</b> {name}"
+msgstr "<b>الاسم:</b> {name}"
+
+msgid "<b>Release files ({count}):</b>"
+msgstr "<b>ملفات الإصدار ({count}):</b>"
+
+msgid "<b>Release notes:</b>"
+msgstr "<b>ملاحظات الإصدار:</b>"
+
+msgid "<b>Select utilities to download:</b>"
+msgstr "<b>حدد الأدوات المساعدة للتنزيل:</b>"
+
+msgid "<b>Summary/Description</b>"
+msgstr "<b>الملخص/الوصف</b>"
+
+msgid "<b>Tags:</b> {tags}"
+msgstr "<b>العلامات:</b> {tags}"
+
+msgid "<b>Votes:</b> {votes}"
+msgstr "<b>التصويتات:</b> {votes}"
+
+msgid "<em style='color: #999;'>Empty</em>"
+msgstr ""
+
+msgid "<em style='color: #999;'>None</em>"
+msgstr ""
+
+msgid "<em>... and {count} more</em>"
+msgstr "<em>... و{count} المزيد</em>"
+
+msgid ""
+"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry "
+"Data</h2>"
+msgstr ""
+
+msgid "<p><em>No summary or description available.</em></p>"
+msgstr "<p><em>لا يتوفر ملخص أو وصف.</em></p>"
+
+msgid "Abort & Close"
+msgstr "إلغاء وإغلاق"
+
+msgid "Abort Downloads"
+msgstr "إلغاء التنزيلات"
+
+msgid "Accessibility"
+msgstr "إمكانية الوصول"
+
+msgid "Action"
+msgstr "فعل"
+
+msgid "Active Tools"
+msgstr "الأدوات النشطة"
+
+msgid "Add"
+msgstr "أضف"
+
+msgid "Add Feed"
+msgstr "إضافة موجز"
+
+msgid "Add Files"
+msgstr "إضافة ملفات"
+
+msgid "Add Prefix/Suffix"
+msgstr "إضافة بادئة/لاحقة"
+
+msgid "Add Tracks"
+msgstr "إضافة مقاطع"
+
+msgid "Add existing path"
+msgstr "إضافة المسار الموجود"
+
+msgid "Add new"
+msgstr "أضف جديدا"
+
+msgid "Add new path to library"
+msgstr "إضافة مسار جديد إلى المكتبة"
+
+msgid "Add to Favorites"
+msgstr "إضافة إلى المفضلة"
+
+msgid "Add to favorites"
+msgstr "إضافة إلى المفضلة"
+
+msgid "Add to library"
+msgstr "إضافة إلى المكتبة"
+
+msgid "Add to playlist"
+msgstr "إضافة إلى قائمة التشغيل"
+
+msgid "Added '{filename}' to playlist '{playlist_name}'"
+msgstr "تمت إضافة \"{filename}\" إلى قائمة التشغيل \"{playlist_name}\""
+
+msgid "Added '{name}' to favorites"
+msgstr "تمت إضافة '{name}' إلى المفضلة"
+
+msgid "Added {count} track(s) to playlist"
+msgstr "تمت إضافة {count} مقطعًا إلى قائمة التشغيل"
+
+msgid "Advanced"
+msgstr "إعدادات متقدم"
+
+msgid "Advanced Format Options"
+msgstr "خيارات التنسيق المتقدمة"
+
+msgid "Album"
+msgstr "الألبوم"
+
+msgid "An error occurred while saving all files: {error}"
+msgstr "حدث خطأ أثناء حفظ جميع الملفات: {error}"
+
+msgid ""
+"An error occurred:\n"
+"{error}"
+msgstr ""
+"حدث خطأ:\n"
+"{error}"
+
+msgid "An error occurred: {message}"
+msgstr "حدث خطأ: {message}"
+
+msgid "Application was minimized to tray"
+msgstr "تم تصغير التطبيق إلى منطقة الإشعارات."
+
+msgid "Apply"
+msgstr "تطبيق"
+
+msgid "Apply Changes"
+msgstr "تطبيق التغييرات"
+
+msgid "Apply Filters"
+msgstr "تطبيق"
+
+msgid "Apply filters button"
+msgstr "تطبيق "
+
+msgid "Are you sure you want to clear all favorites?"
+msgstr "هل أنت متأكد أنك تريد مسح كافة المفضلة؟"
+
+msgid "Are you sure you want to clear all recent files?"
+msgstr "هل أنت متأكد أنك تريد مسح كافة الملفات الأخيرة؟"
+
+msgid "Are you sure you want to reset all hotkeys to default?"
+msgstr ""
+"هل أنت متأكد أنك تريد إعادة تعيين جميع مفاتيح التشغيل السريع إلى الوضع "
+"الافتراضي؟"
+
+msgid "Artist"
+msgstr "فنان"
+
+msgid "Aspect Ratio"
+msgstr "Aspect Ratio"
+
+msgid "Audio Device:"
+msgstr "جهاز الصوت:"
+
+msgid "Audio Extraction"
+msgstr "استخراج الصوت"
+
+msgid ""
+"Audio Files (*.mp3 *.flac *.m4a *.aac *.aiff *.dsf *.ogg *.opus *.wav *.wv)"
+msgstr ""
+"الملفات الصوتية (*.mp3 *.flac *.m4a *.aac *.aiff *.dsf *.ogg *.opus *.wav "
+"*.wv)"
+
+msgid "Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)"
+msgstr "ملفات الصوت (*.mp3 *.wav *.flac *.ogg *.m4a);;جميع الملفات (*)"
+
+msgid "Audio extraction end time or duration"
+msgstr "وقت انتهاء استخراج الصوت أو مدته"
+
+msgid "Audio extraction start time"
+msgstr "وقت بدء استخراج الصوت"
+
+msgid "Audio output format"
+msgstr "Audio output format"
+
+msgid "Audio sample rate"
+msgstr "Audio sample rate"
+
+msgid "Auto Play"
+msgstr "تشغيل تلقائي"
+
+msgid "Auto Updates:"
+msgstr "التحديثات التلقائية:"
+
+msgid "Auto check for updates"
+msgstr "التحقق من التحديثات تلقائيًا"
+
+msgid "Automatic Thumbnail Filter"
+msgstr "تصفية الصور المصغرة التلقائية"
+
+msgid ""
+"Automatic download is not available in developer mode.\n"
+"Please download the update manually from the releases page."
+msgstr ""
+"Automatic download is not available in developer mode.\n"
+"Please download the update manually from the releases page."
+
+msgid "Available Tools:"
+msgstr "الأدوات المتاحة:"
+
+msgid "Backward"
+msgstr "الرجوع إلى الخلف"
+
+msgid "Batch Converter"
+msgstr "محول دفعة"
+
+msgid "Batch Converting..."
+msgstr "جارٍ التحويل ..."
+
+msgid "Batch conversion completed successfully"
+msgstr "اكتمل التحويل بنجاح"
+
+msgid "Batch conversion completed."
+msgstr "اكتمل تحويل الدفعة."
+
+msgid "Bitrate"
+msgstr "معدل البت"
+
+msgid "Bitrate:"
+msgstr "Bitrate:"
+
+msgid "Bookmarks"
+msgstr "الإشارات المرجعية"
+
+msgid "Bookmarks list"
+msgstr "قائمة الإشارات المرجعية"
+
+msgid "Brightness"
+msgstr "Brightness"
+
+msgid "Browse"
+msgstr "تصفح"
+
+msgid "Browse Video"
+msgstr "تصفح ملف فيديو"
+
+msgid "Cache cleared successfully"
+msgstr "تم مسح ذاكرة التخزين المؤقت بنجاح"
+
+msgid "Cancel"
+msgstr "إلغاء"
+
+msgid "Cancel Download"
+msgstr "إلغاء التنزيل"
+
+msgid "Cancelled"
+msgstr "تم الإلغاء"
+
+msgid "Case Sensitive"
+msgstr "Case Sensitive"
+
+msgid "Change Case"
+msgstr "تكبير أو تصغير الأحرف"
+
+msgid "Clear"
+msgstr "مسح"
+
+msgid "Clear All Favorites"
+msgstr "مسح كل المفضلة"
+
+msgid "Clear All Feeds"
+msgstr "حذف كل الموجزات"
+
+msgid "Clear All Recent Files"
+msgstr "مسح كل الملفات الأخيرة"
+
+msgid "Clear Cache"
+msgstr "مسح ذاكرة التخزين المؤقت"
+
+msgid "Clear Favorites"
+msgstr "مسح المفضلة"
+
+msgid "Clear Recent Files"
+msgstr "مسح الملفات الأخيرة"
+
+msgid "Clear Tracks"
+msgstr "مسح الكل"
+
+msgid "Clear all"
+msgstr "مسح الكل"
+
+msgid "Clear all cached data?"
+msgstr "هل تريد مسح جميع البيانات المخزنة مؤقتًا؟"
+
+msgid "Clear all tracks from this playlist?"
+msgstr ""
+
+msgid "Clear cache button"
+msgstr "مسح ذاكرة التخزين المؤقت"
+
+msgid "Clear library"
+msgstr "حذف جميع المجلدات من المكتبة"
+
+msgid "Click Count"
+msgstr "عدد النقرات"
+
+msgid "Click already in progress"
+msgstr "النقر بالفعل قيد التقدم"
+
+msgid "Click failed: {error}"
+msgstr "فشل النقر: {error}"
+
+msgid "Click registered successfully"
+msgstr "تم تسجيل النقر بنجاح"
+
+msgid "Click to apply selected filters"
+msgstr "انقر لتطبيق"
+
+msgid "Click to clear cached data"
+msgstr "انقر لمسح البيانات المخزنة مؤقتًا"
+
+msgid "Click to search by station name"
+msgstr "انقر للبحث حسب اسم المحطة"
+
+msgid "Click to view favorite stations"
+msgstr "انقر لعرض المحطات المفضلة"
+
+msgid "Close"
+msgstr "إغلاق"
+
+msgid "Close anyway and abort all downloads?"
+msgstr "هل تريد الإغلاق مع إلغاء كل التنزيلات؟"
+
+msgid "Codec"
+msgstr "الترميز"
+
+msgid "Completed"
+msgstr "مكتمل"
+
+msgid "Confirm"
+msgstr "تأكيد"
+
+msgid "Confirm Clear All"
+msgstr "تأكيد مسح الكل"
+
+msgid "Confirm Removal"
+msgstr "تأكيد الإزالة"
+
+msgid "Console Output"
+msgstr "Console Output"
+
+msgid "Console output. Tab key won't insert tabs inside editor."
+msgstr "Console output. Tab key won't insert tabs inside editor."
+
+msgid "Contrast"
+msgstr "Contrast"
+
+msgid "Conversion Error"
+msgstr "خطأ في التحويل"
+
+msgid "Conversion Options"
+msgstr "خيارات التحويل"
+
+msgid "Conversion Type:"
+msgstr "نوع التحويل:"
+
+msgid "Conversion type (audio or video)"
+msgstr "نوع التحويل (صوت أو فيديو)"
+
+msgid "Convert"
+msgstr "تحويل"
+
+msgid "Converting file {current} of {total}: {filename}"
+msgstr "تحويل الملف {current} من {total}: {filename}"
+
+msgid "Converting {count} subtitle file(s)"
+msgstr "جاري تحويل {count} ملف "
+
+msgid "Cookies File:"
+msgstr "ملفات تعريف الارتباط: ل Youtube"
+
+msgid "Copied"
+msgstr "تم النسخ"
+
+msgid "Copy"
+msgstr "نسخ إلى الحافظة"
+
+msgid "Copy Destination"
+msgstr "نسخ الوجهة"
+
+msgid "Copy Path"
+msgstr "نسخ المسار"
+
+msgid "Copy Stream URL"
+msgstr "نسخ رابط البث"
+
+msgid "Copy URL"
+msgstr "نسخ الرابط"
+
+msgid "Copy to Clipboard"
+msgstr "نسخ إلى الحافظة"
+
+msgid "Copyright"
+msgstr "حقوق الطبع والنشر"
+
+msgid ""
+"Could not import playlist:\n"
+"{path}\n"
+"\n"
+"{error}"
+msgstr ""
+
+msgid "Could not load {file}: {error}"
+msgstr "تعذر تحميل {file}: {error}"
+
+msgid ""
+"Could not reach the update server:\n"
+"{error}"
+msgstr ""
+"تعذر الوصول إلى خادم التحديث:\n"
+"{error}"
+
+msgid ""
+"Could not resolve links for the following utilities:\n"
+"\n"
+msgstr ""
+"Could not resolve links for the following utilities:\n"
+"\n"
+
+msgid "Country"
+msgstr "دولة"
+
+msgid "Create"
+msgstr "إنشاء"
+
+msgid "Create Playlist"
+msgstr "إنشاء قائمة التشغيل"
+
+msgid "Create playlist from folder"
+msgstr "إنشاء قائمة التشغيل من المجلد"
+
+msgid ""
+"Created and loaded playlist '{playlist_name}' with {track_count} tracks"
+msgstr ""
+"تم إنشاء وتحميل قائمة التشغيل '{playlist_name}' التي تحتوي على {track_count}"
+" من المقاطع الصوتية"
+
+msgid "Created new playlist '{name}'"
+msgstr "تم إنشاء قائمة تشغيل جديدة '{name}'"
+
+msgid "Current File"
+msgstr "الملف الحالي"
+
+msgid "Current video subtitles"
+msgstr "ترجمات الفيديو الحالية"
+
+msgid "Customize &Toolbar..."
+msgstr ""
+
+msgid "Customize Toolbar"
+msgstr "تخصيص شريط الأدوات"
+
+msgid "Customize Toolbar..."
+msgstr "تخصيص شريط الأدوات..."
+
+msgid "Date (Newest First)"
+msgstr "التاريخ (الأحدث أولاً)"
+
+msgid "Date (Oldest First)"
+msgstr "التاريخ (الأقدم أولاً)"
+
+msgid "Debug Console"
+msgstr "Debug Console"
+
+msgid "Debug Level:"
+msgstr "Debug Level:"
+
+msgid "Debug console initialized."
+msgstr "Debug console initialized."
+
+msgid "Delete Selected"
+msgstr ""
+
+msgid "Delete all feeds and cache?"
+msgstr "هل تريد حذف جميع الخلاصات في ذاكرة التخزين المؤقت؟"
+
+msgid "Delete selected"
+msgstr "حذف المحدد"
+
+msgid "Delete the selected track?"
+msgstr ""
+
+msgid "Delete the selected {count} tracks?"
+msgstr ""
+
+msgid "Direct Media Link"
+msgstr "رابط مباشر"
+
+msgid ""
+"Direct media link copied to clipboard:\n"
+"{media_url}"
+msgstr ""
+"تم نسخ الرابط المباشر إلى الحافظة:\n"
+"{media_url}"
+
+msgid "Displays the contents of the selected log file"
+msgstr "Displays the contents of the selected log file"
+
+msgid "Documentation Not Found"
+msgstr "تعذر العثور على دليل المستخدم"
+
+msgid "Done"
+msgstr "منتهي"
+
+msgid ""
+"Done. All selected utilities have been processed.\n"
+"You may close this dialog."
+msgstr ""
+"تمت معالجة كافة الأدوات المساعدة المحددة.\n"
+"يمكنك إغلاق مربع الحوار هذا."
+
+msgid "Double-click or press Enter on a file to open it"
+msgstr "انقر نقرًا مزدوجًا أو اضغط على Enter على الملف لفتحه"
+
+msgid "Download"
+msgstr "تحميل"
+
+msgid "Download Error"
+msgstr "خطأ في التنزيل"
+
+msgid "Download Info:"
+msgstr "معلومات التنزيل:"
+
+msgid "Download Later"
+msgstr "التنزيل لاحقًا"
+
+msgid "Download Manager"
+msgstr "مدير التنزيلات"
+
+msgid "Download Manager closed"
+msgstr "تم إغلاق مدير التنزيلات"
+
+msgid "Download Manager minimized"
+msgstr "تم تصغير مدير التنزيلات"
+
+msgid "Download Manager opened"
+msgstr "تم فتح مدير التنزيلات"
+
+msgid "Download Manager restored"
+msgstr "تمت استعادة مدير التنزيلات"
+
+msgid "Download Now"
+msgstr "تنزيل الآن"
+
+msgid "Download Utilities"
+msgstr "تنزيل الأدوات المساعدة"
+
+msgid "Downloaded {finished} / {expected} files..."
+msgstr "Downloaded {finished} / {expected} files..."
+
+msgid "Downloading"
+msgstr "جارٍ التنزيل"
+
+msgid "Downloading Update"
+msgstr "جارٍ تنزيل التحديث"
+
+msgid "Downloading update files, please wait..."
+msgstr "جارٍ تنزيل ملفات التحديث، يرجى الانتظار..."
+
+msgid ""
+"Downloading update files...\n"
+"  - {manifest}\n"
+"  - {archive}"
+msgstr ""
+"Downloading update files...\n"
+"  - {manifest}\n"
+"  - {archive}"
+
+msgid "Downloading {count} file(s), please waitâ¦"
+msgstr "جارٍ التنزيل (ملفات) {count}، يرجى الانتظار..."
+
+msgid "Downloads in Progress"
+msgstr "تنزيلات قيد التنفيذ"
+
+msgid "Downloads:"
+msgstr "التنزيلات:"
+
+msgid "Duplicate"
+msgstr "نسخ متعدد"
+
+msgid "Duration (seconds):"
+msgstr "المدة (ثواني):"
+
+msgid "Edit Playlist"
+msgstr "تحرير قائمة التشغيل"
+
+msgid "Empty"
+msgstr "فارغ"
+
+msgid "Enable Framerate Transformation"
+msgstr "تمكين تحويل معدل الإطارات"
+
+msgid "Enable VLC Logging"
+msgstr "تمكين VLC logging"
+
+msgid "Enable Verbose Output"
+msgstr "Enable Verbose Output"
+
+msgid "Enable speech accessibility feedback"
+msgstr "تفعيل لإمكانية الوصول"
+
+msgid "Enable yt-dlp Logging"
+msgstr "تمكين yt-dlp logging"
+
+msgid "End"
+msgstr "نهاية"
+
+msgid "End Time or Duration (optional):"
+msgstr "وقت الانتهاء أو المدة (اختياري):"
+
+msgid "Enter feed URL:"
+msgstr "أدخل عنوان URL للخلاصة:"
+
+msgid "Enter new URL:"
+msgstr "أدخل عنوان URL الجديد:"
+
+msgid "Enter or select a media URL:"
+msgstr "أدخل أو حدد عنوان URL للوسائط:"
+
+msgid "Enter playlist name"
+msgstr "أدخل اسم قائمة التشغيل"
+
+msgid "Enter station name..."
+msgstr "أدخل اسم المحطة..."
+
+msgid "Entry Detail Text"
+msgstr "التفاصيل"
+
+msgid "Entry Tree"
+msgstr ""
+
+msgid "Entry data copied to clipboard"
+msgstr ""
+
+msgid "Entry: {title}, Published: {published}, Link: {link}"
+msgstr "المدخلة: {title}، تاريخ النشر: {published}، الرابط: {link}"
+
+msgid "Error"
+msgstr "خطأ"
+
+msgid "Error converting {filename}"
+msgstr "خطأ في تحويل {filename}"
+
+msgid "Error loading favorites: {error}"
+msgstr "حدث خطأ أثناء تحميل المفضلة: {error}"
+
+msgid "Error loading recents: {error}"
+msgstr "حدث خطأ أثناء تحميل الأحداث الأخيرة: {error}"
+
+msgid "Error occurred"
+msgstr "حدث خطأ"
+
+msgid "Error: No files selected."
+msgstr "خطأ: لم يتم تحديد أي ملفات."
+
+msgid "Exit"
+msgstr "مخرج"
+
+msgid "Explorer"
+msgstr "مستكشف الملفات"
+
+msgid "Extract 1 Image Per Second"
+msgstr "استخراج صورة واحدة في الثانية"
+
+msgid "Extract All Frames"
+msgstr "استخراج كافة الإطارات"
+
+msgid "Extract Audio"
+msgstr "استخراج الصوت"
+
+msgid "Extract Images"
+msgstr "استخراج الصور"
+
+msgid "Extract Range"
+msgstr "نطاق الاستخراج"
+
+msgid "Extracted Playlist"
+msgstr "تم استخراج قائمة التشغيل "
+
+msgid "Extracted URL"
+msgstr "تم استخراج الرابط"
+
+msgid "Extracting Audio..."
+msgstr "استخراج الصوت..."
+
+msgid "Extracting Images..."
+msgstr "جاري استخراج الصور..."
+
+msgid "Extracting URL..."
+msgstr "جارٍ استخراج الرابط..."
+
+msgid "Extraction Mode:"
+msgstr "وضع الاستخراج:"
+
+msgid "Extraction completed successfully"
+msgstr "اكتمل الاستخراج بنجاح"
+
+msgid "Extraction completed successfully."
+msgstr "اكتمل الاستخراج بنجاح."
+
+msgid "Extraction failed"
+msgstr "فشل الاستخراج"
+
+msgid "FFmpeg Path:"
+msgstr "مسارFFmpeg :"
+
+msgid "FULL ENTRY DATA"
+msgstr ""
+
+msgid "Failed"
+msgstr "فشل"
+
+msgid "Failed to add favorite: {error}"
+msgstr "فشلت إضافة المفضلة: {error}"
+
+msgid "Failed to add recent file: {error}"
+msgstr "فشلت إضافة الملف الأخير: {error}"
+
+msgid "Failed to clear favorites: {error}"
+msgstr "فشل في مسح المفضلة: {error}"
+
+msgid "Failed to clear recent files: {error}"
+msgstr "فشل في مسح الملفات الأخيرة: {error}"
+
+msgid ""
+"Failed to convert {filename}:\n"
+"{message}"
+msgstr ""
+"فشل تحويل {filename}:\n"
+"{message}"
+
+msgid "Failed to download {label}."
+msgstr "فشل تنزيل {label}."
+
+msgid ""
+"Failed to extract URL:\n"
+"{error}"
+msgstr ""
+"فشل استخراج عنوان URL:\n"
+"{error}"
+
+msgid ""
+"Failed to install {label}:\n"
+"{msg}"
+msgstr ""
+"فشل تثبيت {label}:\n"
+"{msg}"
+
+msgid ""
+"Failed to launch the updater:\n"
+"{error}"
+msgstr ""
+"Failed to launch the updater:\n"
+"{error}"
+
+msgid "Failed to parse feed"
+msgstr "Failed to parse feed"
+
+msgid ""
+"Failed to read file: {path}\n"
+"Error: {error}"
+msgstr ""
+"Failed to read file: {path}\n"
+"Error: {error}"
+
+msgid "Failed to refresh feed"
+msgstr "فشل تحديث الخلاصة"
+
+msgid "Failed to remove favorite: {error}"
+msgstr "فشلت إزالة المفضلة: {error}"
+
+msgid "Failed to save tags"
+msgstr "Failed to save tags"
+
+msgid "Failed to save tags: {error}"
+msgstr "Failed to save tags: {error}"
+
+msgid "Failed to start process: {error}"
+msgstr "فشل بدء العملية: {error}"
+
+msgid "Failed to start thumbnail generation"
+msgstr "فشل في بدء إنشاء الصورة المصغرة"
+
+msgid "Failed to take screenshot"
+msgstr "فشل في التقاط لقطة الشاشة"
+
+msgid "Favorite Station: {name}. Country: {country}. Language: {language}."
+msgstr "المحطة المفضلة: {name}. الدولة: {country}. اللغة: {language}."
+
+msgid "Favorites"
+msgstr "المفضلة"
+
+msgid "Favorites list"
+msgstr "قائمة المفضلة"
+
+msgid "Feed List"
+msgstr "قائمة الموجزات"
+
+msgid "Feed URL updated successfully"
+msgstr "تم تحديث عنوان URL للخلاصة بنجاح"
+
+msgid "Feed added successfully"
+msgstr "تمت إضافة الخلاصة بنجاح"
+
+msgid "Feed already exists"
+msgstr "الخلاصة موجودة بالفعل"
+
+msgid "Feed refreshed successfully"
+msgstr "تم تحديث الخلاصة بنجاح"
+
+msgid ""
+"Feed validation failed:\n"
+"{error}"
+msgstr ""
+"فشل التحقق من صحة الخلاصة:\n"
+"{error}"
+
+msgid "Fetching download links from GitHubâ¦"
+msgstr "Fetching download links from GitHubâ¦"
+
+msgid "Fetching video information..."
+msgstr "جارٍ جلب معلومات الفيديو..."
+
+msgid "File Content Preview (Live)"
+msgstr "معاينة محتوى الملف (مباشر)"
+
+msgid "File Name"
+msgstr "اسم الملف"
+
+msgid "File loaded successfully"
+msgstr "تم تحميل الملف بنجاح"
+
+msgid "Files"
+msgstr "ملفات"
+
+msgid "Files for Conversion (Batch)"
+msgstr "ملفات للتحويل (دفعة)"
+
+msgid "Filter By:"
+msgstr "تصفية حسب:"
+
+msgid "Filter type"
+msgstr "نوع الفلتر"
+
+msgid "Filter value"
+msgstr "قيمة التصفية"
+
+msgid "Filtering by {filter_type}: {filter_value}..."
+msgstr "التصفية حسب {filter_type}: {filter_value}..."
+
+msgid "Filters"
+msgstr "عوامل التصفية"
+
+msgid "Find and Replace"
+msgstr "البحث والاستبدال"
+
+msgid "Find:"
+msgstr "إيجاد:"
+
+msgid "Folder"
+msgstr "مجلد"
+
+msgid "Forward"
+msgstr "تقدم إلى الأمام"
+
+msgid "Found {count} stations"
+msgstr "تم العثور على {count} محطة"
+
+msgid "From FPS:"
+msgstr "منFPS:"
+
+msgid "Full Entry Details"
+msgstr "تفاصيل الدخول الكاملة"
+
+msgid "Fullscreen"
+msgstr "ملء الشاشة"
+
+msgid "Gamma"
+msgstr "Gamma"
+
+msgid "General"
+msgstr "عام"
+
+msgid "Generate Thumbnail(s)"
+msgstr "إنشاء صور مصغرة"
+
+msgid "Generation Mode:"
+msgstr "وضع التوليد:"
+
+msgid "Get/Update &Utilities..."
+msgstr "الحصول على/التحديث والأدوات المساعدة..."
+
+msgid "HTTP {status}"
+msgstr "HTTP {status}"
+
+msgid "Hide"
+msgstr "إخفاء"
+
+msgid "Hide Filters"
+msgstr "إخفاء عوامل التصفية"
+
+msgid "Hide Subtitles"
+msgstr "إخفاء الترجمة"
+
+msgid "Hide subtitles"
+msgstr "إخفاء الترجمة"
+
+msgid "Hide to status bar"
+msgstr "إخفاء في شريط الحالة"
+
+msgid "Hotkeys Configuration"
+msgstr "إعدادات الاختصارات"
+
+msgid "Hotkeys updated"
+msgstr "تم تحديث الاختصارات"
+
+msgid "Hue"
+msgstr "Hue"
+
+msgid "Image Extraction"
+msgstr "استخراج الصور"
+
+msgid "Image extraction duration in seconds"
+msgstr "مدة استخراج الصورة بالثواني"
+
+msgid "Image extraction mode"
+msgstr "وضع استخراج الصورة"
+
+msgid "Image extraction start time"
+msgstr "وقت بدء استخراج الصورة"
+
+msgid "Import Failed"
+msgstr ""
+
+msgid "Import Playlist"
+msgstr ""
+
+msgid "Imported playlist '{name}'"
+msgstr ""
+
+msgid "Info"
+msgstr "معلومات"
+
+msgid "Initializing locale..."
+msgstr "جارٍ تهيئة المنطقة..."
+
+msgid "Input Encoding:"
+msgstr "ترميز الإدخال:"
+
+msgid "Input File Encoding:"
+msgstr "ترميز ملف الإدخال:"
+
+msgid "Install Error"
+msgstr "خطأ في التثبيت"
+
+msgid "Interrupt previous speech"
+msgstr "مقاطعة الكلام السابق"
+
+msgid "Invalid Feed"
+msgstr "خلاصة غير صالحة"
+
+msgid "Invalid URL"
+msgstr "رابط غير صالح"
+
+msgid "Invalid URL extraction result"
+msgstr ""
+
+msgid "Invalid VLC Arguments"
+msgstr "Invalid VLC Arguments"
+
+msgid "Invalid feed format"
+msgstr "Invalid feed format"
+
+msgid "Keep SSA tags (output)"
+msgstr "Keep SSA tags (output)"
+
+msgid "Keep all HTML tags (input)"
+msgstr "Keep all HTML tags (input)"
+
+msgid "Keep unknown HTML tags (input)"
+msgstr "Keep unknown HTML tags (input)"
+
+msgid "Language"
+msgstr "اللغة"
+
+msgid "Language(s)"
+msgstr "اللغات"
+
+msgid "Language:"
+msgstr "اللغة:"
+
+msgid "Library"
+msgstr "المكتبة"
+
+msgid "License"
+msgstr "رخصة"
+
+msgid "Link"
+msgstr "رابط"
+
+msgid "Link Fetch Errors"
+msgstr "Link Fetch Errors"
+
+msgid "List of RSS feeds. Right-click for options."
+msgstr "قائمة خلاصات RSS. انقر بزر الماوس الأيمن للخيارات."
+
+msgid "List of favorite media files"
+msgstr "قائمة ملفات الوسائط المفضلة"
+
+msgid "List of log files in the application's logs folder"
+msgstr "List of log files in the application's logs folder"
+
+msgid "List of radio stations. Right-click or double-click for options."
+msgstr ""
+"قائمة محطات الراديو. انقر بزر الماوس الأيمن أو انقر نقرًا مزدوجًا للحصول على"
+" الخيارات."
+
+msgid "List of recently opened media files"
+msgstr "قائمة ملفات الوسائط التي تم فتحها مؤخرًا"
+
+msgid "Load File"
+msgstr "تحميل ملف"
+
+msgid "Loaded top {count} tags"
+msgstr "تم تحميل أهم {count} وسمًا"
+
+msgid "Loaded {count} countries"
+msgstr "تم تحميل {count} دولة"
+
+msgid "Loaded {count} file(s) for tag editing"
+msgstr "تم تحميل {count} ملف"
+
+msgid "Loaded {count} languages"
+msgstr "تم تحميل {count} لغة"
+
+msgid "Loaded {count} subtitle events"
+msgstr "تم تحميل {count} من أحداث الترجمة"
+
+msgid "Loading URL: {url}"
+msgstr "جاري تحميل عنوان URL : {url}"
+
+msgid "Loading configuration..."
+msgstr "جارٍ تحميلإعدادات التطبيق ..."
+
+msgid "Loading database..."
+msgstr "جارٍ تحميل قاعدة البيانات..."
+
+msgid "Loading favorites..."
+msgstr "جارٍ تحميل المفضلة..."
+
+msgid "Loading playlist: {title}"
+msgstr "جارٍ تحميل قائمة التشغيل: {title}"
+
+msgid "Loading {filter_type}..."
+msgstr "جارٍ تحميل {filter_type}..."
+
+msgid "Loading: {filename}"
+msgstr "جارٍ تحميل: {filename}"
+
+msgid "Log File Viewer"
+msgstr "Log File Viewer"
+
+msgid "Logs Files List"
+msgstr "Logs Files List"
+
+msgid "Logs Viewer"
+msgstr "Logs Viewer"
+
+msgid "Logs folder: {path}"
+msgstr "Logs folder: {path}"
+
+msgid "Lyrics tag editor"
+msgstr "Lyrics tag editor"
+
+msgid "Lyrics:"
+msgstr "Lyrics:"
+
+msgid "Main Toolbar"
+msgstr "شريط الأدوات الرئيسي"
+
+msgid "Main video playback area"
+msgstr "منطقة تشغيل الفيديو الرئيسية"
+
+msgid "Manual Frame Selection"
+msgstr "اختيار الإطار اليدوي"
+
+msgid "Mark {index}: {minutes:02d}:{seconds:02d}"
+msgstr "العلامة {index}: {minutes:02d}:{seconds:02d}"
+
+msgid "Maximize"
+msgstr "تكبير"
+
+msgid "Maximize Controls"
+msgstr "تكبير"
+
+msgid "Media"
+msgstr "وسائط"
+
+msgid "Media Extractor"
+msgstr "مستخرج الوسائط"
+
+msgid "Media Preview"
+msgstr "معاينة الوسائط"
+
+msgid "MicroDVD"
+msgstr "MicroDVD"
+
+msgid "Minimize"
+msgstr "تصغير"
+
+msgid "Minimize Controls"
+msgstr "تصغير"
+
+msgid "Minimize/Maximize Controls"
+msgstr "تصغير/تكبير"
+
+msgid "Missing Playlist"
+msgstr ""
+
+msgid "More Info"
+msgstr "مزيد من المعلومات"
+
+msgid "More Options"
+msgstr "المزيد من الخيارات"
+
+msgid "Move Down"
+msgstr "تحرك للأسفل"
+
+msgid "Move Up"
+msgstr "تحرك لأعلى"
+
+msgid "Mute"
+msgstr "كتم"
+
+msgid "Mute Error"
+msgstr "Mute Error"
+
+msgid "Mute toggled"
+msgstr "كتم الصوت"
+
+msgid "Mute/Unmute"
+msgstr "كتم/إلغاء الكتم"
+
+msgid "N/A"
+msgstr "لا يوجد"
+
+msgid "Name"
+msgstr "الاسم"
+
+msgid "Name (A\\u2013Z)"
+msgstr "الاسم (أ\\u2013Z)"
+
+msgid "Name (Z\\u2013A)"
+msgstr "الاسم (ض\\u2013A)"
+
+msgid "Name:"
+msgstr "اسم:"
+
+msgid "Newest first"
+msgstr "الأحدث أولاً"
+
+msgid "Next"
+msgstr "التالي"
+
+msgid "Next Track"
+msgstr "المسار التالي"
+
+msgid "Next track"
+msgstr "المسار التالي"
+
+msgid "No File"
+msgstr "لا يوجد ملف"
+
+msgid "No Media"
+msgstr "لا توجد وسائط"
+
+msgid "No Media Files"
+msgstr "لا توجد ملفات وسائط"
+
+msgid "No Media Found"
+msgstr "لم يتم العثور على وسائط"
+
+msgid "No Playlists"
+msgstr "لا توجد قوائم التشغيل"
+
+msgid "No Releases Found"
+msgstr "لم يتم العثور على أي إصدارات"
+
+msgid "No URL"
+msgstr "لا يوجد رابط"
+
+msgid "No Update Available"
+msgstr "لا توجد تحديثات متاحة"
+
+msgid "No changes to save."
+msgstr "لا توجد تغييرات للحفظ."
+
+msgid "No direct media link found for this entry."
+msgstr "لم يتم العثور على رابط مباشر لهذه المدخلة."
+
+msgid "No download selected"
+msgstr "لم يتم تحديد أي تنزيلات"
+
+msgid "No downloadable assets found in this release."
+msgstr "No downloadable assets found in this release."
+
+msgid "No entries found for this feed."
+msgstr "لم يتم العثور على إدخالات لهذه الخلاصة."
+
+msgid "No entries match your search."
+msgstr "لا توجد إدخالات تطابق بحثك."
+
+msgid "No file loaded."
+msgstr "لم يتم تحميل أي ملف."
+
+msgid "No files to convert."
+msgstr "لا توجد ملفات لتحويلها."
+
+msgid "No links could be resolved."
+msgstr "No links could be resolved."
+
+msgid "No media loaded"
+msgstr "لم يتم تحميل أي وسائط"
+
+msgid "No platform manifest found for '{platform}' in this release."
+msgstr "No platform manifest found for '{platform}' in this release."
+
+msgid "No playable entries found in playlist"
+msgstr ""
+
+msgid "No playlist selected"
+msgstr "لم يتم تحديد قائمة تشغيل"
+
+msgid "No playlists available. Create a playlist first."
+msgstr "لا توجد قوائم تشغيل متاحة. قم بإنشاء قائمة تشغيل أولاً."
+
+msgid "No playlists exist. Would you like to create a new playlist?"
+msgstr "لا توجد أي قوائم تشغيل. هل تريد إنشاء قائمة جديدة؟"
+
+msgid "No recent files"
+msgstr "لا توجد ملفات حديثة"
+
+msgid "No release notes provided."
+msgstr "لم يتم توفير ملاحظات الإصدار."
+
+msgid "No releases have been published for this application yet."
+msgstr "لم يتم نشر أي إصدارات لهذا التطبيق حتى الآن."
+
+msgid "No results found"
+msgstr "لم يتم العثور على نتائج"
+
+msgid "No stream URL found for {name}"
+msgstr "لم يتم العثور على عنوان URL للبث لـ {name}"
+
+msgid "No supported media files found in the selected folder"
+msgstr "لم يتم العثور على ملفات وسائط مدعومة في المجلد المحدد"
+
+msgid ""
+"No supported media files were found in the selected folder:\n"
+"{folder_path}\n"
+"\n"
+"Supported formats include audio and video files."
+msgstr ""
+"لم يتم العثور على ملفات وسائط مدعومة في المجلد المحدد:\n"
+"{folder_path}\n"
+"\n"
+"تتضمن التنسيقات المدعومة ملفات الصوت والفيديو."
+
+msgid "No zip archive found in this release."
+msgstr "No zip archive found in this release."
+
+msgid "No."
+msgstr "لا."
+
+msgid "None"
+msgstr "لا يوجد"
+
+msgid "Not Found"
+msgstr "لم يتم العثور عليه"
+
+msgid "Number of Images to Generate:"
+msgstr "عدد الصور المراد إنشاؤها:"
+
+msgid "Number of images to generate from scene changes"
+msgstr "عدد الصور التي سيتم توليدها من تغييرات المشهد"
+
+msgid "OK"
+msgstr "نعم"
+
+msgid "Off"
+msgstr "مغلق"
+
+msgid "Oldest first"
+msgstr "الأقدم أولاً"
+
+msgid "Omit FPS declaration (output)"
+msgstr "Omit FPS declaration (output)"
+
+msgid "On"
+msgstr "على"
+
+msgid "One or more update files failed to download. Please try again later."
+msgstr "One or more update files failed to download. Please try again later."
+
+msgid "Open"
+msgstr "فتح"
+
+msgid "Open &Folder..."
+msgstr "فتح &مجلد..."
+
+msgid "Open &Playlist..."
+msgstr ""
+
+msgid "Open &URL..."
+msgstr "فتح &عنوان URL..."
+
+msgid "Open Folder"
+msgstr "فتح مجلد"
+
+msgid "Open Link in Browser"
+msgstr "فتح الرابط في المتصفح"
+
+msgid "Open Media File"
+msgstr "فتح ملف وسائط"
+
+msgid "Open Playlist"
+msgstr ""
+
+msgid "Open URL"
+msgstr "فتح رابط"
+
+msgid "Open in Explorer"
+msgstr "فتح في مستكشف الوسائط"
+
+msgid "Opened {title}"
+msgstr "تم فتح {title}"
+
+msgid "Output Encoding:"
+msgstr "ترميز الإخراج:"
+
+msgid "Output Format:"
+msgstr "Output Format:"
+
+msgid "Page Link"
+msgstr "رابط الصفحة"
+
+msgid "Parent Directory"
+msgstr "المجلد الأصلي"
+
+msgid "Path"
+msgstr "المسار"
+
+msgid "Path already exists."
+msgstr "المسار موجود بالفعل."
+
+msgid "Path in Library"
+msgstr "المسار في المكتبة"
+
+msgid "Path not found."
+msgstr "لم يتم العثور على المسار."
+
+msgid "Pause"
+msgstr "إيقاف مؤقت"
+
+msgid "Paused"
+msgstr "متوقف مؤقتًا"
+
+msgid "Play"
+msgstr "تشغيل"
+
+msgid "Play Entry"
+msgstr ""
+
+msgid "Play Station"
+msgstr "تشغيل المحطة"
+
+msgid "Play/Pause"
+msgstr "تشغيل/إيقاف مؤقت"
+
+msgid "Playback Error"
+msgstr "Playback Error"
+
+msgid "Playing"
+msgstr "قيد التشغيل"
+
+msgid "Playing: {name}"
+msgstr "يتم تشغيل: {name}"
+
+msgid "Playlist '{name}' already exists"
+msgstr "قائمة التشغيل \"{name}\" موجودة بالفعل"
+
+msgid ""
+"Playlist '{name}' could not be found at:\n"
+"{path}\n"
+"\n"
+"Remove it from the playlist list?"
+msgstr ""
+
+msgid "Playlist '{name}' created"
+msgstr "تم إنشاء قائمة التشغيل \"{name}\"."
+
+msgid "Playlist '{new_name}' already exists"
+msgstr "قائمة التشغيل \"{new_name}\" موجودة بالفعل"
+
+msgid "Playlist '{new_name}' updated"
+msgstr "تم تحديث قائمة التشغيل \"{new_name}\"."
+
+msgid "Playlist '{playlist_name}' not found"
+msgstr "لم يتم العثور على قائمة التشغيل '{playlist_name}'"
+
+msgid "Playlist Files (*.json *.m3u *.m3u8 *.pls *.xspf);;All Files (*)"
+msgstr ""
+
+msgid "Playlist from {folder_name}"
+msgstr "قائمة التشغيل من {folder_name}"
+
+msgid "Playlist order updated"
+msgstr ""
+
+msgid "Playlist sorted"
+msgstr ""
+
+msgid "Playlist tracks list"
+msgstr ""
+
+msgid "Playlists"
+msgstr "قوائم التشغيل"
+
+msgid "Please enter a URL."
+msgstr "الرجاء إدخال عنوان URL."
+
+msgid "Please enter a playlist name"
+msgstr "الرجاء إدخال اسم قائمة التشغيل"
+
+msgid "Please enter a valid HTTP/HTTPS URL"
+msgstr "الرجاء إدخال عنوان URL صالح لـ HTTP/HTTPS"
+
+msgid "Please load a subtitle file first."
+msgstr "يرجى تحميل ملف الترجمة أولا."
+
+msgid "Please select a playlist"
+msgstr "الرجاء تحديد قائمة التشغيل"
+
+msgid "Please select a valid input video file."
+msgstr "الرجاء تحديد ملف فيديو صالح."
+
+msgid "Podcasts"
+msgstr "البودكاست"
+
+msgid "Preferences"
+msgstr "التفضيلات"
+
+msgid "Preferences saved"
+msgstr "تم حفظ التفضيلات"
+
+msgid "Prefix:"
+msgstr "بادئة:"
+
+msgid "Previous"
+msgstr "السابق"
+
+msgid "Previous Track"
+msgstr "المسار السابق"
+
+msgid "Previous track"
+msgstr "المسار السابق"
+
+msgid "Processing Error"
+msgstr "خطأ في المعالجة"
+
+msgid "Processing subtitle file"
+msgstr "مجاري عالجة ملف الترجمة"
+
+msgid "Processing subtitle file..."
+msgstr "جارٍ معالجة ملف الترجمة..."
+
+msgid "Processing..."
+msgstr "جاري المعالجة..."
+
+msgid "Published"
+msgstr "تاريخ النشر"
+
+msgid "Publisher"
+msgstr "الناشر"
+
+msgid "Queued"
+msgstr "في الانتظار"
+
+msgid "Radio Browser"
+msgstr "متصفح محطات الراديو"
+
+msgid "Radio stations list"
+msgstr "قائمة محطات الراديو"
+
+msgid "Rate:"
+msgstr "السرعة:"
+
+msgid "Read-only console output viewer"
+msgstr "Read-only console output viewer"
+
+msgid "Ready"
+msgstr "جاهز"
+
+msgid "Ready - Enter search term or select filters"
+msgstr "جاهز - أدخل كلمة بحث أو اختر عوامل تصفية"
+
+msgid "Recent files list"
+msgstr "قائمة الملفات الأخيرة"
+
+msgid "Recents"
+msgstr "الأخيرة"
+
+msgid "Recents & Favorites"
+msgstr "الأخيرة والمفضلة"
+
+msgid "Refresh All Feeds"
+msgstr "تحديث كل الموجزات"
+
+msgid "Refresh Feed"
+msgstr "تحديث الموجز"
+
+msgid ""
+"Refresh failed:\n"
+"{error}"
+msgstr ""
+"فشل التحديث:\n"
+"{error}"
+
+msgid "Refreshing feed..."
+msgstr "جارٍ تحديث التغذية..."
+
+msgid "Refreshing feeds..."
+msgstr "جارٍ تحديث الخلاصات..."
+
+msgid ""
+"Refreshing:\n"
+"{url}..."
+msgstr ""
+"تحديث:\n"
+"{url}..."
+
+msgid "Register Click"
+msgstr "تسجيل نقرة"
+
+msgid "Remove"
+msgstr "إزالة"
+
+msgid "Remove Feed"
+msgstr "إزالة الموجز"
+
+msgid "Remove File"
+msgstr "إزالة الملف"
+
+msgid "Remove Selected"
+msgstr "إزالة المحدد"
+
+msgid ""
+"Remove feed:\n"
+"{url}?"
+msgstr ""
+"هل تريد إزالة الخلاصة:\n"
+"{url}؟"
+
+msgid "Remove from Favorites"
+msgstr "إزالة من المفضلة"
+
+msgid "Remove miscellaneous events"
+msgstr "Remove miscellaneous events"
+
+msgid "Removed missing playlist '{name}'"
+msgstr ""
+
+msgid "Removed station from favorites"
+msgstr "تمت إزالة المحطة من المفضلة"
+
+msgid "Removed {count} track(s) from playlist"
+msgstr ""
+
+msgid ""
+"Reorder tracks by dragging them or pressing Shift+Up / Shift+Down. Right-"
+"click for more options."
+msgstr ""
+
+msgid "Repeat all"
+msgstr "تكرار الكل"
+
+msgid "Repeat mode"
+msgstr "وضع التكرار"
+
+msgid "Repeat off"
+msgstr "إيقاف التكرار"
+
+msgid "Repeat one"
+msgstr "تكرار الحالي"
+
+msgid "Repeat: All"
+msgstr "كرر: الكل"
+
+msgid "Repeat: Off"
+msgstr "كرر: معطل"
+
+msgid "Repeat: One"
+msgstr "كرر: واحد"
+
+msgid "Repeat: {state}"
+msgstr "كرر: {state}"
+
+msgid "Replace With:"
+msgstr "استبدال بـ:"
+
+msgid "Reset to Default"
+msgstr "إرجاع الإعدادات إلى القيم الإفتراضية"
+
+msgid "Resolving next stream..."
+msgstr ""
+
+msgid "Resolving previous stream..."
+msgstr ""
+
+msgid "Resolving stream URL: {url}"
+msgstr ""
+
+msgid "Resolving stream..."
+msgstr ""
+
+msgid "Restart Required"
+msgstr "إعادة التشغيل مطلوبة"
+
+msgid "Results"
+msgstr "النتائج"
+
+msgid "Retry Download"
+msgstr "إعادة محاولة التنزيل"
+
+msgid "Rewind"
+msgstr "إرجاع إلى الخلف"
+
+msgid "SRT"
+msgstr "SRT"
+
+msgid "Sample Rate (Audio):"
+msgstr "Sample Rate (Audio):"
+
+msgid "Saturation"
+msgstr "Saturation"
+
+msgid "Save All Files"
+msgstr "حفظ كل الملفات"
+
+msgid "Save Current File"
+msgstr "حفظ الملف الحالي"
+
+msgid "Save URLs"
+msgstr "حفظ عناوين URL"
+
+msgid "Save URLs:"
+msgstr "حفظ عناوين URL:"
+
+msgid "Scale"
+msgstr "Scale"
+
+msgid "Scene Change Threshold (0.0-1.0):"
+msgstr "عتبة تغيير المشهد (0.0-1.0):"
+
+msgid "Scene change detection threshold"
+msgstr "عتبة الكشف عن تغيير المشهد"
+
+msgid "Screenshot"
+msgstr "لقطة شاشة"
+
+msgid "Screenshot Format:"
+msgstr "سيغة ملف لقطة الشاشة:"
+
+msgid "Screenshot saved: {filename}"
+msgstr "تم حفظ لقطة الشاشة: {filename}"
+
+msgid "Search"
+msgstr "بحث"
+
+msgid "Search and Filter"
+msgstr "بحث وتصفية"
+
+msgid "Search button"
+msgstr "زر البحث"
+
+msgid "Search:"
+msgstr "إبحث:"
+
+msgid "Searching for '{search_name}'..."
+msgstr "جارٍ البحث عن \"{search_name}\"..."
+
+msgid "Seek"
+msgstr "مسار الوقت"
+
+msgid "Seek Error"
+msgstr "Seek Error"
+
+msgid "Seek Offset:"
+msgstr "مقدار إزاحة الوقت:"
+
+msgid "Segment Timeline Widget"
+msgstr "Segment Timeline Widget"
+
+msgid "Select"
+msgstr "تحديد"
+
+msgid "Select Audio Files"
+msgstr "حدد ملفات الصوت"
+
+msgid "Select Cookies File"
+msgstr "حدد ملف ملفات تعريف الارتباط"
+
+msgid "Select FFmpeg Directory"
+msgstr "حدد دليل FFmpeg"
+
+msgid "Select Output Directory"
+msgstr "حدد مسار الإخراج"
+
+msgid "Select Output Directory for Images"
+msgstr "حدد مسار الإخراج للصور"
+
+msgid "Select Playlist"
+msgstr "تحديد قائمة تشغيل"
+
+msgid "Select Subtitle File"
+msgstr "حدد ملف الترجمة"
+
+msgid "Select Subtitle Files"
+msgstr "حدد ملفات الترجمة"
+
+msgid "Select Video File"
+msgstr "حدد ملف الفيديو"
+
+msgid "Select a playlist to add the file to:"
+msgstr "حدد قائمة تشغيل لإضافة الملف إليها:"
+
+msgid "Select files to convert"
+msgstr "حدد الملفات لتحويلها"
+
+msgid "Select from Scene Changes"
+msgstr "اختر من تغييرات المشهد"
+
+msgid "Select how to filter stations"
+msgstr "حدد كيفية تصفية المحطات"
+
+msgid "Select how to sort results"
+msgstr "حدد كيفية فرز النتائج"
+
+msgid "Select or type a filter value"
+msgstr "حدد أو اكتب قيمة عامل التصفية"
+
+msgid "Select tools to display on the toolbar:"
+msgstr "حدد الأدوات التي تريد عرضها على شريط الأدوات:"
+
+msgid "Select yt-dlp Directory"
+msgstr "حدد مسار yt-dlp"
+
+msgid "Selected path is not a directory"
+msgstr "المسار المحدد ليس مجلد"
+
+msgid "Shift Time:"
+msgstr "وقت التحول:"
+
+msgid "Shortcut"
+msgstr "الاختصار"
+
+msgid ""
+"Shortcut editor. Press the desired key combination; press Enter or change "
+"focus to accept."
+msgstr ""
+"محرر الاختصارات. اضغط على مجموعة المفاتيح المطلوبة؛ اضغط على Enter أو قم "
+"بتغيير التركيز للقبول."
+
+msgid "Show"
+msgstr "إظهار"
+
+msgid "Show &Console Dock"
+msgstr "Show &Console Dock"
+
+msgid "Show &Explorer"
+msgstr "عرض &المستكشف"
+
+msgid "Show &Playlists"
+msgstr "عرض &قوائم التشغيل"
+
+msgid "Show &Podcasts"
+msgstr "عرض &البودكاست"
+
+msgid "Show &Radio Browser"
+msgstr "عرض ومتصفح الراديو"
+
+msgid "Show &Recents/Favorites"
+msgstr "عرض &الأحدث/المفضلة"
+
+msgid "Show Downloader"
+msgstr "إظهار مدير التنزيلات"
+
+msgid "Show Favorites"
+msgstr "إظهار المفضلة"
+
+msgid "Show Filters"
+msgstr "إظهار عوامل التصفية"
+
+msgid "Show Tool"
+msgstr "إظهار الأداة"
+
+msgid "Show YouTube Info"
+msgstr "إظهار معلومات YouTube"
+
+msgid "Show favorites button"
+msgstr "إظهار زر المفضلة"
+
+msgid "Show subtitles"
+msgstr "إظهار الترجمة"
+
+msgid "Show {title}"
+msgstr "إظهار {title}"
+
+msgid "Showing {count} favorite stations"
+msgstr "يتم عرض {count} محطة مفضلة"
+
+msgid "Showing {title}"
+msgstr "يتم عرض {title}"
+
+msgid "Shuffle"
+msgstr "تشغيل عشوائي"
+
+msgid "Shuffle off"
+msgstr "إيقاف التشغيل العشوائي"
+
+msgid "Shuffle on"
+msgstr "تفعيل التشغيل العشوائي"
+
+msgid "Shuffle: Off"
+msgstr "التشغيل العشوائي: معطل"
+
+msgid "Shuffle: On"
+msgstr "تشغيل عشوائي: تشغيل"
+
+msgid ""
+"Some options you modified require an application restart to take effect.\n"
+"\n"
+"Would you like to restart now?"
+msgstr ""
+"بعض الخيارات التي عدّلتها تتطلب إعادة تشغيل التطبيق حتى يتم تطبيقها.\n"
+"\n"
+"هل تريد إعادة التشغيل الآن؟"
+
+msgid "Sort"
+msgstr ""
+
+msgid "Sort By"
+msgstr "ترتيب حسب"
+
+msgid "Sort By:"
+msgstr "ترتيب حسب:"
+
+msgid "Sort by"
+msgstr "ترتيب حسب"
+
+msgid "Sort order"
+msgstr "الترتيب"
+
+msgid "Speech Settings"
+msgstr "إعدادات الصوت"
+
+msgid "Speed"
+msgstr "السرعة"
+
+msgid "Start"
+msgstr "بدء"
+
+msgid "Start Batch Conversion"
+msgstr "ابدأ تحويل الدفعة"
+
+msgid "Start Time (HH:MM:SS):"
+msgstr "وقت البدء (س س: د د: س س):"
+
+msgid "Starting application..."
+msgstr "جارٍ تشغيل التطبيق..."
+
+msgid "Starting audio extraction"
+msgstr "جاري استخراج الصوت"
+
+msgid "Starting batch conversion of {count} files"
+msgstr "بدء تحويل دفعة من ملفات {count}"
+
+msgid "Starting conversion..."
+msgstr "بدء التحويل..."
+
+msgid "Starting generation..."
+msgstr "Starting generation..."
+
+msgid "Starting image extraction"
+msgstr "البدء باستخراج الصورة"
+
+msgid "Starting thumbnail generation"
+msgstr "بدء إنشاء الصور المصغرة"
+
+msgid "Station Information"
+msgstr "معلومات المحطة"
+
+msgid "Station Name:"
+msgstr "اسم المحطة:"
+
+msgid "Station name search"
+msgstr "البحث عن اسم المحطة"
+
+msgid ""
+"Station: {name}. Country: {country}. Language: {language}. Tags: {tags}. "
+"Codec: {codec}. Bitrate: {bitrate}."
+msgstr ""
+"المحطة: {name}. الدولة: {country}. اللغة: {language}. العلامات: {tags}. "
+"برنامج الترميز: {codec}. معدل البت: {bitrate}."
+
+msgid "Stop Error"
+msgstr "Stop Error"
+
+msgid "Stopped"
+msgstr "متوقف"
+
+msgid "Streaming URL"
+msgstr "رابط البث"
+
+msgid "Style:"
+msgstr "Style:"
+
+msgid "Subtitle &Converter"
+msgstr "محول subtitles"
+
+msgid "Subtitle &Editor"
+msgstr "محرر subtitles"
+
+msgid "Subtitle Converter"
+msgstr "محول subtitles"
+
+msgid "Subtitle Editor"
+msgstr "محرر subtitles"
+
+msgid ""
+"Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt "
+"*.vtt);;All Files (*)"
+msgstr ""
+"Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt "
+"*.vtt);;All Files (*)"
+
+msgid "Subtitle conversion completed"
+msgstr "اكتمل التحويل بنجاح."
+
+msgid "Subtitle conversion completed successfully."
+msgstr "اكتمل التحويل بنجاح."
+
+msgid "Subtitle conversion failed"
+msgstr "فشل تحويل الملفات"
+
+msgid "Subtitle processing completed"
+msgstr "اكتملت معالجة الترجمة"
+
+msgid "Subtitle processing completed successfully."
+msgstr "تمت معالجة ملف الترجمة بنجاح."
+
+msgid "Subtitle processing failed"
+msgstr "فشلت معالجة ملف الترجمة"
+
+msgid "Subtitles"
+msgstr "الترجمة"
+
+msgid "Subtitles display"
+msgstr "عرض الترجمة"
+
+msgid "Subtitles section"
+msgstr "قسم الترجمة"
+
+msgid "Success"
+msgstr "نجاح"
+
+msgid "Suffix:"
+msgstr "لاحقة:"
+
+msgid "Summary and description of selected entry"
+msgstr "Summary and description of selected entry"
+
+msgid "Tag"
+msgstr "علامة"
+
+msgid "Tag Editor"
+msgstr "محرر معلومات الوسائط"
+
+msgid "Tags saved for {count} file(s)"
+msgstr "العلامات المحفوظة لملفات {count}"
+
+msgid "Tags saved for {filename}"
+msgstr "تم حفظ الوسوم بنجاح  لـ {filename}"
+
+msgid "Tags saved successfully."
+msgstr "تم حفظ الوسوم بنجاح."
+
+msgid "Take screenshot"
+msgstr "التقاط لقطة شاشة"
+
+msgid "Target Format:"
+msgstr "Target Format:"
+
+msgid "Target bitrate"
+msgstr "Target bitrate"
+
+msgid "Target format"
+msgstr "Target format"
+
+msgid "Text"
+msgstr "نص"
+
+msgid "Text Editor"
+msgstr "محرر النص"
+
+msgid "Text Operation"
+msgstr "عملية النص"
+
+msgid "The VLC arguments are not valid. Please check the syntax."
+msgstr "The VLC arguments are not valid. Please check the syntax."
+
+msgid ""
+"The documentation could not be found at:\n"
+"{path}\n"
+"\n"
+"Please visit the project website for help."
+msgstr ""
+"تعذر العثور على دليل المستخدم في:\n"
+"{path}\n"
+"\n"
+"يرجى زيارة موقع المشروع للحصول على المساعدة."
+
+msgid ""
+"The following tools are currently active:\n"
+"{tools}\n"
+"\n"
+"Closing the application will stop these processes. Do you want to continue?"
+msgstr ""
+"الأدوات التالية نشطة حاليًا:\n"
+"{tools}\n"
+"\n"
+"إغلاق التطبيق سيوقف هذه العمليات. هل تريد المتابعة؟"
+
+msgid ""
+"The update has been downloaded.\n"
+"\n"
+"{app_name} needs to restart to apply it. Restart now?"
+msgstr ""
+"تم تنزيل التحديث.\n"
+"\n"
+"يجب إعادة تشغيل {app_name} لتطبيقه. هل تريد إعادة التشغيل الآن؟"
+
+msgid ""
+"The updater binary was not found at:\n"
+"{path}\n"
+"\n"
+"Please update manually."
+msgstr ""
+"The updater binary was not found at:\n"
+"{path}\n"
+"\n"
+"Please update manually."
+
+msgid "Theme:"
+msgstr "السمة:"
+
+msgid "There aren't any log files yet."
+msgstr "There aren't any log files yet."
+
+msgid "This path already exists in the library."
+msgstr "هذا المسار موجود بالفعل في المكتبة."
+
+msgid "Thumbnail Generator"
+msgstr "مولد الصور المصغرة"
+
+msgid "Thumbnail generation completed"
+msgstr "اكتمل إنشاء الصورة المصغرة"
+
+msgid "Thumbnail generation completed successfully."
+msgstr "تم إنشاء الصورة المصغرة بنجاح."
+
+msgid "Thumbnail generation failed"
+msgstr "فشل إنشاء الصورة المصغرة"
+
+msgid "Thumbnail generation mode"
+msgstr "وضع إنشاء الصورة المصغرة"
+
+msgid "Time: {time}, Speed: {speed:.2f}x"
+msgstr "الوقت: {time}، السرعة: {speed:.2f}x"
+
+msgid "Timestamp (HH:MM:SS):"
+msgstr "الطابع الزمني (س س:د د:ث س):"
+
+msgid "Timestamp for manual frame selection"
+msgstr "الطابع الزمني لاختيار الإطار اليدوي"
+
+msgid "Timing Editor"
+msgstr "محرر التوقيت"
+
+msgid "Title"
+msgstr "العنوان"
+
+msgid "Title (Ascending A-Z)"
+msgstr "العنوان (تصاعدي A-Z)"
+
+msgid "Title (Descending Z-A)"
+msgstr "العنوان (تنازلي Z-A)"
+
+msgid "To FPS:"
+msgstr "إلى FPS:"
+
+msgid "Toggle &Repeat: Off"
+msgstr "تبديل وتكرار: إيقاف"
+
+msgid "Toggle Repeat: Off"
+msgstr "التكرار: متوقف"
+
+msgid "Toggle Repeat: On"
+msgstr "التكرار: مفعّل"
+
+msgid "Too many redirects"
+msgstr "عدد كبير من عمليات إعادة التوجيه"
+
+msgid "Tool Active"
+msgstr "الأداة قيد العمل"
+
+msgid "Tool Already Open"
+msgstr "الأداة مفتوحة بالفعل"
+
+msgid "Tool closed"
+msgstr "تم إغلاق الأداة"
+
+msgid "Toolbar Tools:"
+msgstr "أدوات شريط الأدوات:"
+
+msgid "Tracks:"
+msgstr "المسارات:"
+
+msgid ""
+"Tree of feed entries with title, date, and link. Right-click for options."
+msgstr ""
+"شجرة إدخالات الخلاصة مع العنوان والتاريخ والارتباط. انقر بزر الماوس الأيمن "
+"للحصول على الخيارات."
+
+msgid "Type a station name and press Enter to search"
+msgstr "اكتب اسم المحطة ثم اضغط Enter للبحث"
+
+msgid "Type and press Enter to search entries..."
+msgstr "اكتب واضغط على Enter للبحث عن الإدخالات..."
+
+msgid "URL Extraction Failed"
+msgstr "فشل استخراج الرابط"
+
+msgid "URL extraction failed"
+msgstr ""
+
+msgid "URL resolution failed"
+msgstr ""
+
+msgid "Unknown"
+msgstr "مجهول"
+
+msgid "Unknown error"
+msgstr "خطأ غير معروف"
+
+msgid "Unmute"
+msgstr "إلغاء الكتم"
+
+msgid "Untitled"
+msgstr "بدون عنوان"
+
+msgid "Update Available - {title}"
+msgstr "تحديث متاح - {title}"
+
+msgid "Update Check Failed"
+msgstr "فشل التحقق من التحديث"
+
+msgid "Update Error"
+msgstr "خطأ في التحديث"
+
+msgid "Update Failed"
+msgstr "فشل التحديث"
+
+msgid "Update Feed URL"
+msgstr "تحديث عنوان URL للخلاصة"
+
+msgid "Update Ready"
+msgstr "Update Ready"
+
+msgid "Updater Not Found"
+msgstr "Updater Not Found"
+
+msgid "VLC Arguments:"
+msgstr "VLC Arguments:"
+
+msgid "VLC Logging:"
+msgstr "VLC logging:"
+
+msgid "VLC Settings"
+msgstr "إعدادات برنامج VLC"
+
+msgid "Validating feed..."
+msgstr "جارٍ التحقق من التغذية..."
+
+msgid "Validating new feed URL..."
+msgstr "جارٍ التحقق من صحة عنوان URL للخلاصة الجديدة..."
+
+msgid "Value:"
+msgstr "قيمة:"
+
+msgid "Verbose Output:"
+msgstr "Verbose Output:"
+
+msgid "Video Display"
+msgstr "عرض الفيديو"
+
+msgid "Video Display Area"
+msgstr "منطقة عرض الفيديو"
+
+msgid "Video File:"
+msgstr "ملف الفيديو:"
+
+msgid "Video Information:"
+msgstr "معلومات الفيديو:"
+
+msgid "Video display area"
+msgstr "منطقة عرض الفيديو"
+
+msgid "Video file for extraction"
+msgstr "ملف فيديو لاستخراجه"
+
+msgid "Video file input path"
+msgstr "مسار إدخال ملف الفيديو"
+
+msgid "View Full Entry Dump"
+msgstr "View Full Entry Dump"
+
+msgid "Voice Settings"
+msgstr "إعدادات الصوت"
+
+msgid "Voice changed to {voice_name}"
+msgstr "تم تغيير الصوت إلى {voice_name}"
+
+msgid "Voice:"
+msgstr "الصوت:"
+
+msgid "Volume"
+msgstr "مستوى الصوت"
+
+msgid "Volume Error"
+msgstr "Volume Error"
+
+msgid "Volume Offset:"
+msgstr "مقدار إزاحة مستوى الصوت:"
+
+msgid "Volume:"
+msgstr "مستوى الصوت"
+
+msgid "Votes"
+msgstr "التصويتات"
+
+msgid "Warning"
+msgstr "تحذير"
+
+msgid "What would you like to do?"
+msgstr "ماذا تريد أن تفعل؟"
+
+msgid "YouTube Video Information"
+msgstr "معلومات فيديو يوتيوب"
+
+msgid "cancel"
+msgstr "إلغاء"
+
+msgid "confirm"
+msgstr "موافق"
+
+msgid "copy path"
+msgstr "نسخ المسار إلى الحافظة"
+
+msgid "debugConsoleDock"
+msgstr "debugConsoleDock"
+
+msgid "e.g., 00:01:30 or 90"
+msgstr "على سبيل المثال، 00:01:30 أو 90"
+
+msgid "e.g., 1.5s or -1m10s"
+msgstr "على سبيل المثال، 1.5 ثانية أو -1 دقيقة و10 ثانية"
+
+msgid "navigate to folder"
+msgstr "الانتقال إلى المجلد"
+
+msgid "path"
+msgstr "المسار"
+
+msgid "size"
+msgstr "الحجم"
+
+msgid "volume"
+msgstr "مستوى الصوت"
+
+msgid "yt-dlp Logging:"
+msgstr "yt-dlp Logging:"
+
+msgid "yt-dlp Path:"
+msgstr "مسار yt-dlp:"
+
+msgid "yt-dlp Settings"
+msgstr "إعدادات yt-dlp"
+
+msgid "{app} is up to date (version {version})."
+msgstr "{app} محدّث (الإصدار {version})."
+
+msgid "{count} download(s) are still in progress."
+msgstr "لا يزال هناك {count} تنزيل/تنزيلات قيد التنفيذ."
+
+msgid "{count} files saved."
+msgstr "تم حفظ الملفات {count}."
+
+msgid "{label} (Descending)"
+msgstr ""
+
+msgid "{title} hidden"
+msgstr "تم إخفاء {title}"

@@ -1,0 +1,2505 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PlayForm 1.0.0\n"
+"Report-Msgid-Bugs-To: support@joybytes.dev\n"
+"POT-Creation-Date: 2026-05-26 15:47+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: fr\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid " (Max retries reached)"
+msgstr "(Nombre maximal de tentatives atteint)"
+
+msgid "&About PlayForm..."
+msgstr "À propos de PlayForm..."
+
+msgid "&Backward"
+msgstr "Retour rapide"
+
+msgid "&Batch Converter"
+msgstr "Convertisseur par lots"
+
+msgid "&Check for Updates..."
+msgstr "Rechercher des mises à jour..."
+
+msgid "&Close Media"
+msgstr "Fermer le média"
+
+msgid "&Debug"
+msgstr "Débogage"
+
+msgid "&Documentation"
+msgstr "Documentation"
+
+msgid "&Download Manager"
+msgstr "Gestionnaire de téléchargements"
+
+msgid "&Exit"
+msgstr "Quitter"
+
+msgid "&File"
+msgstr "Fichier"
+
+msgid "&Forward"
+msgstr "Avance rapide"
+
+msgid "&Manage Hotkeys"
+msgstr "Gérer les raccourcis"
+
+msgid "&Manage Preferences"
+msgstr "Gérer les préférences"
+
+msgid "&Media"
+msgstr "Médias"
+
+msgid "&Media Extractor"
+msgstr "Extracteur multimédia"
+
+msgid "&Minimize Player"
+msgstr "Réduire le lecteur"
+
+msgid "&Minimize to Taskbar"
+msgstr "Réduire dans la barre des tâches"
+
+msgid "&Mute/Unmute"
+msgstr "Couper/Rétablir le son"
+
+msgid "&Next"
+msgstr "Suivant"
+
+msgid "&Open File..."
+msgstr "Ouvrir un fichier..."
+
+msgid "&Options"
+msgstr "Options"
+
+msgid "&Play/Pause"
+msgstr "Lecture/Pause"
+
+msgid "&Previous"
+msgstr "Précédent"
+
+msgid "&Recent Files"
+msgstr "Fichiers récents"
+
+msgid "&Stop"
+msgstr "Arrêter"
+
+msgid "&Subtitle Tools"
+msgstr "Outils de sous-titres"
+
+msgid "&Tag Editor"
+msgstr "Éditeur de tags"
+
+msgid "&Thumbnail Generator"
+msgstr "Générateur de miniatures"
+
+msgid "&Tools"
+msgstr "Outils"
+
+msgid "&View"
+msgstr "Affichage"
+
+msgid "&View Logsâ¦"
+msgstr "&Afficher les journaux…"
+
+msgid ""
+"'{title}' is already open. Please close it before opening another tool."
+msgstr ""
+"« {title} » est déjà ouvert. Veuillez le fermer avant d'ouvrir un autre "
+"outil."
+
+msgid "(no log files)"
+msgstr "(pas de fichiers journaux)"
+
+msgid "... and {count} more"
+msgstr "... et {count} plus"
+
+msgid "0 B / 0 B"
+msgstr "0 o / 0 o"
+
+msgid "0 B/s"
+msgstr "0 o/s"
+
+msgid "1 file saved."
+msgstr "1 fichier enregistré."
+
+msgid ""
+"<b>A new version of {app} is available!</b><br>Your version: "
+"<b>{current}</b> -> New version: <b>{new}</b>"
+msgstr ""
+"<b>Une nouvelle version de {app} est disponible !</b><br>Votre version : "
+"<b>{current}</b> -> Nouvelle version : <b>{new}</b>"
+
+msgid "<b>Bitrate:</b> {bitrate} kbps"
+msgstr "<b>Débit :</b> {bitrate} kbps"
+
+msgid "<b>Codec:</b> {codec}"
+msgstr "<b>Codec :</b> {codec}"
+
+msgid "<b>Country:</b> {country}"
+msgstr "<b>Pays :</b> {country}"
+
+msgid "<b>Description:</b>"
+msgstr "<b>Description :</b>"
+
+msgid "<b>Entries</b>"
+msgstr "<b>Entrées</b>"
+
+msgid "<b>Feeds</b>"
+msgstr "<b>Flux</b>"
+
+msgid "<b>Homepage:</b> {homepage}"
+msgstr "<b>Page d'accueil :</b> {homepage}"
+
+msgid "<b>Language:</b> {language}"
+msgstr "<b>Langue :</b> {language}"
+
+msgid "<b>Name:</b> {name}"
+msgstr "<b>Nom :</b> {name}"
+
+msgid "<b>Release files ({count}):</b>"
+msgstr "<b>Fichiers de version ({count}) :</b>"
+
+msgid "<b>Release notes:</b>"
+msgstr "<b>Notes de version :</b>"
+
+msgid "<b>Select utilities to download:</b>"
+msgstr "<b>Sélectionnez les utilitaires à télécharger :</b>"
+
+msgid "<b>Summary/Description</b>"
+msgstr "<b>Résumé/Description</b>"
+
+msgid "<b>Tags:</b> {tags}"
+msgstr "<b>Étiquettes :</b> {tags}"
+
+msgid "<b>Votes:</b> {votes}"
+msgstr "<b>Votes :</b> {votes}"
+
+msgid "<em style='color: #999;'>Empty</em>"
+msgstr "<em style='color: #999;'>Vide</em>"
+
+msgid "<em style='color: #999;'>None</em>"
+msgstr "<em style='color: #999;'>Aucun</em>"
+
+msgid "<em>... and {count} more</em>"
+msgstr "<em>... et {count} plus</em>"
+
+msgid ""
+"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry "
+"Data</h2>"
+msgstr ""
+"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Données complètes"
+" d'entrée</h2>"
+
+msgid "<p><em>No summary or description available.</em></p>"
+msgstr "<p><em>Aucun résumé ou description disponible.</em></p>"
+
+msgid "Abort & Close"
+msgstr "Annuler et fermer"
+
+msgid "Abort Downloads"
+msgstr "Annuler les téléchargements"
+
+msgid "Accessibility"
+msgstr "Accessibilité"
+
+msgid "Action"
+msgstr "Action"
+
+msgid "Active Tools"
+msgstr "Outils actifs"
+
+msgid "Add"
+msgstr "Ajouter"
+
+msgid "Add Feed"
+msgstr "Ajouter un flux"
+
+msgid "Add Files"
+msgstr "Ajouter des fichiers"
+
+msgid "Add Prefix/Suffix"
+msgstr "Ajouter un préfixe/suffixe"
+
+msgid "Add Tracks"
+msgstr "Ajouter des pistes"
+
+msgid "Add existing path"
+msgstr "Ajouter un chemin existant"
+
+msgid "Add new"
+msgstr "Ajouter un nouveau"
+
+msgid "Add new path to library"
+msgstr "Ajouter un nouveau chemin à la bibliothèque"
+
+msgid "Add to Favorites"
+msgstr "Ajouter aux favoris"
+
+msgid "Add to favorites"
+msgstr "Ajouter aux favoris"
+
+msgid "Add to library"
+msgstr "Ajouter à la bibliothèque"
+
+msgid "Add to playlist"
+msgstr "Ajouter à la liste de lecture"
+
+msgid "Added '{filename}' to playlist '{playlist_name}'"
+msgstr "Ajout de « {filename} » à la liste de lecture « {playlist_name} »"
+
+msgid "Added '{name}' to favorites"
+msgstr "« {name} » a été ajouté aux favoris"
+
+msgid "Added {count} track(s) to playlist"
+msgstr "Ajout de {count} piste(s) à la playlist"
+
+msgid "Advanced"
+msgstr "Avancé"
+
+msgid "Advanced Format Options"
+msgstr "Options de format avancées"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "An error occurred while saving all files: {error}"
+msgstr ""
+"Une erreur s'est produite lors de l'enregistrement de tous les fichiers : "
+"{error}"
+
+msgid ""
+"An error occurred:\n"
+"{error}"
+msgstr ""
+"Une erreur s'est produite :\n"
+"{error}"
+
+msgid "An error occurred: {message}"
+msgstr "Une erreur s'est produite : {message}"
+
+msgid "Application was minimized to tray"
+msgstr "L'application a été réduite dans la zone de notification"
+
+msgid "Apply"
+msgstr "Appliquer"
+
+msgid "Apply Changes"
+msgstr "Appliquer les modifications"
+
+msgid "Apply Filters"
+msgstr "Appliquer des filtres"
+
+msgid "Apply filters button"
+msgstr "Bouton Appliquer les filtres"
+
+msgid "Are you sure you want to clear all favorites?"
+msgstr "Etes-vous sûr de vouloir effacer tous les favoris ?"
+
+msgid "Are you sure you want to clear all recent files?"
+msgstr "Êtes-vous sûr de vouloir effacer tous les fichiers récents ?"
+
+msgid "Are you sure you want to reset all hotkeys to default?"
+msgstr ""
+"Êtes-vous sûr de vouloir réinitialiser tous les raccourcis clavier par "
+"défaut ?"
+
+msgid "Artist"
+msgstr "Artiste"
+
+msgid "Aspect Ratio"
+msgstr "Rapport hauteur/largeur"
+
+msgid "Audio Device:"
+msgstr "Périphérique audio :"
+
+msgid "Audio Extraction"
+msgstr "Extraction audio"
+
+msgid ""
+"Audio Files (*.mp3 *.flac *.m4a *.aac *.aiff *.dsf *.ogg *.opus *.wav *.wv)"
+msgstr ""
+"Fichiers audio (*.mp3 *.flac *.m4a *.aac *.aiff *.dsf *.ogg *.opus *.wav "
+"*.wv)"
+
+msgid "Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)"
+msgstr ""
+"Fichiers audio (*.mp3 *.wav *.flac *.ogg *.m4a);;Tous les fichiers (*)"
+
+msgid "Audio extraction end time or duration"
+msgstr "Heure ou durée de fin de l’extraction audio"
+
+msgid "Audio extraction start time"
+msgstr "Heure de début de l’extraction audio"
+
+msgid "Audio output format"
+msgstr "Format de sortie audio"
+
+msgid "Audio sample rate"
+msgstr "Taux d'échantillonnage audio"
+
+msgid "Auto Play"
+msgstr "Lecture automatique"
+
+msgid "Auto Updates:"
+msgstr "Mises à jour automatiques :"
+
+msgid "Auto check for updates"
+msgstr "Vérifier automatiquement les mises à jour"
+
+msgid "Automatic Thumbnail Filter"
+msgstr "Filtre automatique de vignettes"
+
+msgid ""
+"Automatic download is not available in developer mode.\n"
+"Please download the update manually from the releases page."
+msgstr ""
+"Le téléchargement automatique n'est pas disponible en mode développeur.\n"
+"Veuillez télécharger la mise à jour manuellement à partir de la page des versions."
+
+msgid "Available Tools:"
+msgstr "Outils disponibles :"
+
+msgid "Backward"
+msgstr "Retour rapide"
+
+msgid "Batch Converter"
+msgstr "Convertisseur par lots"
+
+msgid "Batch Converting..."
+msgstr "Conversion par lots en cours..."
+
+msgid "Batch conversion completed successfully"
+msgstr "Conversion par lots terminée avec succès"
+
+msgid "Batch conversion completed."
+msgstr "Conversion par lots terminée."
+
+msgid "Bitrate"
+msgstr "Débit"
+
+msgid "Bitrate:"
+msgstr "Débit :"
+
+msgid "Bookmarks"
+msgstr "Signets"
+
+msgid "Bookmarks list"
+msgstr "Liste des favoris"
+
+msgid "Brightness"
+msgstr "Luminosité"
+
+msgid "Browse"
+msgstr "Parcourir"
+
+msgid "Browse Video"
+msgstr "Parcourir la vidéo"
+
+msgid "Cache cleared successfully"
+msgstr "Cache vidé avec succès"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Cancel Download"
+msgstr "Annuler le téléchargement"
+
+msgid "Cancelled"
+msgstr "Annulé"
+
+msgid "Case Sensitive"
+msgstr "Sensible aux majuscules et minuscules"
+
+msgid "Change Case"
+msgstr "Modifier la casse"
+
+msgid "Clear"
+msgstr "Clair"
+
+msgid "Clear All Favorites"
+msgstr "Effacer tous les favoris"
+
+msgid "Clear All Feeds"
+msgstr "Supprimer tous les flux"
+
+msgid "Clear All Recent Files"
+msgstr "Effacer tous les fichiers récents"
+
+msgid "Clear Cache"
+msgstr "Vider le cache"
+
+msgid "Clear Favorites"
+msgstr "Effacer les favoris"
+
+msgid "Clear Recent Files"
+msgstr "Effacer les fichiers récents"
+
+msgid "Clear Tracks"
+msgstr "Effacer les pistes"
+
+msgid "Clear all"
+msgstr "Tout effacer"
+
+msgid "Clear all cached data?"
+msgstr "Effacer toutes les données mises en cache ?"
+
+msgid "Clear all tracks from this playlist?"
+msgstr ""
+
+msgid "Clear cache button"
+msgstr "Bouton vider le cache"
+
+msgid "Clear library"
+msgstr "Effacer la bibliothèque"
+
+msgid "Click Count"
+msgstr "Nombre de clics"
+
+msgid "Click already in progress"
+msgstr "Clic déjà en cours"
+
+msgid "Click failed: {error}"
+msgstr "Échec du clic : {error}"
+
+msgid "Click registered successfully"
+msgstr "Cliquez sur enregistré avec succès"
+
+msgid "Click to apply selected filters"
+msgstr "Cliquez pour appliquer les filtres sélectionnés"
+
+msgid "Click to clear cached data"
+msgstr "Cliquez pour effacer les données mises en cache"
+
+msgid "Click to search by station name"
+msgstr "Cliquez pour rechercher par nom de station"
+
+msgid "Click to view favorite stations"
+msgstr "Cliquez pour voir les stations préférées"
+
+msgid "Close"
+msgstr "Fermer"
+
+msgid "Close anyway and abort all downloads?"
+msgstr "Fermer quand même et annuler tous les téléchargements ?"
+
+msgid "Codec"
+msgstr "Codec"
+
+msgid "Completed"
+msgstr "Terminé"
+
+msgid "Confirm"
+msgstr "Confirmer"
+
+msgid "Confirm Clear All"
+msgstr "Confirmer Effacer tout"
+
+msgid "Confirm Removal"
+msgstr "Confirmer la suppression"
+
+msgid "Console Output"
+msgstr "Sortie de la console"
+
+msgid "Console output. Tab key won't insert tabs inside editor."
+msgstr ""
+"Sortie console. La touche de tabulation n'insérera pas d'onglets dans "
+"l'éditeur."
+
+msgid "Contrast"
+msgstr "Contraste"
+
+msgid "Conversion Error"
+msgstr "Erreur de conversion"
+
+msgid "Conversion Options"
+msgstr "Options de conversion"
+
+msgid "Conversion Type:"
+msgstr "Type de conversion :"
+
+msgid "Conversion type (audio or video)"
+msgstr "Type de conversion (audio ou vidéo)"
+
+msgid "Convert"
+msgstr "Convertir"
+
+msgid "Converting file {current} of {total}: {filename}"
+msgstr "Conversion du fichier {current} de {total} : {filename}"
+
+msgid "Converting {count} subtitle file(s)"
+msgstr "Conversion du ou des fichiers de sous-titres {count}"
+
+msgid "Cookies File:"
+msgstr "Fichier de cookies :"
+
+msgid "Copied"
+msgstr "Copié"
+
+msgid "Copy"
+msgstr "Copie"
+
+msgid "Copy Destination"
+msgstr "Copier la destination"
+
+msgid "Copy Path"
+msgstr "Copier le chemin"
+
+msgid "Copy Stream URL"
+msgstr "Copier l’URL du flux"
+
+msgid "Copy URL"
+msgstr "Copier l’URL"
+
+msgid "Copy to Clipboard"
+msgstr "Copier dans le Presse-papiers"
+
+msgid "Copyright"
+msgstr "Droit d'auteur"
+
+msgid ""
+"Could not import playlist:\n"
+"{path}\n"
+"\n"
+"{error}"
+msgstr ""
+
+msgid "Could not load {file}: {error}"
+msgstr "Impossible de charger {file} : {error}"
+
+msgid ""
+"Could not reach the update server:\n"
+"{error}"
+msgstr ""
+"Impossible d'atteindre le serveur de mise à jour :\n"
+"{error}"
+
+msgid ""
+"Could not resolve links for the following utilities:\n"
+"\n"
+msgstr ""
+"Impossible de résoudre les liens pour les utilitaires suivants :\n"
+"\n"
+
+msgid "Country"
+msgstr "Pays"
+
+msgid "Create"
+msgstr "Créer"
+
+msgid "Create Playlist"
+msgstr "Créer une liste de lecture"
+
+msgid "Create playlist from folder"
+msgstr "Créer une liste de lecture à partir d'un dossier"
+
+msgid ""
+"Created and loaded playlist '{playlist_name}' with {track_count} tracks"
+msgstr ""
+"Création et chargement de la playlist « {playlist_name} » avec les pistes "
+"{track_count}"
+
+msgid "Created new playlist '{name}'"
+msgstr "Création d'une nouvelle playlist '{name}'"
+
+msgid "Current File"
+msgstr "Fichier actuel"
+
+msgid "Current video subtitles"
+msgstr "Sous-titres vidéo actuels"
+
+msgid "Customize &Toolbar..."
+msgstr ""
+
+msgid "Customize Toolbar"
+msgstr "Personnaliser la barre d’outils"
+
+msgid "Customize Toolbar..."
+msgstr "Personnaliser la barre d’outils..."
+
+msgid "Date (Newest First)"
+msgstr "Date (du plus récent au plus ancien)"
+
+msgid "Date (Oldest First)"
+msgstr "Date (du plus ancien au plus récent)"
+
+msgid "Debug Console"
+msgstr "Console de débogage"
+
+msgid "Debug Level:"
+msgstr "Niveau de débogage :"
+
+msgid "Debug console initialized."
+msgstr "Console de débogage initialisée."
+
+msgid "Delete Selected"
+msgstr ""
+
+msgid "Delete all feeds and cache?"
+msgstr "Supprimer tous les flux et le cache ?"
+
+msgid "Delete selected"
+msgstr "Supprimer la sélection"
+
+msgid "Delete the selected track?"
+msgstr ""
+
+msgid "Delete the selected {count} tracks?"
+msgstr ""
+
+msgid "Direct Media Link"
+msgstr "Lien direct du média"
+
+msgid ""
+"Direct media link copied to clipboard:\n"
+"{media_url}"
+msgstr ""
+"Lien média direct copié dans le presse-papier :\n"
+"{media_url}"
+
+msgid "Displays the contents of the selected log file"
+msgstr "Affiche le contenu du fichier journal sélectionné"
+
+msgid "Documentation Not Found"
+msgstr "Documentation introuvable"
+
+msgid "Done"
+msgstr "Fait"
+
+msgid ""
+"Done. All selected utilities have been processed.\n"
+"You may close this dialog."
+msgstr ""
+"Fait. Tous les utilitaires sélectionnés ont été traités.\n"
+"Vous pouvez fermer cette boîte de dialogue."
+
+msgid "Double-click or press Enter on a file to open it"
+msgstr "Double-cliquez ou appuyez sur Entrée sur un fichier pour l'ouvrir"
+
+msgid "Download"
+msgstr "Télécharger"
+
+msgid "Download Error"
+msgstr "Erreur de téléchargement"
+
+msgid "Download Info:"
+msgstr "Informations de téléchargement :"
+
+msgid "Download Later"
+msgstr "Télécharger plus tard"
+
+msgid "Download Manager"
+msgstr "Gestionnaire de téléchargements"
+
+msgid "Download Manager closed"
+msgstr "Gestionnaire de téléchargements fermé"
+
+msgid "Download Manager minimized"
+msgstr "Gestionnaire de téléchargements réduit"
+
+msgid "Download Manager opened"
+msgstr "Gestionnaire de téléchargements ouvert"
+
+msgid "Download Manager restored"
+msgstr "Gestionnaire de téléchargements restauré"
+
+msgid "Download Now"
+msgstr "Télécharger maintenant"
+
+msgid "Download Utilities"
+msgstr "Télécharger les utilitaires"
+
+msgid "Downloaded {finished} / {expected} files..."
+msgstr "Fichiers {finished} / {expected} téléchargés..."
+
+msgid "Downloading"
+msgstr "Téléchargement"
+
+msgid "Downloading Update"
+msgstr "Téléchargement de la mise à jour"
+
+msgid "Downloading update files, please wait..."
+msgstr "Téléchargement des fichiers de mise à jour, veuillez patienter..."
+
+msgid ""
+"Downloading update files...\n"
+"  - {manifest}\n"
+"  - {archive}"
+msgstr ""
+"Téléchargement des fichiers de mise à jour...\n"
+" - {manifest}\n"
+" - {archive}"
+
+msgid "Downloading {count} file(s), please waitâ¦"
+msgstr "Téléchargement du ou des fichiers {count}, veuillez patienter…"
+
+msgid "Downloads in Progress"
+msgstr "Téléchargements en cours"
+
+msgid "Downloads:"
+msgstr "Téléchargements :"
+
+msgid "Duplicate"
+msgstr "Double"
+
+msgid "Duration (seconds):"
+msgstr "Durée (secondes) :"
+
+msgid "Edit Playlist"
+msgstr "Modifier la liste de lecture"
+
+msgid "Empty"
+msgstr "Vide"
+
+msgid "Enable Framerate Transformation"
+msgstr "Activer la transformation du framerate"
+
+msgid "Enable VLC Logging"
+msgstr "Activer la journalisation VLC"
+
+msgid "Enable Verbose Output"
+msgstr "Activer la sortie détaillée"
+
+msgid "Enable speech accessibility feedback"
+msgstr "Activer le retour vocal d’accessibilité"
+
+msgid "Enable yt-dlp Logging"
+msgstr "Activer la journalisation yt-dlp"
+
+msgid "End"
+msgstr "Fin"
+
+msgid "End Time or Duration (optional):"
+msgstr "Heure de fin ou durée (facultatif) :"
+
+msgid "Enter feed URL:"
+msgstr "Saisissez l'URL du flux :"
+
+msgid "Enter new URL:"
+msgstr "Saisissez la nouvelle URL :"
+
+msgid "Enter or select a media URL:"
+msgstr "Saisissez ou sélectionnez une URL de média :"
+
+msgid "Enter playlist name"
+msgstr "Entrez le nom de la liste de lecture"
+
+msgid "Enter station name..."
+msgstr "Saisissez le nom d’une station..."
+
+msgid "Entry Detail Text"
+msgstr "Texte détaillé de l'entrée"
+
+msgid "Entry Tree"
+msgstr "Arbre d'entrée"
+
+msgid "Entry data copied to clipboard"
+msgstr "Données d'entrée copiées dans le presse-papiers"
+
+msgid "Entry: {title}, Published: {published}, Link: {link}"
+msgstr "Entrée : {title}, Publié : {published}, Lien : {link}"
+
+msgid "Error"
+msgstr "Erreur"
+
+msgid "Error converting {filename}"
+msgstr "Erreur lors de la conversion de {filename}"
+
+msgid "Error loading favorites: {error}"
+msgstr "Erreur lors du chargement des favoris : {error}"
+
+msgid "Error loading recents: {error}"
+msgstr "Erreur lors du chargement des fichiers récents : {error}"
+
+msgid "Error occurred"
+msgstr "Une erreur s’est produite"
+
+msgid "Error: No files selected."
+msgstr "Erreur : aucun fichier sélectionné."
+
+msgid "Exit"
+msgstr "Sortie"
+
+msgid "Explorer"
+msgstr "Explorateur"
+
+msgid "Extract 1 Image Per Second"
+msgstr "Extraire 1 image par seconde"
+
+msgid "Extract All Frames"
+msgstr "Extraire toutes les images"
+
+msgid "Extract Audio"
+msgstr "Extraire l’audio"
+
+msgid "Extract Images"
+msgstr "Extraire des images"
+
+msgid "Extract Range"
+msgstr "Extraire la plage"
+
+msgid "Extracted Playlist"
+msgstr "Liste de lecture extraite"
+
+msgid "Extracted URL"
+msgstr "URL extraite"
+
+msgid "Extracting Audio..."
+msgstr "Extraction de l'audio..."
+
+msgid "Extracting Images..."
+msgstr "Extraction d'images..."
+
+msgid "Extracting URL..."
+msgstr "Extraction de l’URL..."
+
+msgid "Extraction Mode:"
+msgstr "Mode d'extraction :"
+
+msgid "Extraction completed successfully"
+msgstr "Extraction terminée avec succès"
+
+msgid "Extraction completed successfully."
+msgstr "Extraction terminée avec succès."
+
+msgid "Extraction failed"
+msgstr "Échec de l'extraction"
+
+msgid "FFmpeg Path:"
+msgstr "Chemin FFmpeg :"
+
+msgid "FULL ENTRY DATA"
+msgstr "DONNÉES D'ENTRÉE COMPLÈTES"
+
+msgid "Failed"
+msgstr "Échec"
+
+msgid "Failed to add favorite: {error}"
+msgstr "Échec de l'ajout du favori : {error}"
+
+msgid "Failed to add recent file: {error}"
+msgstr "Échec de l'ajout du fichier récent : {error}"
+
+msgid "Failed to clear favorites: {error}"
+msgstr "Échec de la suppression des favoris : {error}"
+
+msgid "Failed to clear recent files: {error}"
+msgstr "Échec de la suppression des fichiers récents : {error}"
+
+msgid ""
+"Failed to convert {filename}:\n"
+"{message}"
+msgstr ""
+"Échec de la conversion de {filename} :\n"
+"{message}"
+
+msgid "Failed to download {label}."
+msgstr "Échec du téléchargement de {label}."
+
+msgid ""
+"Failed to extract URL:\n"
+"{error}"
+msgstr ""
+"Échec de l'extraction de l'URL :\n"
+"{error}"
+
+msgid ""
+"Failed to install {label}:\n"
+"{msg}"
+msgstr ""
+"Échec de l'installation de {label} :\n"
+"{msg}"
+
+msgid ""
+"Failed to launch the updater:\n"
+"{error}"
+msgstr ""
+"Échec du lancement du programme de mise à jour :\n"
+"{error}"
+
+msgid "Failed to parse feed"
+msgstr "Échec de l'analyse du flux"
+
+msgid ""
+"Failed to read file: {path}\n"
+"Error: {error}"
+msgstr ""
+"Échec de la lecture du fichier : {path}\n"
+"Erreur : {error}"
+
+msgid "Failed to refresh feed"
+msgstr "Échec de l'actualisation du flux"
+
+msgid "Failed to remove favorite: {error}"
+msgstr "Échec de la suppression du favori : {error}"
+
+msgid "Failed to save tags"
+msgstr "Échec de l'enregistrement des balises"
+
+msgid "Failed to save tags: {error}"
+msgstr "Échec de l'enregistrement des balises : {error}"
+
+msgid "Failed to start process: {error}"
+msgstr "Échec du démarrage du processus : {error}"
+
+msgid "Failed to start thumbnail generation"
+msgstr "Échec du démarrage de la génération de vignettes"
+
+msgid "Failed to take screenshot"
+msgstr "Échec de la capture d'écran"
+
+msgid "Favorite Station: {name}. Country: {country}. Language: {language}."
+msgstr "Station préférée : {name}. Pays : {country}. Langue : {language}."
+
+msgid "Favorites"
+msgstr "Favoris"
+
+msgid "Favorites list"
+msgstr "Liste des favoris"
+
+msgid "Feed List"
+msgstr "Liste des flux"
+
+msgid "Feed URL updated successfully"
+msgstr "L'URL du flux a été mise à jour avec succès"
+
+msgid "Feed added successfully"
+msgstr "Flux ajouté avec succès"
+
+msgid "Feed already exists"
+msgstr "Le flux existe déjà"
+
+msgid "Feed refreshed successfully"
+msgstr "Flux actualisé avec succès"
+
+msgid ""
+"Feed validation failed:\n"
+"{error}"
+msgstr ""
+"Échec de la validation du flux :\n"
+"{error}"
+
+msgid "Fetching download links from GitHubâ¦"
+msgstr "Récupération des liens de téléchargement depuis GitHub…"
+
+msgid "Fetching video information..."
+msgstr "Récupération des informations vidéo..."
+
+msgid "File Content Preview (Live)"
+msgstr "Aperçu du contenu du fichier (en direct)"
+
+msgid "File Name"
+msgstr "Nom de fichier"
+
+msgid "File loaded successfully"
+msgstr "Fichier chargé avec succès"
+
+msgid "Files"
+msgstr "Fichiers"
+
+msgid "Files for Conversion (Batch)"
+msgstr "Fichiers à convertir (par lots)"
+
+msgid "Filter By:"
+msgstr "Filtrer par :"
+
+msgid "Filter type"
+msgstr "Type de filtre"
+
+msgid "Filter value"
+msgstr "Valeur du filtre"
+
+msgid "Filtering by {filter_type}: {filter_value}..."
+msgstr "Filtrage par {filter_type} : {filter_value}..."
+
+msgid "Filters"
+msgstr "Filtres"
+
+msgid "Find and Replace"
+msgstr "Rechercher et remplacer"
+
+msgid "Find:"
+msgstr "Trouver:"
+
+msgid "Folder"
+msgstr "Dossier"
+
+msgid "Forward"
+msgstr "Avance rapide"
+
+msgid "Found {count} stations"
+msgstr "{count} stations trouvées"
+
+msgid "From FPS:"
+msgstr "Depuis le FPS :"
+
+msgid "Full Entry Details"
+msgstr "Détails complets de l'entrée"
+
+msgid "Fullscreen"
+msgstr "Plein écran"
+
+msgid "Gamma"
+msgstr "Gamma"
+
+msgid "General"
+msgstr "Général"
+
+msgid "Generate Thumbnail(s)"
+msgstr "Générer des vignettes"
+
+msgid "Generation Mode:"
+msgstr "Mode de génération :"
+
+msgid "Get/Update &Utilities..."
+msgstr "Obtenir/Mettre à jour les &Utilitaires..."
+
+msgid "HTTP {status}"
+msgstr "HTTP {status}"
+
+msgid "Hide"
+msgstr "Masquer"
+
+msgid "Hide Filters"
+msgstr "Masquer les filtres"
+
+msgid "Hide Subtitles"
+msgstr "Masquer les sous-titres"
+
+msgid "Hide subtitles"
+msgstr "Masquer les sous-titres"
+
+msgid "Hide to status bar"
+msgstr "Masquer dans la barre d’état"
+
+msgid "Hotkeys Configuration"
+msgstr "Configuration des raccourcis"
+
+msgid "Hotkeys updated"
+msgstr "Raccourcis mis à jour"
+
+msgid "Hue"
+msgstr "Teinte"
+
+msgid "Image Extraction"
+msgstr "Extraction d'images"
+
+msgid "Image extraction duration in seconds"
+msgstr "Durée d'extraction d'image en secondes"
+
+msgid "Image extraction mode"
+msgstr "Mode d'extraction d'images"
+
+msgid "Image extraction start time"
+msgstr "Heure de début de l’extraction d’image"
+
+msgid "Import Failed"
+msgstr ""
+
+msgid "Import Playlist"
+msgstr ""
+
+msgid "Imported playlist '{name}'"
+msgstr ""
+
+msgid "Info"
+msgstr "Informations"
+
+msgid "Initializing locale..."
+msgstr "Initialisation des paramètres régionaux..."
+
+msgid "Input Encoding:"
+msgstr "Encodage d'entrée :"
+
+msgid "Input File Encoding:"
+msgstr "Encodage du fichier d'entrée :"
+
+msgid "Install Error"
+msgstr "Erreur d'installation"
+
+msgid "Interrupt previous speech"
+msgstr "Interrompre le discours précédent"
+
+msgid "Invalid Feed"
+msgstr "Flux invalide"
+
+msgid "Invalid URL"
+msgstr "URL invalide"
+
+msgid "Invalid URL extraction result"
+msgstr ""
+
+msgid "Invalid VLC Arguments"
+msgstr "Arguments VLC invalides"
+
+msgid "Invalid feed format"
+msgstr "Format de flux invalide"
+
+msgid "Keep SSA tags (output)"
+msgstr "Conserver les balises SSA (sortie)"
+
+msgid "Keep all HTML tags (input)"
+msgstr "Conserver toutes les balises HTML (entrée)"
+
+msgid "Keep unknown HTML tags (input)"
+msgstr "Conserver les balises HTML inconnues (saisie)"
+
+msgid "Language"
+msgstr "Langue"
+
+msgid "Language(s)"
+msgstr "Langue(s)"
+
+msgid "Language:"
+msgstr "Langue :"
+
+msgid "Library"
+msgstr "Bibliothèque"
+
+msgid "License"
+msgstr "Licence"
+
+msgid "Link"
+msgstr "Lien"
+
+msgid "Link Fetch Errors"
+msgstr "Erreurs de récupération de lien"
+
+msgid "List of RSS feeds. Right-click for options."
+msgstr "Liste des flux RSS. Cliquez avec le bouton droit pour les options."
+
+msgid "List of favorite media files"
+msgstr "Liste des fichiers multimédias favoris"
+
+msgid "List of log files in the application's logs folder"
+msgstr ""
+"Liste des fichiers journaux dans le dossier des journaux de l'application"
+
+msgid "List of radio stations. Right-click or double-click for options."
+msgstr ""
+"Liste des radios. Cliquez avec le bouton droit ou double-cliquez pour les "
+"options."
+
+msgid "List of recently opened media files"
+msgstr "Liste des fichiers multimédias récemment ouverts"
+
+msgid "Load File"
+msgstr "Charger un fichier"
+
+msgid "Loaded top {count} tags"
+msgstr "{count} tags principaux chargés"
+
+msgid "Loaded {count} countries"
+msgstr "{count} pays chargés"
+
+msgid "Loaded {count} file(s) for tag editing"
+msgstr "Fichier(s) {count} chargé(s) pour l'édition des balises"
+
+msgid "Loaded {count} languages"
+msgstr "{count} langues chargées"
+
+msgid "Loaded {count} subtitle events"
+msgstr "Événements de sous-titres {count} chargés"
+
+msgid "Loading URL: {url}"
+msgstr "URL de chargement : {url}"
+
+msgid "Loading configuration..."
+msgstr "Chargement de la configuration..."
+
+msgid "Loading database..."
+msgstr "Chargement de la base de données..."
+
+msgid "Loading favorites..."
+msgstr "Chargement des favoris..."
+
+msgid "Loading playlist: {title}"
+msgstr "Chargement de la liste de lecture : {title}"
+
+msgid "Loading {filter_type}..."
+msgstr "Chargement de {filter_type}..."
+
+msgid "Loading: {filename}"
+msgstr "Chargement : {filename}"
+
+msgid "Log File Viewer"
+msgstr "Visionneuse de fichiers journaux"
+
+msgid "Logs Files List"
+msgstr "Liste des fichiers journaux"
+
+msgid "Logs Viewer"
+msgstr "Visionneuse de journaux"
+
+msgid "Logs folder: {path}"
+msgstr "Dossier des journaux : {path}"
+
+msgid "Lyrics tag editor"
+msgstr "Éditeur de balises de paroles"
+
+msgid "Lyrics:"
+msgstr "Paroles:"
+
+msgid "Main Toolbar"
+msgstr "Barre d’outils principale"
+
+msgid "Main video playback area"
+msgstr "Zone de lecture vidéo principale"
+
+msgid "Manual Frame Selection"
+msgstr "Sélection manuelle du cadre"
+
+msgid "Mark {index}: {minutes:02d}:{seconds:02d}"
+msgstr "Marque {index} : {minutes:02d} :{seconds:02d}"
+
+msgid "Maximize"
+msgstr "Agrandir"
+
+msgid "Maximize Controls"
+msgstr "Maximiser les contrôles"
+
+msgid "Media"
+msgstr "Médias"
+
+msgid "Media Extractor"
+msgstr "Extracteur multimédia"
+
+msgid "Media Preview"
+msgstr "Aperçu multimédia"
+
+msgid "MicroDVD"
+msgstr "MicroDVD"
+
+msgid "Minimize"
+msgstr "Réduire"
+
+msgid "Minimize Controls"
+msgstr "Réduire les contrôles"
+
+msgid "Minimize/Maximize Controls"
+msgstr "Réduire/Agrandir les contrôles"
+
+msgid "Missing Playlist"
+msgstr ""
+
+msgid "More Info"
+msgstr "Plus d’informations"
+
+msgid "More Options"
+msgstr "Plus d'options"
+
+msgid "Move Down"
+msgstr "Descendre"
+
+msgid "Move Up"
+msgstr "Monter"
+
+msgid "Mute"
+msgstr "Couper le son"
+
+msgid "Mute Error"
+msgstr "Erreur de sourdine"
+
+msgid "Mute toggled"
+msgstr "Muet activé"
+
+msgid "Mute/Unmute"
+msgstr "Couper/Rétablir le son"
+
+msgid "N/A"
+msgstr "N / A"
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Name (A\\u2013Z)"
+msgstr "Nom (A\\u2013Z)"
+
+msgid "Name (Z\\u2013A)"
+msgstr "Nom (Z\\u2013A)"
+
+msgid "Name:"
+msgstr "Nom:"
+
+msgid "Newest first"
+msgstr "Le plus récent en premier"
+
+msgid "Next"
+msgstr "Suivant"
+
+msgid "Next Track"
+msgstr "Piste suivante"
+
+msgid "Next track"
+msgstr "Piste suivante"
+
+msgid "No File"
+msgstr "Aucun fichier"
+
+msgid "No Media"
+msgstr "Aucun média"
+
+msgid "No Media Files"
+msgstr "Aucun fichier multimédia"
+
+msgid "No Media Found"
+msgstr "Aucun média trouvé"
+
+msgid "No Playlists"
+msgstr "Aucune liste de lecture"
+
+msgid "No Releases Found"
+msgstr "Aucune version trouvée"
+
+msgid "No URL"
+msgstr "Aucune URL"
+
+msgid "No Update Available"
+msgstr "Aucune mise à jour disponible"
+
+msgid "No changes to save."
+msgstr "Aucune modification à enregistrer."
+
+msgid "No direct media link found for this entry."
+msgstr "Aucun lien média direct trouvé pour cette entrée."
+
+msgid "No download selected"
+msgstr "Aucun téléchargement sélectionné"
+
+msgid "No downloadable assets found in this release."
+msgstr "Aucune ressource téléchargeable trouvée dans cette version."
+
+msgid "No entries found for this feed."
+msgstr "Aucune entrée trouvée pour ce flux."
+
+msgid "No entries match your search."
+msgstr "Aucune entrée ne correspond à votre recherche."
+
+msgid "No file loaded."
+msgstr "Aucun fichier chargé."
+
+msgid "No files to convert."
+msgstr "Aucun fichier à convertir."
+
+msgid "No links could be resolved."
+msgstr "Aucun lien n'a pu être résolu."
+
+msgid "No media loaded"
+msgstr "Aucun média chargé"
+
+msgid "No platform manifest found for '{platform}' in this release."
+msgstr ""
+"Aucun manifeste de plate-forme trouvé pour « {platform} » dans cette "
+"version."
+
+msgid "No playable entries found in playlist"
+msgstr ""
+
+msgid "No playlist selected"
+msgstr "Aucune playlist sélectionnée"
+
+msgid "No playlists available. Create a playlist first."
+msgstr ""
+"Aucune liste de lecture disponible. Créez d’abord une liste de lecture."
+
+msgid "No playlists exist. Would you like to create a new playlist?"
+msgstr "Aucune liste de lecture n’existe. Voulez-vous en créer une nouvelle ?"
+
+msgid "No recent files"
+msgstr "Aucun fichier récent"
+
+msgid "No release notes provided."
+msgstr "Aucune note de version fournie."
+
+msgid "No releases have been published for this application yet."
+msgstr "Aucune version n'a encore été publiée pour cette application."
+
+msgid "No results found"
+msgstr "Aucun résultat trouvé"
+
+msgid "No stream URL found for {name}"
+msgstr "Aucune URL de flux trouvée pour {name}"
+
+msgid "No supported media files found in the selected folder"
+msgstr ""
+"Aucun fichier multimédia pris en charge trouvé dans le dossier sélectionné"
+
+msgid ""
+"No supported media files were found in the selected folder:\n"
+"{folder_path}\n"
+"\n"
+"Supported formats include audio and video files."
+msgstr ""
+"Aucun fichier multimédia pris en charge n'a été trouvé dans le dossier sélectionné :\n"
+"{folder_path}\n"
+"\n"
+"Les formats pris en charge incluent les fichiers audio et vidéo."
+
+msgid "No zip archive found in this release."
+msgstr "Aucune archive zip trouvée dans cette version."
+
+msgid "No."
+msgstr "Non."
+
+msgid "None"
+msgstr "Aucun"
+
+msgid "Not Found"
+msgstr "Introuvable"
+
+msgid "Number of Images to Generate:"
+msgstr "Nombre d'images à générer :"
+
+msgid "Number of images to generate from scene changes"
+msgstr "Nombre d'images à générer à partir des changements de scène"
+
+msgid "OK"
+msgstr "D'ACCORD"
+
+msgid "Off"
+msgstr "Désactivé"
+
+msgid "Oldest first"
+msgstr "Le plus ancien en premier"
+
+msgid "Omit FPS declaration (output)"
+msgstr "Omettre la déclaration FPS (sortie)"
+
+msgid "On"
+msgstr "Sur"
+
+msgid "One or more update files failed to download. Please try again later."
+msgstr ""
+"Un ou plusieurs fichiers de mise à jour n'ont pas pu être téléchargés. "
+"Veuillez réessayer plus tard."
+
+msgid "Open"
+msgstr "Ouvrir"
+
+msgid "Open &Folder..."
+msgstr "Ouvrir le &dossier..."
+
+msgid "Open &Playlist..."
+msgstr ""
+
+msgid "Open &URL..."
+msgstr "Ouvrir l'&URL..."
+
+msgid "Open Folder"
+msgstr "Ouvrir un dossier"
+
+msgid "Open Link in Browser"
+msgstr "Ouvrir le lien dans le navigateur"
+
+msgid "Open Media File"
+msgstr "Ouvrir un fichier multimédia"
+
+msgid "Open Playlist"
+msgstr ""
+
+msgid "Open URL"
+msgstr "Ouvrir une URL"
+
+msgid "Open in Explorer"
+msgstr "Ouvrir dans l’explorateur"
+
+msgid "Opened {title}"
+msgstr "{title} ouvert"
+
+msgid "Output Encoding:"
+msgstr "Encodage de sortie :"
+
+msgid "Output Format:"
+msgstr "Format de sortie :"
+
+msgid "Page Link"
+msgstr "Lien vers la page"
+
+msgid "Parent Directory"
+msgstr "Dossier parent"
+
+msgid "Path"
+msgstr "Chemin"
+
+msgid "Path already exists."
+msgstr "Le chemin existe déjà."
+
+msgid "Path in Library"
+msgstr "Chemin dans la bibliothèque"
+
+msgid "Path not found."
+msgstr "Chemin introuvable."
+
+msgid "Pause"
+msgstr "Pause"
+
+msgid "Paused"
+msgstr "En pause"
+
+msgid "Play"
+msgstr "Lire"
+
+msgid "Play Entry"
+msgstr ""
+
+msgid "Play Station"
+msgstr "Lire la station"
+
+msgid "Play/Pause"
+msgstr "Lecture/Pause"
+
+msgid "Playback Error"
+msgstr "Erreur de lecture"
+
+msgid "Playing"
+msgstr "Lecture en cours"
+
+msgid "Playing: {name}"
+msgstr "Lecture : {name}"
+
+msgid "Playlist '{name}' already exists"
+msgstr "La playlist « {name} » existe déjà"
+
+msgid ""
+"Playlist '{name}' could not be found at:\n"
+"{path}\n"
+"\n"
+"Remove it from the playlist list?"
+msgstr ""
+
+msgid "Playlist '{name}' created"
+msgstr "Liste de lecture '{name}' créée"
+
+msgid "Playlist '{new_name}' already exists"
+msgstr "La playlist « {new_name} » existe déjà"
+
+msgid "Playlist '{new_name}' updated"
+msgstr "Liste de lecture '{new_name}' mise à jour"
+
+msgid "Playlist '{playlist_name}' not found"
+msgstr "Liste de lecture '{playlist_name}' introuvable"
+
+msgid "Playlist Files (*.json *.m3u *.m3u8 *.pls *.xspf);;All Files (*)"
+msgstr ""
+
+msgid "Playlist from {folder_name}"
+msgstr "Liste de lecture de {folder_name}"
+
+msgid "Playlist order updated"
+msgstr ""
+
+msgid "Playlist sorted"
+msgstr ""
+
+msgid "Playlist tracks list"
+msgstr ""
+
+msgid "Playlists"
+msgstr "Listes de lecture"
+
+msgid "Please enter a URL."
+msgstr "Veuillez saisir une URL."
+
+msgid "Please enter a playlist name"
+msgstr "Veuillez saisir un nom de playlist"
+
+msgid "Please enter a valid HTTP/HTTPS URL"
+msgstr "Veuillez saisir une URL HTTP/HTTPS valide"
+
+msgid "Please load a subtitle file first."
+msgstr "Veuillez d'abord charger un fichier de sous-titres."
+
+msgid "Please select a playlist"
+msgstr "Veuillez sélectionner une playlist"
+
+msgid "Please select a valid input video file."
+msgstr "Veuillez sélectionner un fichier vidéo d'entrée valide."
+
+msgid "Podcasts"
+msgstr "Podcasts"
+
+msgid "Preferences"
+msgstr "Préférences"
+
+msgid "Preferences saved"
+msgstr "Préférences enregistrées"
+
+msgid "Prefix:"
+msgstr "Préfixe:"
+
+msgid "Previous"
+msgstr "Précédent"
+
+msgid "Previous Track"
+msgstr "Piste précédente"
+
+msgid "Previous track"
+msgstr "Piste précédente"
+
+msgid "Processing Error"
+msgstr "Erreur de traitement"
+
+msgid "Processing subtitle file"
+msgstr "Traitement du fichier de sous-titres"
+
+msgid "Processing subtitle file..."
+msgstr "Traitement du fichier de sous-titres..."
+
+msgid "Processing..."
+msgstr "Traitement..."
+
+msgid "Published"
+msgstr "Publié"
+
+msgid "Publisher"
+msgstr "Éditeur"
+
+msgid "Queued"
+msgstr "En attente"
+
+msgid "Radio Browser"
+msgstr "Radio Browser"
+
+msgid "Radio stations list"
+msgstr "Liste des stations de radio"
+
+msgid "Rate:"
+msgstr "Taux:"
+
+msgid "Read-only console output viewer"
+msgstr "Visionneuse de sortie de console en lecture seule"
+
+msgid "Ready"
+msgstr "Prêt"
+
+msgid "Ready - Enter search term or select filters"
+msgstr "Prêt - saisissez un terme de recherche ou choisissez des filtres"
+
+msgid "Recent files list"
+msgstr "Liste des fichiers récents"
+
+msgid "Recents"
+msgstr "Récents"
+
+msgid "Recents & Favorites"
+msgstr "Récents et favoris"
+
+msgid "Refresh All Feeds"
+msgstr "Actualiser tous les flux"
+
+msgid "Refresh Feed"
+msgstr "Actualiser le flux"
+
+msgid ""
+"Refresh failed:\n"
+"{error}"
+msgstr ""
+"Échec de l'actualisation :\n"
+"{error}"
+
+msgid "Refreshing feed..."
+msgstr "Alimentation rafraîchissante..."
+
+msgid "Refreshing feeds..."
+msgstr "Flux rafraîchissants..."
+
+msgid ""
+"Refreshing:\n"
+"{url}..."
+msgstr ""
+"Actualisation :\n"
+"{url}..."
+
+msgid "Register Click"
+msgstr "S'inscrire Cliquez"
+
+msgid "Remove"
+msgstr "Supprimer"
+
+msgid "Remove Feed"
+msgstr "Supprimer le flux"
+
+msgid "Remove File"
+msgstr "Supprimer le fichier"
+
+msgid "Remove Selected"
+msgstr "Supprimer la sélection"
+
+msgid ""
+"Remove feed:\n"
+"{url}?"
+msgstr ""
+"Supprimer le flux :\n"
+"{url} ?"
+
+msgid "Remove from Favorites"
+msgstr "Retirer des favoris"
+
+msgid "Remove miscellaneous events"
+msgstr "Supprimer divers événements"
+
+msgid "Removed missing playlist '{name}'"
+msgstr ""
+
+msgid "Removed station from favorites"
+msgstr "Station retirée des favoris"
+
+msgid "Removed {count} track(s) from playlist"
+msgstr ""
+
+msgid ""
+"Reorder tracks by dragging them or pressing Shift+Up / Shift+Down. Right-"
+"click for more options."
+msgstr ""
+
+msgid "Repeat all"
+msgstr "Répéter tout"
+
+msgid "Repeat mode"
+msgstr "Mode répétition"
+
+msgid "Repeat off"
+msgstr "Répétition désactivée"
+
+msgid "Repeat one"
+msgstr "Répéter la piste"
+
+msgid "Repeat: All"
+msgstr "Répéter : Tous"
+
+msgid "Repeat: Off"
+msgstr "Répéter : Désactivé"
+
+msgid "Repeat: One"
+msgstr "Répéter : un"
+
+msgid "Repeat: {state}"
+msgstr "Répéter : {state}"
+
+msgid "Replace With:"
+msgstr "Remplacer par :"
+
+msgid "Reset to Default"
+msgstr "Réinitialiser aux valeurs par défaut"
+
+msgid "Resolving next stream..."
+msgstr ""
+
+msgid "Resolving previous stream..."
+msgstr ""
+
+msgid "Resolving stream URL: {url}"
+msgstr ""
+
+msgid "Resolving stream..."
+msgstr ""
+
+msgid "Restart Required"
+msgstr "Redémarrage requis"
+
+msgid "Results"
+msgstr "Résultats"
+
+msgid "Retry Download"
+msgstr "Réessayer le téléchargement"
+
+msgid "Rewind"
+msgstr "Reculer"
+
+msgid "SRT"
+msgstr "SRT"
+
+msgid "Sample Rate (Audio):"
+msgstr "Taux d'échantillonnage (audio) :"
+
+msgid "Saturation"
+msgstr "Saturation"
+
+msgid "Save All Files"
+msgstr "Enregistrer tous les fichiers"
+
+msgid "Save Current File"
+msgstr "Enregistrer le fichier actuel"
+
+msgid "Save URLs"
+msgstr "Enregistrer les URL"
+
+msgid "Save URLs:"
+msgstr "Enregistrer les URL :"
+
+msgid "Scale"
+msgstr "Échelle"
+
+msgid "Scene Change Threshold (0.0-1.0):"
+msgstr "Seuil de changement de scène (0,0-1,0) :"
+
+msgid "Scene change detection threshold"
+msgstr "Seuil de détection de changement de scène"
+
+msgid "Screenshot"
+msgstr "Capture d’écran"
+
+msgid "Screenshot Format:"
+msgstr "Format de capture d'écran :"
+
+msgid "Screenshot saved: {filename}"
+msgstr "Capture d'écran enregistrée : {filename}"
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "Search and Filter"
+msgstr "Recherche et filtres"
+
+msgid "Search button"
+msgstr "Bouton Rechercher"
+
+msgid "Search:"
+msgstr "Recherche:"
+
+msgid "Searching for '{search_name}'..."
+msgstr "Recherche de « {search_name} »..."
+
+msgid "Seek"
+msgstr "Rechercher"
+
+msgid "Seek Error"
+msgstr "Rechercher une erreur"
+
+msgid "Seek Offset:"
+msgstr "Rechercher un décalage :"
+
+msgid "Segment Timeline Widget"
+msgstr "Widget de chronologie des segments"
+
+msgid "Select"
+msgstr "Sélectionner"
+
+msgid "Select Audio Files"
+msgstr "Sélectionnez les fichiers audio"
+
+msgid "Select Cookies File"
+msgstr "Sélectionnez le fichier de cookies"
+
+msgid "Select FFmpeg Directory"
+msgstr "Sélectionnez le répertoire FFmpeg"
+
+msgid "Select Output Directory"
+msgstr "Sélectionnez le répertoire de sortie"
+
+msgid "Select Output Directory for Images"
+msgstr "Sélectionnez le répertoire de sortie pour les images"
+
+msgid "Select Playlist"
+msgstr "Sélectionner une liste de lecture"
+
+msgid "Select Subtitle File"
+msgstr "Sélectionnez le fichier de sous-titres"
+
+msgid "Select Subtitle Files"
+msgstr "Sélectionnez les fichiers de sous-titres"
+
+msgid "Select Video File"
+msgstr "Sélectionnez un fichier vidéo"
+
+msgid "Select a playlist to add the file to:"
+msgstr "Sélectionnez une liste de lecture à laquelle ajouter le fichier :"
+
+msgid "Select files to convert"
+msgstr "Sélectionnez les fichiers à convertir"
+
+msgid "Select from Scene Changes"
+msgstr "Sélectionnez parmi les changements de scène"
+
+msgid "Select how to filter stations"
+msgstr "Sélectionnez comment filtrer les stations"
+
+msgid "Select how to sort results"
+msgstr "Sélectionnez comment trier les résultats"
+
+msgid "Select or type a filter value"
+msgstr "Sélectionnez ou saisissez une valeur de filtre"
+
+msgid "Select tools to display on the toolbar:"
+msgstr "Sélectionnez les outils à afficher dans la barre d'outils :"
+
+msgid "Select yt-dlp Directory"
+msgstr "Sélectionnez le répertoire yt-dlp"
+
+msgid "Selected path is not a directory"
+msgstr "Le chemin sélectionné n'est pas un répertoire"
+
+msgid "Shift Time:"
+msgstr "Temps de quart :"
+
+msgid "Shortcut"
+msgstr "Raccourci"
+
+msgid ""
+"Shortcut editor. Press the desired key combination; press Enter or change "
+"focus to accept."
+msgstr ""
+"Éditeur de raccourcis. Appuyez sur la combinaison de touches souhaitée ; "
+"appuyez sur Entrée ou changez le focus pour accepter."
+
+msgid "Show"
+msgstr "Afficher"
+
+msgid "Show &Console Dock"
+msgstr "Afficher la station d'accueil de la &console"
+
+msgid "Show &Explorer"
+msgstr "Afficher l'&Explorateur"
+
+msgid "Show &Playlists"
+msgstr "Afficher les &listes de lecture"
+
+msgid "Show &Podcasts"
+msgstr "Afficher les &podcasts"
+
+msgid "Show &Radio Browser"
+msgstr "Navigateur d'émissions et de radios"
+
+msgid "Show &Recents/Favorites"
+msgstr "Afficher les &Récents/Favoris"
+
+msgid "Show Downloader"
+msgstr "Afficher le gestionnaire"
+
+msgid "Show Favorites"
+msgstr "Afficher les favoris"
+
+msgid "Show Filters"
+msgstr "Afficher les filtres"
+
+msgid "Show Tool"
+msgstr "Afficher l’outil"
+
+msgid "Show YouTube Info"
+msgstr "Afficher les informations YouTube"
+
+msgid "Show favorites button"
+msgstr "Afficher le bouton Favoris"
+
+msgid "Show subtitles"
+msgstr "Afficher les sous-titres"
+
+msgid "Show {title}"
+msgstr "Afficher {title}"
+
+msgid "Showing {count} favorite stations"
+msgstr "Affichage de {count} stations favorites"
+
+msgid "Showing {title}"
+msgstr "Affichage de {title}"
+
+msgid "Shuffle"
+msgstr "Lecture aléatoire"
+
+msgid "Shuffle off"
+msgstr "Lecture aléatoire désactivée"
+
+msgid "Shuffle on"
+msgstr "Lecture aléatoire activée"
+
+msgid "Shuffle: Off"
+msgstr "Lecture aléatoire : Désactivé"
+
+msgid "Shuffle: On"
+msgstr "Lecture aléatoire : activée"
+
+msgid ""
+"Some options you modified require an application restart to take effect.\n"
+"\n"
+"Would you like to restart now?"
+msgstr ""
+"Certaines options modifiées nécessitent un redémarrage de l’application pour être prises en compte.\n"
+"\n"
+"Voulez-vous redémarrer maintenant ?"
+
+msgid "Sort"
+msgstr ""
+
+msgid "Sort By"
+msgstr "Trier par"
+
+msgid "Sort By:"
+msgstr "Trier par :"
+
+msgid "Sort by"
+msgstr "Trier par"
+
+msgid "Sort order"
+msgstr "Ordre de tri"
+
+msgid "Speech Settings"
+msgstr "Paramètres vocaux"
+
+msgid "Speed"
+msgstr "Vitesse"
+
+msgid "Start"
+msgstr "Démarrer"
+
+msgid "Start Batch Conversion"
+msgstr "Démarrer la conversion par lots"
+
+msgid "Start Time (HH:MM:SS):"
+msgstr "Heure de début (HH:MM:SS) :"
+
+msgid "Starting application..."
+msgstr "Démarrage de l’application..."
+
+msgid "Starting audio extraction"
+msgstr "Démarrage de l'extraction audio"
+
+msgid "Starting batch conversion of {count} files"
+msgstr "Démarrage de la conversion par lots des fichiers {count}"
+
+msgid "Starting conversion..."
+msgstr "Démarrage de la conversion..."
+
+msgid "Starting generation..."
+msgstr "Génération de départ..."
+
+msgid "Starting image extraction"
+msgstr "Démarrage de l'extraction d'images"
+
+msgid "Starting thumbnail generation"
+msgstr "Démarrer la génération de vignettes"
+
+msgid "Station Information"
+msgstr "Informations sur la station"
+
+msgid "Station Name:"
+msgstr "Nom de la station :"
+
+msgid "Station name search"
+msgstr "Recherche de nom de station"
+
+msgid ""
+"Station: {name}. Country: {country}. Language: {language}. Tags: {tags}. "
+"Codec: {codec}. Bitrate: {bitrate}."
+msgstr ""
+"Station : {name}. Pays : {country}. Langue : {language}. Balises : {tags}. "
+"Codec : {codec}. Débit : {bitrate}."
+
+msgid "Stop Error"
+msgstr "Erreur d’arrêt"
+
+msgid "Stopped"
+msgstr "Arrêté"
+
+msgid "Streaming URL"
+msgstr "URL du flux"
+
+msgid "Style:"
+msgstr "Style:"
+
+msgid "Subtitle &Converter"
+msgstr "Sous-titres et convertisseur"
+
+msgid "Subtitle &Editor"
+msgstr "Sous-titres et éditeur"
+
+msgid "Subtitle Converter"
+msgstr "Convertisseur de sous-titres"
+
+msgid "Subtitle Editor"
+msgstr "Éditeur de sous-titres"
+
+msgid ""
+"Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt "
+"*.vtt);;All Files (*)"
+msgstr ""
+"Fichiers de sous-titres (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml "
+"*.txt *.vtt);;Tous les fichiers (*)"
+
+msgid "Subtitle conversion completed"
+msgstr "Conversion des sous-titres terminée"
+
+msgid "Subtitle conversion completed successfully."
+msgstr "La conversion des sous-titres s'est terminée avec succès."
+
+msgid "Subtitle conversion failed"
+msgstr "Échec de la conversion des sous-titres"
+
+msgid "Subtitle processing completed"
+msgstr "Traitement des sous-titres terminé"
+
+msgid "Subtitle processing completed successfully."
+msgstr "Le traitement des sous-titres s'est terminé avec succès."
+
+msgid "Subtitle processing failed"
+msgstr "Échec du traitement des sous-titres"
+
+msgid "Subtitles"
+msgstr "Sous-titres"
+
+msgid "Subtitles display"
+msgstr "Affichage des sous-titres"
+
+msgid "Subtitles section"
+msgstr "Section sous-titres"
+
+msgid "Success"
+msgstr "Succès"
+
+msgid "Suffix:"
+msgstr "Suffixe:"
+
+msgid "Summary and description of selected entry"
+msgstr "Résumé et description de l'entrée sélectionnée"
+
+msgid "Tag"
+msgstr "Étiqueter"
+
+msgid "Tag Editor"
+msgstr "Éditeur de balises"
+
+msgid "Tags saved for {count} file(s)"
+msgstr "Balises enregistrées pour le(s) fichier(s) {count}"
+
+msgid "Tags saved for {filename}"
+msgstr "Tags enregistrés pour {filename}"
+
+msgid "Tags saved successfully."
+msgstr "Balises enregistrées avec succès."
+
+msgid "Take screenshot"
+msgstr "Prendre une capture d’écran"
+
+msgid "Target Format:"
+msgstr "Format cible :"
+
+msgid "Target bitrate"
+msgstr "Débit binaire cible"
+
+msgid "Target format"
+msgstr "Format cible"
+
+msgid "Text"
+msgstr "Texte"
+
+msgid "Text Editor"
+msgstr "Éditeur de texte"
+
+msgid "Text Operation"
+msgstr "Opération de texte"
+
+msgid "The VLC arguments are not valid. Please check the syntax."
+msgstr "Les arguments VLC ne sont pas valides. Veuillez vérifier la syntaxe."
+
+msgid ""
+"The documentation could not be found at:\n"
+"{path}\n"
+"\n"
+"Please visit the project website for help."
+msgstr ""
+"La documentation est introuvable à l’emplacement suivant :\n"
+"{path}\n"
+"\n"
+"Veuillez consulter le site du projet pour obtenir de l’aide."
+
+msgid ""
+"The following tools are currently active:\n"
+"{tools}\n"
+"\n"
+"Closing the application will stop these processes. Do you want to continue?"
+msgstr ""
+"Les outils suivants sont actuellement actifs :\n"
+"{tools}\n"
+"\n"
+"Fermer l’application arrêtera ces processus. Voulez-vous continuer ?"
+
+msgid ""
+"The update has been downloaded.\n"
+"\n"
+"{app_name} needs to restart to apply it. Restart now?"
+msgstr ""
+"La mise à jour a été téléchargée.\n"
+"\n"
+"{app_name} doit redémarrer pour l’appliquer. Redémarrer maintenant ?"
+
+msgid ""
+"The updater binary was not found at:\n"
+"{path}\n"
+"\n"
+"Please update manually."
+msgstr ""
+"Le binaire du programme de mise à jour est introuvable dans :\n"
+"{path}\n"
+"\n"
+"Veuillez mettre à jour manuellement."
+
+msgid "Theme:"
+msgstr "Thème :"
+
+msgid "There aren't any log files yet."
+msgstr "Il n'y a pas encore de fichiers journaux."
+
+msgid "This path already exists in the library."
+msgstr "Ce chemin existe déjà dans la bibliothèque."
+
+msgid "Thumbnail Generator"
+msgstr "Générateur de miniatures"
+
+msgid "Thumbnail generation completed"
+msgstr "Génération de vignettes terminée"
+
+msgid "Thumbnail generation completed successfully."
+msgstr "La génération des vignettes s'est terminée avec succès."
+
+msgid "Thumbnail generation failed"
+msgstr "Échec de la génération des vignettes"
+
+msgid "Thumbnail generation mode"
+msgstr "Mode de génération de vignettes"
+
+msgid "Time: {time}, Speed: {speed:.2f}x"
+msgstr "Temps : {time}, Vitesse : {speed:.2f}x"
+
+msgid "Timestamp (HH:MM:SS):"
+msgstr "Horodatage (HH:MM:SS) :"
+
+msgid "Timestamp for manual frame selection"
+msgstr "Horodatage pour la sélection manuelle des images"
+
+msgid "Timing Editor"
+msgstr "Éditeur de timing"
+
+msgid "Title"
+msgstr "Titre"
+
+msgid "Title (Ascending A-Z)"
+msgstr "Titre (Ascendant de A à Z)"
+
+msgid "Title (Descending Z-A)"
+msgstr "Titre (décroissant Z-A)"
+
+msgid "To FPS:"
+msgstr "Vers les FPS :"
+
+msgid "Toggle &Repeat: Off"
+msgstr "Basculer et répéter : désactivé"
+
+msgid "Toggle Repeat: Off"
+msgstr "Répétition : désactivée"
+
+msgid "Toggle Repeat: On"
+msgstr "Répétition : activée"
+
+msgid "Too many redirects"
+msgstr "Trop de redirections"
+
+msgid "Tool Active"
+msgstr "Outil actif"
+
+msgid "Tool Already Open"
+msgstr "Outil déjà ouvert"
+
+msgid "Tool closed"
+msgstr "Outil fermé"
+
+msgid "Toolbar Tools:"
+msgstr "Outils de la barre d'outils :"
+
+msgid "Tracks:"
+msgstr "Pistes :"
+
+msgid ""
+"Tree of feed entries with title, date, and link. Right-click for options."
+msgstr ""
+"Arbre des entrées de flux avec titre, date et lien. Cliquez avec le bouton "
+"droit pour les options."
+
+msgid "Type a station name and press Enter to search"
+msgstr ""
+"Saisissez un nom de station et appuyez sur Entrée pour lancer la recherche"
+
+msgid "Type and press Enter to search entries..."
+msgstr "Tapez et appuyez sur Entrée pour rechercher les entrées..."
+
+msgid "URL Extraction Failed"
+msgstr "Échec de l’extraction de l’URL"
+
+msgid "URL extraction failed"
+msgstr ""
+
+msgid "URL resolution failed"
+msgstr ""
+
+msgid "Unknown"
+msgstr "Inconnu"
+
+msgid "Unknown error"
+msgstr "Erreur inconnue"
+
+msgid "Unmute"
+msgstr "Rétablir le son"
+
+msgid "Untitled"
+msgstr "Sans titre"
+
+msgid "Update Available - {title}"
+msgstr "Mise à jour disponible - {title}"
+
+msgid "Update Check Failed"
+msgstr "Échec de la vérification de la mise à jour"
+
+msgid "Update Error"
+msgstr "Erreur de mise à jour"
+
+msgid "Update Failed"
+msgstr "Échec de la mise à jour"
+
+msgid "Update Feed URL"
+msgstr "Mettre à jour l'URL du flux"
+
+msgid "Update Ready"
+msgstr "Mise à jour prête"
+
+msgid "Updater Not Found"
+msgstr "Programme de mise à jour introuvable"
+
+msgid "VLC Arguments:"
+msgstr "Arguments VLC :"
+
+msgid "VLC Logging:"
+msgstr "Journalisation VLC :"
+
+msgid "VLC Settings"
+msgstr "Paramètres VLC"
+
+msgid "Validating feed..."
+msgstr "Validation du flux..."
+
+msgid "Validating new feed URL..."
+msgstr "Validation de la nouvelle URL du flux…"
+
+msgid "Value:"
+msgstr "Valeur:"
+
+msgid "Verbose Output:"
+msgstr "Sortie détaillée :"
+
+msgid "Video Display"
+msgstr "Affichage vidéo"
+
+msgid "Video Display Area"
+msgstr "Zone d'affichage vidéo"
+
+msgid "Video File:"
+msgstr "Fichier vidéo :"
+
+msgid "Video Information:"
+msgstr "Informations vidéo :"
+
+msgid "Video display area"
+msgstr "Zone d'affichage vidéo"
+
+msgid "Video file for extraction"
+msgstr "Fichier vidéo à extraire"
+
+msgid "Video file input path"
+msgstr "Chemin d'entrée du fichier vidéo"
+
+msgid "View Full Entry Dump"
+msgstr "Afficher le dump d'entrée complet"
+
+msgid "Voice Settings"
+msgstr "Paramètres vocaux"
+
+msgid "Voice changed to {voice_name}"
+msgstr "Voix modifiée en {voice_name}"
+
+msgid "Voice:"
+msgstr "Voix :"
+
+msgid "Volume"
+msgstr "Volume"
+
+msgid "Volume Error"
+msgstr "Erreur de volume"
+
+msgid "Volume Offset:"
+msgstr "Décalage de volume :"
+
+msgid "Volume:"
+msgstr "Volume:"
+
+msgid "Votes"
+msgstr "Votes"
+
+msgid "Warning"
+msgstr "Avertissement"
+
+msgid "What would you like to do?"
+msgstr "Que souhaitez-vous faire ?"
+
+msgid "YouTube Video Information"
+msgstr "Informations sur la vidéo YouTube"
+
+msgid "cancel"
+msgstr "Annuler"
+
+msgid "confirm"
+msgstr "confirmer"
+
+msgid "copy path"
+msgstr "copier le chemin"
+
+msgid "debugConsoleDock"
+msgstr "debugConsoleDock"
+
+msgid "e.g., 00:01:30 or 90"
+msgstr "par exemple, 00:01:30 ou 90"
+
+msgid "e.g., 1.5s or -1m10s"
+msgstr "par exemple, 1,5 s ou -1 min 10 s"
+
+msgid "navigate to folder"
+msgstr "aller au dossier"
+
+msgid "path"
+msgstr "chemin"
+
+msgid "size"
+msgstr "taille"
+
+msgid "volume"
+msgstr "volume"
+
+msgid "yt-dlp Logging:"
+msgstr "Journalisation yt-dlp :"
+
+msgid "yt-dlp Path:"
+msgstr "Chemin yt-dlp :"
+
+msgid "yt-dlp Settings"
+msgstr "Paramètres yt-dlp"
+
+msgid "{app} is up to date (version {version})."
+msgstr "{app} est à jour (version {version})."
+
+msgid "{count} download(s) are still in progress."
+msgstr "{count} téléchargement(s) sont toujours en cours."
+
+msgid "{count} files saved."
+msgstr "{count} fichiers enregistrés."
+
+msgid "{label} (Descending)"
+msgstr ""
+
+msgid "{title} hidden"
+msgstr "{title} masqué"
