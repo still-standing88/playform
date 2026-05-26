@@ -54,6 +54,8 @@ class PlayerWidget(QWidget):
         self._pending_navigation: Optional[dict] = None
         self._navigation_token = 0
         self._last_playlist_index = -1
+        self._manual_playlist_control = False
+        self._advance_in_progress = False
         
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
@@ -570,6 +572,15 @@ class PlayerWidget(QWidget):
             )
         return runtime_playlist
 
+    def _playlist_requires_manual_control(self, playlist: Optional[av_play.Playlist] = None) -> bool:
+        playlist = playlist or self._runtime_playlist
+        if playlist is None:
+            return False
+        for entry in playlist.entries:
+            if self._entry_requires_resolution(entry):
+                return True
+        return False
+
     def _update_runtime_entries_for_url(self, original_url: str, resolved_url: Optional[str] = None, error: Optional[str] = None):
         if self._runtime_playlist is None:
             return
@@ -689,7 +700,7 @@ class PlayerWidget(QWidget):
         if target_index is None:
             return
         if self._ensure_runtime_entry_resolved(target_index, block=False):
-            self.player.next()
+            self._activate_playlist_index(target_index, fallback_direction="next")
             self.filters_widget.reset_filters()
         else:
             self._navigation_token += 1
@@ -708,7 +719,7 @@ class PlayerWidget(QWidget):
         if target_index is None:
             return
         if self._ensure_runtime_entry_resolved(target_index, block=False):
-            self.player.previous()
+            self._activate_playlist_index(target_index, fallback_direction="previous")
             self.filters_widget.reset_filters()
         else:
             self._navigation_token += 1
@@ -731,6 +742,40 @@ class PlayerWidget(QWidget):
             self._ensure_runtime_entry_resolved(next_index, block=False)
         except Exception as e:
             logger.warning(f"Failed to queue playlist resolution for {next_index}: {e}")
+
+    def _activate_playlist_index(self, index: int, fallback_direction: Optional[str] = None):
+        if self._manual_playlist_control:
+            self.player.jump_to_track(index)
+        elif fallback_direction == "previous":
+            self.player.previous()
+        elif fallback_direction == "next":
+            self.player.next()
+        else:
+            self.player.jump_to_track(index)
+
+    def _advance_manual_playlist(self):
+        current_index = self.player.get_current_track_index()
+        target_index = self._get_next_playlist_index(current_index)
+        if target_index is None:
+            self._advance_in_progress = False
+            return
+
+        if self._ensure_runtime_entry_resolved(target_index, block=False):
+            self._activate_playlist_index(target_index)
+            self.filters_widget.reset_filters()
+            self._update_current_file()
+            self._sync_current_track_display(target_index)
+            self._advance_in_progress = False
+        else:
+            self._navigation_token += 1
+            self._pending_navigation = {
+                "direction": "auto_next",
+                "target_index": target_index,
+                "token": self._navigation_token,
+                "source_index": current_index,
+            }
+            self._loading = True
+            signal_manager.statusbar_message.emit(_("Resolving next stream..."))
 
     def _sync_current_track_display(self, index: Optional[int] = None):
         if index is None:
@@ -898,6 +943,9 @@ class PlayerWidget(QWidget):
             
             if state == av_play.AVPlaybackState.AV_STATE_NOTHING and self._last_known_state == av_play.AVPlaybackState.AV_STATE_PLAYING:
                 self._last_known_state = state
+                if self._manual_playlist_control and not self._loading and not self._advance_in_progress:
+                    self._advance_in_progress = True
+                    self._advance_manual_playlist()
                 self._load_subtitles_for_current_track()
                 self.filters_widget.reset_filters()
                 self._update_current_file()
@@ -989,6 +1037,8 @@ class PlayerWidget(QWidget):
         self._pending_playlist_start = None
         self._pending_navigation = None
         self._last_playlist_index = -1
+        self._manual_playlist_control = False
+        self._advance_in_progress = False
         self.player_controls.set_current_track(_("No media loaded"))
         self.player_controls.set_time_text("00:00 / 00:00")
         self.player_controls.set_seek_range(0, 100)
@@ -1062,8 +1112,14 @@ class PlayerWidget(QWidget):
                     pass
             self.player.stop_playlist()
             self._loading = True
-            self.player.load_playlist(self._runtime_playlist, auto_play=False, start_index=start_index)
-            self.player._play_playlist_track()
+            if self._manual_playlist_control:
+                self.player.load_playlist(self._runtime_playlist, auto_play=False, start_index=start_index)
+                self.player._play_playlist_track()
+                self.player.set_auto_play(False)
+            else:
+                self.player.load_playlist(self._runtime_playlist, auto_play=auto_play, start_index=start_index)
+                if not auto_play:
+                    self.player._play_playlist_track()
             self.video_display.hide_loading()
             self.player_controls.set_controls_enabled(True)
             self._load_subtitles_for_current_track()
@@ -1094,7 +1150,14 @@ class PlayerWidget(QWidget):
             self._source_playlist = playlist
             self._runtime_playlist = self._build_runtime_playlist(playlist)
             self._last_playlist_index = -1
+            self._manual_playlist_control = self._playlist_requires_manual_control(self._runtime_playlist)
+            self._advance_in_progress = False
+            self._pending_playlist_start = {
+                "start_index": start_index,
+                "auto_play": auto_play,
+            }
             if self._ensure_runtime_entry_resolved(start_index, block=False):
+                self._pending_playlist_start = None
                 self._start_loaded_playlist(start_index=start_index, auto_play=auto_play)
             else:
                 try:
@@ -1102,10 +1165,6 @@ class PlayerWidget(QWidget):
                 except Exception:
                     pass
                 self._loading = True
-                self._pending_playlist_start = {
-                    "start_index": start_index,
-                    "auto_play": auto_play,
-                }
                 self.video_display.show_loading(_("Resolving stream..."))
                 self.player_controls.set_controls_enabled(False)
                 signal_manager.statusbar_message.emit(_("Resolving stream..."))
@@ -1210,10 +1269,13 @@ class PlayerWidget(QWidget):
                 direction = pending_navigation.get("direction")
                 self._pending_navigation = None
                 self._loading = False
+                self._advance_in_progress = False
                 if direction == "next":
-                    self.player.next()
+                    self._activate_playlist_index(pending_navigation.get("target_index", -1), fallback_direction="next")
                 elif direction == "previous":
-                    self.player.previous()
+                    self._activate_playlist_index(pending_navigation.get("target_index", -1), fallback_direction="previous")
+                elif direction == "auto_next":
+                    self._activate_playlist_index(pending_navigation.get("target_index", -1))
                 self.filters_widget.reset_filters()
                 self._update_current_file()
                 self._sync_current_track_display()
@@ -1247,6 +1309,7 @@ class PlayerWidget(QWidget):
             if target_entry and self._get_entry_original_location(target_entry) == original_url:
                 self._pending_navigation = None
                 self._loading = False
+                self._advance_in_progress = False
                 self.player_controls.set_controls_enabled(True)
 
     def set_shortcuts(self):

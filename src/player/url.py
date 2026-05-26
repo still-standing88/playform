@@ -179,7 +179,11 @@ def normalize_playlist_url(url: str) -> str:
         if not has_list:
             return url
 
-        normalized_params = [(key, value) for key, value in params if key.lower() != "index"]
+        normalized_params = [
+            (key, value)
+            for key, value in params
+            if key.lower() not in {"index", "start_radio"}
+        ]
         normalized_query = urlencode(normalized_params, doseq=True)
         return urlunparse(parsed._replace(query=normalized_query))
     except Exception:
@@ -275,6 +279,14 @@ def build_url_playlist_result(url: str, cookies: Optional[str] = None) -> dict:
         if not entries:
             raise ValueError(_("No playable entries found in playlist"))
 
+        first_entry = entries[0]
+        first_source_url = first_entry["metadata"].get("original_location")
+        if first_source_url:
+            try:
+                first_entry["metadata"]["resolved_location"] = resolve_media_url(first_source_url, cookies=cookies)
+            except Exception:
+                pass
+
         return {
             "title": playlist_title,
             "entries": entries,
@@ -287,6 +299,7 @@ def build_url_playlist_result(url: str, cookies: Optional[str] = None) -> dict:
             info = info[0]
         source_url = info.get("webpage_url") or info.get("original_url") or url
         title = info.get("title") or _("Streaming URL")
+        resolved_location = get_best_format(info)
         return {
             "title": title,
             "entries": [
@@ -296,6 +309,7 @@ def build_url_playlist_result(url: str, cookies: Optional[str] = None) -> dict:
                     "metadata": {
                         "original_location": source_url,
                         "requires_resolution": True,
+                        "resolved_location": resolved_location,
                     },
                 }
             ],

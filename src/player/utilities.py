@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QMessageBox, QWidget
 
 from app_config import prefs as app_prefs
 from app_constance import prefs_dict
+from utilities.functions import get_parent_dir
 
 
 @dataclass(frozen=True)
@@ -154,6 +155,15 @@ def _locate_ffmpeg(prefs: dict) -> Tuple[Optional[str], Optional[str]]:
             ffmpeg_path = ffmpeg_candidate
         if _verify_binary_exists(ffprobe_candidate):
             ffprobe_path = ffprobe_candidate
+
+    app_bin_dir = os.path.join(get_parent_dir(), "bin")
+    if os.path.isdir(app_bin_dir):
+        ffmpeg_candidate = os.path.join(app_bin_dir, ffmpeg_name + _get_bin_ext())
+        ffprobe_candidate = os.path.join(app_bin_dir, ffprobe_name + _get_bin_ext())
+        if not ffmpeg_path and _verify_binary_exists(ffmpeg_candidate):
+            ffmpeg_path = ffmpeg_candidate
+        if not ffprobe_path and _verify_binary_exists(ffprobe_candidate):
+            ffprobe_path = ffprobe_candidate
     
     if not ffmpeg_path:
         env_ffmpeg = _find_in_path(ffmpeg_name)
@@ -258,7 +268,7 @@ def check_ffmpeg(min_major: int = 6) -> BinaryCheckResult:
             version=None,
             major=None,
             ok=False,
-            message="FFmpeg path is not configured.",
+            message="FFmpeg path is not configured. Use Get/Update Utilities to download FFmpeg.",
         )
 
     exists = os.path.exists(path)
@@ -272,7 +282,7 @@ def check_ffmpeg(min_major: int = 6) -> BinaryCheckResult:
             version=None,
             major=None,
             ok=False,
-            message="FFmpeg was not found at the configured path.",
+            message="FFmpeg was not found at the configured path. Use Get/Update Utilities to install FFmpeg.",
         )
 
     rc, out, err = _run_command([path, "-version"])

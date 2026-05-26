@@ -11,15 +11,16 @@ __all__ = ['init_binaries', 'reinit_ytdlp_settings']
 
 def init_binaries():
     from .utilities import update_prefs_with_found_binaries
-    from utilities.ffmpeg_extractor import extract_ffmpeg_from_pyffmpeg
     current_path = get_parent_dir()
     bin_dir = os.path.join(current_path, "bin")
 
-    if not prefs.prefs.get("ffmpeg_binary") or not os.path.exists(prefs.prefs.get("ffmpeg_binary", "")):
-        extracted_ffmpeg, _ = extract_ffmpeg_from_pyffmpeg(bin_dir)
-        if extracted_ffmpeg:
-            prefs.prefs["ffmpeg_binary"] = extracted_ffmpeg
-            prefs.prefs["ffmpeg_path"] = bin_dir
+    # Deprecated: FFmpeg is now provisioned through the Utility Download Center
+    # rather than unpacked from ffmpeg_binary.py / pyffmpeg at startup.
+    # if not prefs.prefs.get("ffmpeg_binary") or not os.path.exists(prefs.prefs.get("ffmpeg_binary", "")):
+    #     extracted_ffmpeg, _ = extract_ffmpeg_from_pyffmpeg(bin_dir)
+    #     if extracted_ffmpeg:
+    #         prefs.prefs["ffmpeg_binary"] = extracted_ffmpeg
+    #         prefs.prefs["ffmpeg_path"] = bin_dir
 
     updated_prefs = update_prefs_with_found_binaries(prefs.prefs)
     if updated_prefs != prefs:

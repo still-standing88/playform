@@ -19,7 +19,7 @@ from app_constance.styles import (PLAYER_CONTROLS_STYLE, BUTTON_STYLE, SLIDER_ST
 from utilities.functions import get_app_path
 from .playback_state_manager import PlaybackStateManager
 from utilities.functions import is_youtube_url, is_local_file, open_file_location
-from utilities.icon_loader import load_icon
+from utilities.icon_loader import load_icon, load_pixmap
 
 
 class PlayerControls(QWidget):
@@ -162,6 +162,9 @@ class PlayerControls(QWidget):
         self.seek_slider.setSingleStep(prefs.prefs["offset"]["seek"])
         self.seek_slider.setValue(0)
         self.seek_slider.setAccessibleName(_("Seek"))
+        self.seek_icon_label = QLabel(self)
+        self.seek_icon_label.setPixmap(load_pixmap("seek.svg"))
+        self.seek_icon_label.setToolTip(_("Seek"))
 
         self.mute_btn = QToolButton(self)
         self.mute_btn.setIcon(load_icon("mute_off.svg"))
@@ -175,6 +178,9 @@ class PlayerControls(QWidget):
         
         self.volume_slider = QSlider(Qt.Orientation.Horizontal, self)
         self.volume_slider.setAccessibleName(_("Volume"))
+        self.volume_icon_label = QLabel(self)
+        self.volume_icon_label.setPixmap(load_pixmap("volume.svg"))
+        self.volume_icon_label.setToolTip(_("Volume"))
 
         sliders = [
             (self.volume_slider, 0, 100, prefs.prefs["offset"]["volume"], 100, 80),
@@ -233,10 +239,12 @@ class PlayerControls(QWidget):
         self.volume_layout = QHBoxLayout()
         self.volume_layout.setSpacing(5)
         self.volume_layout.addWidget(self.mute_btn)
+        self.volume_layout.addWidget(self.volume_icon_label)
         self.volume_layout.addWidget(self.volume_slider)
         
         self.controls_layout.addLayout(self.transport_layout)
         self.controls_layout.addWidget(self.separator1)
+        self.controls_layout.addWidget(self.seek_icon_label)
         self.controls_layout.addWidget(self.seek_slider, 1)
         self.controls_layout.addWidget(self.separator2)
         self.controls_layout.addLayout(self.volume_layout)
@@ -251,7 +259,8 @@ class PlayerControls(QWidget):
         self.expandable_widgets = [
             self.previous_btn, self.backward_btn, self.forward_btn, 
             self.next_btn, self.repeat_btn, self.separator1,
-            self.seek_slider, self.separator2, self.mute_btn,
+            self.seek_icon_label, self.seek_slider, self.separator2, self.mute_btn,
+            self.volume_icon_label,
             self.volume_slider, self.time_label, self.current_track_label, self.shuffle_btn, self.bookmarks_btn, self.screenshot_btn, 
             self.more_btn
         ]
@@ -889,5 +898,4 @@ class PlayerControls(QWidget):
         parent = self.parent()
         if parent and hasattr(parent, 'show_youtube_info_dialog'):
             parent.show_youtube_info_dialog()  # type: ignore
-
 
