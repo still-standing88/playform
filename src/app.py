@@ -1,19 +1,15 @@
 import sys
-import gettext
-import os
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer
-from utilities.functions import get_app_path
+from utilities.i18n import install_translation
 from app_info import APP_NAME, APP_VERSION, APP_PUBLISHER, APP_WEBSITE, setup_env
-
-
-gettext.install("PlayFormDomain", localedir=os.path.join(get_app_path(), "lang", "locale"))
 
 def main():
     cli_args = sys.argv
 
     setup_env()
+    install_translation()
 
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
@@ -53,6 +49,8 @@ def main():
         
         splash.update_message(_("Starting application..."))
         splash.finish(window)
+        import os,vlc
+        #print(os.environ.get("PYTHON_VLC_MODULE_PATH"), os.environ.get("VLC_PLUGIN_PATH"), vlc.plugin_path, vlc.dll)
         window.show()
         if len(cli_args) > 1 and app_instance:
             app_instance.focus_window("PlayForm")
@@ -63,6 +61,10 @@ def main():
         exc_t = sys.exc_info()[2]
         raise Exception(f"Error: {e}").with_traceback(exc_t)
         exit_code = 1
+    from utilities.functions import get_restart_flag, set_restart_flag, restart_app
+    if get_restart_flag():
+        set_restart_flag(False)
+        restart_app()
     sys.exit(exit_code)
 
 if __name__ == "__main__":

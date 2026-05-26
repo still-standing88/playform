@@ -4,6 +4,7 @@ from app_constance.misc import screenshot_formats, app_languages
 class GeneralPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._loaded_language = None
         self.setup_ui()
         
     def setup_ui(self):
@@ -28,6 +29,7 @@ class GeneralPanel(QWidget):
         layout.addRow(_("Save URLs:"), self.save_urls_check)
         
     def load_settings(self, prefs):
+        self._loaded_language = prefs["language"]
         if prefs["language"].upper() in app_languages:
             self.language_combo.setCurrentText(prefs["language"].upper())
         
@@ -39,8 +41,14 @@ class GeneralPanel(QWidget):
         self.save_urls_check.setChecked(prefs["save_urls"])
         
     def save_settings(self, prefs):
-        prefs["language"] = self.language_combo.currentText().lower()
+        selected_language = self.language_combo.currentText().lower()
+        language_changed = selected_language != self._loaded_language
+
+        prefs["language"] = selected_language
         prefs["image_format"] = self.screenshot_format_combo.currentText()
         prefs["color_theme"] = self.theme_combo.currentText()
         prefs["auto_check_for_updates"] = self.auto_update_check.isChecked()
         prefs["save_urls"] = self.save_urls_check.isChecked()
+        prefs["should_restart"] = prefs.get("should_restart", False) or language_changed
+        self._loaded_language = selected_language
+        return language_changed

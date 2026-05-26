@@ -44,10 +44,10 @@ class SystemTrayIcon:
         if self.tray_icon:
             self.window.hide()
             if self.show_hide_action:
-                self.show_hide_action.setText("Show")
+                self.show_hide_action.setText(_("Show"))
             if hasattr(self.tray_icon, 'showMessage'):
                 self.tray_icon.showMessage(
-                    "PlayForm Media Player",
+                    app_name,
                     _("Application was minimized to tray"),
                     QSystemTrayIcon.MessageIcon.Information,
                     2000

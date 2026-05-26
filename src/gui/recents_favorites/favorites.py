@@ -13,8 +13,8 @@ class FavoritesWidget(QListWidget):
         super().__init__(parent)
         self.user_db = user_db
         self.path_mapping = {}
-        self.setAccessibleName(_("\"Favorites list"))
-        self.setAccessibleDescription(_("\"List of favorite media files"))
+        self.setAccessibleName(_("Favorites list"))
+        self.setAccessibleDescription(_("List of favorite media files"))
         self.setAlternatingRowColors(True)
         self.setDragDropMode(QListWidget.DragDropMode.NoDragDrop)
         
@@ -22,7 +22,7 @@ class FavoritesWidget(QListWidget):
         self.itemDoubleClicked.connect(self.on_item_activated)
         self.itemActivated.connect(self.on_item_activated)
         self.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
-        self.setToolTip(_("\"Double-click or press Enter on a file to open it"))
+        self.setToolTip(_("Double-click or press Enter on a file to open it"))
 
         self.load_favorites()
         
@@ -36,7 +36,7 @@ class FavoritesWidget(QListWidget):
                 self.path_mapping[filename] = fav_path
                 self.addItem(filename)
         except Exception as e:
-            messageBox(_("Error"), f"{_('Error loading favorites: {e}')}") # print(f"{_('Error loading favorites: {e}')}")
+            messageBox(_("Error"), _("Error loading favorites: {error}").format(error=e))
     
     def add_favorite(self, file_path: str):
         try:
@@ -45,7 +45,7 @@ class FavoritesWidget(QListWidget):
             self.path_mapping[filename] = file_path
             self.addItem(filename)
         except Exception as e:
-            messageBox(_("Error"), f"{_('Failed to add favorite: {e}')}")
+            messageBox(_("Error"), _("Failed to add favorite: {error}").format(error=e))
     
     def remove_favorite(self, file_path: str):
         try:
@@ -63,7 +63,7 @@ class FavoritesWidget(QListWidget):
                         break
                 del self.path_mapping[filename_to_remove]
         except Exception as e:
-            messageBox(_("Error"), f"{_('Failed to remove favorite: {e}')}")
+            messageBox(_("Error"), _("Failed to remove favorite: {error}").format(error=e))
 
     @Slot()
     def clear_favorites(self):
@@ -76,7 +76,7 @@ class FavoritesWidget(QListWidget):
                 self.clear()
                 self.path_mapping.clear()
             except Exception as e:
-                                messageBox(_("Error"), f"{_('Failed to clear favorites: {e}')}")
+                messageBox(_("Error"), _("Failed to clear favorites: {error}").format(error=e))
 
     def show_context_menu(self, position):
         menu = QMenu(self)

@@ -8,7 +8,7 @@ import traceback
 from pathlib import Path
 from datetime import datetime
 
-from utilities import get_app_path
+from utilities.functions import get_logs_dir
 from .handlers import QTextEditLogHandler
 
 class LoggingSetup:
@@ -25,8 +25,7 @@ class LoggingSetup:
                  self.add_console_handler(console_widget)
             return
             
-        app_path = Path(get_app_path())
-        self.log_dir = Path(log_dir) if log_dir else app_path / "logs"
+        self.log_dir = Path(log_dir) if log_dir else Path(get_logs_dir())
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.console_widget = console_widget
 

@@ -21,18 +21,18 @@ class LibraryView(QTreeWidget):
 
         contextMenu(self, self.context_menu)
         self.setColumnCount(1)
-        self.setHeaderLabels([_("folder")])
+        self.setHeaderLabels([_("Folder")])
 
         self._folder_paths:List[str] = []
         self.lib = QTreeWidgetItem(self)
-        self.lib.setText(0, "library")
+        self.lib.setText(0, _("Library"))
         self.insertTopLevelItem(0, self.lib)
         self.listContents()
 
 
     def add_path(self, path:str):
         if path in self._folder_paths:
-            messageBox('path in library', _("This path already exists in the library."))
+            messageBox(_("Path in Library"), _("This path already exists in the library."))
             return 0
 
         self._user_db.add_library_folder(path)
@@ -50,7 +50,7 @@ class LibraryView(QTreeWidget):
 
     def delete(self):
         current_item = self.currentItem()
-        if current_item and current_item.text(0) != "library":
+        if current_item and current_item.text(0) != _("Library"):
             item_name = current_item.text(0)
             # Find the full path from _folder_paths based on basename
             item_path = None
@@ -66,7 +66,7 @@ class LibraryView(QTreeWidget):
     @Slot()
     def navigateTo(self):
         current_item = self.currentItem()
-        if current_item is None or current_item.text(0) == "library":
+        if current_item is None or current_item.text(0) == _("Library"):
             return
             
         item_name = current_item.text(0)
@@ -120,7 +120,7 @@ class LibraryView(QTreeWidget):
             self.lib.removeChild(item)
 
     def clear_library(self):
-        self.clear()
+        self.Clear()
         self._folder_paths.clear()
         self._user_db.clear_library_folders()
 

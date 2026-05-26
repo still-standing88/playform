@@ -13,6 +13,7 @@ class ToolbarManager:
         self.main_window.toolbar.setObjectName("mainToolbar")
         self.main_window.toolbar.setMovable(False)
         self.main_window.toolbar.setFloatable(False)
+        self.main_window.toolbar.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.main_window.toolbar.setIconSize(self.main_window.toolbar.iconSize())
         self.main_window.toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self.main_window.toolbar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -21,6 +22,7 @@ class ToolbarManager:
         
         self.main_window.toolbar.addAction(self.main_window.open_file_action)
         self.main_window.toolbar.addAction(self.main_window.open_folder_action)
+        self.main_window.toolbar.addAction(self.main_window.open_playlist_action)
         self.main_window.toolbar.addAction(self.main_window.open_url_action)
         self.main_window.toolbar.addSeparator()
         self.main_window.toolbar.addAction(self.main_window.play_pause_action)

@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Optional
+from gettext import gettext as _
 
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
@@ -20,7 +21,7 @@ class UtilityDownloadDialog(QDialog):
 
     def __init__(self, downloader: Optional[Downloader] = None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Download Utilities")
+        self.setWindowTitle(_("Download Utilities"))
         self.setModal(True)
         self.setMinimumSize(520, 420)
         self.resize(600, 480)
@@ -42,13 +43,13 @@ class UtilityDownloadDialog(QDialog):
         layout.setSpacing(8)
         layout.setContentsMargins(12, 12, 12, 12)
 
-        layout.addWidget(QLabel("<b>Select utilities to download:</b>"))
+        layout.addWidget(QLabel(_("<b>Select utilities to download:</b>")))
 
         self._list = QListWidget()
         self._list.setMinimumHeight(130)
         layout.addWidget(self._list)
 
-        layout.addWidget(QLabel("<b>Description:</b>"))
+        layout.addWidget(QLabel(_("<b>Description:</b>")))
 
         self._desc = QTextEdit()
         self._desc.setReadOnly(True)
@@ -63,12 +64,12 @@ class UtilityDownloadDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        self._close_btn = QPushButton("Close")
+        self._close_btn = QPushButton(_("Close"))
         self._close_btn.setFixedWidth(90)
         self._close_btn.clicked.connect(self.reject)
         btn_row.addWidget(self._close_btn)
 
-        self._download_btn = QPushButton("Download")
+        self._download_btn = QPushButton(_("Download"))
         self._download_btn.setFixedWidth(90)
         self._download_btn.setEnabled(False)
         self._download_btn.clicked.connect(self._on_download)
@@ -127,7 +128,7 @@ class UtilityDownloadDialog(QDialog):
         self._pending_errors = []
         self._download_btn.setEnabled(False)
         self._close_btn.setEnabled(False)
-        self._desc.setPlainText("Fetching download links from GitHub…")
+        self._desc.setPlainText(_("Fetching download links from GitHub…"))
         self._fetcher.fetch(tools)
 
     @Slot(str, str)
@@ -139,13 +140,13 @@ class UtilityDownloadDialog(QDialog):
         if self._pending_errors:
             QMessageBox.warning(
                 self,
-                "Link Fetch Errors",
-                "Could not resolve links for the following utilities:\n\n"
+                _("Link Fetch Errors"),
+                _("Could not resolve links for the following utilities:\n\n")
                 + "\n".join(self._pending_errors),
             )
 
         if not results:
-            self._desc.setPlainText("No links could be resolved.")
+            self._desc.setPlainText(_("No links could be resolved."))
             self._close_btn.setEnabled(True)
             self._download_btn.setEnabled(True)
             return
@@ -164,7 +165,7 @@ class UtilityDownloadDialog(QDialog):
         self._completed = 0
 
         self._desc.setPlainText(
-            f"Downloading {self._expected} file(s), please wait…"
+            _("Downloading {count} file(s), please wait…").format(count=self._expected)
         )
 
         for r in results:
@@ -196,14 +197,14 @@ class UtilityDownloadDialog(QDialog):
             if not ok:
                 QMessageBox.warning(
                     self,
-                    "Install Error",
-                    f"Failed to install {tool.label}:\n{msg}",
+                    _("Install Error"),
+                    _("Failed to install {label}:\n{msg}").format(label=tool.label, msg=msg),
                 )
         else:
             QMessageBox.warning(
                 self,
-                "Download Error",
-                f"Failed to download {tool.label}.",
+                _("Download Error"),
+                _("Failed to download {label}.").format(label=tool.label),
             )
 
         if self._completed >= self._expected:
@@ -213,8 +214,8 @@ class UtilityDownloadDialog(QDialog):
         import shutil
         shutil.rmtree(self._temp_dir, ignore_errors=True)
         self._desc.setPlainText(
-            "Done. All selected utilities have been processed.\n"
-            "You may close this dialog."
+            _("Done. All selected utilities have been processed.\n"
+            "You may close this dialog.")
         )
         self._close_btn.setEnabled(True)
         self._download_btn.setEnabled(True)

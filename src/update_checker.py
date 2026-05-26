@@ -5,18 +5,13 @@ import platform as _platform_mod
 import subprocess
 from pathlib import Path
 
-from PySide6.QtCore import (
-    QObject, Signal, Slot, QTimer, QUrl
-)
-from PySide6.QtNetwork import (
-    QNetworkAccessManager, QNetworkRequest, QNetworkReply
-)
+from PySide6.QtCore import QObject, Signal, Slot, QTimer, QUrl, Qt
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QTextBrowser, QListWidget, QListWidgetItem,
-    QMessageBox, QWidget, QSizePolicy
+    QMessageBox, QWidget,
 )
-from PySide6.QtCore import Qt
 
 
 _12H_MS = 12 * 60 * 60 * 1000
@@ -24,8 +19,8 @@ _CHECK_DELAY_MS = 3_000
 
 
 def _current_platform() -> str:
-    s = _platform_mod.system().lower()
-    return "macos" if s == "darwin" else ("windows" if s == "windows" else "linux")
+    system_name = _platform_mod.system().lower()
+    return "macos" if system_name == "darwin" else ("windows" if system_name == "windows" else "linux")
 
 
 def _strip_v(tag: str) -> str:
@@ -35,7 +30,7 @@ def _strip_v(tag: str) -> str:
 def _is_newer(remote_tag: str, local_version: str) -> bool:
     try:
         remote = tuple(int(x) for x in _strip_v(remote_tag).split("."))
-        local  = tuple(int(x) for x in _strip_v(local_version).split("."))
+        local = tuple(int(x) for x in _strip_v(local_version).split("."))
         return remote > local
     except Exception:
         return False
@@ -43,26 +38,27 @@ def _is_newer(remote_tag: str, local_version: str) -> bool:
 
 def _is_frozen() -> bool:
     from utilities.functions import is_frozen
+
     return is_frozen()
 
 
 def _get_app_path() -> str:
     from utilities.functions import get_app_path
+
     return get_app_path()
 
 
 class UpdateAvailableDialog(QDialog):
-
-    download_now   = Signal(dict)
+    download_now = Signal(dict)
     download_later = Signal()
 
     def __init__(self, release: dict, parent=None, dev_mode: bool = False):
         super().__init__(parent)
         self._release = release
         self._dev_mode = dev_mode
-        tag   = release.get("tag_name", "")
+        tag = release.get("tag_name", "")
         title = release.get("name") or tag
-        self.setWindowTitle(f"Update Available – {title}")
+        self.setWindowTitle(_("Update Available - {title}").format(title=title))
         self.setModal(True)
         self.setMinimumSize(560, 420)
         self.resize(640, 500)
@@ -75,23 +71,29 @@ class UpdateAvailableDialog(QDialog):
 
         current = os.environ.get("APP_VERSION", "")
         header = QLabel(
-            f"<b>A new version of {os.environ.get('APP_NAME','PlayForm')} is available!</b><br>"
-            f"Your version: <b>{current}</b> &nbsp;→&nbsp; New version: <b>{_strip_v(tag)}</b>"
+            _(
+                "<b>A new version of {app} is available!</b><br>"
+                "Your version: <b>{current}</b> -> New version: <b>{new}</b>"
+            ).format(
+                app=os.environ.get("APP_NAME", "PlayForm"),
+                current=current,
+                new=_strip_v(tag),
+            )
         )
         header.setWordWrap(True)
         layout.addWidget(header)
 
-        notes_label = QLabel("<b>Release notes:</b>")
+        notes_label = QLabel(_("<b>Release notes:</b>"))
         layout.addWidget(notes_label)
 
         notes = QTextBrowser()
-        notes.setMarkdown(release.get("body") or "_No release notes provided._")
+        notes.setMarkdown(release.get("body") or _("No release notes provided."))
         notes.setMinimumHeight(160)
         layout.addWidget(notes, 1)
 
         assets = release.get("assets", [])
         if assets:
-            files_label = QLabel(f"<b>Release files ({len(assets)}):</b>")
+            files_label = QLabel(_("<b>Release files ({count}):</b>").format(count=len(assets)))
             layout.addWidget(files_label)
 
             files_list = QListWidget()
@@ -105,20 +107,22 @@ class UpdateAvailableDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        later_btn = QPushButton("Download Later")
+        later_btn = QPushButton(_("Download Later"))
         later_btn.setFixedWidth(120)
         later_btn.clicked.connect(self._on_later)
         btn_row.addWidget(later_btn)
 
-        now_btn = QPushButton("Download Now")
+        now_btn = QPushButton(_("Download Now"))
         now_btn.setFixedWidth(120)
         now_btn.setDefault(not self._dev_mode)
         now_btn.clicked.connect(self._on_now)
         if self._dev_mode:
             now_btn.setEnabled(False)
             now_btn.setToolTip(
-                "Automatic download is not available in developer mode.\n"
-                "Please download the update manually from the releases page."
+                _(
+                    "Automatic download is not available in developer mode.\n"
+                    "Please download the update manually from the releases page."
+                )
             )
         btn_row.addWidget(now_btn)
 
@@ -134,22 +138,21 @@ class UpdateAvailableDialog(QDialog):
 
 
 class _DownloadProgressDialog(QDialog):
-
     cancelled = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Downloading Update")
+        self.setWindowTitle(_("Downloading Update"))
         self.setModal(True)
         self.setFixedSize(380, 120)
         self.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, False)
 
         layout = QVBoxLayout(self)
-        self._label = QLabel("Downloading update files, please wait…")
+        self._label = QLabel(_("Downloading update files, please wait..."))
         self._label.setWordWrap(True)
         layout.addWidget(self._label)
 
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(_("Cancel"))
         cancel_btn.clicked.connect(self._on_cancel)
         btn_row = QHBoxLayout()
         btn_row.addStretch()
@@ -165,11 +168,10 @@ class _DownloadProgressDialog(QDialog):
 
 
 class UpdateChecker(QObject):
-
     update_available = Signal(dict)
-    no_update        = Signal()
-    check_error      = Signal(str)
-    download_ready   = Signal(str, str)
+    no_update = Signal()
+    check_error = Signal(str)
+    download_ready = Signal(str, str)
 
     _singleton = None
 
@@ -182,12 +184,12 @@ class UpdateChecker(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self._repo      = os.environ.get("APP_GITHUB_REPO", "")
-        self._version   = os.environ.get("APP_VERSION", "0.0.0")
-        self._platform  = _current_platform()
+        self._repo = os.environ.get("APP_GITHUB_REPO", "")
+        self._version = os.environ.get("APP_VERSION", "0.0.0")
+        self._platform = _current_platform()
         self._parent_widget: QWidget | None = parent
 
-        self._nam        = QNetworkAccessManager(self)
+        self._nam = QNetworkAccessManager(self)
         self._reply: QNetworkReply | None = None
         self._download_nam = QNetworkAccessManager(self)
 
@@ -215,8 +217,10 @@ class UpdateChecker(QObject):
         self._silent = silent
         url = f"https://api.github.com/repos/{self._repo}/releases/latest"
         request = QNetworkRequest(QUrl(url))
-        request.setHeader(QNetworkRequest.KnownHeaders.UserAgentHeader,
-                          f"{os.environ.get('APP_NAME','App')}/{self._version}")
+        request.setHeader(
+            QNetworkRequest.KnownHeaders.UserAgentHeader,
+            f"{os.environ.get('APP_NAME', 'App')}/{self._version}",
+        )
         request.setRawHeader(b"Accept", b"application/vnd.github+json")
         self._reply = self._nam.get(request)
         self._reply.finished.connect(self._on_api_reply)
@@ -228,10 +232,7 @@ class UpdateChecker(QObject):
             return
 
         try:
-            http_status = reply.attribute(
-                QNetworkRequest.Attribute.HttpStatusCodeAttribute
-            )
-
+            http_status = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
             data = bytes(reply.readAll()).decode("utf-8", errors="replace")
 
             try:
@@ -245,12 +246,13 @@ class UpdateChecker(QObject):
                 and http_status >= 400
             ):
                 self.check_error.emit(
-                    release.get("message", f"HTTP {http_status}")
+                    release.get("message", _("HTTP {status}").format(status=http_status))
                 )
                 if not getattr(self, "_silent", True):
                     QMessageBox.information(
-                        self._parent_widget, "No Releases Found",
-                        "No releases have been published for this application yet."
+                        self._parent_widget,
+                        _("No Releases Found"),
+                        _("No releases have been published for this application yet."),
                     )
                 return
 
@@ -259,16 +261,18 @@ class UpdateChecker(QObject):
                 self.check_error.emit(err)
                 if not getattr(self, "_silent", True):
                     QMessageBox.warning(
-                        self._parent_widget, "Update Check Failed",
-                        f"Could not reach the update server:\n{err}"
+                        self._parent_widget,
+                        _("Update Check Failed"),
+                        _("Could not reach the update server:\n{error}").format(error=err),
                     )
                 return
 
             if not release or "tag_name" not in release:
                 if not getattr(self, "_silent", True):
                     QMessageBox.information(
-                        self._parent_widget, "No Releases Found",
-                        "No releases have been published for this application yet."
+                        self._parent_widget,
+                        _("No Releases Found"),
+                        _("No releases have been published for this application yet."),
                     )
                 return
 
@@ -280,9 +284,12 @@ class UpdateChecker(QObject):
                 self.no_update.emit()
                 if not getattr(self, "_silent", True):
                     QMessageBox.information(
-                        self._parent_widget, "No Update Available",
-                        f"{os.environ.get('APP_NAME','PlayForm')} is up to date "
-                        f"(version {self._version})."
+                        self._parent_widget,
+                        _("No Update Available"),
+                        _("{app} is up to date (version {version}).").format(
+                            app=os.environ.get("APP_NAME", "PlayForm"),
+                            version=self._version,
+                        ),
                     )
         finally:
             reply.deleteLater()
@@ -300,50 +307,58 @@ class UpdateChecker(QObject):
 
         assets = release.get("assets", [])
         if not assets:
-            QMessageBox.warning(self._parent_widget, "Update Error",
-                                "No downloadable assets found in this release.")
+            QMessageBox.warning(
+                self._parent_widget,
+                _("Update Error"),
+                _("No downloadable assets found in this release."),
+            )
             return
 
         manifest_name = f"{self._platform}-manifest.json"
-        manifest_asset = next(
-            (a for a in assets if a["name"] == manifest_name), None
-        )
+        manifest_asset = next((a for a in assets if a["name"] == manifest_name), None)
         if manifest_asset is None:
             QMessageBox.warning(
-                self._parent_widget, "Update Error",
-                f"No platform manifest found for '{self._platform}' in this release."
+                self._parent_widget,
+                _("Update Error"),
+                _("No platform manifest found for '{platform}' in this release.").format(
+                    platform=self._platform
+                ),
             )
             return
 
         zip_asset = next(
-            (a for a in assets
-             if a["name"].endswith(".zip") and self._platform in a["name"].lower()),
-            None
+            (a for a in assets if a["name"].endswith(".zip") and self._platform in a["name"].lower()),
+            None,
         )
         if zip_asset is None:
             zip_asset = next((a for a in assets if a["name"].endswith(".zip")), None)
         if zip_asset is None:
-            QMessageBox.warning(self._parent_widget, "Update Error",
-                                "No zip archive found in this release.")
+            QMessageBox.warning(
+                self._parent_widget,
+                _("Update Error"),
+                _("No zip archive found in this release."),
+            )
             return
 
         temp_dir = Path(_get_app_path()) / "update_temp"
         temp_dir.mkdir(parents=True, exist_ok=True)
         temp_dir_str = str(temp_dir)
 
-        self._pending_release   = release
-        self._pending_zip_name  = zip_asset["name"]
-        self._pending_temp_dir  = temp_dir_str
-        self._expected_count    = 2
-        self._finished_count    = 0
-        self._download_failed   = False
+        self._pending_release = release
+        self._pending_zip_name = zip_asset["name"]
+        self._pending_temp_dir = temp_dir_str
+        self._expected_count = 2
+        self._finished_count = 0
+        self._download_failed = False
 
         from downloader.downloader import Downloader
+
         if self._update_downloader is not None:
             try:
                 self._update_downloader.deleteLater()
             except Exception:
                 pass
+
         self._update_downloader = Downloader(destination=temp_dir_str, max_concurrent=2)
         self._update_downloader.download_finished.connect(self._on_update_file_finished)
         self._update_downloader.all_finished.connect(self._on_all_update_files_finished)
@@ -351,20 +366,22 @@ class UpdateChecker(QObject):
         self._update_downloader.add_download(
             manifest_asset["browser_download_url"],
             destination=temp_dir_str,
-            filename=manifest_name
+            filename=manifest_name,
         )
         self._update_downloader.add_download(
             zip_asset["browser_download_url"],
             destination=temp_dir_str,
-            filename=zip_asset["name"]
+            filename=zip_asset["name"],
         )
 
         self._progress_dialog = _DownloadProgressDialog(self._parent_widget)
         self._progress_dialog.cancelled.connect(self._cancel_update_download)
         self._progress_dialog.set_message(
-            f"Downloading update files…\n"
-            f"  • {manifest_name}\n"
-            f"  • {zip_asset['name']}"
+            _(
+                "Downloading update files...\n"
+                "  - {manifest}\n"
+                "  - {archive}"
+            ).format(manifest=manifest_name, archive=zip_asset["name"])
         )
         self._progress_dialog.show()
 
@@ -376,7 +393,10 @@ class UpdateChecker(QObject):
         self._finished_count += 1
         if self._progress_dialog:
             self._progress_dialog.set_message(
-                f"Downloaded {self._finished_count} / {self._expected_count} files…"
+                _("Downloaded {finished} / {expected} files...").format(
+                    finished=self._finished_count,
+                    expected=self._expected_count,
+                )
             )
 
     @Slot()
@@ -387,19 +407,22 @@ class UpdateChecker(QObject):
 
         if self._download_failed:
             QMessageBox.critical(
-                self._parent_widget, "Update Failed",
-                "One or more update files failed to download. Please try again later."
+                self._parent_widget,
+                _("Update Failed"),
+                _("One or more update files failed to download. Please try again later."),
             )
             return
 
         app_name = os.environ.get("APP_NAME", "PlayForm")
         reply = QMessageBox.question(
             self._parent_widget,
-            "Update Ready",
-            f"The update has been downloaded.\n\n"
-            f"{app_name} needs to restart to apply it. Restart now?",
+            _("Update Ready"),
+            _(
+                "The update has been downloaded.\n\n"
+                "{app_name} needs to restart to apply it. Restart now?"
+            ).format(app_name=app_name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.Yes
+            QMessageBox.StandardButton.Yes,
         )
         if reply == QMessageBox.StandardButton.Yes:
             self._apply_update_and_restart()
@@ -424,17 +447,22 @@ class UpdateChecker(QObject):
 
         if not updater_exe.exists():
             QMessageBox.critical(
-                self._parent_widget, "Updater Not Found",
-                f"The updater binary was not found at:\n{updater_exe}\n\n"
-                "Please update manually."
+                self._parent_widget,
+                _("Updater Not Found"),
+                _(
+                    "The updater binary was not found at:\n{path}\n\nPlease update manually."
+                ).format(path=updater_exe),
             )
             return
 
         args = [
             str(updater_exe),
-            "--temp",        temp_dir,
-            "--zip",         zip_name,
-            "--install-dir", str(app_path),
+            "--temp",
+            temp_dir,
+            "--zip",
+            zip_name,
+            "--install-dir",
+            str(app_path),
         ]
 
         try:
@@ -444,10 +472,12 @@ class UpdateChecker(QObject):
                 subprocess.Popen(args)
         except Exception as e:
             QMessageBox.critical(
-                self._parent_widget, "Update Error",
-                f"Failed to launch the updater:\n{e}"
+                self._parent_widget,
+                _("Update Error"),
+                _("Failed to launch the updater:\n{error}").format(error=e),
             )
             return
 
         from PySide6.QtWidgets import QApplication
+
         QApplication.quit()

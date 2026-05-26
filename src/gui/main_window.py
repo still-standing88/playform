@@ -61,6 +61,7 @@ from system_tray import SystemTrayIcon
 from .dialogs.downloader_dialog import DownloaderDialog
 from .dialogs.about_dialog import AboutDialog
 from downloader.downloader import Downloader
+from utilities.functions import get_restart_flag
 
 
 
@@ -110,6 +111,7 @@ class MainWindow(QMainWindow):
         self.focusable_widgets = []
         self.current_focus_index = -1
         self.tool_actions_map = {}
+        self.customize_toolbar_action: Optional[QAction] = None
         
         self.global_hotkeys = {
             "Play/Pause": self.toggle_play_pause,
@@ -204,9 +206,8 @@ class MainWindow(QMainWindow):
                 self.explorer_widget.setFocus()
 
     def focus_player(self):
-        if self.player_dock and self.player_dock.isVisible():
-            if self.player_widget:
-                self.player_widget.setFocus()
+        if self.player_widget and self.player_widget.isVisible():
+            self.player_widget.setFocus()
 
     def focus_playlists(self):
         if self.playlists_dock and self.playlists_dock.isVisible():
@@ -229,17 +230,15 @@ class MainWindow(QMainWindow):
                 self.recents_and_favorites_widget.setFocus()
     
     def toggle_explorer_shortcut(self):
-        """Toggle explorer via menu action"""
         if self.show_explorer_action:
             self.show_explorer_action.trigger()  # type: ignore
     
     def toggle_player_shortcut(self):
-        """Toggle player minimize via menu action"""
+
         if self.minimize_player_action:
             self.minimize_player_action.trigger()  # type: ignore
     
     def toggle_playlists_shortcut(self):
-        """Toggle playlists via menu action"""
         if self.playlists_dock:
             is_visible = self.playlists_dock.isVisible()
             self.playlists_dock.setVisible(not is_visible)
@@ -249,7 +248,7 @@ class MainWindow(QMainWindow):
                 self.playlists_widget.setFocus()
     
     def toggle_podcasts_shortcut(self):
-        """Toggle podcasts via menu action"""
+
         if self.podcast_dock:
             is_visible = self.podcast_dock.isVisible()
             self.podcast_dock.setVisible(not is_visible)
@@ -263,7 +262,6 @@ class MainWindow(QMainWindow):
             self.show_podcast_action.trigger()
     
     def toggle_radio_shortcut(self):
-        """Toggle radio via menu action"""
         if self.radio_dock:
             is_visible = self.radio_dock.isVisible()
             self.radio_dock.setVisible(not is_visible)
@@ -277,7 +275,6 @@ class MainWindow(QMainWindow):
             self.show_radio_action.trigger()
     
     def toggle_recents_favorites_shortcut(self):
-        """Toggle recents/favorites via menu action"""
         if self.recents_favorites_dock:
             is_visible = self.recents_favorites_dock.isVisible()
             self.recents_favorites_dock.setVisible(not is_visible)
@@ -295,10 +292,6 @@ class MainWindow(QMainWindow):
         self.main_layout.setContentsMargins(5, 5, 5, 5)
         self.main_layout.setSpacing(10)
         
-        self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
-        self.main_splitter.setObjectName("mainSplitter")
-        self.main_layout.addWidget(self.main_splitter)
-        
         self.recents_and_favorites_widget = RecentsAndFavoritesWidget(self.user_db)
         self.recents_and_favorites_widget.setObjectName("recentsAndFavoritesWidget")
         
@@ -315,10 +308,11 @@ class MainWindow(QMainWindow):
         
         self.player_widget = PlayerWidget(self)
         self.player_widget.setObjectName("playerWidget")
+        self.main_layout.addWidget(self.player_widget)
         
         self.playlists_widget = PlaylistsWidget(
             parent=self,
-            play_callback=self.play_file
+            play_callback=self.play_playlist_track
         )
         self.playlists_widget.setObjectName("playlistsWidget")
         
@@ -326,25 +320,30 @@ class MainWindow(QMainWindow):
         self.status_bar = QStatusBar()
         self.status_bar.setObjectName("statusBar")
         self.status_bar.setSizeGripEnabled(True)
+        self.status_bar.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.setStatusBar(self.status_bar)
         
-        self.status_label = QLabel("Ready")
+        self.status_label = QLabel(_("Ready"))
         self.status_label.setObjectName("statusLabel")
+        self.status_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.status_bar.addWidget(self.status_label, 1)
         
         self.media_info_label = QLabel("")
         self.media_info_label.setObjectName("mediaInfoLabel")
+        self.media_info_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.status_bar.addPermanentWidget(self.media_info_label)
         
-        self.show_tool_button = QPushButton("Show Tool")
+        self.show_tool_button = QPushButton(_("Show Tool"))
         self.show_tool_button.setObjectName("showToolButton")
         self.show_tool_button.clicked.connect(self.show_hidden_tool)
+        self.show_tool_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.show_tool_button.setVisible(False)
         self.status_bar.addPermanentWidget(self.show_tool_button)
 
-        self.show_downloader_button = QPushButton("Show Downloader")
+        self.show_downloader_button = QPushButton(_("Show Downloader"))
         self.show_downloader_button.setObjectName("showDownloaderButton")
         self.show_downloader_button.clicked.connect(self._show_minimized_downloader)
+        self.show_downloader_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.show_downloader_button.setVisible(False)
         self.status_bar.addPermanentWidget(self.show_downloader_button)
         
@@ -360,24 +359,32 @@ class MainWindow(QMainWindow):
         self.fileOpened.connect(self.player_widget.change_path)
         if self.explorer_dock and hasattr(self.explorer_dock, 'visibilityChanged'):
             self.explorer_dock.visibilityChanged.connect(self.menu_manager.update_explorer_menu)
-        if self.player_dock and hasattr(self.player_dock, 'visibilityChanged'):
-            self.player_dock.visibilityChanged.connect(self.menu_manager.update_player_menu)
         if self.playlists_dock and hasattr(self.playlists_dock, 'visibilityChanged'):
             self.playlists_dock.visibilityChanged.connect(self.menu_manager.update_playlists_menu)
             
     def open_file_dialog(self):
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Open Media File", "", file_filter
+        file_path, selected_filter = QFileDialog.getOpenFileName(
+            self, _("Open Media File"), "", file_filter
         )
         if file_path:
             self.play_file(file_path)
     
     def open_folder_dialog(self):
         folder_path = QFileDialog.getExistingDirectory(
-            self, "Open Folder", ""
+            self, _("Open Folder"), ""
         )
         if folder_path:
             self.load_folder_as_playlist(folder_path)
+
+    def open_playlist_dialog(self):
+        file_path, selected_filter = QFileDialog.getOpenFileName(
+            self,
+            _("Open Playlist"),
+            "",
+            PlaylistsWidget.PLAYLIST_FILE_FILTER,
+        )
+        if file_path:
+            self.play_file(file_path)
             
     def open_url_dialog(self):
         dialog = URLDialog(self)
@@ -390,8 +397,8 @@ class MainWindow(QMainWindow):
         if not media_files:
             QMessageBox.information(
                 self, 
-                "No Media Found", 
-                f"No supported media files were found in the selected folder:\n{folder_path}\n\nSupported formats include audio and video files."
+                _("No Media Found"), 
+                f"{_('No supported media files were found in the selected folder:')}\n{folder_path}\n\n{_('Supported formats include audio and video files.')}"
             )
             return
         
@@ -404,15 +411,34 @@ class MainWindow(QMainWindow):
             self.play_file(media_files[0])
             
     def play_file(self, file_path: str):
-        signal_manager.statusbar_message.emit(f"Loading: {os.path.basename(file_path)}")
+        signal_manager.statusbar_message.emit(f"{_("Loading:")} {os.path.basename(file_path)}")
         signal_manager.media_info_message.emit(file_path)
         self.add_to_recents(file_path)
         self.menu_manager.update_recent_files_menu()
         self.fileOpened.emit(file_path)
         self.close_media_action.setEnabled(True)
+
+    def play_playlist_track(self, playlist: Playlist, start_index: int = 0):
+        if playlist is None or len(playlist) == 0:
+            return
+
+        if start_index < 0 or start_index >= len(playlist):
+            start_index = 0
+
+        entry = playlist[start_index]
+        signal_manager.statusbar_message.emit(
+            _("Loading playlist: {title}").format(
+                title=playlist.title or _("Untitled")
+            )
+        )
+        signal_manager.media_info_message.emit(entry.location)
+        self.add_to_recents(entry.location)
+        self.menu_manager.update_recent_files_menu()
+        self.player_widget.load_playlist(playlist, start_index=start_index, auto_play=True)
+        self.close_media_action.setEnabled(True)
         
     def play_url(self, url: str):
-        signal_manager.statusbar_message.emit(f"Loading URL: {url}")
+        signal_manager.statusbar_message.emit(f"{_('Loading URL:')} {url}")
         signal_manager.media_info_message.emit(url)
         self.urlOpened.emit(url)
         self.close_media_action.setEnabled(True)
@@ -434,8 +460,8 @@ class MainWindow(QMainWindow):
         
         if not playlist_manager.list_playlists():
             reply = QMessageBox.question(
-                self, "No Playlists",
-                "No playlists exist. Would you like to create a new playlist?",
+                self, _("No Playlists"),
+                _("No playlists exist. Would you like to create a new playlist?"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             if reply == QMessageBox.StandardButton.Yes:
@@ -451,7 +477,7 @@ class MainWindow(QMainWindow):
     def create_playlist_from_folder(self, folder_path: str):
 
         if not os.path.isdir(folder_path):
-            messageBox("Error", "Selected path is not a directory")
+            messageBox(_("Error"), _("Selected path is not a directory"))
             return
             
         audio_formats = [ext.lower() for ext in formats.get("audio", [])]
@@ -460,11 +486,11 @@ class MainWindow(QMainWindow):
         media_files = get_media_files_from_directory(folder_path, audio_formats, video_formats)
         
         if not media_files:
-            messageBox("No Media Files", "No supported media files found in the selected folder")
+            messageBox(_("No Media Files"), _("No supported media files found in the selected folder"))
             return
             
         folder_name = os.path.basename(folder_path)
-        playlist_name = f"Playlist from {folder_name}"
+        playlist_name = f"{_("Playlist from")} {folder_name}"
         
         playlist = Playlist(title=playlist_name)
         for file_path in media_files:
@@ -478,20 +504,35 @@ class MainWindow(QMainWindow):
 
         self.player_widget.load_playlist(playlist, start_index=0, auto_play=True)
         
-        signal_manager.statusbar_message.emit(f"Created and loaded playlist '{playlist_name}' with {len(media_files)} tracks")
+        signal_manager.statusbar_message.emit(
+            _("Created and loaded playlist '{playlist_name}' with {track_count} tracks").format(
+                playlist_name=playlist_name,
+                track_count=len(media_files),
+            )
+        )
         
     def add_file_to_playlist(self, file_path: str, playlist_name: str):
 
         playlist = self.playlists_widget.playlist_manager.get_playlist(playlist_name)
-        if playlist:
+        if playlist is not None:
             entry = PlaylistEntry(location=file_path)
             playlist.add_entry(entry)
             self.playlists_widget.save_playlists_data()
             
             filename = os.path.basename(file_path)
-            signal_manager.statusbar_message.emit(f"Added '{filename}' to playlist '{playlist_name}'")
+            signal_manager.statusbar_message.emit(
+                _("Added '{filename}' to playlist '{playlist_name}'").format(
+                    filename=filename,
+                    playlist_name=playlist_name,
+                )
+            )
         else:
-            messageBox("Error", f"Playlist '{playlist_name}' not found")
+            messageBox(
+                _("Error"),
+                _("Playlist '{playlist_name}' not found").format(
+                    playlist_name=playlist_name
+                ),
+            )
             
     def create_new_playlist_with_file(self, file_path: str):
 
@@ -509,7 +550,9 @@ class MainWindow(QMainWindow):
         self.playlists_widget.playlist_manager.playlists[name] = playlist
         self.playlists_widget.add_playlist_to_list(name)
         self.playlists_widget.save_playlists_data()
-        signal_manager.statusbar_message.emit(f"Created new playlist '{name}'")
+        signal_manager.statusbar_message.emit(
+            _("Created new playlist '{name}'").format(name=name)
+        )
         
 
 
@@ -530,29 +573,29 @@ class MainWindow(QMainWindow):
                     state = self.player_widget.player.primary_instance.get_playback_state()
                     if state == "playing":
                         self.player_widget.player.primary_instance.pause()
-                        signal_manager.statusbar_message.emit("Paused")
+                        signal_manager.statusbar_message.emit(_("Paused"))
                     else:
                         self.player_widget.player.primary_instance.play()
-                        signal_manager.statusbar_message.emit("Playing")
+                        signal_manager.statusbar_message.emit(_("Playing"))
             except Exception as e:
-                signal_manager.statusbar_message.emit("No media loaded")
+                signal_manager.statusbar_message.emit(_("No media loaded"))
                 
     def stop_playback(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             try:
                 if self.player_widget.player.primary_instance:
                     self.player_widget.player.primary_instance.stop()
-                    signal_manager.statusbar_message.emit("Stopped")
+                    signal_manager.statusbar_message.emit(_("Stopped"))
             except Exception as e:
-                signal_manager.statusbar_message.emit("No media loaded")
+                signal_manager.statusbar_message.emit(_("No media loaded"))
                 
     def toggle_mute(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             try:
                 if self.player_widget.player.primary_instance:
-                    signal_manager.statusbar_message.emit("Mute toggled")
+                    signal_manager.statusbar_message.emit(_("Mute toggled"))
             except Exception as e:
-                signal_manager.statusbar_message.emit("No media loaded")
+                signal_manager.statusbar_message.emit(_("No media loaded"))
                 
     def seek_forward(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
@@ -573,10 +616,10 @@ class MainWindow(QMainWindow):
                 pass
                 
     def previous_track(self):
-        signal_manager.statusbar_message.emit("Previous track")
+        signal_manager.statusbar_message.emit(_("Previous track"))
         
     def next_track(self):
-        signal_manager.statusbar_message.emit("Next track")
+        signal_manager.statusbar_message.emit(_("Next track"))
 
     def volume_down(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
@@ -595,26 +638,26 @@ class MainWindow(QMainWindow):
     def open_batch_converter(self):
         if not ensure_ffmpeg_available(self, show_message=True, min_major=6):
             return
-        self.open_tool_dialog("batch_converter", BatchConverterUI(), "Batch Converter")
+        self.open_tool_dialog("batch_converter", BatchConverterUI(), _("Batch Converter"))
         
     def open_extractor(self):
         if not ensure_ffmpeg_available(self, show_message=True, min_major=6):
             return
-        self.open_tool_dialog("extractor", ExtractorUI(), "Media Extractor")
+        self.open_tool_dialog("extractor", ExtractorUI(), _("Media Extractor"))
         
     def open_tag_editor(self):
-        self.open_tool_dialog("tag_editor", TagEditorUI(), "Tag Editor")
+        self.open_tool_dialog("tag_editor", TagEditorUI(), _("Tag Editor"))
         
     def open_thumbnail_generator(self):
         if not ensure_ffmpeg_available(self, show_message=True, min_major=6):
             return
-        self.open_tool_dialog("thumbnail_generator", ThumbnailGeneratorUI(), "Thumbnail Generator")
+        self.open_tool_dialog("thumbnail_generator", ThumbnailGeneratorUI(), _("Thumbnail Generator"))
     
     def open_subtitle_converter(self):
-        self.open_tool_dialog("subtitle_converter", SubtitleConverterUI(), "Subtitle Converter")
+        self.open_tool_dialog("subtitle_converter", SubtitleConverterUI(), _("Subtitle Converter"))
     
     def open_subtitle_editor(self):
-        self.open_tool_dialog("subtitle_editor", SubtitleEditorUI(), "Subtitle Editor")
+        self.open_tool_dialog("subtitle_editor", SubtitleEditorUI(), _("Subtitle Editor"))
         
     def open_tool_dialog(self, tool_name, tool_widget, title):
 
@@ -624,8 +667,10 @@ class MainWindow(QMainWindow):
                 if active_dialog.isVisible() or self.show_tool_button.isVisible():
                     QMessageBox.information(
                         self,
-                        "Tool Already Open",
-                        f"'{active_dialog.title}' is already open. Please close it before opening another tool.",
+                        _("Tool Already Open"),
+                        _("'{title}' is already open. Please close it before opening another tool.").format(
+                            title=active_dialog.title
+                        ),
                         QMessageBox.StandardButton.Ok
                     )
                     return
@@ -642,13 +687,17 @@ class MainWindow(QMainWindow):
             dialog.show_dialog()
         
         self.active_tool_name = tool_name
-        signal_manager.statusbar_message.emit(f"Opened {title}")
+        signal_manager.statusbar_message.emit(
+            _("Opened {title}").format(title=title)
+        )
     
     def on_tool_hidden(self, tool_name, title):
 
-        self.show_tool_button.setText(f"Show {title}")
+        self.show_tool_button.setText(_("Show {title}").format(title=title))
         self.show_tool_button.setVisible(True)
-        signal_manager.statusbar_message.emit(f"{title} hidden")
+        signal_manager.statusbar_message.emit(
+            _("{title} hidden").format(title=title)
+        )
     
     def on_tool_closed(self, tool_name):
 
@@ -657,24 +706,34 @@ class MainWindow(QMainWindow):
         if self.active_tool_name == tool_name:
             self.active_tool_name = None
         self.show_tool_button.setVisible(False)
-        signal_manager.statusbar_message.emit("Tool closed")
+        signal_manager.statusbar_message.emit(_("Tool closed"))
     
     def show_hidden_tool(self):
         if self.active_tool_name and self.active_tool_name in self.tool_dialogs:
             dialog = self.tool_dialogs[self.active_tool_name]
             dialog.show_dialog()
             self.show_tool_button.setVisible(False)
-            signal_manager.statusbar_message.emit(f"Showing {dialog.title}")
+            signal_manager.statusbar_message.emit(
+                _("Showing {title}").format(title=dialog.title)
+            )
         
     def toggle_repeat(self):
         self.is_repeat_enabled = not self.is_repeat_enabled
         prefs.prefs['repeat'] = self.is_repeat_enabled
         prefs.save()
         
-        repeat_text = "Toggle Repeat: On" if self.is_repeat_enabled else "Toggle Repeat: Off"
+        repeat_text = (
+            _("Toggle Repeat: On")
+            if self.is_repeat_enabled
+            else _("Toggle Repeat: Off")
+        )
         if self.repeat_action:
             self.repeat_action.setText(repeat_text)
-        signal_manager.statusbar_message.emit(f"Repeat: {'On' if self.is_repeat_enabled else 'Off'}")
+        signal_manager.statusbar_message.emit(
+            _("Repeat: {state}").format(
+                state=_("On") if self.is_repeat_enabled else _("Off")
+            )
+        )
         
 
     
@@ -688,8 +747,7 @@ class MainWindow(QMainWindow):
             return
         
         self.current_focus_index = (self.current_focus_index + 1) % len(self.focusable_widgets)
-        widget = self.focusable_widgets[self.current_focus_index]
-        widget.setFocus()
+        self._focus_navigation_target(self.focusable_widgets[self.current_focus_index])
     
     def focus_previous_widget(self):
         self.dock_manager.update_focusable_widgets()
@@ -697,7 +755,40 @@ class MainWindow(QMainWindow):
             return
         
         self.current_focus_index = (self.current_focus_index - 1) % len(self.focusable_widgets)
-        widget = self.focusable_widgets[self.current_focus_index]
+        self._focus_navigation_target(self.focusable_widgets[self.current_focus_index])
+
+    def _focus_navigation_target(self, widget):
+        if widget is None:
+            return
+
+        if widget is self.menuBar():
+            widget.setFocus()
+            first_action = next((action for action in widget.actions() if action.isVisible()), None)
+            if first_action is not None:
+                widget.setActiveAction(first_action)
+            return
+
+        if widget is self.toolbar:
+            widget.setFocus()
+            toolbar_actions = [action for action in widget.actions() if action.isVisible() and not action.isSeparator()]
+            if toolbar_actions:
+                toolbar_widget = widget.widgetForAction(toolbar_actions[0])
+                if toolbar_widget is not None:
+                    toolbar_widget.setFocus()
+            return
+
+        if widget is self.status_bar:
+            widget.setFocus()
+            if self.show_tool_button.isVisible():
+                self.show_tool_button.setFocus()
+            elif self.show_downloader_button.isVisible():
+                self.show_downloader_button.setFocus()
+            elif self.media_info_label.isVisible():
+                self.media_info_label.setFocus()
+            else:
+                self.status_label.setFocus()
+            return
+
         widget.setFocus()
     
 
@@ -744,12 +835,12 @@ class MainWindow(QMainWindow):
         
         dialog = PreferencesDialog(self, audio_devices, self.apply_audio_device)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            signal_manager.statusbar_message.emit("Preferences saved")
+            signal_manager.statusbar_message.emit(_("Preferences saved"))
             
     def open_hotkeys(self):
         dialog = HotkeysDialog(self, reset_callback=self.reset_shortcuts_callback)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            signal_manager.statusbar_message.emit("Hotkeys updated")
+            signal_manager.statusbar_message.emit(_("Hotkeys updated"))
 
     # ------------------------------------------------------------------
     # About & Options menu actions
@@ -776,9 +867,10 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.information(
                 self,
-                "Documentation Not Found",
-                f"The documentation could not be found at:\n{doc_path}\n\n"
-                "Please visit the project website for help.",
+                _("Documentation Not Found"),
+                _("The documentation could not be found at:\n{path}\n\nPlease visit the project website for help.").format(
+                    path=doc_path
+                ),
             )
 
     def check_for_updates(self):
@@ -811,7 +903,7 @@ class MainWindow(QMainWindow):
             # Dialog was minimized or still alive – bring it back
             self._downloader_dialog.show_dialog()
             self.show_downloader_button.setVisible(False)
-            signal_manager.statusbar_message.emit("Download Manager opened")
+            signal_manager.statusbar_message.emit(_("Download Manager opened"))
             return
 
         # First time (or after close) – create fresh dialog
@@ -821,25 +913,25 @@ class MainWindow(QMainWindow):
         self._downloader_dialog = dlg
         dlg.show_dialog()
         self.show_downloader_button.setVisible(False)
-        signal_manager.statusbar_message.emit("Download Manager opened")
+        signal_manager.statusbar_message.emit(_("Download Manager opened"))
 
     def _on_downloader_hidden(self):
         """Called when dialog hides itself (Minimize button)."""
         self.show_downloader_button.setVisible(True)
-        signal_manager.statusbar_message.emit("Download Manager minimized")
+        signal_manager.statusbar_message.emit(_("Download Manager minimized"))
 
     def _on_downloader_closed(self):
         """Called when dialog is fully closed so it can be re-created next time."""
         self._downloader_dialog = None
         self.show_downloader_button.setVisible(False)
-        signal_manager.statusbar_message.emit("Download Manager closed")
+        signal_manager.statusbar_message.emit(_("Download Manager closed"))
 
     def _show_minimized_downloader(self):
         """Status-bar button: show the minimized dialog."""
         if self._downloader_dialog is not None:
             self._downloader_dialog.show_dialog()
             self.show_downloader_button.setVisible(False)
-            signal_manager.statusbar_message.emit("Download Manager restored")
+            signal_manager.statusbar_message.emit(_("Download Manager restored"))
             
     def hide_to_tray(self):
         if self.tray:
@@ -879,9 +971,10 @@ class MainWindow(QMainWindow):
         tools_text = "\n".join(f"• {tool}" for tool in active_tools)
         reply = QMessageBox.question(
             self,
-            "Active Tools",
-            f"The following tools are currently active:\n{tools_text}\n\n"
-            "Closing the application will stop these processes. Do you want to continue?",
+            _("Active Tools"),
+            _("The following tools are currently active:\n{tools}\n\nClosing the application will stop these processes. Do you want to continue?").format(
+                tools=tools_text
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
@@ -889,7 +982,7 @@ class MainWindow(QMainWindow):
         return reply == QMessageBox.StandardButton.Yes
 
     def close_application(self):
-        if self.has_active_tools():
+        if not get_restart_flag() and self.has_active_tools():
             if not self.confirm_close_with_active_tools():
                 return
         
@@ -906,6 +999,7 @@ class MainWindow(QMainWindow):
     def save_window_state(self):
         prefs.prefs['window_geometry'] = self.saveGeometry().data().hex()
         prefs.prefs['window_state'] = self.saveState().data().hex()
+        prefs.prefs['player_visible'] = self.player_widget.isVisible()
         prefs.save()
         
     def restore_window_state(self):
@@ -922,10 +1016,16 @@ class MainWindow(QMainWindow):
                 self.restoreState(state)
             except:
                 pass
+
+        self.player_widget.setVisible(prefs.prefs.get('player_visible', True))
+        if self.minimize_player_action:
+            self.minimize_player_action.setChecked(not self.player_widget.isVisible())
                 
     def closeEvent(self, event):
 
-        if self.has_active_tools():
+        is_restarting = get_restart_flag()
+
+        if not is_restarting and self.has_active_tools():
             if not self.confirm_close_with_active_tools():
                 event.ignore()
                 return
@@ -938,7 +1038,7 @@ class MainWindow(QMainWindow):
         if self.podcast_widget and hasattr(self.podcast_widget, 'close'):
             self.podcast_widget.close()
         
-        if self.tray and self.tray.is_available():
+        if self.tray and self.tray.is_available() and not is_restarting:
             event.ignore()
             self.hide_to_tray()
         else:

@@ -43,6 +43,10 @@ class MenuManager:
         self.main_window.open_folder_action = QAction(_("Open &Folder..."), self.main_window)
         self.main_window.open_folder_action.triggered.connect(self.main_window.open_folder_dialog)
         self.main_window.file_menu.addAction(self.main_window.open_folder_action)
+
+        self.main_window.open_playlist_action = QAction(_("Open &Playlist..."), self.main_window)
+        self.main_window.open_playlist_action.triggered.connect(self.main_window.open_playlist_dialog)
+        self.main_window.file_menu.addAction(self.main_window.open_playlist_action)
         
         self.main_window.open_url_action = QAction(_("Open &URL..."), self.main_window)
         self.main_window.open_url_action.triggered.connect(self.main_window.open_url_dialog)
@@ -149,7 +153,7 @@ class MenuManager:
         self.main_window.show_podcast_action.setChecked(False)
         self.main_window.show_podcast_action.triggered.connect(self.main_window.dock_manager.toggle_podcast)
         self.main_window.view_menu.addAction(self.main_window.show_podcast_action)
-        
+
     def setup_tools_menu(self):
         self.main_window.batch_converter_action = QAction(_("&Batch Converter"), self.main_window)
         self.main_window.batch_converter_action.triggered.connect(self.main_window.tool_manager.open_batch_converter)
@@ -197,6 +201,12 @@ class MenuManager:
         self.main_window.preferences_action = QAction(_("&Manage Preferences"), self.main_window)
         self.main_window.preferences_action.triggered.connect(self.main_window.open_preferences)
         self.main_window.options_menu.addAction(self.main_window.preferences_action)
+
+        self.main_window.customize_toolbar_action = QAction(_("Customize &Toolbar..."), self.main_window)
+        self.main_window.customize_toolbar_action.triggered.connect(
+            self.main_window.toolbar_manager.open_toolbar_customize_dialog
+        )
+        self.main_window.options_menu.addAction(self.main_window.customize_toolbar_action)
 
         self.main_window.hotkeys_action = QAction(_("&Manage Hotkeys"), self.main_window)
         self.main_window.hotkeys_action.triggered.connect(self.main_window.open_hotkeys)

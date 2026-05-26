@@ -1,13 +1,24 @@
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QListWidget, 
+from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidget,
                                QListWidgetItem, QLabel, QPushButton, QMenu,
                                QMessageBox, QProgressBar, QFrame, QScrollArea)
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QClipboard
+from PySide6.QtGui import QAction
 from downloader.downloader import Downloader, DownloadStatus
-from pathlib import Path
 
 
 class DownloadListItem(QWidget):
+    @staticmethod
+    def status_text(status):
+        status_map = {
+            DownloadStatus.QUEUED: _("Queued"),
+            DownloadStatus.DOWNLOADING: _("Downloading"),
+            DownloadStatus.PAUSED: _("Paused"),
+            DownloadStatus.COMPLETED: _("Completed"),
+            DownloadStatus.FAILED: _("Failed"),
+            DownloadStatus.CANCELLED: _("Cancelled"),
+        }
+        return status_map.get(status, str(status))
+
     def __init__(self, download_item):
         super().__init__()
         self.download_item = download_item
@@ -19,7 +30,7 @@ class DownloadListItem(QWidget):
         self.filename_label = QLabel(download_item.filename)
         self.filename_label.setStyleSheet("font-weight: bold;")
         
-        self.status_label = QLabel(download_item.status.value)
+        self.status_label = QLabel(self.status_text(download_item.status))
         
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
@@ -27,8 +38,8 @@ class DownloadListItem(QWidget):
         self.progress_bar.setTextVisible(True)
         
         info_layout = QHBoxLayout()
-        self.size_label = QLabel("0 B / 0 B")
-        self.speed_label = QLabel("0 B/s")
+        self.size_label = QLabel(_("0 B / 0 B"))
+        self.speed_label = QLabel(_("0 B/s"))
         info_layout.addWidget(self.size_label)
         info_layout.addStretch()
         info_layout.addWidget(self.speed_label)
@@ -52,7 +63,7 @@ class DownloadListItem(QWidget):
         self.size_label.setText(f"{self.format_size(downloaded)} / {self.format_size(total)}")
     
     def update_status(self, status):
-        self.status_label.setText(status.value)
+        self.status_label.setText(self.status_text(status))
         
         if status == DownloadStatus.COMPLETED:
             self.progress_bar.setValue(100)
@@ -155,7 +166,7 @@ class DownloaderWidget(QWidget):
         
         self.more_info_scroll.setWidget(self.more_info_content)
         
-        right_layout.addWidget(QLabel(_("Download Info:)"))
+        right_layout.addWidget(QLabel(_("Download Info:")))
         right_layout.addWidget(self.info_label)
         right_layout.addWidget(self.more_info_btn)
         right_layout.addWidget(self.more_info_scroll, 1)
@@ -240,9 +251,10 @@ class DownloaderWidget(QWidget):
             return
         
         info = self.current_item.get_info()
+        status_text = DownloadListItem.status_text(self.current_item.status)
         
-        text = f"""<b>{_("Filename")}:</b> {info['filename']}<br>"
-        text += f"<b>{_("Status")}:</b> {info['status']}<br>"
+        text = f"<b>{_('Filename')}:</b> {info['filename']}<br>"
+        text += f"<b>{_('Status')}:</b> {status_text}<br>"
         text += f"<b>{_("Progress")}:</b> {DownloadListItem.format_size(info['downloaded_size'])} / "
         text += f"{DownloadListItem.format_size(info['total_size'])}<br>"
         text += f"<b>{_("Speed")}:</b> {DownloadListItem.format_size(info['speed'])}/s"
@@ -312,8 +324,7 @@ class DownloaderWidget(QWidget):
         menu.exec(self.list_widget.mapToGlobal(position))
     
     def copy_to_clipboard(self, text):
-        clipboard = QClipboard()
-        clipboard.setText(text)
+        QApplication.clipboard().setText(text)
     
     def close_with_confirmation(self):
         active_downloads = self.downloader.get_all_downloads()['active']
@@ -321,7 +332,9 @@ class DownloaderWidget(QWidget):
         if active_downloads:
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle(_("Downloads in Progress"))
-            msg_box.setText(f"{len(active_downloads)} {_("download(s) are still in progress.")}")
+            msg_box.setText(
+                _("{count} download(s) are still in progress.").format(count=len(active_downloads))
+            )
             msg_box.setInformativeText(_("What would you like to do?"))
             
             abort_btn = msg_box.addButton(_("Abort Downloads"), QMessageBox.DestructiveRole)

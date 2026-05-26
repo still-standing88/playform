@@ -4,7 +4,8 @@ from typing import Optional, Tuple
 
 def extract_ffmpeg_from_pyffmpeg(target_dir: str) -> Tuple[Optional[str], Optional[str]]:
     try:
-        from ffmpeg_binary import FFmpegBin
+        import ffmpeg_binary
+        FFmpegBin = ffmpeg_binary.FFmpegBin
         
         os.makedirs(target_dir, exist_ok=True)
         

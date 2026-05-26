@@ -6,6 +6,7 @@ import locale
 from pathlib import Path
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont
+from utilities.i18n import install_translation
 
 def setup_environment():
     import app_info
@@ -49,6 +50,10 @@ def initialize_modules(splash):
     splash.update_message(_("Loading configuration..."))
     import app_config
     from app_config import key_config
+    install_translation(app_config.prefs.prefs.get("language"))
+    if app_config.prefs.prefs.get("should_restart"):
+        app_config.prefs.prefs["should_restart"] = False
+        app_config.prefs.save()
     
     splash.update_message(_("Loading database..."))
     import app_db
@@ -82,12 +87,13 @@ def setup_ipc_handlers(app_instance, window):
     app_instance.register_msg(cli_args_msg)
 
 def setup_cleanup(app, app_instance, app_db):
-    from utilities.functions import get_restart_flag, set_restart_flag, restart_app
+    from utilities.speech import speech_manager
     
     def release():
-        if get_restart_flag():
-            set_restart_flag(False)
-            restart_app()
+        try:
+            speech_manager.stop_queue()
+        except Exception:
+            pass
         
         try:
             app_db.user_db.close_connection()

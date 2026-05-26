@@ -92,7 +92,9 @@ class DownloaderDialog(QDialog):
         if active:
             box = QMessageBox(self)
             box.setWindowTitle(_("Downloads in Progress"))
-            box.setText(f"{len(active)} {_("download(s)")} are still in progress.")
+            box.setText(
+                _("{count} download(s) are still in progress.").format(count=len(active))
+            )
             box.setInformativeText(_("Close anyway and abort all downloads?"))
             abort_btn = box.addButton(_("Abort & Close"), QMessageBox.ButtonRole.DestructiveRole)
             cancel_btn = box.addButton(_("Cancel"), QMessageBox.ButtonRole.RejectRole)

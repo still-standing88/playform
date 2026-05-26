@@ -21,6 +21,7 @@ prefs = {
 "image_format": screenshot_formats[1],
 "color_theme": "system",
 "language":"en",
+"should_restart": False,
 "subtitle-language":"en-US",
 "auto_check_for_updates": True,
 "youtube_cookies": "",

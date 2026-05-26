@@ -21,7 +21,10 @@ class PlaylistHandler:
             QMessageBox.information(
                 self.main_window, 
                 _("No Media Found"), 
-                f"{_('No supported media files were found in the selected folder:')}\n{folder_path}\n\n{_('Supported formats include audio and video files.')}"
+                _(
+                    "No supported media files were found in the selected folder:\n{folder_path}\n\n"
+                    "Supported formats include audio and video files."
+                ).format(folder_path=folder_path)
             )
             return
         
@@ -67,7 +70,7 @@ class PlaylistHandler:
             return
             
         folder_name = os.path.basename(folder_path)
-        playlist_name = f"{_('Playlist from {folder_name}')}"
+        playlist_name = _("Playlist from {folder_name}").format(folder_name=folder_name)
         
         playlist = Playlist(title=playlist_name)
         for file_path in media_files:
@@ -80,19 +83,29 @@ class PlaylistHandler:
         
         self.main_window.player_widget.load_playlist(playlist, start_index=0, auto_play=True)
         
-        signal_manager.statusbar_message.emit(f"{_('Created and loaded playlist')} '{playlist_name}' {_('with')} {len(media_files)} {_('tracks')}")
+        signal_manager.statusbar_message.emit(
+            _("Created and loaded playlist '{playlist_name}' with {track_count} tracks").format(
+                playlist_name=playlist_name,
+                track_count=len(media_files),
+            )
+        )
         
     def add_file_to_playlist(self, file_path: str, playlist_name: str):
         playlist = self.main_window.playlists_widget.playlist_manager.get_playlist(playlist_name)
-        if playlist:
+        if playlist is not None:
             entry = PlaylistEntry(location=file_path)
             playlist.add_entry(entry)
             self.main_window.playlists_widget.save_playlists_data()
             
             filename = os.path.basename(file_path)
-            signal_manager.statusbar_message.emit(f"{_('Added')} '{filename}' {_('to playlist')} '{playlist_name}'")
+            signal_manager.statusbar_message.emit(
+                _("Added '{filename}' to playlist '{playlist_name}'").format(
+                    filename=filename,
+                    playlist_name=playlist_name,
+                )
+            )
         else:
-            messageBox(_("Error"), f"Playlist '{playlist_name}' not found")
+            messageBox(_("Error"), _("Playlist '{playlist_name}' not found").format(playlist_name=playlist_name))
             
     def create_new_playlist_with_file(self, file_path: str):
         dialog = PlaylistCreateDialog(self.main_window)

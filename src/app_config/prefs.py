@@ -36,6 +36,17 @@ def processData(path,mode,data="", target=""):
         with open(path,"w") as file:
             file.write("")
 
+def ensure_prefs_schema():
+    global prefs
+    updated = False
+
+    for key, default_value in prefs_dict.prefs.items():
+        if key not in prefs:
+            prefs[key] = default_value
+            updated = True
+
+    return updated
+
 def save():        
     processData(prefs_file, "write", prefs) # type: ignore
 
@@ -57,8 +68,8 @@ def initialize():
     if os.path.exists(prefs_file):
         try:
             processData(prefs_file, "read")
-            if not is_prefs_dict_valid():
-                reset()
+            if ensure_prefs_schema():
+                save()
         except:
             reset()
     elif not os.path.exists(prefs_file):

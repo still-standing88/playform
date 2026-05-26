@@ -54,7 +54,7 @@ class ExplorerWidget(QWidget):
         "library_callback": lambda path: self.add_to_library(path),
         "image_preview_callback": self._on_image_preview,
         }
-        vlc_args = log_args
+        vlc_args = list(log_args)
         if prefs.prefs.get("vlc_logging", True):
             vlc_args.extend([
                 "--file-logging",

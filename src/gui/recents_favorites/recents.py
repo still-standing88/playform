@@ -34,7 +34,7 @@ class RecentsWidget(QListWidget):
                 self.path_mapping[filename] = recent_path
                 self.addItem(filename)
         except Exception as e:
-            messageBox(_("Error"), f"{_('Error loading recents: {e}')}") # print(f"Error loading recents: {e}")
+            messageBox(_("Error"), _("Error loading recents: {error}").format(error=e))
     
     def add_recent(self, file_path: str):
         try:
@@ -57,7 +57,7 @@ class RecentsWidget(QListWidget):
                     del self.path_mapping[removed_item.text()]
                 
         except Exception as e:
-            messageBox(_("Error"), f"{_('Failed to add recent file: {e}')}")
+            messageBox(_("Error"), _("Failed to add recent file: {error}").format(error=e))
 
     @Slot()
     def clear_recents(self):
@@ -70,7 +70,7 @@ class RecentsWidget(QListWidget):
                 self.clear()
                 self.path_mapping.clear()
             except Exception as e:
-                messageBox(_("Error"), f"{_('Failed to clear recent files: {e}')}")
+                messageBox(_("Error"), _("Failed to clear recent files: {error}").format(error=e))
 
     def show_context_menu(self, position):
         menu = QMenu(self)

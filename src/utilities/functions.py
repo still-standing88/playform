@@ -8,6 +8,7 @@ import subprocess as sp
 import validators as vl
 import pyperclip
 import shlex
+import tempfile
 
 from PySide6.QtCore import Qt as qt
 from PySide6.QtCore import QUrl
@@ -171,9 +172,33 @@ def get_debug_level() -> int:
     debug_level = prefs.prefs.get("debug_level", 2)
     return debug_level
 
+def get_logs_dir() -> str:
+    candidates = [Path(get_app_path()) / "logs"]
+
+    local_appdata = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA")
+    if local_appdata:
+        candidates.append(Path(local_appdata) / "PlayForm" / "logs")
+
+    candidates.append(Path.home() / ".playform" / "logs")
+    candidates.append(Path(tempfile.gettempdir()) / "PlayForm" / "logs")
+
+    for candidate in candidates:
+        try:
+            candidate.mkdir(parents=True, exist_ok=True)
+            probe = candidate / ".write_test"
+            with open(probe, "a", encoding="utf-8"):
+                pass
+            probe.unlink(missing_ok=True)
+            return str(candidate)
+        except OSError:
+            continue
+
+    fallback = Path(tempfile.gettempdir()) / "PlayForm" / "logs"
+    fallback.mkdir(parents=True, exist_ok=True)
+    return str(fallback)
+
 def get_vlclog_file() -> str:
-    app_path = get_app_path()
-    return str(Path(app_path) / "logs" / "vlc-log.txt")
+    return str(Path(get_logs_dir()) / "vlc-log.txt")
 
 def set_restart_flag(flag:bool):
     os.environ["APP_RESTART"] = "1" if flag else "0"

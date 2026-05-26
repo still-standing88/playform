@@ -103,7 +103,7 @@ class PlayerWidget(QWidget):
         self.main_layout.addWidget(self.main_splitter)
 
     def _init_player(self):
-        vlc_args = log_args
+        vlc_args = list(log_args)
         if prefs.prefs.get("vlc_logging", True):
             vlc_args.extend([
                 "--file-logging",
@@ -780,6 +780,7 @@ class PlayerWidget(QWidget):
             
             self.url_extractor = UrlExtractor(url, self)
             self.url_extractor.started.connect(self._on_url_extraction_started)
+            self.url_extractor.progress.connect(signal_manager.statusbar_message.emit)
             self.url_extractor.finished.connect(self._on_url_extraction_complete)
             self.url_extractor.failed.connect(self._on_url_extraction_failed)
             self.url_extractor.start()
@@ -867,6 +868,7 @@ class PlayerWidget(QWidget):
         logger.info("URL extraction started, showing loading message")
         self.video_display.show_loading(_("Extracting URL..."))
         self.player_controls.set_controls_enabled(False)
+        signal_manager.statusbar_message.emit(_("Extracting URL..."))
         
     @Slot(object)
     def _on_url_extraction_complete(self, result):
@@ -897,6 +899,7 @@ class PlayerWidget(QWidget):
         self.video_display.hide_loading()
         self.player_controls.set_controls_enabled(True)
         self._reset_ui_to_default()
+        signal_manager.statusbar_message.emit(_("URL extraction failed"))
         
         msg = QMessageBox(self)
         msg.setWindowTitle(_("URL Extraction Failed"))

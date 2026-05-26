@@ -1,6 +1,7 @@
 import os
 import logging
 from typing import Union, List, Optional
+from gettext import gettext as _
 from PySide6.QtCore import QThread, Signal
 from app_config import prefs
 from .url import extract, is_supported
@@ -11,6 +12,7 @@ class UrlExtractor(QThread):
     started = Signal()
     finished = Signal(object)
     failed = Signal(str)
+    progress = Signal(str)
     
     def __init__(self, url: str, parent=None):
         super().__init__(parent)
@@ -19,6 +21,7 @@ class UrlExtractor(QThread):
     def run(self):
         try:
             self.started.emit()
+            self.progress.emit(_("Extracting URL..."))
             logger.info(f"Starting URL extraction for: {self.url}")
             
             cookies_path = prefs.prefs.get("youtube_cookies", "")

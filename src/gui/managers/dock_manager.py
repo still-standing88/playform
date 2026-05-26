@@ -29,15 +29,6 @@ class DockManager:
         self.main_window.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.explorer_dock)
         self.main_window.explorer_dock = self.explorer_dock
         
-        self.player_dock = QDockWidget(_("Player"), self.main_window)
-        self.player_dock.setObjectName("playerDock")
-        self.player_dock.setWidget(self.main_window.player_widget)
-        self.player_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
-        self.player_dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetMovable)
-        self.player_dock.visibilityChanged.connect(self.main_window.menu_manager.update_player_menu)
-        self.main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.player_dock)
-        self.main_window.player_dock = self.player_dock
-        
         self.playlists_dock = QDockWidget(_("Playlists"), self.main_window)
         self.playlists_dock.setObjectName("playlistsDock")
         self.playlists_dock.setWidget(self.main_window.playlists_widget)
@@ -62,7 +53,7 @@ class DockManager:
         dock_states = {
             'recents_favorites': self.main_window.recents_favorites_dock.isVisible(),
             'explorer': self.main_window.explorer_dock.isVisible(),
-            'player': self.main_window.player_dock.isVisible(),
+            'player': self.main_window.player_widget.isVisible(),
             'playlists': self.main_window.playlists_dock.isVisible(),
             'radio': self.main_window.radio_dock.isVisible() if self.main_window.radio_dock else False,
             'podcast': self.main_window.podcast_dock.isVisible() if self.main_window.podcast_dock else False,
@@ -79,7 +70,7 @@ class DockManager:
         self.main_window.explorer_dock.setVisible(dock_states.get('explorer', False))
         self.main_window.show_explorer_action.setChecked(dock_states.get('explorer', False))
         
-        self.main_window.player_dock.setVisible(dock_states.get('player', True))
+        self.main_window.player_widget.setVisible(dock_states.get('player', True))
         self.main_window.minimize_player_action.setChecked(not dock_states.get('player', True))
         
         self.main_window.playlists_dock.setVisible(dock_states.get('playlists', False))
@@ -117,13 +108,12 @@ class DockManager:
                 self.main_window.explorer_widget.setFocus()
         
     def toggle_player_minimize(self, checked):
-        if self.main_window.player_dock:
-            if checked:
-                self.main_window.player_dock.hide()
-            else:
-                self.main_window.player_dock.show()
-                if self.main_window.player_widget:
-                    self.main_window.player_widget.setFocus()
+        if checked:
+            self.main_window.player_widget.hide()
+        else:
+            self.main_window.player_widget.show()
+            self.main_window.player_widget.setFocus()
+        self.update_focusable_widgets()
             
     def toggle_playlists(self, checked):
         if self.main_window.playlists_dock:
@@ -187,6 +177,10 @@ class DockManager:
 
     def update_focusable_widgets(self):
         self.main_window.focusable_widgets = []
+
+        menu_bar = self.main_window.menuBar()
+        if menu_bar is not None and menu_bar.isVisible():
+            self.main_window.focusable_widgets.append(menu_bar)
         
         if hasattr(self.main_window, 'toolbar') and self.main_window.toolbar.isVisible():
             self.main_window.focusable_widgets.append(self.main_window.toolbar)
@@ -194,7 +188,6 @@ class DockManager:
         dock_widgets = [
             (self.main_window.recents_favorites_dock, self.main_window.recents_and_favorites_widget),
             (self.main_window.explorer_dock, self.main_window.explorer_widget),
-            (self.main_window.player_dock, self.main_window.player_widget),
             (self.main_window.playlists_dock, self.main_window.playlists_widget),
         ]
         
@@ -206,6 +199,9 @@ class DockManager:
         for dock, widget in dock_widgets:
             if dock.isVisible() and widget:
                 self.main_window.focusable_widgets.append(widget)
+
+        if self.main_window.player_widget.isVisible():
+            self.main_window.focusable_widgets.append(self.main_window.player_widget)
         
         if hasattr(self.main_window, 'status_bar') and self.main_window.status_bar.isVisible():
             self.main_window.focusable_widgets.append(self.main_window.status_bar)
