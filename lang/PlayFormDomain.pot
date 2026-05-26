@@ -1,0 +1,2334 @@
+# PlayForm translation template.
+# A modern, accessible media player for audio and video files.
+# Copyright © 2024 Still Standing
+# License: GPL-3.0
+# Website: https://github.com/still-standing88/playform
+# Publisher: Joybytes
+# Author: Still Standing
+# Support: support@joybytes.dev
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PlayForm 1.0.0\n"
+"Report-Msgid-Bugs-To: support@joybytes.dev\n"
+"POT-Creation-Date: 2026-05-22 18:57+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Still Standing <support@joybytes.dev>\n"
+"Language-Team: Joybytes <support@joybytes.dev>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid " (Max retries reached)"
+msgstr ""
+
+msgid "&About PlayForm..."
+msgstr ""
+
+msgid "&Backward"
+msgstr ""
+
+msgid "&Batch Converter"
+msgstr ""
+
+msgid "&Check for Updates..."
+msgstr ""
+
+msgid "&Close Media"
+msgstr ""
+
+msgid "&Debug"
+msgstr ""
+
+msgid "&Documentation"
+msgstr ""
+
+msgid "&Download Manager"
+msgstr ""
+
+msgid "&Exit"
+msgstr ""
+
+msgid "&File"
+msgstr ""
+
+msgid "&Forward"
+msgstr ""
+
+msgid "&Manage Hotkeys"
+msgstr ""
+
+msgid "&Manage Preferences"
+msgstr ""
+
+msgid "&Media"
+msgstr ""
+
+msgid "&Media Extractor"
+msgstr ""
+
+msgid "&Minimize Player"
+msgstr ""
+
+msgid "&Minimize to Taskbar"
+msgstr ""
+
+msgid "&Mute/Unmute"
+msgstr ""
+
+msgid "&Next"
+msgstr ""
+
+msgid "&Open File..."
+msgstr ""
+
+msgid "&Options"
+msgstr ""
+
+msgid "&Play/Pause"
+msgstr ""
+
+msgid "&Previous"
+msgstr ""
+
+msgid "&Recent Files"
+msgstr ""
+
+msgid "&Stop"
+msgstr ""
+
+msgid "&Subtitle Tools"
+msgstr ""
+
+msgid "&Tag Editor"
+msgstr ""
+
+msgid "&Thumbnail Generator"
+msgstr ""
+
+msgid "&Tools"
+msgstr ""
+
+msgid "&View"
+msgstr ""
+
+msgid "&View Logsâ¦"
+msgstr ""
+
+msgid "'{title}' is already open. Please close it before opening another tool."
+msgstr ""
+
+msgid "(no log files)"
+msgstr ""
+
+msgid "... and {count} more"
+msgstr ""
+
+msgid "0 B / 0 B"
+msgstr ""
+
+msgid "0 B/s"
+msgstr ""
+
+msgid "1 file saved."
+msgstr ""
+
+msgid ""
+"<b>A new version of {app} is available!</b><br>Your version: <b>{current}</"
+"b> -> New version: <b>{new}</b>"
+msgstr ""
+
+msgid "<b>Bitrate:</b> {bitrate} kbps"
+msgstr ""
+
+msgid "<b>Codec:</b> {codec}"
+msgstr ""
+
+msgid "<b>Country:</b> {country}"
+msgstr ""
+
+msgid "<b>Description:</b>"
+msgstr ""
+
+msgid "<b>Entries</b>"
+msgstr ""
+
+msgid "<b>Feeds</b>"
+msgstr ""
+
+msgid "<b>Homepage:</b> {homepage}"
+msgstr ""
+
+msgid "<b>Language:</b> {language}"
+msgstr ""
+
+msgid "<b>Name:</b> {name}"
+msgstr ""
+
+msgid "<b>Release files ({count}):</b>"
+msgstr ""
+
+msgid "<b>Release notes:</b>"
+msgstr ""
+
+msgid "<b>Select utilities to download:</b>"
+msgstr ""
+
+msgid "<b>Summary/Description</b>"
+msgstr ""
+
+msgid "<b>Tags:</b> {tags}"
+msgstr ""
+
+msgid "<b>Votes:</b> {votes}"
+msgstr ""
+
+msgid "<em style='color: #999;'>Empty</em>"
+msgstr ""
+
+msgid "<em style='color: #999;'>None</em>"
+msgstr ""
+
+msgid "<em>... and {count} more</em>"
+msgstr ""
+
+msgid ""
+"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry Data</"
+"h2>"
+msgstr ""
+
+msgid "<p><em>No summary or description available.</em></p>"
+msgstr ""
+
+msgid "Abort & Close"
+msgstr ""
+
+msgid "Abort Downloads"
+msgstr ""
+
+msgid "Accessibility"
+msgstr ""
+
+msgid "Action"
+msgstr ""
+
+msgid "Active Tools"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "Add Feed"
+msgstr ""
+
+msgid "Add Files"
+msgstr ""
+
+msgid "Add Prefix/Suffix"
+msgstr ""
+
+msgid "Add Tracks"
+msgstr ""
+
+msgid "Add existing path"
+msgstr ""
+
+msgid "Add new"
+msgstr ""
+
+msgid "Add new path to library"
+msgstr ""
+
+msgid "Add to Favorites"
+msgstr ""
+
+msgid "Add to favorites"
+msgstr ""
+
+msgid "Add to library"
+msgstr ""
+
+msgid "Add to playlist"
+msgstr ""
+
+msgid "Added '{filename}' to playlist '{playlist_name}'"
+msgstr ""
+
+msgid "Added '{name}' to favorites"
+msgstr ""
+
+msgid "Added {count} track(s) to playlist"
+msgstr ""
+
+msgid "Advanced"
+msgstr ""
+
+msgid "Advanced Format Options"
+msgstr ""
+
+msgid "Album"
+msgstr ""
+
+msgid "An error occurred while saving all files: {error}"
+msgstr ""
+
+msgid ""
+"An error occurred:\n"
+"{error}"
+msgstr ""
+
+msgid "An error occurred: {message}"
+msgstr ""
+
+msgid "Application was minimized to tray"
+msgstr ""
+
+msgid "Apply"
+msgstr ""
+
+msgid "Apply Changes"
+msgstr ""
+
+msgid "Apply Filters"
+msgstr ""
+
+msgid "Apply filters button"
+msgstr ""
+
+msgid "Are you sure you want to clear all favorites?"
+msgstr ""
+
+msgid "Are you sure you want to clear all recent files?"
+msgstr ""
+
+msgid "Are you sure you want to reset all hotkeys to default?"
+msgstr ""
+
+msgid "Artist"
+msgstr ""
+
+msgid "Aspect Ratio"
+msgstr ""
+
+msgid "Audio Device:"
+msgstr ""
+
+msgid "Audio Extraction"
+msgstr ""
+
+msgid ""
+"Audio Files (*.mp3 *.flac *.m4a *.aac *.aiff *.dsf *.ogg *.opus *.wav *.wv)"
+msgstr ""
+
+msgid "Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)"
+msgstr ""
+
+msgid "Audio extraction end time or duration"
+msgstr ""
+
+msgid "Audio extraction start time"
+msgstr ""
+
+msgid "Audio output format"
+msgstr ""
+
+msgid "Audio sample rate"
+msgstr ""
+
+msgid "Auto Play"
+msgstr ""
+
+msgid "Auto Updates:"
+msgstr ""
+
+msgid "Auto check for updates"
+msgstr ""
+
+msgid "Automatic Thumbnail Filter"
+msgstr ""
+
+msgid ""
+"Automatic download is not available in developer mode.\n"
+"Please download the update manually from the releases page."
+msgstr ""
+
+msgid "Available Tools:"
+msgstr ""
+
+msgid "Backward"
+msgstr ""
+
+msgid "Batch Converter"
+msgstr ""
+
+msgid "Batch Converting..."
+msgstr ""
+
+msgid "Batch conversion completed successfully"
+msgstr ""
+
+msgid "Batch conversion completed."
+msgstr ""
+
+msgid "Bitrate"
+msgstr ""
+
+msgid "Bitrate:"
+msgstr ""
+
+msgid "Bookmarks"
+msgstr ""
+
+msgid "Bookmarks list"
+msgstr ""
+
+msgid "Brightness"
+msgstr ""
+
+msgid "Browse"
+msgstr ""
+
+msgid "Browse & Add Tracks"
+msgstr ""
+
+msgid "Browse Video"
+msgstr ""
+
+msgid "Cache cleared successfully"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Cancel Download"
+msgstr ""
+
+msgid "Cancelled"
+msgstr ""
+
+msgid "Case Sensitive"
+msgstr ""
+
+msgid "Change Case"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+msgid "Clear All Favorites"
+msgstr ""
+
+msgid "Clear All Feeds"
+msgstr ""
+
+msgid "Clear All Recent Files"
+msgstr ""
+
+msgid "Clear Cache"
+msgstr ""
+
+msgid "Clear Favorites"
+msgstr ""
+
+msgid "Clear Recent Files"
+msgstr ""
+
+msgid "Clear Tracks"
+msgstr ""
+
+msgid "Clear all"
+msgstr ""
+
+msgid "Clear all cached data?"
+msgstr ""
+
+msgid "Clear all tracks?"
+msgstr ""
+
+msgid "Clear cache button"
+msgstr ""
+
+msgid "Clear library"
+msgstr ""
+
+msgid "Click Count"
+msgstr ""
+
+msgid "Click already in progress"
+msgstr ""
+
+msgid "Click failed: {error}"
+msgstr ""
+
+msgid "Click registered successfully"
+msgstr ""
+
+msgid "Click to apply selected filters"
+msgstr ""
+
+msgid "Click to clear cached data"
+msgstr ""
+
+msgid "Click to search by station name"
+msgstr ""
+
+msgid "Click to view favorite stations"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "Close anyway and abort all downloads?"
+msgstr ""
+
+msgid "Codec"
+msgstr ""
+
+msgid "Completed"
+msgstr ""
+
+msgid "Confirm"
+msgstr ""
+
+msgid "Confirm Clear All"
+msgstr ""
+
+msgid "Confirm Removal"
+msgstr ""
+
+msgid "Console Output"
+msgstr ""
+
+msgid "Console output. Tab key won't insert tabs inside editor."
+msgstr ""
+
+msgid "Contrast"
+msgstr ""
+
+msgid "Conversion Error"
+msgstr ""
+
+msgid "Conversion Options"
+msgstr ""
+
+msgid "Conversion Type:"
+msgstr ""
+
+msgid "Conversion type (audio or video)"
+msgstr ""
+
+msgid "Convert"
+msgstr ""
+
+msgid "Converting file {current} of {total}: {filename}"
+msgstr ""
+
+msgid "Converting {count} subtitle file(s)"
+msgstr ""
+
+msgid "Cookies File:"
+msgstr ""
+
+msgid "Copied"
+msgstr ""
+
+msgid "Copy"
+msgstr ""
+
+msgid "Copy Destination"
+msgstr ""
+
+msgid "Copy Path"
+msgstr ""
+
+msgid "Copy Stream URL"
+msgstr ""
+
+msgid "Copy URL"
+msgstr ""
+
+msgid "Copy to Clipboard"
+msgstr ""
+
+msgid "Copyright"
+msgstr ""
+
+msgid "Could not load {file}: {error}"
+msgstr ""
+
+msgid ""
+"Could not reach the update server:\n"
+"{error}"
+msgstr ""
+
+msgid ""
+"Could not resolve links for the following utilities:\n"
+"\n"
+msgstr ""
+
+msgid "Country"
+msgstr ""
+
+msgid "Create"
+msgstr ""
+
+msgid "Create Playlist"
+msgstr ""
+
+msgid "Create playlist from folder"
+msgstr ""
+
+msgid "Created and loaded playlist '{playlist_name}' with {track_count} tracks"
+msgstr ""
+
+msgid "Created new playlist '{name}'"
+msgstr ""
+
+msgid "Current File"
+msgstr ""
+
+msgid "Current video subtitles"
+msgstr ""
+
+msgid "Customize Toolbar"
+msgstr ""
+
+msgid "Customize Toolbar..."
+msgstr ""
+
+msgid "Date (Newest First)"
+msgstr ""
+
+msgid "Date (Oldest First)"
+msgstr ""
+
+msgid "Debug Console"
+msgstr ""
+
+msgid "Debug Level:"
+msgstr ""
+
+msgid "Debug console initialized."
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Delete all feeds and cache?"
+msgstr ""
+
+msgid "Delete selected"
+msgstr ""
+
+msgid "Direct Media Link"
+msgstr ""
+
+msgid ""
+"Direct media link copied to clipboard:\n"
+"{media_url}"
+msgstr ""
+
+msgid "Displays the contents of the selected log file"
+msgstr ""
+
+msgid "Documentation Not Found"
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
+msgid ""
+"Done. All selected utilities have been processed.\n"
+"You may close this dialog."
+msgstr ""
+
+msgid "Double-click or press Enter on a file to open it"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Download Error"
+msgstr ""
+
+msgid "Download Info:"
+msgstr ""
+
+msgid "Download Later"
+msgstr ""
+
+msgid "Download Manager"
+msgstr ""
+
+msgid "Download Manager closed"
+msgstr ""
+
+msgid "Download Manager minimized"
+msgstr ""
+
+msgid "Download Manager opened"
+msgstr ""
+
+msgid "Download Manager restored"
+msgstr ""
+
+msgid "Download Now"
+msgstr ""
+
+msgid "Download Utilities"
+msgstr ""
+
+msgid "Downloaded {finished} / {expected} files..."
+msgstr ""
+
+msgid "Downloading"
+msgstr ""
+
+msgid "Downloading Update"
+msgstr ""
+
+msgid "Downloading update files, please wait..."
+msgstr ""
+
+msgid ""
+"Downloading update files...\n"
+"  - {manifest}\n"
+"  - {archive}"
+msgstr ""
+
+msgid "Downloading {count} file(s), please waitâ¦"
+msgstr ""
+
+msgid "Downloads in Progress"
+msgstr ""
+
+msgid "Downloads:"
+msgstr ""
+
+msgid "Duplicate"
+msgstr ""
+
+msgid "Duration (seconds):"
+msgstr ""
+
+msgid "Edit Playlist"
+msgstr ""
+
+msgid "Empty"
+msgstr ""
+
+msgid "Enable Framerate Transformation"
+msgstr ""
+
+msgid "Enable VLC Logging"
+msgstr ""
+
+msgid "Enable Verbose Output"
+msgstr ""
+
+msgid "Enable speech accessibility feedback"
+msgstr ""
+
+msgid "Enable yt-dlp Logging"
+msgstr ""
+
+msgid "End"
+msgstr ""
+
+msgid "End Time or Duration (optional):"
+msgstr ""
+
+msgid "Enter feed URL:"
+msgstr ""
+
+msgid "Enter new URL:"
+msgstr ""
+
+msgid "Enter or select a media URL:"
+msgstr ""
+
+msgid "Enter playlist name"
+msgstr ""
+
+msgid "Enter station name..."
+msgstr ""
+
+msgid "Entry Detail Text"
+msgstr ""
+
+msgid "Entry Tree"
+msgstr ""
+
+msgid "Entry data copied to clipboard"
+msgstr ""
+
+msgid "Entry: {title}, Published: {published}, Link: {link}"
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+msgid "Error converting {filename}"
+msgstr ""
+
+msgid "Error loading favorites: {error}"
+msgstr ""
+
+msgid "Error loading recents: {error}"
+msgstr ""
+
+msgid "Error occurred"
+msgstr ""
+
+msgid "Error: No files selected."
+msgstr ""
+
+msgid "Exit"
+msgstr ""
+
+msgid "Explorer"
+msgstr ""
+
+msgid "Extract 1 Image Per Second"
+msgstr ""
+
+msgid "Extract All Frames"
+msgstr ""
+
+msgid "Extract Audio"
+msgstr ""
+
+msgid "Extract Images"
+msgstr ""
+
+msgid "Extract Range"
+msgstr ""
+
+msgid "Extracted Playlist"
+msgstr ""
+
+msgid "Extracted URL"
+msgstr ""
+
+msgid "Extracting Audio..."
+msgstr ""
+
+msgid "Extracting Images..."
+msgstr ""
+
+msgid "Extracting URL..."
+msgstr ""
+
+msgid "Extraction Mode:"
+msgstr ""
+
+msgid "Extraction completed successfully"
+msgstr ""
+
+msgid "Extraction completed successfully."
+msgstr ""
+
+msgid "Extraction failed"
+msgstr ""
+
+msgid "FFmpeg Path:"
+msgstr ""
+
+msgid "FULL ENTRY DATA"
+msgstr ""
+
+msgid "Failed"
+msgstr ""
+
+msgid "Failed to add favorite: {error}"
+msgstr ""
+
+msgid "Failed to add recent file: {error}"
+msgstr ""
+
+msgid "Failed to clear favorites: {error}"
+msgstr ""
+
+msgid "Failed to clear recent files: {error}"
+msgstr ""
+
+msgid ""
+"Failed to convert {filename}:\n"
+"{message}"
+msgstr ""
+
+msgid "Failed to download {label}."
+msgstr ""
+
+msgid ""
+"Failed to extract URL:\n"
+"{error}"
+msgstr ""
+
+msgid ""
+"Failed to install {label}:\n"
+"{msg}"
+msgstr ""
+
+msgid ""
+"Failed to launch the updater:\n"
+"{error}"
+msgstr ""
+
+msgid "Failed to parse feed"
+msgstr ""
+
+msgid ""
+"Failed to read file: {path}\n"
+"Error: {error}"
+msgstr ""
+
+msgid "Failed to refresh feed"
+msgstr ""
+
+msgid "Failed to remove favorite: {error}"
+msgstr ""
+
+msgid "Failed to save tags"
+msgstr ""
+
+msgid "Failed to save tags: {error}"
+msgstr ""
+
+msgid "Failed to start process: {error}"
+msgstr ""
+
+msgid "Failed to start thumbnail generation"
+msgstr ""
+
+msgid "Failed to take screenshot"
+msgstr ""
+
+msgid "Favorite Station: {name}. Country: {country}. Language: {language}."
+msgstr ""
+
+msgid "Favorites"
+msgstr ""
+
+msgid "Favorites list"
+msgstr ""
+
+msgid "Feed List"
+msgstr ""
+
+msgid "Feed URL updated successfully"
+msgstr ""
+
+msgid "Feed added successfully"
+msgstr ""
+
+msgid "Feed already exists"
+msgstr ""
+
+msgid "Feed refreshed successfully"
+msgstr ""
+
+msgid ""
+"Feed validation failed:\n"
+"{error}"
+msgstr ""
+
+msgid "Fetching download links from GitHubâ¦"
+msgstr ""
+
+msgid "Fetching video information..."
+msgstr ""
+
+msgid "File Content Preview (Live)"
+msgstr ""
+
+msgid "File Name"
+msgstr ""
+
+msgid "File loaded successfully"
+msgstr ""
+
+msgid "Files"
+msgstr ""
+
+msgid "Files for Conversion (Batch)"
+msgstr ""
+
+msgid "Filter By:"
+msgstr ""
+
+msgid "Filter type"
+msgstr ""
+
+msgid "Filter value"
+msgstr ""
+
+msgid "Filtering by {filter_type}: {filter_value}..."
+msgstr ""
+
+msgid "Filters"
+msgstr ""
+
+msgid "Find and Replace"
+msgstr ""
+
+msgid "Find:"
+msgstr ""
+
+msgid "Folder"
+msgstr ""
+
+msgid "Forward"
+msgstr ""
+
+msgid "Found {count} stations"
+msgstr ""
+
+msgid "From FPS:"
+msgstr ""
+
+msgid "Full Entry Details"
+msgstr ""
+
+msgid "Fullscreen"
+msgstr ""
+
+msgid "Gamma"
+msgstr ""
+
+msgid "General"
+msgstr ""
+
+msgid "Generate Thumbnail(s)"
+msgstr ""
+
+msgid "Generation Mode:"
+msgstr ""
+
+msgid "Get/Update &Utilities..."
+msgstr ""
+
+msgid "HTTP {status}"
+msgstr ""
+
+msgid "Hide"
+msgstr ""
+
+msgid "Hide Filters"
+msgstr ""
+
+msgid "Hide Subtitles"
+msgstr ""
+
+msgid "Hide subtitles"
+msgstr ""
+
+msgid "Hide to status bar"
+msgstr ""
+
+msgid "Hotkeys Configuration"
+msgstr ""
+
+msgid "Hotkeys updated"
+msgstr ""
+
+msgid "Hue"
+msgstr ""
+
+msgid "Image Extraction"
+msgstr ""
+
+msgid "Image extraction duration in seconds"
+msgstr ""
+
+msgid "Image extraction mode"
+msgstr ""
+
+msgid "Image extraction start time"
+msgstr ""
+
+msgid "Info"
+msgstr ""
+
+msgid "Initializing locale..."
+msgstr ""
+
+msgid "Input Encoding:"
+msgstr ""
+
+msgid "Input File Encoding:"
+msgstr ""
+
+msgid "Install Error"
+msgstr ""
+
+msgid "Interrupt previous speech"
+msgstr ""
+
+msgid "Invalid Feed"
+msgstr ""
+
+msgid "Invalid URL"
+msgstr ""
+
+msgid "Invalid VLC Arguments"
+msgstr ""
+
+msgid "Invalid feed format"
+msgstr ""
+
+msgid "Keep SSA tags (output)"
+msgstr ""
+
+msgid "Keep all HTML tags (input)"
+msgstr ""
+
+msgid "Keep unknown HTML tags (input)"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Language(s)"
+msgstr ""
+
+msgid "Language:"
+msgstr ""
+
+msgid "Library"
+msgstr ""
+
+msgid "License"
+msgstr ""
+
+msgid "Link"
+msgstr ""
+
+msgid "Link Fetch Errors"
+msgstr ""
+
+msgid "List of RSS feeds. Right-click for options."
+msgstr ""
+
+msgid "List of favorite media files"
+msgstr ""
+
+msgid "List of log files in the application's logs folder"
+msgstr ""
+
+msgid "List of radio stations. Right-click or double-click for options."
+msgstr ""
+
+msgid "List of recently opened media files"
+msgstr ""
+
+msgid "Load File"
+msgstr ""
+
+msgid "Loaded top {count} tags"
+msgstr ""
+
+msgid "Loaded {count} countries"
+msgstr ""
+
+msgid "Loaded {count} file(s) for tag editing"
+msgstr ""
+
+msgid "Loaded {count} languages"
+msgstr ""
+
+msgid "Loaded {count} subtitle events"
+msgstr ""
+
+msgid "Loading URL: {url}"
+msgstr ""
+
+msgid "Loading configuration..."
+msgstr ""
+
+msgid "Loading database..."
+msgstr ""
+
+msgid "Loading favorites..."
+msgstr ""
+
+msgid "Loading playlist: {title}"
+msgstr ""
+
+msgid "Loading {filter_type}..."
+msgstr ""
+
+msgid "Loading: {filename}"
+msgstr ""
+
+msgid "Log File Viewer"
+msgstr ""
+
+msgid "Logs Files List"
+msgstr ""
+
+msgid "Logs Viewer"
+msgstr ""
+
+msgid "Logs folder: {path}"
+msgstr ""
+
+msgid "Lyrics tag editor"
+msgstr ""
+
+msgid "Lyrics:"
+msgstr ""
+
+msgid "Main Toolbar"
+msgstr ""
+
+msgid "Main video playback area"
+msgstr ""
+
+msgid "Manual Frame Selection"
+msgstr ""
+
+msgid "Mark {index}: {minutes:02d}:{seconds:02d}"
+msgstr ""
+
+msgid "Maximize"
+msgstr ""
+
+msgid "Maximize Controls"
+msgstr ""
+
+msgid "Media"
+msgstr ""
+
+msgid "Media Extractor"
+msgstr ""
+
+msgid "Media Preview"
+msgstr ""
+
+msgid "MicroDVD"
+msgstr ""
+
+msgid "Minimize"
+msgstr ""
+
+msgid "Minimize Controls"
+msgstr ""
+
+msgid "Minimize/Maximize Controls"
+msgstr ""
+
+msgid "More Info"
+msgstr ""
+
+msgid "More Options"
+msgstr ""
+
+msgid "Move Down"
+msgstr ""
+
+msgid "Move Up"
+msgstr ""
+
+msgid "Mute"
+msgstr ""
+
+msgid "Mute Error"
+msgstr ""
+
+msgid "Mute toggled"
+msgstr ""
+
+msgid "Mute/Unmute"
+msgstr ""
+
+msgid "N/A"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Name (A\\u2013Z)"
+msgstr ""
+
+msgid "Name (Z\\u2013A)"
+msgstr ""
+
+msgid "Name:"
+msgstr ""
+
+msgid "Newest first"
+msgstr ""
+
+msgid "Next"
+msgstr ""
+
+msgid "Next Track"
+msgstr ""
+
+msgid "Next track"
+msgstr ""
+
+msgid "No File"
+msgstr ""
+
+msgid "No Media"
+msgstr ""
+
+msgid "No Media Files"
+msgstr ""
+
+msgid "No Media Found"
+msgstr ""
+
+msgid "No Playlists"
+msgstr ""
+
+msgid "No Releases Found"
+msgstr ""
+
+msgid "No URL"
+msgstr ""
+
+msgid "No Update Available"
+msgstr ""
+
+msgid "No changes to save."
+msgstr ""
+
+msgid "No direct media link found for this entry."
+msgstr ""
+
+msgid "No download selected"
+msgstr ""
+
+msgid "No downloadable assets found in this release."
+msgstr ""
+
+msgid "No entries found for this feed."
+msgstr ""
+
+msgid "No entries match your search."
+msgstr ""
+
+msgid "No file loaded."
+msgstr ""
+
+msgid "No files to convert."
+msgstr ""
+
+msgid "No links could be resolved."
+msgstr ""
+
+msgid "No media loaded"
+msgstr ""
+
+msgid "No platform manifest found for '{platform}' in this release."
+msgstr ""
+
+msgid "No playlist selected"
+msgstr ""
+
+msgid "No playlists available. Create a playlist first."
+msgstr ""
+
+msgid "No playlists exist. Would you like to create a new playlist?"
+msgstr ""
+
+msgid "No recent files"
+msgstr ""
+
+msgid "No release notes provided."
+msgstr ""
+
+msgid "No releases have been published for this application yet."
+msgstr ""
+
+msgid "No results found"
+msgstr ""
+
+msgid "No stream URL found for {name}"
+msgstr ""
+
+msgid "No supported media files found in the selected folder"
+msgstr ""
+
+msgid ""
+"No supported media files were found in the selected folder:\n"
+"{folder_path}\n"
+"\n"
+"Supported formats include audio and video files."
+msgstr ""
+
+msgid "No zip archive found in this release."
+msgstr ""
+
+msgid "No."
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "Not Found"
+msgstr ""
+
+msgid "Number of Images to Generate:"
+msgstr ""
+
+msgid "Number of images to generate from scene changes"
+msgstr ""
+
+msgid "OK"
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Oldest first"
+msgstr ""
+
+msgid "Omit FPS declaration (output)"
+msgstr ""
+
+msgid "On"
+msgstr ""
+
+msgid "One or more update files failed to download. Please try again later."
+msgstr ""
+
+msgid "Open"
+msgstr ""
+
+msgid "Open &Folder..."
+msgstr ""
+
+msgid "Open &URL..."
+msgstr ""
+
+msgid "Open Folder"
+msgstr ""
+
+msgid "Open Link in Browser"
+msgstr ""
+
+msgid "Open Media File"
+msgstr ""
+
+msgid "Open URL"
+msgstr ""
+
+msgid "Open in Explorer"
+msgstr ""
+
+msgid "Opened {title}"
+msgstr ""
+
+msgid "Output Encoding:"
+msgstr ""
+
+msgid "Output Format:"
+msgstr ""
+
+msgid "Page Link"
+msgstr ""
+
+msgid "Parent Directory"
+msgstr ""
+
+msgid "Path"
+msgstr ""
+
+msgid "Path already exists."
+msgstr ""
+
+msgid "Path in Library"
+msgstr ""
+
+msgid "Path not found."
+msgstr ""
+
+msgid "Pause"
+msgstr ""
+
+msgid "Paused"
+msgstr ""
+
+msgid "Play"
+msgstr ""
+
+msgid "Play Station"
+msgstr ""
+
+msgid "Play/Pause"
+msgstr ""
+
+msgid "Playback Error"
+msgstr ""
+
+msgid "Player"
+msgstr ""
+
+msgid "Playing"
+msgstr ""
+
+msgid "Playing: {name}"
+msgstr ""
+
+msgid "Playlist '{name}' already exists"
+msgstr ""
+
+msgid "Playlist '{name}' created"
+msgstr ""
+
+msgid "Playlist '{new_name}' already exists"
+msgstr ""
+
+msgid "Playlist '{new_name}' updated"
+msgstr ""
+
+msgid "Playlist '{playlist_name}' not found"
+msgstr ""
+
+msgid "Playlist cleared"
+msgstr ""
+
+msgid "Playlist from {folder_name}"
+msgstr ""
+
+msgid "Playlists"
+msgstr ""
+
+msgid "Please enter a URL."
+msgstr ""
+
+msgid "Please enter a playlist name"
+msgstr ""
+
+msgid "Please enter a valid HTTP/HTTPS URL"
+msgstr ""
+
+msgid "Please load a subtitle file first."
+msgstr ""
+
+msgid "Please select a playlist"
+msgstr ""
+
+msgid "Please select a valid input video file."
+msgstr ""
+
+msgid "Podcasts"
+msgstr ""
+
+msgid "Preferences"
+msgstr ""
+
+msgid "Preferences saved"
+msgstr ""
+
+msgid "Prefix:"
+msgstr ""
+
+msgid "Previous"
+msgstr ""
+
+msgid "Previous Track"
+msgstr ""
+
+msgid "Previous track"
+msgstr ""
+
+msgid "Processing Error"
+msgstr ""
+
+msgid "Processing subtitle file"
+msgstr ""
+
+msgid "Processing subtitle file..."
+msgstr ""
+
+msgid "Processing..."
+msgstr ""
+
+msgid "Published"
+msgstr ""
+
+msgid "Publisher"
+msgstr ""
+
+msgid "Queued"
+msgstr ""
+
+msgid "Radio Browser"
+msgstr ""
+
+msgid "Radio stations list"
+msgstr ""
+
+msgid "Rate:"
+msgstr ""
+
+msgid "Read-only console output viewer"
+msgstr ""
+
+msgid "Ready"
+msgstr ""
+
+msgid "Ready - Enter search term or select filters"
+msgstr ""
+
+msgid "Recent files list"
+msgstr ""
+
+msgid "Recents"
+msgstr ""
+
+msgid "Recents & Favorites"
+msgstr ""
+
+msgid "Refresh All Feeds"
+msgstr ""
+
+msgid "Refresh Feed"
+msgstr ""
+
+msgid ""
+"Refresh failed:\n"
+"{error}"
+msgstr ""
+
+msgid "Refreshing feed..."
+msgstr ""
+
+msgid "Refreshing feeds..."
+msgstr ""
+
+msgid ""
+"Refreshing:\n"
+"{url}..."
+msgstr ""
+
+msgid "Register Click"
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Remove Feed"
+msgstr ""
+
+msgid "Remove File"
+msgstr ""
+
+msgid "Remove Selected"
+msgstr ""
+
+msgid ""
+"Remove feed:\n"
+"{url}?"
+msgstr ""
+
+msgid "Remove from Favorites"
+msgstr ""
+
+msgid "Remove miscellaneous events"
+msgstr ""
+
+msgid "Removed station from favorites"
+msgstr ""
+
+msgid "Repeat all"
+msgstr ""
+
+msgid "Repeat mode"
+msgstr ""
+
+msgid "Repeat off"
+msgstr ""
+
+msgid "Repeat one"
+msgstr ""
+
+msgid "Repeat: All"
+msgstr ""
+
+msgid "Repeat: Off"
+msgstr ""
+
+msgid "Repeat: One"
+msgstr ""
+
+msgid "Repeat: {state}"
+msgstr ""
+
+msgid "Replace With:"
+msgstr ""
+
+msgid "Reset to Default"
+msgstr ""
+
+msgid "Restart Required"
+msgstr ""
+
+msgid "Results"
+msgstr ""
+
+msgid "Retry Download"
+msgstr ""
+
+msgid "Rewind"
+msgstr ""
+
+msgid "SRT"
+msgstr ""
+
+msgid "Sample Rate (Audio):"
+msgstr ""
+
+msgid "Saturation"
+msgstr ""
+
+msgid "Save All Files"
+msgstr ""
+
+msgid "Save Current File"
+msgstr ""
+
+msgid "Save URLs"
+msgstr ""
+
+msgid "Save URLs:"
+msgstr ""
+
+msgid "Scale"
+msgstr ""
+
+msgid "Scene Change Threshold (0.0-1.0):"
+msgstr ""
+
+msgid "Scene change detection threshold"
+msgstr ""
+
+msgid "Screenshot"
+msgstr ""
+
+msgid "Screenshot Format:"
+msgstr ""
+
+msgid "Screenshot saved: {filename}"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Search and Filter"
+msgstr ""
+
+msgid "Search button"
+msgstr ""
+
+msgid "Search:"
+msgstr ""
+
+msgid "Searching for '{search_name}'..."
+msgstr ""
+
+msgid "Seek"
+msgstr ""
+
+msgid "Seek Error"
+msgstr ""
+
+msgid "Seek Offset:"
+msgstr ""
+
+msgid "Segment Timeline Widget"
+msgstr ""
+
+msgid "Select"
+msgstr ""
+
+msgid "Select Audio Files"
+msgstr ""
+
+msgid "Select Cookies File"
+msgstr ""
+
+msgid "Select FFmpeg Directory"
+msgstr ""
+
+msgid "Select Output Directory"
+msgstr ""
+
+msgid "Select Output Directory for Images"
+msgstr ""
+
+msgid "Select Playlist"
+msgstr ""
+
+msgid "Select Subtitle File"
+msgstr ""
+
+msgid "Select Subtitle Files"
+msgstr ""
+
+msgid "Select Video File"
+msgstr ""
+
+msgid "Select a playlist to add the file to:"
+msgstr ""
+
+msgid "Select files to convert"
+msgstr ""
+
+msgid "Select from Scene Changes"
+msgstr ""
+
+msgid "Select how to filter stations"
+msgstr ""
+
+msgid "Select how to sort results"
+msgstr ""
+
+msgid "Select or type a filter value"
+msgstr ""
+
+msgid "Select tools to display on the toolbar:"
+msgstr ""
+
+msgid "Select yt-dlp Directory"
+msgstr ""
+
+msgid "Selected path is not a directory"
+msgstr ""
+
+msgid "Shift Time:"
+msgstr ""
+
+msgid "Shortcut"
+msgstr ""
+
+msgid ""
+"Shortcut editor. Press the desired key combination; press Enter or change "
+"focus to accept."
+msgstr ""
+
+msgid "Show"
+msgstr ""
+
+msgid "Show &Console Dock"
+msgstr ""
+
+msgid "Show &Explorer"
+msgstr ""
+
+msgid "Show &Playlists"
+msgstr ""
+
+msgid "Show &Podcasts"
+msgstr ""
+
+msgid "Show &Radio Browser"
+msgstr ""
+
+msgid "Show &Recents/Favorites"
+msgstr ""
+
+msgid "Show Downloader"
+msgstr ""
+
+msgid "Show Favorites"
+msgstr ""
+
+msgid "Show Filters"
+msgstr ""
+
+msgid "Show Tool"
+msgstr ""
+
+msgid "Show YouTube Info"
+msgstr ""
+
+msgid "Show favorites button"
+msgstr ""
+
+msgid "Show subtitles"
+msgstr ""
+
+msgid "Show {title}"
+msgstr ""
+
+msgid "Showing {count} favorite stations"
+msgstr ""
+
+msgid "Showing {title}"
+msgstr ""
+
+msgid "Shuffle"
+msgstr ""
+
+msgid "Shuffle off"
+msgstr ""
+
+msgid "Shuffle on"
+msgstr ""
+
+msgid "Shuffle: Off"
+msgstr ""
+
+msgid "Shuffle: On"
+msgstr ""
+
+msgid ""
+"Some options you modified require an application restart to take effect.\n"
+"\n"
+"Would you like to restart now?"
+msgstr ""
+
+msgid "Sort By"
+msgstr ""
+
+msgid "Sort By:"
+msgstr ""
+
+msgid "Sort by"
+msgstr ""
+
+msgid "Sort order"
+msgstr ""
+
+msgid "Speech Settings"
+msgstr ""
+
+msgid "Speed"
+msgstr ""
+
+msgid "Start"
+msgstr ""
+
+msgid "Start Batch Conversion"
+msgstr ""
+
+msgid "Start Time (HH:MM:SS):"
+msgstr ""
+
+msgid "Starting application..."
+msgstr ""
+
+msgid "Starting audio extraction"
+msgstr ""
+
+msgid "Starting batch conversion of {count} files"
+msgstr ""
+
+msgid "Starting conversion..."
+msgstr ""
+
+msgid "Starting generation..."
+msgstr ""
+
+msgid "Starting image extraction"
+msgstr ""
+
+msgid "Starting thumbnail generation"
+msgstr ""
+
+msgid "Station Information"
+msgstr ""
+
+msgid "Station Name:"
+msgstr ""
+
+msgid "Station name search"
+msgstr ""
+
+msgid ""
+"Station: {name}. Country: {country}. Language: {language}. Tags: {tags}. "
+"Codec: {codec}. Bitrate: {bitrate}."
+msgstr ""
+
+msgid "Stop Error"
+msgstr ""
+
+msgid "Stopped"
+msgstr ""
+
+msgid "Streaming URL"
+msgstr ""
+
+msgid "Style:"
+msgstr ""
+
+msgid "Subtitle &Converter"
+msgstr ""
+
+msgid "Subtitle &Editor"
+msgstr ""
+
+msgid "Subtitle Converter"
+msgstr ""
+
+msgid "Subtitle Editor"
+msgstr ""
+
+msgid ""
+"Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt *."
+"vtt);;All Files (*)"
+msgstr ""
+
+msgid "Subtitle conversion completed"
+msgstr ""
+
+msgid "Subtitle conversion completed successfully."
+msgstr ""
+
+msgid "Subtitle conversion failed"
+msgstr ""
+
+msgid "Subtitle processing completed"
+msgstr ""
+
+msgid "Subtitle processing completed successfully."
+msgstr ""
+
+msgid "Subtitle processing failed"
+msgstr ""
+
+msgid "Subtitles"
+msgstr ""
+
+msgid "Subtitles display"
+msgstr ""
+
+msgid "Subtitles section"
+msgstr ""
+
+msgid "Success"
+msgstr ""
+
+msgid "Suffix:"
+msgstr ""
+
+msgid "Summary and description of selected entry"
+msgstr ""
+
+msgid "Tag"
+msgstr ""
+
+msgid "Tag Editor"
+msgstr ""
+
+msgid "Tags saved for {count} file(s)"
+msgstr ""
+
+msgid "Tags saved for {filename}"
+msgstr ""
+
+msgid "Tags saved successfully."
+msgstr ""
+
+msgid "Take screenshot"
+msgstr ""
+
+msgid "Target Format:"
+msgstr ""
+
+msgid "Target bitrate"
+msgstr ""
+
+msgid "Target format"
+msgstr ""
+
+msgid "Text"
+msgstr ""
+
+msgid "Text Editor"
+msgstr ""
+
+msgid "Text Operation"
+msgstr ""
+
+msgid "The VLC arguments are not valid. Please check the syntax."
+msgstr ""
+
+msgid ""
+"The documentation could not be found at:\n"
+"{path}\n"
+"\n"
+"Please visit the project website for help."
+msgstr ""
+
+msgid ""
+"The following tools are currently active:\n"
+"{tools}\n"
+"\n"
+"Closing the application will stop these processes. Do you want to continue?"
+msgstr ""
+
+msgid ""
+"The update has been downloaded.\n"
+"\n"
+"{app_name} needs to restart to apply it. Restart now?"
+msgstr ""
+
+msgid ""
+"The updater binary was not found at:\n"
+"{path}\n"
+"\n"
+"Please update manually."
+msgstr ""
+
+msgid "Theme:"
+msgstr ""
+
+msgid "There aren't any log files yet."
+msgstr ""
+
+msgid "This path already exists in the library."
+msgstr ""
+
+msgid "Thumbnail Generator"
+msgstr ""
+
+msgid "Thumbnail generation completed"
+msgstr ""
+
+msgid "Thumbnail generation completed successfully."
+msgstr ""
+
+msgid "Thumbnail generation failed"
+msgstr ""
+
+msgid "Thumbnail generation mode"
+msgstr ""
+
+msgid "Time: {time}, Speed: {speed:.2f}x"
+msgstr ""
+
+msgid "Timestamp (HH:MM:SS):"
+msgstr ""
+
+msgid "Timestamp for manual frame selection"
+msgstr ""
+
+msgid "Timing Editor"
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Title (Ascending A-Z)"
+msgstr ""
+
+msgid "Title (Descending Z-A)"
+msgstr ""
+
+msgid "To FPS:"
+msgstr ""
+
+msgid "Toggle &Repeat: Off"
+msgstr ""
+
+msgid "Toggle Repeat: Off"
+msgstr ""
+
+msgid "Toggle Repeat: On"
+msgstr ""
+
+msgid "Too many redirects"
+msgstr ""
+
+msgid "Tool Active"
+msgstr ""
+
+msgid "Tool Already Open"
+msgstr ""
+
+msgid "Tool closed"
+msgstr ""
+
+msgid "Toolbar Tools:"
+msgstr ""
+
+msgid "Track removed from playlist"
+msgstr ""
+
+msgid "Track {index}"
+msgstr ""
+
+msgid "Tracks:"
+msgstr ""
+
+msgid ""
+"Tree of feed entries with title, date, and link. Right-click for options."
+msgstr ""
+
+msgid "Type a station name and press Enter to search"
+msgstr ""
+
+msgid "Type and press Enter to search entries..."
+msgstr ""
+
+msgid "URL Extraction Failed"
+msgstr ""
+
+msgid "Unknown"
+msgstr ""
+
+msgid "Unknown error"
+msgstr ""
+
+msgid "Unmute"
+msgstr ""
+
+msgid "Untitled"
+msgstr ""
+
+msgid "Update Available - {title}"
+msgstr ""
+
+msgid "Update Check Failed"
+msgstr ""
+
+msgid "Update Error"
+msgstr ""
+
+msgid "Update Failed"
+msgstr ""
+
+msgid "Update Feed URL"
+msgstr ""
+
+msgid "Update Ready"
+msgstr ""
+
+msgid "Updater Not Found"
+msgstr ""
+
+msgid "VLC Arguments:"
+msgstr ""
+
+msgid "VLC Logging:"
+msgstr ""
+
+msgid "VLC Settings"
+msgstr ""
+
+msgid "Validating feed..."
+msgstr ""
+
+msgid "Validating new feed URL..."
+msgstr ""
+
+msgid "Value:"
+msgstr ""
+
+msgid "Verbose Output:"
+msgstr ""
+
+msgid "Video Display"
+msgstr ""
+
+msgid "Video Display Area"
+msgstr ""
+
+msgid "Video File:"
+msgstr ""
+
+msgid "Video Information:"
+msgstr ""
+
+msgid "Video display area"
+msgstr ""
+
+msgid "Video file for extraction"
+msgstr ""
+
+msgid "Video file input path"
+msgstr ""
+
+msgid "View Full Entry Dump"
+msgstr ""
+
+msgid "Voice Settings"
+msgstr ""
+
+msgid "Voice changed to {voice_name}"
+msgstr ""
+
+msgid "Voice:"
+msgstr ""
+
+msgid "Volume"
+msgstr ""
+
+msgid "Volume Error"
+msgstr ""
+
+msgid "Volume Offset:"
+msgstr ""
+
+msgid "Volume:"
+msgstr ""
+
+msgid "Votes"
+msgstr ""
+
+msgid "Warning"
+msgstr ""
+
+msgid "What would you like to do?"
+msgstr ""
+
+msgid "YouTube Video Information"
+msgstr ""
+
+msgid "cancel"
+msgstr ""
+
+msgid "confirm"
+msgstr ""
+
+msgid "copy path"
+msgstr ""
+
+msgid "debugConsoleDock"
+msgstr ""
+
+msgid "e.g., 00:01:30 or 90"
+msgstr ""
+
+msgid "e.g., 1.5s or -1m10s"
+msgstr ""
+
+msgid "navigate to folder"
+msgstr ""
+
+msgid "path"
+msgstr ""
+
+msgid "size"
+msgstr ""
+
+msgid "volume"
+msgstr ""
+
+msgid "yt-dlp Logging:"
+msgstr ""
+
+msgid "yt-dlp Path:"
+msgstr ""
+
+msgid "yt-dlp Settings"
+msgstr ""
+
+msgid "{app} is up to date (version {version})."
+msgstr ""
+
+msgid "{count} download(s) are still in progress."
+msgstr ""
+
+msgid "{count} files saved."
+msgstr ""
+
+msgid "{title} hidden"
+msgstr ""
