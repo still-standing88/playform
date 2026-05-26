@@ -37,7 +37,7 @@ class PlaylistCreateDialog(QDialog):
         self.tracks_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         tracks_layout.addWidget(self.tracks_list)
         
-        browse_button = QPushButton(_("Browse & Add Tracks"))
+        browse_button = QPushButton(_("Browse"))
         browse_button.clicked.connect(self.browse_tracks)
         tracks_layout.addWidget(browse_button)
         
@@ -46,14 +46,14 @@ class PlaylistCreateDialog(QDialog):
         buttons_layout = QHBoxLayout()
         buttons_layout.addStretch()
         
-        cancel_button = QPushButton(_("Cancel"))
-        cancel_button.clicked.connect(self.reject)
-        buttons_layout.addWidget(cancel_button)
-        
         confirm_button = QPushButton(_("Create"))
         confirm_button.clicked.connect(self.confirm_creation)
         confirm_button.setDefault(True)
         buttons_layout.addWidget(confirm_button)
+
+        cancel_button = QPushButton(_("Cancel"))
+        cancel_button.clicked.connect(self.reject)
+        buttons_layout.addWidget(cancel_button)
         
         layout.addLayout(buttons_layout)
         
