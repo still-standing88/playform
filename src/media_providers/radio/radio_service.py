@@ -11,6 +11,37 @@ class RadioService:
         self.cache = RadioCache()
         self.favorites = FavoritesManager()
 
+    def _enum_cache_value(self, value: Any) -> str:
+        return str(getattr(value, "value", value))
+
+    def _coerce_order(self, value: Any) -> Order:
+        if isinstance(value, Order):
+            return value
+        if isinstance(value, str):
+            try:
+                return Order(value)
+            except Exception:
+                pass
+            try:
+                return Order[value]
+            except Exception:
+                pass
+        return Order.NAME
+
+    def _coerce_filter_by(self, value: Any) -> FilterBy:
+        if isinstance(value, FilterBy):
+            return value
+        if isinstance(value, str):
+            try:
+                return FilterBy(value)
+            except Exception:
+                pass
+            try:
+                return FilterBy[value]
+            except Exception:
+                pass
+        raise ValueError(f"Unsupported filter_by value: {value}")
+
     async def get_stats(self, use_cache: bool = True) -> Stats:
         if use_cache and self.cache.is_valid("stats"):
             cached = self.cache.load("stats")
@@ -24,7 +55,8 @@ class RadioService:
         return stats
 
     async def get_countries(self, use_cache: bool = True, **kwargs) -> List[Country]:
-        cache_key = f"{kwargs.get('order', Order.NAME)}_{kwargs.get('reverse', False)}"
+        order = self._coerce_order(kwargs.get('order', Order.NAME))
+        cache_key = f"{self._enum_cache_value(order)}_{kwargs.get('reverse', False)}"
         
         if use_cache and self.cache.is_valid("countries", cache_key):
             cached = self.cache.load("countries", cache_key)
@@ -33,7 +65,7 @@ class RadioService:
         
         async with RadioBrowser(user_agent=self.user_agent) as rb:
             countries = await rb.countries(
-                order=kwargs.get('order', Order.NAME),
+                order=order,
                 reverse=kwargs.get('reverse', False),
                 hide_broken=kwargs.get('hide_broken', False),
                 limit=kwargs.get('limit', 100000),
@@ -44,7 +76,8 @@ class RadioService:
         return countries
 
     async def get_languages(self, use_cache: bool = True, **kwargs) -> List[Language]:
-        cache_key = f"{kwargs.get('order', Order.NAME)}_{kwargs.get('reverse', False)}"
+        order = self._coerce_order(kwargs.get('order', Order.NAME))
+        cache_key = f"{self._enum_cache_value(order)}_{kwargs.get('reverse', False)}"
         
         if use_cache and self.cache.is_valid("languages", cache_key):
             cached = self.cache.load("languages", cache_key)
@@ -53,7 +86,7 @@ class RadioService:
         
         async with RadioBrowser(user_agent=self.user_agent) as rb:
             languages = await rb.languages(
-                order=kwargs.get('order', Order.NAME),
+                order=order,
                 reverse=kwargs.get('reverse', False),
                 hide_broken=kwargs.get('hide_broken', False),
                 limit=kwargs.get('limit', 100000),
@@ -64,7 +97,8 @@ class RadioService:
         return languages
 
     async def get_tags(self, use_cache: bool = True, **kwargs) -> List[Tag]:
-        cache_key = f"{kwargs.get('order', Order.NAME)}_{kwargs.get('reverse', False)}"
+        order = self._coerce_order(kwargs.get('order', Order.NAME))
+        cache_key = f"{self._enum_cache_value(order)}_{kwargs.get('reverse', False)}"
         
         if use_cache and self.cache.is_valid("tags", cache_key):
             cached = self.cache.load("tags", cache_key)
@@ -73,7 +107,7 @@ class RadioService:
         
         async with RadioBrowser(user_agent=self.user_agent) as rb:
             tags = await rb.tags(
-                order=kwargs.get('order', Order.NAME),
+                order=order,
                 reverse=kwargs.get('reverse', False),
                 hide_broken=kwargs.get('hide_broken', False),
                 limit=kwargs.get('limit', 100000),
@@ -86,7 +120,8 @@ class RadioService:
     async def search_stations(self, use_cache: bool = True, **kwargs) -> List[Station]:
         name = kwargs.get('name', '')
         country = kwargs.get('country', '')
-        cache_key = f"{name}_{country}_{kwargs.get('order', Order.NAME)}"
+        order = self._coerce_order(kwargs.get('order', Order.NAME))
+        cache_key = f"{name}_{country}_{self._enum_cache_value(order)}"
         
         if use_cache and self.cache.is_valid("search", cache_key):
             cached = self.cache.load("search", cache_key)
@@ -97,7 +132,7 @@ class RadioService:
             search_params = {
                 'name': kwargs.get('name'),
                 'country': kwargs.get('country'),
-                'order': kwargs.get('order', Order.NAME),
+                'order': order,
                 'reverse': kwargs.get('reverse', False),
                 'limit': kwargs.get('limit', 100000),
                 'offset': kwargs.get('offset', 0),
@@ -111,7 +146,9 @@ class RadioService:
 
     async def get_stations_by_filter(self, filter_by: FilterBy, filter_term: str, 
                                     use_cache: bool = True, **kwargs) -> List[Station]:
-        cache_key = f"{filter_by.value}_{filter_term}_{kwargs.get('order', Order.NAME)}"
+        filter_by = self._coerce_filter_by(filter_by)
+        order = self._coerce_order(kwargs.get('order', Order.NAME))
+        cache_key = f"{self._enum_cache_value(filter_by)}_{filter_term}_{self._enum_cache_value(order)}"
         
         if use_cache and self.cache.is_valid("filter", cache_key):
             cached = self.cache.load("filter", cache_key)
@@ -122,7 +159,7 @@ class RadioService:
             stations = await rb.stations(
                 filter_by=filter_by,
                 filter_term=filter_term,
-                order=kwargs.get('order', Order.NAME),
+                order=order,
                 reverse=kwargs.get('reverse', False),
                 limit=kwargs.get('limit', 100000),
                 offset=kwargs.get('offset', 0),
