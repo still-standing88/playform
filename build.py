@@ -45,16 +45,28 @@ def _base_args(output_dir) -> list[str]:
         sys.executable, "-m", "nuitka",
         "--standalone",
         "--deployment",
+        #"--low-memory",
         "--no-debug-immortal-assumptions",
         "--include-package-data=qdarkstyle",
         "--nofollow-import-to=ffmpeg_binary",
         "--nofollow-import-to=assets_rc",
+        "--nofollow-import-to=sqlalchemy.ext",
+        "--nofollow-import-to=sqlalchemy.dialects.mssql",
+        "--nofollow-import-to=sqlalchemy.dialects.mysql",
+        "--nofollow-import-to=sqlalchemy.dialects.oracle",
+        "--nofollow-import-to=sqlalchemy.dialects.postgresql",
         "--enable-plugin=pyside6",
         f"--include-qt-plugins={','.join(QT_PLUGINS)}",
         "--report=compilation-report.xml",
-        f"--user-package-configuration-file={ROOT_DIR / 'playform.nuitka-package.config.yml'}",
         f"--output-dir={output_dir}",
     ]
+
+
+def _translation_data_args() -> list[str]:
+    lang_dir = ROOT_DIR / "lang"
+    if lang_dir.exists():
+        return [f"--include-data-dir={lang_dir}=lang"]
+    return []
 
 
 def _windows_args(assets_dir, app_name) -> list[str]:
@@ -134,6 +146,7 @@ def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, com
     print(f"Output dir  : {output_dir}")
 
     args = _base_args(output_dir)
+    args += _translation_data_args()
 
     args += [
         f"--company-name={APP_PUBLISHER}",
