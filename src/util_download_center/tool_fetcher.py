@@ -40,12 +40,47 @@ class ToolFetcher(QObject):
             self._fetch_one(tool)
 
     def _fetch_one(self, tool: ToolDef):
+        if tool.direct_urls:
+            self._resolve_direct_urls(tool)
+            return
         url = f"https://api.github.com/repos/{tool.github_repo}/releases/latest"
         req = QNetworkRequest(QUrl(url))
         req.setHeader(QNetworkRequest.KnownHeaders.UserAgentHeader, "PlayForm")
         req.setRawHeader(b"Accept", b"application/vnd.github+json")
         reply = self._nam.get(req)
         reply.finished.connect(lambda: self._on_reply(reply, tool))
+
+    def _resolve_direct_urls(self, tool: ToolDef):
+        try:
+            platform_urls = tool.direct_urls.get(self._platform, {})
+            urls = platform_urls.get(self._arch) or next(iter(platform_urls.values()), [])
+            if not urls:
+                self._emit_error(
+                    tool,
+                    f"No direct download URLs defined for {self._platform}/{self._arch}",
+                )
+                return
+
+            results = []
+            for url in urls:
+                filename = url.rstrip("/").split("/")[-1]
+                results.append(
+                    {
+                        "tool_name": tool.name,
+                        "url": url,
+                        "filename": filename,
+                        "tool": tool,
+                    }
+                )
+
+            self._results.extend(results)
+            self.links_ready.emit(results)
+        except Exception as exc:
+            self._emit_error(tool, str(exc))
+        finally:
+            self._active -= 1
+            if self._active == 0:
+                self.all_done.emit(list(self._results))
 
     def _on_reply(self, reply: QNetworkReply, tool: ToolDef):
         try:

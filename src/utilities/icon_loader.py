@@ -40,18 +40,26 @@ def load_icon(icon_name: str) -> QIcon:
     return icon
 
 def load_pixmap(icon_name: str) -> QPixmap:
+    cache_key = f"pixmap::{icon_name}"
+    if cache_key in _icon_cache:
+        return _icon_cache[cache_key]
+
     assets_dir = get_assets_dir()
     
     if assets_dir is None:
         try:
             resource_path = f":/icons/{icon_name}"
-            return QPixmap(resource_path)
+            pixmap = QPixmap(resource_path)
+            _icon_cache[cache_key] = pixmap
+            return pixmap
         except:
             return QPixmap()
     else:
         icon_path = os.path.join(assets_dir, icon_name)
         if os.path.exists(icon_path):
-            return QPixmap(icon_path)
+            pixmap = QPixmap(icon_path)
+            _icon_cache[cache_key] = pixmap
+            return pixmap
     
     return QPixmap()
 

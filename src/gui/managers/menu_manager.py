@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QMenu
 from PySide6.QtGui import QAction
 import os
 from app_config import key_config
+from utilities.icon_loader import load_icon
 
 class MenuManager:
 
@@ -41,6 +42,7 @@ class MenuManager:
         self.main_window.file_menu.addAction(self.main_window.open_file_action)
         
         self.main_window.open_folder_action = QAction(_("Open &Folder..."), self.main_window)
+        self.main_window.open_folder_action.setIcon(load_icon("explorer.svg"))
         self.main_window.open_folder_action.triggered.connect(self.main_window.open_folder_dialog)
         self.main_window.file_menu.addAction(self.main_window.open_folder_action)
 
@@ -81,12 +83,14 @@ class MenuManager:
         self.main_window.media_menu.addAction(self.main_window.play_pause_action)
         
         self.main_window.stop_action = QAction(_("&Stop"), self.main_window)
+        self.main_window.stop_action.setIcon(load_icon("stop.svg"))
         self.main_window.stop_action.triggered.connect(self.main_window.stop_playback)
         self.main_window.media_menu.addAction(self.main_window.stop_action)
         
         self.main_window.media_menu.addSeparator()
         
         self.main_window.mute_action = QAction(_("&Mute/Unmute"), self.main_window)
+        self.main_window.mute_action.setIcon(load_icon("volume.svg"))
         self.main_window.mute_action.triggered.connect(self.main_window.toggle_mute)
         self.main_window.media_menu.addAction(self.main_window.mute_action)
         
@@ -124,6 +128,7 @@ class MenuManager:
         self.main_window.view_menu.addAction(self.main_window.show_recents_favorites_action)
         
         self.main_window.show_explorer_action = QAction(_("Show &Explorer"), self.main_window)
+        self.main_window.show_explorer_action.setIcon(load_icon("explorer.svg"))
         self.main_window.show_explorer_action.setCheckable(True)
         self.main_window.show_explorer_action.setChecked(False)
         self.main_window.show_explorer_action.triggered.connect(self.main_window.dock_manager.toggle_explorer)

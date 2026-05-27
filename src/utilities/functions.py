@@ -18,6 +18,8 @@ from utilities.util_structs import time_struct
 #from pynotifier import NotificationClient, Notification
 #from pynotifier.backends import platform
 
+_dll_dir_handles = []
+
 
 def copyText(text):
     if text != "":
@@ -265,6 +267,33 @@ def setup_vlc_macos():
     return lib_path, plugins_path
 
 
+def setup_vlc_windows():
+    lib_dir = os.path.join(get_parent_dir(), "lib")
+    libvlc_path = os.path.join(lib_dir, "libvlc.dll")
+
+    os.environ["VLC_LIB_PATH"] = lib_dir
+    os.environ["VLC_PLUGIN_PATH"] = lib_dir
+    os.environ["PYTHON_VLC_MODULE_PATH"] = lib_dir
+
+    if os.path.exists(libvlc_path):
+        os.environ["PYTHON_VLC_LIB_PATH"] = libvlc_path
+
+    if os.path.isdir(lib_dir):
+        current_path = os.environ.get("PATH", "")
+        normalized_entries = [os.path.normcase(os.path.normpath(entry)) for entry in current_path.split(os.pathsep) if entry]
+        normalized_lib_dir = os.path.normcase(os.path.normpath(lib_dir))
+        if normalized_lib_dir not in normalized_entries:
+            os.environ["PATH"] = lib_dir + os.pathsep + current_path if current_path else lib_dir
+
+        if hasattr(os, "add_dll_directory"):
+            try:
+                _dll_dir_handles.append(os.add_dll_directory(lib_dir))
+            except OSError:
+                pass
+
+    return libvlc_path, lib_dir
+
+
 def _get_linux_package_manager() -> str | None:
     distro = ""
     like = ""
@@ -336,7 +365,9 @@ def ensure_vlc_linux():
 
 
 def setup_vlc_binaries():
-    if sys.platform == "darwin":
+    if sys.platform == "win32":
+        setup_vlc_windows()
+    elif sys.platform == "darwin":
         setup_vlc_macos()
     elif sys.platform.startswith("linux"):
         ensure_vlc_linux()

@@ -14,7 +14,6 @@ def setup_environment():
 
     from utilities.functions import get_parent_dir, setup_vlc_binaries
     setup_vlc_binaries()
-    os.environ["VLC_LIB_PATH"] = os.path.join(get_parent_dir(), "lib")
     os.environ["USE_VLC"] = "1"
     
     if getattr(sys, 'frozen', False):

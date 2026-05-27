@@ -13,6 +13,7 @@ class ToolDef:
     is_zip: bool = False
     binary_name_posix: str = ""
     binary_name_win: str = ""
+    direct_urls: dict = field(default_factory=dict)
 
 
 def current_machine() -> str:
@@ -80,4 +81,39 @@ DENO = ToolDef(
     binary_name_win="deno.exe",
 )
 
-ALL_TOOLS: list[ToolDef] = [YTDLP, DENO]
+FFMPEG = ToolDef(
+    name="ffmpeg",
+    label="FFmpeg",
+    description=(
+        "FFmpeg provides ffmpeg and ffprobe binaries used by PlayForm tools for "
+        "media conversion, extraction, and thumbnail generation. The download "
+        "installs only the ffmpeg and ffprobe executables into PlayForm's bin folder."
+    ),
+    github_repo="",
+    asset_patterns={},
+    is_zip=True,
+    binary_name_posix="ffmpeg",
+    binary_name_win="ffmpeg.exe",
+    direct_urls={
+        "windows": {
+            "x86_64": ["https://github.com/GyanD/codexffmpeg/releases/download/6.0/ffmpeg-6.0-essentials_build.7z"],
+            "aarch64": ["https://github.com/GyanD/codexffmpeg/releases/download/6.0/ffmpeg-6.0-essentials_build.7z"],
+        },
+        "linux": {
+            "x86_64": ["https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-6.0-amd64-static.tar.xz"],
+            "aarch64": ["https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-6.0-amd64-static.tar.xz"],
+        },
+        "macos": {
+            "x86_64": [
+                "https://evermeet.cx/ffmpeg/ffmpeg-6.0.7z",
+                "https://evermeet.cx/ffmpeg/ffprobe-6.0.7z",
+            ],
+            "aarch64": [
+                "https://evermeet.cx/ffmpeg/ffmpeg-6.0.7z",
+                "https://evermeet.cx/ffmpeg/ffprobe-6.0.7z",
+            ],
+        },
+    },
+)
+
+ALL_TOOLS: list[ToolDef] = [YTDLP, DENO, FFMPEG]

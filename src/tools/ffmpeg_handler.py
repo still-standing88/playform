@@ -3,7 +3,6 @@ from ffmpeg import FFmpeg
 from ffmpeg.asyncio import FFmpeg as AsyncFFmpeg
 
 from utilities.functions import get_parent_dir
-from utilities.ffmpeg_extractor import extract_ffmpeg_from_pyffmpeg
 from player.utilities import resolve_ffmpeg_binary_path
 from app_config import prefs
 
@@ -34,12 +33,14 @@ class FFmpegHandler:
                 FFmpegHandler._ffprobe_path = ffprobe_candidate if os.path.exists(ffprobe_candidate) else None
                 return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
             
-            extracted_ffmpeg, extracted_ffprobe = extract_ffmpeg_from_pyffmpeg(bin_dir)
-            
-            if extracted_ffmpeg and os.path.exists(extracted_ffmpeg):
-                FFmpegHandler._ffmpeg_path = extracted_ffmpeg
-                FFmpegHandler._ffprobe_path = extracted_ffprobe
-                return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
+            # Deprecated: FFmpeg is now installed via the Utility Download Center
+            # instead of being unpacked from ffmpeg_binary.py / pyffmpeg here.
+            # extracted_ffmpeg, extracted_ffprobe = extract_ffmpeg_from_pyffmpeg(bin_dir)
+            #
+            # if extracted_ffmpeg and os.path.exists(extracted_ffmpeg):
+            #     FFmpegHandler._ffmpeg_path = extracted_ffmpeg
+            #     FFmpegHandler._ffprobe_path = extracted_ffprobe
+            #     return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
             
             FFmpegHandler._errors.append("FFmpeg not found in system PATH or preferences")
             FFmpegHandler._ffmpeg_path = "ffmpeg"
