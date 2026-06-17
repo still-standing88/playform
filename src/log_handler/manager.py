@@ -114,7 +114,12 @@ class LoggingSetup:
         except Exception as e:
             print(f"Failed to write exception log: {e}")
 
-        self.original_excepthook(exc_type, exc_value, exc_traceback)
+        _saved_stderr = sys.stderr
+        try:
+            sys.stderr = sys.__stderr__
+            self.original_excepthook(exc_type, exc_value, exc_traceback)
+        finally:
+            sys.stderr = _saved_stderr
 
     def cleanup(self):
         if hasattr(self, 'fault_file') and self.fault_file:
