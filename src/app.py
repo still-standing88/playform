@@ -3,12 +3,14 @@ import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer
 from utilities.i18n import install_translation
+from utilities.functions import setup_vlc_binaries
 from app_info import APP_NAME, APP_VERSION, APP_PUBLISHER, APP_WEBSITE, setup_env
 
 def main():
     cli_args = sys.argv
 
     setup_env()
+    setup_vlc_binaries()
     install_translation()
 
     app = QApplication(sys.argv)

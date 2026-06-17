@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QListWidget, 
                                QPushButton, QLabel, QMessageBox)
 from PySide6.QtCore import Qt, Signal, Slot
+import utilities.vlc_bootstrap
 from av_play import PlaylistManager
 
 

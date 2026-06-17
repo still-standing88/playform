@@ -30,6 +30,7 @@ from utilities.media_utils import get_media_files_from_directory
 from utilities.speech import speech_manager
 from utilities import signal_manager
 from player.utilities import ensure_ffmpeg_available
+import utilities.vlc_bootstrap
 from av_play import Playlist, PlaylistEntry
 from utilities.formats import formats
 from tools.batch_converter_ui import BatchConverterUI

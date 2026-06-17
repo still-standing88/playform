@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt as qt, QTimer, Slot
 from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap
 
 from typing import Optional, Callable
+import utilities.vlc_bootstrap
 from av_play import VLCVideoPlayer, AVMediaInstance, AVPlaybackState
 from utilities.formats import formats, image_extensions
 from app_config import prefs

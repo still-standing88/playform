@@ -20,15 +20,21 @@ class PathInfo:
 
     @staticmethod
     def get_modified_date(path):
-        return dt.date.fromtimestamp(os.path.getmtime(path))
+        try:
+            return dt.date.fromtimestamp(os.path.getmtime(path))
+        except (OSError, ValueError, OverflowError):
+            return None
 
     def __init__(self, path):
         self.path: str = path
         self.name: str = os.path.basename(self.path)
         self.type: PathType = self.get_path_type(self.path)
         self.ext: str = os.path.splitext(self.path)[1] if self.type == PathType.FILE else "file folder"
-        self.modify_date:dt.date = self.get_modified_date(self.path)
-        self.size: str = f"{sz(get_size(self.path))}b" if self.type == PathType.FILE else "0"
+        self.modify_date = self.get_modified_date(self.path)
+        try:
+            self.size: str = f"{sz(get_size(self.path))}b" if self.type == PathType.FILE else "0"
+        except (OSError, ValueError):
+            self.size: str = "0"
 
 @dataclass
 class PathItem:
@@ -141,8 +147,11 @@ class Explorer:
             drives = self.list_drives()
             for drive in drives:
                 drive_path = drive + "\\" if os.name == "nt" else drive
-                self.items[drive] = PathItem(path=drive_path, type=PathType.FOLDER, info=PathInfo(drive_path))
-                self.folders.append(drive)
+                try:
+                    self.items[drive] = PathItem(path=drive_path, type=PathType.FOLDER, info=PathInfo(drive_path))
+                    self.folders.append(drive)
+                except (OSError, ValueError):
+                    continue
         else:
             try:
                 contents = os.listdir(self._current_path)
@@ -167,8 +176,9 @@ class Explorer:
 
         if self._sort_mode in ("date_newest", "date_oldest"):
             rev = self._sort_mode == "date_newest"
-            self.folders.sort(key=lambda x: self.items[x].info.modify_date, reverse=rev)
-            self.files.sort(key=lambda x: self.items[x].info.modify_date, reverse=rev)
+            _fallback = dt.date.min
+            self.folders.sort(key=lambda x: self.items[x].info.modify_date or _fallback, reverse=rev)
+            self.files.sort(key=lambda x: self.items[x].info.modify_date or _fallback, reverse=rev)
         else:
             rev = self._sort_mode == "name_desc"
             self.folders.sort(key=lambda x: x.lower(), reverse=rev)

@@ -5,6 +5,7 @@ from typing import Optional, Callable
 from PySide6.QtGui import QKeyEvent, QKeySequence
 from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel
 from PySide6.QtCore import Qt as qt, Slot
+import utilities.vlc_bootstrap
 from av_play import AVMediaInstance, VLCVideoPlayer, AVPlaybackState
 from utilities.formats import image_extensions
 

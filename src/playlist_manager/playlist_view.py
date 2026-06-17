@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QAbstractItemView, QFileDialog, QMenu, QMessageBox, QVBoxLayout, QWidget
 
+import utilities.vlc_bootstrap
 from av_play import Playlist, PlaylistEntry
 from gui_controls.list_ctrl import ListCtrl
 from utilities import signal_manager

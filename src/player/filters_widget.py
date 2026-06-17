@@ -1,4 +1,5 @@
 from typing import Optional
+import utilities.vlc_bootstrap
 import av_play
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QDoubleSpinBox, QSpinBox
@@ -152,4 +153,3 @@ class FiltersWidget(QWidget):
 			self.hue_spin, self.saturation_spin, self.toggle_btn
 		]
 		self._key_event_filter.install_on_widgets(widgets)
-

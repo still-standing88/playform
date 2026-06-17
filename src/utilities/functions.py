@@ -148,14 +148,14 @@ def open_explorer(path):
     sp.Popen(fr'explorer /select,"{path}"')
 
 def is_frozen():
-    return getattr(sys, 'frozen', False) or hasattr(sys, '__compiled__') or 'nuitka' in sys.executable.lower()
+    return getattr(sys, 'frozen', False) or "__compiled__" in globals()
 
 def is_dev_mode():
     return not is_frozen()
 
 def get_app_path() -> str:
     if is_frozen():
-        BASE_DIR = Path(sys.executable).parent
+        BASE_DIR = Path(sys.argv[0]).resolve().parent
     else:
         BASE_DIR = Path(__file__).parent.parent
     return str(BASE_DIR)
@@ -164,7 +164,7 @@ def get_script_parent_dir():
     return Path(__file__).parent.parent.parent
 
 def get_exe_parent_dir():
-    return Path(sys.executable).parent
+    return Path(sys.argv[0]).resolve().parent if is_frozen() else Path(sys.executable).parent
 
 def get_parent_dir():
     return str(get_exe_parent_dir() if is_frozen() else get_script_parent_dir())
@@ -270,10 +270,11 @@ def setup_vlc_macos():
 def setup_vlc_windows():
     lib_dir = os.path.join(get_parent_dir(), "lib")
     libvlc_path = os.path.join(lib_dir, "libvlc.dll")
+    plugins_dir = os.path.join(lib_dir, "plugins")
 
     os.environ["VLC_LIB_PATH"] = lib_dir
-    os.environ["VLC_PLUGIN_PATH"] = lib_dir
-    os.environ["PYTHON_VLC_MODULE_PATH"] = lib_dir
+    os.environ["VLC_PLUGIN_PATH"] = plugins_dir if os.path.isdir(plugins_dir) else lib_dir
+    os.environ.pop("PYTHON_VLC_MODULE_PATH", None)
 
     if os.path.exists(libvlc_path):
         os.environ["PYTHON_VLC_LIB_PATH"] = libvlc_path
@@ -289,6 +290,12 @@ def setup_vlc_windows():
             try:
                 _dll_dir_handles.append(os.add_dll_directory(lib_dir))
             except OSError:
+                pass
+
+        if hasattr(ctypes, "windll"):
+            try:
+                ctypes.windll.kernel32.SetDllDirectoryW(lib_dir)
+            except Exception:
                 pass
 
     return libvlc_path, lib_dir

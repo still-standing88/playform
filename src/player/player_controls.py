@@ -183,7 +183,7 @@ class PlayerControls(QWidget):
         self.volume_icon_label.setToolTip(_("Volume"))
 
         sliders = [
-            (self.volume_slider, 0, 100, prefs.prefs["offset"]["volume"], 100, 80),
+            (self.volume_slider, 0, 200, prefs.prefs["offset"]["volume"], 100, 80),
         ]
         for slider, minv, maxv, step, value, fixed_width in sliders:
             slider.setMinimum(minv)
@@ -835,7 +835,7 @@ class PlayerControls(QWidget):
     def volume_up(self):
         current_volume = self.get_volume()
         volume_offset = prefs.prefs["offset"]["volume"]
-        new_volume = min(100, current_volume + volume_offset)
+        new_volume = min(200, current_volume + volume_offset)
         self.set_volume(new_volume)
         self.volumeChanged.emit(new_volume)
     
