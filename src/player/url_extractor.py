@@ -4,7 +4,7 @@ from typing import Union, List, Optional
 from gettext import gettext as _
 from PySide6.QtCore import QThread, Signal
 from app_config import prefs
-from .url import build_url_playlist_result
+from .url import extract, is_supported
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +33,16 @@ class UrlExtractor(QThread):
             else:
                 logger.info("No valid cookies file found, proceeding without cookies")
             
+            if not is_supported(self.url):
+                logger.info(f"URL not supported by yt-dlp extractors")
+            
             logger.info("Extracting URL(s)...")
-            result = build_url_playlist_result(self.url, cookies=cookies)
-            logger.info(f"Prepared URL playlist with {len(result.get('entries', []))} entries")
+            result = extract(self.url, cookies=cookies)
+            
+            if isinstance(result, list):
+                logger.info(f"Extracted playlist with {len(result)} entries")
+            else:
+                logger.info("Extracted single URL")
                 
             self.finished.emit(result)
             
