@@ -77,7 +77,10 @@ class PlaylistHandler:
         for file_path in media_files:
             entry = PlaylistEntry(location=file_path)
             playlist.add_entry(entry)
-            
+
+        names = [os.path.basename(e.location) for e in playlist.entries]
+        print(f"[TRACE] playlist_handler: create_playlist_from_folder title={playlist_name} total={len(names)} first3={names[:3]}")
+
         self.main_window.playlists_widget.playlist_manager.playlists[playlist_name] = playlist
         self.main_window.playlists_widget.add_playlist_to_list(playlist_name)
         self.main_window.playlists_widget.save_playlists_data()

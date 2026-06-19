@@ -152,6 +152,8 @@ class PlaylistView(QWidget):
 
     def set_playlist(self, playlist):
         self.current_playlist = playlist
+        names = [os.path.basename(e.location) for e in playlist.entries if e.location]
+        print(f"[TRACE] playlist_view.set_playlist: title={playlist.title} total={len(names)} first3={names[:3]}")
         self.refresh_view()
 
     def refresh_view(self):

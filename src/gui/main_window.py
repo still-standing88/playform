@@ -503,8 +503,11 @@ class MainWindow(QMainWindow):
         self.playlists_widget.save_playlists_data()
         
 
+        entries = [os.path.basename(e.location) for e in playlist.entries]
+        print(f"[TRACE] main_window: create_playlist_from_folder title={playlist.title} total={len(entries)} first3={entries[:3]}")
+
         self.player_widget.load_playlist(playlist, start_index=0, auto_play=True)
-        
+
         signal_manager.statusbar_message.emit(
             _("Created and loaded playlist '{playlist_name}' with {track_count} tracks").format(
                 playlist_name=playlist_name,

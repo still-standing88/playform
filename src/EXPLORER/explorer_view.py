@@ -99,6 +99,7 @@ class ExplorerView(QListWidget):
 
     def create_playlist_from_folder(self):
         if self._focused_item_path:
+            print(f"[TRACE] explorer_view: create_playlist_from_folder path={self._focused_item_path}")
             self._execute_callback("create_playlist_callback", self._focused_item_path)  # type: ignore[arg-type]
 
     def _sort(self, mode: str):
