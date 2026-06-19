@@ -21,8 +21,7 @@ from gui_controls.player_key_event_filter import KeyEventFilter
 from gui_controls.toggle_button import ToggleButton
 from .subtitles import SubtitleManager
 from .filters_widget import FiltersWidget
-from .url_extractor import UrlExtractor
-from .utilities import ensure_ytdlp_available
+from .lazy_player import LazyPlaylistPlayer
 from app_constance.styles import PLAYER_WIDGET_STYLE
 
 from utilities.functions import get_app_path, get_debug_level, get_parent_dir, get_vlclog_file, parse_vlc_args
@@ -43,18 +42,17 @@ class PlayerWidget(QWidget):
         super().__init__(parent)
         self.is_seeking = False
         self._last_known_state = av_play.AVPlaybackState.AV_STATE_NOTHING
-        self.url_extractor = None
         self._shortcuts:Dict[str, QShortcut] = {}
         self._key_event_filter = KeyEventFilter(self)
         self._youtube_info_cache: Dict[str, str] = {}
         self._last_subtitle_text: Optional[str] = None
-        
+
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self.setup_ui()
         self.layout_widgets()
-        
-        self.player:av_play.VLCVideoPlayer = av_play.VLCVideoPlayer()
+
+        self.player:LazyPlaylistPlayer = LazyPlaylistPlayer()
         self.subtitle_manager = SubtitleManager()
         self._loading = False
         
@@ -185,6 +183,9 @@ class PlayerWidget(QWidget):
         self.player_controls.aspectRatioChanged.connect(self._on_aspect_ratio_changed)
         self.player_controls.scaleChanged.connect(self._on_scale_changed)
         self.player_controls.screenshotRequested.connect(self._on_screenshot)
+        self.player.signals.extraction_started.connect(self._on_url_extraction_started)
+        self.player.signals.extraction_complete.connect(self._on_url_extraction_complete)
+        self.player.signals.extraction_failed.connect(self._on_url_extraction_failed)
 
     def apply_styles(self):
         self.setStyleSheet(PLAYER_WIDGET_STYLE)
@@ -645,7 +646,9 @@ class PlayerWidget(QWidget):
             
             if state == av_play.AVPlaybackState.AV_STATE_NOTHING and self._last_known_state == av_play.AVPlaybackState.AV_STATE_PLAYING:
                 self._last_known_state = state
-                if not self._loading: self.player.next()
+                if not self._loading:
+                    print(f"[TRACE] widget._update_player_state: track ended, calling player.next() current_index={self.player.get_current_track_index()}")
+                    self.player.next()
                 self._load_subtitles_for_current_track()
                 self.filters_widget.reset_filters()
                 self._update_current_file()
@@ -760,6 +763,9 @@ class PlayerWidget(QWidget):
                 if media_file == file_path:
                     start_index = i
 
+            names = [os.path.basename(e.location) for e in playlist.entries]
+            print(f"[TRACE] widget.load_file: file={os.path.basename(file_path)} start_index={start_index} total={len(names)} first3={names[:3]}")
+
             self.load_playlist(playlist, start_index=start_index)
             self.player_controls.set_current_track(os.path.basename(file_path))
             self.player_controls.load_last_position()
@@ -769,23 +775,10 @@ class PlayerWidget(QWidget):
             self._reset_ui_to_default()
 
     def load_url(self, url: str):
+        print(f"[TRACE] widget.load_url: url={url}")
         signal_manager.statusbar_message.emit(_("Loading URL: {url}").format(url=url))
-
-        if not ensure_ytdlp_available(self, show_message=True):
-            self._reset_ui_to_default()
-            return
         try:
-            if self.url_extractor and self.url_extractor.isRunning():
-                self.url_extractor.terminate()
-                self.url_extractor.wait()
-            
-            self.url_extractor = UrlExtractor(url, self)
-            self.url_extractor.started.connect(self._on_url_extraction_started)
-            self.url_extractor.progress.connect(signal_manager.statusbar_message.emit)
-            self.url_extractor.finished.connect(self._on_url_extraction_complete)
-            self.url_extractor.failed.connect(self._on_url_extraction_failed)
-            self.url_extractor.start()
-            
+            self.player.load_url(url)
         except Exception as e:
             logger.error(f"Failed to start URL extraction: {e}")
             self._reset_ui_to_default()
@@ -799,6 +792,8 @@ class PlayerWidget(QWidget):
                 title=playlist.title or _("Untitled")
             )
         )
+        names = [os.path.basename(e.location) for e in playlist.entries]
+        print(f"[TRACE] widget.load_playlist: title={playlist.title} start_index={start_index} total={len(names)} first3={names[:3]}")
         try:
             if self.player.primary_instance is not None:
                 try:
@@ -846,30 +841,16 @@ class PlayerWidget(QWidget):
         self.video_display.show_loading(_("Extracting URL..."))
         self.player_controls.set_controls_enabled(False)
         signal_manager.statusbar_message.emit(_("Extracting URL..."))
-        
+
     @Slot(object)
-    def _on_url_extraction_complete(self, result):
-        logger.info("URL extraction completed, processing result")
+    def _on_url_extraction_complete(self, _result):
+        logger.info("URL extraction completed")
         self.video_display.hide_loading()
         self.player_controls.set_controls_enabled(True)
-        
-        try:
-            if isinstance(result, list):
-                logger.info(f"Creating playlist from {len(result)} URLs")
-                playlist = av_play.Playlist(title=_("Extracted Playlist"))
-                for i, url in enumerate(result):
-                    title = _("Track {index}").format(index=i + 1)
-                    playlist.add_entry(av_play.PlaylistEntry(location=url, title=title))
-                self.load_playlist(playlist)
-            else:
-                logger.info("Creating single entry playlist from extracted URL")
-                playlist = av_play.Playlist(title=_("Extracted URL"))
-                playlist.add_entry(av_play.PlaylistEntry(location=result, title=_("Streaming URL")))
-                self.load_playlist(playlist)
-        except Exception as e:
-            logger.error(f"Failed to load extracted URL(s): {e}")
-            self._reset_ui_to_default()
-            
+        self._load_subtitles_for_current_track()
+        self._update_current_file()
+        self._update_player_state()
+
     @Slot(str)
     def _on_url_extraction_failed(self, error_msg):
         logger.error(f"URL extraction failed: {error_msg}")
@@ -877,7 +858,7 @@ class PlayerWidget(QWidget):
         self.player_controls.set_controls_enabled(True)
         self._reset_ui_to_default()
         signal_manager.statusbar_message.emit(_("URL extraction failed"))
-        
+
         msg = QMessageBox(self)
         msg.setWindowTitle(_("URL Extraction Failed"))
         msg.setText(_("Failed to extract URL:\n{error}").format(error=error_msg))
@@ -1018,11 +999,6 @@ class PlayerWidget(QWidget):
 
     def closeEvent(self, event):
         try:
-            if self.url_extractor and self.url_extractor.isRunning():
-                self.url_extractor.terminate()
-                self.url_extractor.wait()
-            
-
             self._youtube_info_cache.clear()
             
             self.player_controls.save_last_position()

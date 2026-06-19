@@ -1,5 +1,6 @@
 import subprocess
 import logging
+import os
 import json
 import requests
 from typing import Optional, List, Union
@@ -11,6 +12,18 @@ YTDLP_PATH = 'yt-dlp'
 YTDLP_LOG_FILE = None
 YTDLP_VERBOSE = False
 
+
+def _get_deno_arg():
+    try:
+        from utilities.functions import get_parent_dir
+        name = "deno.exe" if os.name == "nt" else "deno"
+        deno_path = os.path.join(get_parent_dir(), "bin", name)
+        if os.path.isfile(deno_path):
+            return ["--js-runtimes", f"deno:{deno_path}", "--remote-components", "ejs:github"]
+    except Exception:
+        pass
+    return ["--remote-components", "ejs:github"]
+
 def set_ytdlp_path(path: str):
     global YTDLP_PATH
     YTDLP_PATH = path
@@ -21,7 +34,7 @@ def set_ytdlp_log(log_file: Optional[str] = None, verbose: bool = False):
     YTDLP_VERBOSE = verbose
 
 def get_yt_video_info(url: str) -> dict:
-    command = [YTDLP_PATH, '--dump-json', '--no-playlist', url]
+    command = [YTDLP_PATH, '--dump-json', '--no-playlist'] + _get_deno_arg() + [url]
     try:
         result = subprocess.run(
             command,
@@ -41,7 +54,7 @@ def get_yt_video_info(url: str) -> dict:
 def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None):
     from app_config import prefs
     
-    cmd = [YTDLP_PATH, '--dump-json']
+    cmd = [YTDLP_PATH, '--dump-json'] + _get_deno_arg()
     
     if not as_playlist:
         cmd.append('--no-playlist')
@@ -89,7 +102,7 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
 def fetch_full_info(url: str, cookies: Optional[str] = None):
     from app_config import prefs
     
-    cmd = [YTDLP_PATH, '--dump-json', '--no-playlist', url]
+    cmd = [YTDLP_PATH, '--dump-json', '--no-playlist'] + _get_deno_arg() + [url]
     
     if cookies:
         cmd.extend(['--cookies', cookies])
@@ -117,7 +130,7 @@ def fetch_full_info(url: str, cookies: Optional[str] = None):
     return json.loads(result.stdout.strip())
 
 def is_supported(url: str) -> bool:
-    cmd = [YTDLP_PATH, '--dump-json', '--no-playlist', '--skip-download', url]
+    cmd = [YTDLP_PATH, '--dump-json', '--no-playlist', '--skip-download'] + _get_deno_arg() + [url]
     result = subprocess.run(cmd, capture_output=True, text=True)
     
     if result.returncode != 0:
@@ -147,38 +160,97 @@ def is_playlist(url: str) -> bool:
 
 def get_best_format(info) -> str:
     formats = info.get("formats", [])
-    
+
     if not formats and "url" in info:
         return info["url"]
-    
+
     http_formats = [f for f in formats if f.get("protocol", "").startswith(("http", "https"))]
-    
+
     if http_formats:
         muxed = [f for f in http_formats if f.get("acodec") != "none" and f.get("vcodec") != "none"]
         if muxed:
             return muxed[-1]["url"]
-        
+
         audio = [f for f in http_formats if f.get("acodec") != "none" and f.get("vcodec") == "none"]
         if audio:
             return audio[-1]["url"]
-        
+
         video = [f for f in http_formats if f.get("vcodec") != "none"]
         if video:
             return video[-1]["url"]
-    
+
     muxed = [f for f in formats if f.get("acodec") != "none" and f.get("vcodec") != "none"]
     if muxed:
         return muxed[-1]["url"]
-    
+
     audio = [f for f in formats if f.get("acodec") != "none"]
     if audio:
         return audio[-1]["url"]
-    
+
     video = [f for f in formats if f.get("vcodec") != "none"]
     if video:
         return video[-1]["url"]
-    
+
     raise ValueError("No playable formats found")
+
+
+_DIRECT_MEDIA_EXTENSIONS = (
+    ".mp4", ".m4v", ".webm", ".mkv", ".mov", ".avi", ".flv", ".ts",
+    ".mp3", ".m4a", ".aac", ".ogg", ".opus", ".wav", ".flac",
+    ".m3u8", ".mpd",
+)
+
+
+def looks_like_direct_media_url(url: str) -> bool:
+    if not url:
+        return False
+    parsed = urlparse(url)
+    path = (parsed.path or "").lower()
+    return any(path.endswith(ext) for ext in _DIRECT_MEDIA_EXTENSIONS)
+
+
+def resolve_webpage_url(url: str, cookies: Optional[str] = None) -> str:
+    print(f"[TRACE] url.resolve_webpage_url: yt-dlp={YTDLP_PATH} url={url[:80]}")
+    info = run_ytdlp(url, as_playlist=False, cookies=cookies)
+    if isinstance(info, list):
+        info = info[0]
+    return get_best_format(info)
+
+
+def run_ytdlp_flat_playlist(url: str, cookies: Optional[str] = None) -> List[dict]:
+    from app_config import prefs
+
+    print(f"[TRACE] url.run_ytdlp_flat: yt-dlp={YTDLP_PATH} url={url[:80]}")
+    cmd = [YTDLP_PATH, "--flat-playlist", "--dump-json"] + _get_deno_arg()
+
+    if cookies:
+        cmd.extend(["--cookies", cookies])
+    else:
+        cookies_file = prefs.prefs.get("youtube_cookies")
+        if cookies_file:
+            cmd.extend(["--cookies", cookies_file])
+
+    if YTDLP_VERBOSE:
+        cmd.append("--verbose")
+
+    cmd.append(url)
+
+    if YTDLP_LOG_FILE:
+        with open(YTDLP_LOG_FILE, "a") as log:
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            log.write(f"Command: {' '.join(cmd)}\n")
+            log.write(f"STDOUT:\n{result.stdout}\n")
+            log.write(f"STDERR:\n{result.stderr}\n")
+            log.write("-" * 80 + "\n")
+    else:
+        result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise ValueError(f"yt-dlp failed: {result.stderr}")
+
+    lines = [line for line in result.stdout.strip().split("\n") if line]
+    return [json.loads(line) for line in lines]
+
 
 def extract(url: str, cookies: Optional[str] = None) -> Union[str, List[str]]:
     if not is_supported(url):
