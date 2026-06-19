@@ -10,11 +10,16 @@ from utilities.i18n import install_translation
 
 def setup_environment():
     import app_info
-    app_info.setup_env()          # ensure env vars are set even when imported standalone
+    app_info.setup_env()
 
     from utilities.functions import get_parent_dir
     os.environ["USE_VLC"] = "1"
-    
+
+    bin_dir = os.path.join(get_parent_dir(), "bin")
+    if os.path.isdir(bin_dir):
+        existing = os.environ.get("PATH", "")
+        os.environ["PATH"] = bin_dir + os.pathsep + existing
+
     if getattr(sys, 'frozen', False):
         BASE_DIR = Path(sys.executable).parent
         os.environ['QT_PLUGIN_PATH'] = str(BASE_DIR / "PySide6" / "qt-plugins")
