@@ -1,7 +1,6 @@
 import os
 
 from .user_db import UserFiles
-#from .media_db import MediaFile, MediaType, MediaDatabase
 from utilities.functions import get_app_path, get_user_directories
 
 current_path = get_app_path()
