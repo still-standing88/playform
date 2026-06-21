@@ -207,7 +207,7 @@ class MainWindow(QMainWindow):
                 self.explorer_widget.setFocus()
 
     def focus_player(self):
-        if self.player_widget and self.player_widget.isVisible():
+        if self.player_dock and self.player_dock.isVisible():
             self.player_widget.setFocus()
 
     def focus_playlists(self):
@@ -289,10 +289,6 @@ class MainWindow(QMainWindow):
         central_widget.setObjectName("centralWidget")
         self.setCentralWidget(central_widget)
         
-        self.main_layout = QHBoxLayout(central_widget)
-        self.main_layout.setContentsMargins(5, 5, 5, 5)
-        self.main_layout.setSpacing(10)
-        
         self.recents_and_favorites_widget = RecentsAndFavoritesWidget(self.user_db)
         self.recents_and_favorites_widget.setObjectName("recentsAndFavoritesWidget")
         
@@ -309,7 +305,6 @@ class MainWindow(QMainWindow):
         
         self.player_widget = PlayerWidget(self)
         self.player_widget.setObjectName("playerWidget")
-        self.main_layout.addWidget(self.player_widget)
         
         self.playlists_widget = PlaylistsWidget(
             parent=self,
@@ -1003,7 +998,7 @@ class MainWindow(QMainWindow):
     def save_window_state(self):
         prefs.prefs['window_geometry'] = self.saveGeometry().data().hex()
         prefs.prefs['window_state'] = self.saveState().data().hex()
-        prefs.prefs['player_visible'] = self.player_widget.isVisible()
+        prefs.prefs['player_visible'] = self.player_dock.isVisible() if self.player_dock else True
         prefs.save()
         
     def restore_window_state(self):
@@ -1021,9 +1016,10 @@ class MainWindow(QMainWindow):
             except:
                 pass
 
-        self.player_widget.setVisible(prefs.prefs.get('player_visible', True))
+        if self.player_dock:
+            self.player_dock.setVisible(prefs.prefs.get('player_visible', True))
         if self.minimize_player_action:
-            self.minimize_player_action.setChecked(not self.player_widget.isVisible())
+            self.minimize_player_action.setChecked(not (self.player_dock.isVisible() if self.player_dock else True))
                 
     def closeEvent(self, event):
 
