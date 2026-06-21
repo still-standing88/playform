@@ -9,7 +9,7 @@ from utilities.session import dock_session
 class DockManager:
     def __init__(self, main_window):
         self.main_window = main_window
-        self._dock_features = QDockWidget.DockWidgetFeature.DockWidgetMovable | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        self._dock_features = QDockWidget.DockWidgetFeature.DockWidgetMovable
 
     def setup_dock_widgets(self):
         self.recents_favorites_dock = QDockWidget(_("Recents && Favorites"), self.main_window)
