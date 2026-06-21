@@ -285,9 +285,7 @@ class MainWindow(QMainWindow):
                 self.recents_and_favorites_widget.setFocus()
 
     def setup_ui(self):
-        central_widget = QWidget()
-        central_widget.setObjectName("centralWidget")
-        self.setCentralWidget(central_widget)
+        self.setCentralWidget(None)
         
         self.recents_and_favorites_widget = RecentsAndFavoritesWidget(self.user_db)
         self.recents_and_favorites_widget.setObjectName("recentsAndFavoritesWidget")
