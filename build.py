@@ -45,6 +45,7 @@ def _base_args(output_dir) -> list[str]:
         sys.executable, "-m", "nuitka",
         "--standalone",
         "--deployment",
+        "--remove-output",
         #"--low-memory",
         "--no-debug-immortal-assumptions",
         "--include-package-data=qdarkstyle",
@@ -71,7 +72,7 @@ def _translation_data_args() -> list[str]:
 
 def _windows_args(assets_dir, app_name) -> list[str]:
     args = [
-        #"--windows-console-mode=disable",
+        "--windows-console-mode=disable",
         "--assume-yes-for-downloads",
         f"--output-filename={app_name}.exe",
     ]
@@ -204,6 +205,7 @@ def _updater_base_args(output_dir) -> list[str]:
         sys.executable, "-m", "nuitka",
         "--standalone",
         "--deployment",
+        "--remove-output",
         "--no-debug-immortal-assumptions",
         "--report=updater-compilation-report.xml",
         f"--output-dir={output_dir}",
