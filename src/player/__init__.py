@@ -5,7 +5,7 @@ import sys
 from app_config import prefs
 from utilities.functions import get_logs_dir, get_parent_dir
 from .utilities import resolve_ytdlp_binary_path
-from .url import set_ytdlp_path, set_ytdlp_log
+from .url import set_ytdlp_path, set_ytdlp_log, preload_extractors
 
 __all__ = ['init_binaries', 'reinit_ytdlp_settings']
 
@@ -41,6 +41,8 @@ if ytdlp_path:
 if prefs.prefs.get("yt-dlp_logging", False):
     log_file = os.path.join(get_logs_dir(), "yt-dlp.log")
     set_ytdlp_log(log_file, prefs.prefs.get("yt-dlp_verbose_output", False))
+
+preload_extractors()
 
 def reinit_ytdlp_settings():
     ytdlp_path = resolve_ytdlp_binary_path()

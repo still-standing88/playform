@@ -10,12 +10,11 @@ import av_play
 from PySide6.QtCore import QObject, Signal, QThread
 
 from .url import (
-    looks_like_direct_media_url,
+    is_url_supported,
     resolve_webpage_url,
     run_ytdlp_flat_playlist,
     has_playlist_param,
     is_playlist,
-    is_supported,
 )
 from .utilities import ensure_ytdlp_available
 
@@ -112,7 +111,7 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
         for idx, entry in enumerate(playlist.entries):
             location = entry.location or ""
             self._webpage_urls.append(location)
-            if location and (av_play.is_path(location) or looks_like_direct_media_url(location)):
+            if location and av_play.is_path(location):
                 with self._resolve_lock:
                     self._resolved[idx] = location
 
@@ -242,10 +241,16 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
             return False
 
         try:
-            if av_play.is_path(webpage) or looks_like_direct_media_url(webpage):
+            if av_play.is_path(webpage):
                 resolved = webpage
+            elif is_url_supported(webpage):
+                try:
+                    resolved = resolve_webpage_url(webpage)
+                except Exception as e:
+                    logger.warning(f"Extraction failed for supported URL, passing directly: {e}")
+                    resolved = webpage
             else:
-                resolved = resolve_webpage_url(webpage)
+                resolved = webpage
             with self._resolve_lock:
                 self._resolved[index] = resolved
                 self._resolving.discard(index)
@@ -323,8 +328,6 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
 
     def _fetch_webpage_playlist(self, url: str) -> dict:
         if not is_playlist(url) and not has_playlist_param(url):
-            if not is_supported(url):
-                return {"title": "Extracted URL", "entries": [{"location": url}]}
             return {"title": "Extracted URL", "entries": [{"location": url}]}
 
         flat_entries = run_ytdlp_flat_playlist(url)
