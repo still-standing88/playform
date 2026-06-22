@@ -847,17 +847,21 @@ class MainWindow(QMainWindow):
         dlg.exec()
 
     def open_documentation(self):
-        """Open the local documentation index in the default web browser."""
+        """Open the local documentation in the default web browser."""
         import webbrowser
         from pathlib import Path
         from utilities.functions import get_parent_dir, is_dev_mode
         from PySide6.QtWidgets import QMessageBox
 
         base = Path(get_parent_dir())
+        lang = prefs.prefs.get("language", "en")
         if is_dev_mode():
-            doc_path = base / "docs" / "build" / "index.html"
+            doc_path = base / "docs" / "build" / lang / "documentation.html"
         else:
-            doc_path = base / "docs" / "index.html"
+            doc_path = base / "docs" / lang / "documentation.html"
+
+        if not doc_path.exists():
+            doc_path = base / "docs" / ("build" if is_dev_mode() else "") / "en" / "documentation.html"
 
         if doc_path.exists():
             webbrowser.open(doc_path.as_uri())
@@ -865,9 +869,7 @@ class MainWindow(QMainWindow):
             QMessageBox.information(
                 self,
                 _("Documentation Not Found"),
-                _("The documentation could not be found at:\n{path}\n\nPlease visit the project website for help.").format(
-                    path=doc_path
-                ),
+                _("The documentation could not be found.\n\nPlease visit the project website for help."),
             )
 
     def check_for_updates(self):
