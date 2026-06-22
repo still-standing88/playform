@@ -2,8 +2,10 @@ import subprocess
 import logging
 import os
 import json
-import requests
-from typing import Optional, List, Union
+import sys
+import re
+import threading
+from typing import Optional, List
 from urllib.parse import urlparse, parse_qs
 
 headers={ "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" }
@@ -11,6 +13,8 @@ logger = logging.getLogger(__name__)
 YTDLP_PATH = 'yt-dlp'
 YTDLP_LOG_FILE = None
 YTDLP_VERBOSE = False
+
+_NO_WINDOW = {"creationflags": subprocess.CREATE_NO_WINDOW} if sys.platform == "win32" else {}
 
 
 def _get_deno_arg():
@@ -41,7 +45,8 @@ def get_yt_video_info(url: str) -> dict:
             capture_output=True,
             text=True,
             check=True,
-            encoding='utf-8'
+            encoding='utf-8',
+            **_NO_WINDOW,
         )
         return json.loads(result.stdout)
     except FileNotFoundError:
@@ -79,13 +84,13 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
     
     if YTDLP_LOG_FILE:
         with open(YTDLP_LOG_FILE, 'a') as log:
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
             log.write(f"Command: {' '.join(cmd)}\n")
             log.write(f"STDOUT:\n{result.stdout}\n")
             log.write(f"STDERR:\n{result.stderr}\n")
             log.write("-" * 80 + "\n")
     else:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
     
     if result.returncode != 0:
         raise ValueError(f"yt-dlp failed: {result.stderr}")
@@ -116,31 +121,18 @@ def fetch_full_info(url: str, cookies: Optional[str] = None):
     
     if YTDLP_LOG_FILE:
         with open(YTDLP_LOG_FILE, 'a') as log:
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
             log.write(f"Command: {' '.join(cmd)}\n")
             log.write(f"STDOUT:\n{result.stdout}\n")
             log.write(f"STDERR:\n{result.stderr}\n")
             log.write("-" * 80 + "\n")
     else:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
     
     if result.returncode != 0:
         raise ValueError(f"Failed to fetch full info: {result.stderr}")
     
     return json.loads(result.stdout.strip())
-
-def is_supported(url: str) -> bool:
-    cmd = [YTDLP_PATH, '--dump-json', '--no-playlist', '--skip-download'] + _get_deno_arg() + [url]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        return False
-    
-    try:
-        info = json.loads(result.stdout.strip())
-        return info.get('extractor') != 'generic'
-    except:
-        return False
 
 def has_playlist_param(url: str) -> bool:
     try:
@@ -194,19 +186,78 @@ def get_best_format(info) -> str:
     raise ValueError("No playable formats found")
 
 
-_DIRECT_MEDIA_EXTENSIONS = (
-    ".mp4", ".m4v", ".webm", ".mkv", ".mov", ".avi", ".flv", ".ts",
-    ".mp3", ".m4a", ".aac", ".ogg", ".opus", ".wav", ".flac",
-    ".m3u8", ".mpd",
-)
+_supported_extractor_names: set[str] | None = None
+_preload_lock = threading.Lock()
+_preload_started = False
 
 
-def looks_like_direct_media_url(url: str) -> bool:
-    if not url:
+def _load_extractor_names():
+    global _supported_extractor_names
+    if _supported_extractor_names is not None:
+        return
+    result = subprocess.run(
+        [YTDLP_PATH, "--extractor-descriptions"],
+        capture_output=True, text=True, **_NO_WINDOW,
+    )
+    names = set()
+    for line in result.stdout.splitlines():
+        name = line.split(":")[0].strip().lower()
+        if name:
+            names.add(name)
+    _supported_extractor_names = names
+
+
+def _load_extractor_names_thread():
+    try:
+        _load_extractor_names()
+    except Exception:
+        pass
+
+
+def preload_extractors():
+    global _preload_started
+    with _preload_lock:
+        if _preload_started:
+            return
+        _preload_started = True
+    threading.Thread(target=_load_extractor_names_thread, daemon=True, name="ytdlp-extractor-preload").start()
+
+
+_TLD_COMPONENTS = frozenset({"com", "co", "org", "net", "gov", "edu", "ac", "uk", "jp", "tv", "be", "io", "ai", "info", "biz", "me", "us", "ca", "de", "fr", "au", "nz", "in"})
+
+_DOMAIN_ALIASES = {
+    "youtu.be": "youtube",
+    "x.com": "twitter",
+    "fb.watch": "facebook",
+}
+
+
+def is_url_supported(url: str) -> bool:
+    if _supported_extractor_names is None:
+        _load_extractor_names()
+    if not _supported_extractor_names:
         return False
-    parsed = urlparse(url)
-    path = (parsed.path or "").lower()
-    return any(path.endswith(ext) for ext in _DIRECT_MEDIA_EXTENSIONS)
+    try:
+        hostname = (urlparse(url).hostname or "").lower().removeprefix("www.")
+    except Exception:
+        return False
+
+    if hostname in _DOMAIN_ALIASES:
+        return True
+
+    parts = hostname.split(".")
+    domain = parts[-2] if len(parts) >= 2 else hostname
+    if domain in _TLD_COMPONENTS and len(parts) >= 3:
+        domain = parts[-3]
+
+    for extractor in _supported_extractor_names:
+        base = extractor.split(":")[0]
+        if base == domain:
+            return True
+        if len(domain) >= 4 and domain in base:
+            return True
+
+    return False
 
 
 def resolve_webpage_url(url: str, cookies: Optional[str] = None) -> str:
@@ -237,59 +288,16 @@ def run_ytdlp_flat_playlist(url: str, cookies: Optional[str] = None) -> List[dic
 
     if YTDLP_LOG_FILE:
         with open(YTDLP_LOG_FILE, "a") as log:
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
             log.write(f"Command: {' '.join(cmd)}\n")
             log.write(f"STDOUT:\n{result.stdout}\n")
             log.write(f"STDERR:\n{result.stderr}\n")
             log.write("-" * 80 + "\n")
     else:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
 
     if result.returncode != 0:
         raise ValueError(f"yt-dlp failed: {result.stderr}")
 
     lines = [line for line in result.stdout.strip().split("\n") if line]
     return [json.loads(line) for line in lines]
-
-
-def extract(url: str, cookies: Optional[str] = None) -> Union[str, List[str]]:
-    if not is_supported(url):
-        logger.info("Attempting to resolve direct URL redirection if any")
-        res = requests.get(url, allow_redirects=True, stream=True, timeout=15, headers=headers)
-        url = res.url
-        res.close()
-        logger.info(f"Resolved URL: {url}")
-        return url
-    
-    try:
-        if is_playlist(url):
-            result = run_ytdlp(url, as_playlist=True, cookies=cookies)
-            urls = []
-            
-            if isinstance(result, list):
-                for entry in result:
-                    try:
-                        if 'url' in entry and not entry.get('formats'):
-                            full_info = fetch_full_info(entry['url'], cookies=cookies)
-                            urls.append(get_best_format(full_info))
-                        else:
-                            urls.append(get_best_format(entry))
-                    except:
-                        continue
-            else:
-                urls.append(get_best_format(result))
-            
-            if not urls:
-                raise ValueError("No playable entries found in playlist")
-            
-            return urls
-        else:
-            info = run_ytdlp(url, as_playlist=False, cookies=cookies)
-            if isinstance(info, list):
-                info = info[0]
-            return get_best_format(info)
-            
-    except Exception as e:
-        if is_supported(url):
-            raise ValueError(f"Extraction failed for supported site: {e}")
-        return url
