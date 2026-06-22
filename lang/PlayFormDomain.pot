@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PlayForm 1.0.0\n"
 "Report-Msgid-Bugs-To: support@joybytes.dev\n"
-"POT-Creation-Date: 2026-05-26 15:47+0200\n"
+"POT-Creation-Date: 2026-06-22 16:41+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Still Standing <support@joybytes.dev>\n"
 "Language-Team: Joybytes <support@joybytes.dev>\n"
@@ -112,15 +112,17 @@ msgstr ""
 msgid "&View"
 msgstr ""
 
-msgid "&View Logsâ¦"
+msgid "&View Logs…"
 msgstr ""
 
+#, python-brace-format
 msgid "'{title}' is already open. Please close it before opening another tool."
 msgstr ""
 
 msgid "(no log files)"
 msgstr ""
 
+#, python-brace-format
 msgid "... and {count} more"
 msgstr ""
 
@@ -133,17 +135,21 @@ msgstr ""
 msgid "1 file saved."
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "<b>A new version of {app} is available!</b><br>Your version: <b>{current}</"
 "b> -> New version: <b>{new}</b>"
 msgstr ""
 
+#, python-brace-format
 msgid "<b>Bitrate:</b> {bitrate} kbps"
 msgstr ""
 
+#, python-brace-format
 msgid "<b>Codec:</b> {codec}"
 msgstr ""
 
+#, python-brace-format
 msgid "<b>Country:</b> {country}"
 msgstr ""
 
@@ -156,15 +162,19 @@ msgstr ""
 msgid "<b>Feeds</b>"
 msgstr ""
 
+#, python-brace-format
 msgid "<b>Homepage:</b> {homepage}"
 msgstr ""
 
+#, python-brace-format
 msgid "<b>Language:</b> {language}"
 msgstr ""
 
+#, python-brace-format
 msgid "<b>Name:</b> {name}"
 msgstr ""
 
+#, python-brace-format
 msgid "<b>Release files ({count}):</b>"
 msgstr ""
 
@@ -177,9 +187,11 @@ msgstr ""
 msgid "<b>Summary/Description</b>"
 msgstr ""
 
+#, python-brace-format
 msgid "<b>Tags:</b> {tags}"
 msgstr ""
 
+#, python-brace-format
 msgid "<b>Votes:</b> {votes}"
 msgstr ""
 
@@ -189,6 +201,7 @@ msgstr ""
 msgid "<em style='color: #999;'>None</em>"
 msgstr ""
 
+#, python-brace-format
 msgid "<em>... and {count} more</em>"
 msgstr ""
 
@@ -251,12 +264,15 @@ msgstr ""
 msgid "Add to playlist"
 msgstr ""
 
+#, python-brace-format
 msgid "Added '{filename}' to playlist '{playlist_name}'"
 msgstr ""
 
+#, python-brace-format
 msgid "Added '{name}' to favorites"
 msgstr ""
 
+#, python-brace-format
 msgid "Added {count} track(s) to playlist"
 msgstr ""
 
@@ -269,14 +285,17 @@ msgstr ""
 msgid "Album"
 msgstr ""
 
+#, python-brace-format
 msgid "An error occurred while saving all files: {error}"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "An error occurred:\n"
 "{error}"
 msgstr ""
 
+#, python-brace-format
 msgid "An error occurred: {message}"
 msgstr ""
 
@@ -454,6 +473,7 @@ msgstr ""
 msgid "Click already in progress"
 msgstr ""
 
+#, python-brace-format
 msgid "Click failed: {error}"
 msgstr ""
 
@@ -517,9 +537,11 @@ msgstr ""
 msgid "Convert"
 msgstr ""
 
+#, python-brace-format
 msgid "Converting file {current} of {total}: {filename}"
 msgstr ""
 
+#, python-brace-format
 msgid "Converting {count} subtitle file(s)"
 msgstr ""
 
@@ -550,6 +572,7 @@ msgstr ""
 msgid "Copyright"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Could not import playlist:\n"
 "{path}\n"
@@ -557,9 +580,11 @@ msgid ""
 "{error}"
 msgstr ""
 
+#, python-brace-format
 msgid "Could not load {file}: {error}"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Could not reach the update server:\n"
 "{error}"
@@ -582,9 +607,11 @@ msgstr ""
 msgid "Create playlist from folder"
 msgstr ""
 
+#, python-brace-format
 msgid "Created and loaded playlist '{playlist_name}' with {track_count} tracks"
 msgstr ""
 
+#, python-brace-format
 msgid "Created new playlist '{name}'"
 msgstr ""
 
@@ -630,12 +657,14 @@ msgstr ""
 msgid "Delete the selected track?"
 msgstr ""
 
+#, python-brace-format
 msgid "Delete the selected {count} tracks?"
 msgstr ""
 
 msgid "Direct Media Link"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Direct media link copied to clipboard:\n"
 "{media_url}"
@@ -691,6 +720,7 @@ msgstr ""
 msgid "Download Utilities"
 msgstr ""
 
+#, python-brace-format
 msgid "Downloaded {finished} / {expected} files..."
 msgstr ""
 
@@ -703,13 +733,15 @@ msgstr ""
 msgid "Downloading update files, please wait..."
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Downloading update files...\n"
 "  - {manifest}\n"
 "  - {archive}"
 msgstr ""
 
-msgid "Downloading {count} file(s), please waitâ¦"
+#, python-brace-format
+msgid "Downloading {count} file(s), please wait…"
 msgstr ""
 
 msgid "Downloads in Progress"
@@ -775,18 +807,22 @@ msgstr ""
 msgid "Entry data copied to clipboard"
 msgstr ""
 
+#, python-brace-format
 msgid "Entry: {title}, Published: {published}, Link: {link}"
 msgstr ""
 
 msgid "Error"
 msgstr ""
 
+#, python-brace-format
 msgid "Error converting {filename}"
 msgstr ""
 
+#, python-brace-format
 msgid "Error loading favorites: {error}"
 msgstr ""
 
+#, python-brace-format
 msgid "Error loading recents: {error}"
 msgstr ""
 
@@ -815,12 +851,6 @@ msgid "Extract Images"
 msgstr ""
 
 msgid "Extract Range"
-msgstr ""
-
-msgid "Extracted Playlist"
-msgstr ""
-
-msgid "Extracted URL"
 msgstr ""
 
 msgid "Extracting Audio..."
@@ -853,36 +883,45 @@ msgstr ""
 msgid "Failed"
 msgstr ""
 
+#, python-brace-format
 msgid "Failed to add favorite: {error}"
 msgstr ""
 
+#, python-brace-format
 msgid "Failed to add recent file: {error}"
 msgstr ""
 
+#, python-brace-format
 msgid "Failed to clear favorites: {error}"
 msgstr ""
 
+#, python-brace-format
 msgid "Failed to clear recent files: {error}"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Failed to convert {filename}:\n"
 "{message}"
 msgstr ""
 
+#, python-brace-format
 msgid "Failed to download {label}."
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Failed to extract URL:\n"
 "{error}"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Failed to install {label}:\n"
 "{msg}"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Failed to launch the updater:\n"
 "{error}"
@@ -891,6 +930,7 @@ msgstr ""
 msgid "Failed to parse feed"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Failed to read file: {path}\n"
 "Error: {error}"
@@ -899,15 +939,18 @@ msgstr ""
 msgid "Failed to refresh feed"
 msgstr ""
 
+#, python-brace-format
 msgid "Failed to remove favorite: {error}"
 msgstr ""
 
 msgid "Failed to save tags"
 msgstr ""
 
+#, python-brace-format
 msgid "Failed to save tags: {error}"
 msgstr ""
 
+#, python-brace-format
 msgid "Failed to start process: {error}"
 msgstr ""
 
@@ -917,6 +960,7 @@ msgstr ""
 msgid "Failed to take screenshot"
 msgstr ""
 
+#, python-brace-format
 msgid "Favorite Station: {name}. Country: {country}. Language: {language}."
 msgstr ""
 
@@ -941,12 +985,13 @@ msgstr ""
 msgid "Feed refreshed successfully"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Feed validation failed:\n"
 "{error}"
 msgstr ""
 
-msgid "Fetching download links from GitHubâ¦"
+msgid "Fetching download links from GitHub…"
 msgstr ""
 
 msgid "Fetching video information..."
@@ -976,6 +1021,7 @@ msgstr ""
 msgid "Filter value"
 msgstr ""
 
+#, python-brace-format
 msgid "Filtering by {filter_type}: {filter_value}..."
 msgstr ""
 
@@ -994,6 +1040,7 @@ msgstr ""
 msgid "Forward"
 msgstr ""
 
+#, python-brace-format
 msgid "Found {count} stations"
 msgstr ""
 
@@ -1021,6 +1068,7 @@ msgstr ""
 msgid "Get/Update &Utilities..."
 msgstr ""
 
+#, python-brace-format
 msgid "HTTP {status}"
 msgstr ""
 
@@ -1066,6 +1114,7 @@ msgstr ""
 msgid "Import Playlist"
 msgstr ""
 
+#, python-brace-format
 msgid "Imported playlist '{name}'"
 msgstr ""
 
@@ -1091,9 +1140,6 @@ msgid "Invalid Feed"
 msgstr ""
 
 msgid "Invalid URL"
-msgstr ""
-
-msgid "Invalid URL extraction result"
 msgstr ""
 
 msgid "Invalid VLC Arguments"
@@ -1150,21 +1196,27 @@ msgstr ""
 msgid "Load File"
 msgstr ""
 
+#, python-brace-format
 msgid "Loaded top {count} tags"
 msgstr ""
 
+#, python-brace-format
 msgid "Loaded {count} countries"
 msgstr ""
 
+#, python-brace-format
 msgid "Loaded {count} file(s) for tag editing"
 msgstr ""
 
+#, python-brace-format
 msgid "Loaded {count} languages"
 msgstr ""
 
+#, python-brace-format
 msgid "Loaded {count} subtitle events"
 msgstr ""
 
+#, python-brace-format
 msgid "Loading URL: {url}"
 msgstr ""
 
@@ -1177,12 +1229,15 @@ msgstr ""
 msgid "Loading favorites..."
 msgstr ""
 
+#, python-brace-format
 msgid "Loading playlist: {title}"
 msgstr ""
 
+#, python-brace-format
 msgid "Loading {filter_type}..."
 msgstr ""
 
+#, python-brace-format
 msgid "Loading: {filename}"
 msgstr ""
 
@@ -1195,6 +1250,7 @@ msgstr ""
 msgid "Logs Viewer"
 msgstr ""
 
+#, python-brace-format
 msgid "Logs folder: {path}"
 msgstr ""
 
@@ -1213,6 +1269,7 @@ msgstr ""
 msgid "Manual Frame Selection"
 msgstr ""
 
+#, python-brace-format
 msgid "Mark {index}: {minutes:02d}:{seconds:02d}"
 msgstr ""
 
@@ -1351,10 +1408,8 @@ msgstr ""
 msgid "No media loaded"
 msgstr ""
 
+#, python-brace-format
 msgid "No platform manifest found for '{platform}' in this release."
-msgstr ""
-
-msgid "No playable entries found in playlist"
 msgstr ""
 
 msgid "No playlist selected"
@@ -1378,12 +1433,14 @@ msgstr ""
 msgid "No results found"
 msgstr ""
 
+#, python-brace-format
 msgid "No stream URL found for {name}"
 msgstr ""
 
 msgid "No supported media files found in the selected folder"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "No supported media files were found in the selected folder:\n"
 "{folder_path}\n"
@@ -1457,6 +1514,7 @@ msgstr ""
 msgid "Open in Explorer"
 msgstr ""
 
+#, python-brace-format
 msgid "Opened {title}"
 msgstr ""
 
@@ -1505,15 +1563,21 @@ msgstr ""
 msgid "Playback Error"
 msgstr ""
 
+msgid "Player"
+msgstr ""
+
 msgid "Playing"
 msgstr ""
 
+#, python-brace-format
 msgid "Playing: {name}"
 msgstr ""
 
+#, python-brace-format
 msgid "Playlist '{name}' already exists"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Playlist '{name}' could not be found at:\n"
 "{path}\n"
@@ -1521,21 +1585,26 @@ msgid ""
 "Remove it from the playlist list?"
 msgstr ""
 
+#, python-brace-format
 msgid "Playlist '{name}' created"
 msgstr ""
 
+#, python-brace-format
 msgid "Playlist '{new_name}' already exists"
 msgstr ""
 
+#, python-brace-format
 msgid "Playlist '{new_name}' updated"
 msgstr ""
 
+#, python-brace-format
 msgid "Playlist '{playlist_name}' not found"
 msgstr ""
 
 msgid "Playlist Files (*.json *.m3u *.m3u8 *.pls *.xspf);;All Files (*)"
 msgstr ""
 
+#, python-brace-format
 msgid "Playlist from {folder_name}"
 msgstr ""
 
@@ -1635,7 +1704,7 @@ msgstr ""
 msgid "Recents"
 msgstr ""
 
-msgid "Recents & Favorites"
+msgid "Recents && Favorites"
 msgstr ""
 
 msgid "Refresh All Feeds"
@@ -1644,6 +1713,7 @@ msgstr ""
 msgid "Refresh Feed"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Refresh failed:\n"
 "{error}"
@@ -1655,6 +1725,7 @@ msgstr ""
 msgid "Refreshing feeds..."
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Refreshing:\n"
 "{url}..."
@@ -1675,6 +1746,7 @@ msgstr ""
 msgid "Remove Selected"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Remove feed:\n"
 "{url}?"
@@ -1686,12 +1758,14 @@ msgstr ""
 msgid "Remove miscellaneous events"
 msgstr ""
 
+#, python-brace-format
 msgid "Removed missing playlist '{name}'"
 msgstr ""
 
 msgid "Removed station from favorites"
 msgstr ""
 
+#, python-brace-format
 msgid "Removed {count} track(s) from playlist"
 msgstr ""
 
@@ -1721,6 +1795,7 @@ msgstr ""
 msgid "Repeat: One"
 msgstr ""
 
+#, python-brace-format
 msgid "Repeat: {state}"
 msgstr ""
 
@@ -1728,18 +1803,6 @@ msgid "Replace With:"
 msgstr ""
 
 msgid "Reset to Default"
-msgstr ""
-
-msgid "Resolving next stream..."
-msgstr ""
-
-msgid "Resolving previous stream..."
-msgstr ""
-
-msgid "Resolving stream URL: {url}"
-msgstr ""
-
-msgid "Resolving stream..."
 msgstr ""
 
 msgid "Restart Required"
@@ -1790,6 +1853,7 @@ msgstr ""
 msgid "Screenshot Format:"
 msgstr ""
 
+#, python-brace-format
 msgid "Screenshot saved: {filename}"
 msgstr ""
 
@@ -1805,6 +1869,7 @@ msgstr ""
 msgid "Search:"
 msgstr ""
 
+#, python-brace-format
 msgid "Searching for '{search_name}'..."
 msgstr ""
 
@@ -1930,12 +1995,15 @@ msgstr ""
 msgid "Show subtitles"
 msgstr ""
 
+#, python-brace-format
 msgid "Show {title}"
 msgstr ""
 
+#, python-brace-format
 msgid "Showing {count} favorite stations"
 msgstr ""
 
+#, python-brace-format
 msgid "Showing {title}"
 msgstr ""
 
@@ -1996,6 +2064,7 @@ msgstr ""
 msgid "Starting audio extraction"
 msgstr ""
 
+#, python-brace-format
 msgid "Starting batch conversion of {count} files"
 msgstr ""
 
@@ -2020,6 +2089,7 @@ msgstr ""
 msgid "Station name search"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Station: {name}. Country: {country}. Language: {language}. Tags: {tags}. "
 "Codec: {codec}. Bitrate: {bitrate}."
@@ -2029,9 +2099,6 @@ msgid "Stop Error"
 msgstr ""
 
 msgid "Stopped"
-msgstr ""
-
-msgid "Streaming URL"
 msgstr ""
 
 msgid "Style:"
@@ -2096,9 +2163,11 @@ msgstr ""
 msgid "Tag Editor"
 msgstr ""
 
+#, python-brace-format
 msgid "Tags saved for {count} file(s)"
 msgstr ""
 
+#, python-brace-format
 msgid "Tags saved for {filename}"
 msgstr ""
 
@@ -2130,12 +2199,12 @@ msgid "The VLC arguments are not valid. Please check the syntax."
 msgstr ""
 
 msgid ""
-"The documentation could not be found at:\n"
-"{path}\n"
+"The documentation could not be found.\n"
 "\n"
 "Please visit the project website for help."
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "The following tools are currently active:\n"
 "{tools}\n"
@@ -2143,12 +2212,14 @@ msgid ""
 "Closing the application will stop these processes. Do you want to continue?"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "The update has been downloaded.\n"
 "\n"
 "{app_name} needs to restart to apply it. Restart now?"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "The updater binary was not found at:\n"
 "{path}\n"
@@ -2180,6 +2251,7 @@ msgstr ""
 msgid "Thumbnail generation mode"
 msgstr ""
 
+#, python-brace-format
 msgid "Time: {time}, Speed: {speed:.2f}x"
 msgstr ""
 
@@ -2247,9 +2319,6 @@ msgstr ""
 msgid "URL extraction failed"
 msgstr ""
 
-msgid "URL resolution failed"
-msgstr ""
-
 msgid "Unknown"
 msgstr ""
 
@@ -2262,6 +2331,7 @@ msgstr ""
 msgid "Untitled"
 msgstr ""
 
+#, python-brace-format
 msgid "Update Available - {title}"
 msgstr ""
 
@@ -2331,6 +2401,7 @@ msgstr ""
 msgid "Voice Settings"
 msgstr ""
 
+#, python-brace-format
 msgid "Voice changed to {voice_name}"
 msgstr ""
 
@@ -2370,9 +2441,6 @@ msgstr ""
 msgid "copy path"
 msgstr ""
 
-msgid "debugConsoleDock"
-msgstr ""
-
 msgid "e.g., 00:01:30 or 90"
 msgstr ""
 
@@ -2400,17 +2468,22 @@ msgstr ""
 msgid "yt-dlp Settings"
 msgstr ""
 
+#, python-brace-format
 msgid "{app} is up to date (version {version})."
 msgstr ""
 
+#, python-brace-format
 msgid "{count} download(s) are still in progress."
 msgstr ""
 
+#, python-brace-format
 msgid "{count} files saved."
 msgstr ""
 
+#, python-brace-format
 msgid "{label} (Descending)"
 msgstr ""
 
+#, python-brace-format
 msgid "{title} hidden"
 msgstr ""
