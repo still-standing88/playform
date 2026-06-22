@@ -87,6 +87,23 @@ def translate_creat(c, language):
 
 
 @task
+def build_docs(c, langs=None):
+    """Compile Markdown documentation to HTML.
+    
+    Reads docs/source/<lang>/*.md and outputs HTML to docs/build/<lang>/.
+    
+    Args:
+        langs: Comma-separated language codes (e.g. 'en,fr').
+               If omitted, all subdirectories under docs/source/ are processed.
+    """
+    cmd = f'"{sys.executable}" "{SCRIPTS_DIR / "compile_docs.py"}"'
+    if langs:
+        for lang in langs.split(","):
+            cmd += f" {lang.strip()}"
+    c.run(cmd, pty=False, in_stream=False)
+
+
+@task
 def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_VERSION, compiler=None):
     plat = _detect_plat(target_platform)
 
@@ -120,10 +137,12 @@ def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_
     _copy_dir(ROOT_DIR / "bin",  app_dist_dir / "bin")
     _copy_dir(ROOT_DIR / "lib",  app_dist_dir / "lib")
 
+    build_docs(c)
     docs_build = ROOT_DIR / "docs" / "build"
     if docs_build.exists():
-        shutil.copytree(str(docs_build), str(app_dist_dir / "docs"), dirs_exist_ok=True)
-        print(f"Copied docs/build -> {app_dist_dir / 'docs'}")
+        docs_dist = app_dist_dir / "docs"
+        shutil.copytree(str(docs_build), str(docs_dist), dirs_exist_ok=True)
+        print(f"Copied docs/build -> {docs_dist}")
 
 
 @task
@@ -171,6 +190,7 @@ namespace.add_task(run_app)
 namespace.add_task(translate_gen)
 namespace.add_task(translate_compile)
 namespace.add_task(translate_creat)
+namespace.add_task(build_docs)
 namespace.add_task(compile)
 namespace.add_task(bundle)
 namespace.add_task(release)
