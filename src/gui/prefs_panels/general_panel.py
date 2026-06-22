@@ -30,8 +30,10 @@ class GeneralPanel(QWidget):
         
     def load_settings(self, prefs):
         self._loaded_language = prefs["language"]
-        if prefs["language"].upper() in app_languages:
-            self.language_combo.setCurrentText(prefs["language"].upper())
+        for i in range(self.language_combo.count()):
+            if self.language_combo.itemText(i).lower().startswith(prefs["language"]):
+                self.language_combo.setCurrentIndex(i)
+                break
         
         if prefs["image_format"] in screenshot_formats:
             self.screenshot_format_combo.setCurrentText(prefs["image_format"])
@@ -41,7 +43,7 @@ class GeneralPanel(QWidget):
         self.save_urls_check.setChecked(prefs["save_urls"])
         
     def save_settings(self, prefs):
-        selected_language = self.language_combo.currentText().lower()
+        selected_language = self.language_combo.currentText()[:2].lower()
         language_changed = selected_language != self._loaded_language
 
         prefs["language"] = selected_language

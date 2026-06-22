@@ -70,4 +70,4 @@ video_scales = [
 ]
 
 screenshot_formats = ["jpg", "png", "tiff"]
-app_languages = ["EN", "FR", "AR", "ES"]
+app_languages = ["EN - English", "FR - French", "AR - Arabic", "ES - Spanish"]

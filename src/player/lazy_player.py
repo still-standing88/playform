@@ -105,9 +105,6 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
 
         self._reset_resolution_state(len(playlist))
 
-        names = [os.path.basename(e.location) for e in playlist.entries]
-        print(f"[TRACE] lazy.load_playlist: title={playlist.title} start_index={start_index} total={len(names)} first3={names[:3]}")
-
         for idx, entry in enumerate(playlist.entries):
             location = entry.location or ""
             self._webpage_urls.append(location)
@@ -228,7 +225,6 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
                     self._current_playlist.entries[idx].location = streaming
 
         av_play.VLCVideoPlayer._play_playlist_track(self)
-        print(f"[TRACE] lazy._play: index={self._current_playlist_index} location={self._current_playlist.entries[self._current_playlist_index].location[:80] if self._current_playlist else '?'}")
         self._schedule_preload_ahead(self._current_playlist_index)
 
     def _ensure_resolved_blocking(self, index: int) -> bool:

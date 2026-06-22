@@ -647,7 +647,6 @@ class PlayerWidget(QWidget):
             if state == av_play.AVPlaybackState.AV_STATE_NOTHING and self._last_known_state == av_play.AVPlaybackState.AV_STATE_PLAYING:
                 self._last_known_state = state
                 if not self._loading:
-                    print(f"[TRACE] widget._update_player_state: track ended, calling player.next() current_index={self.player.get_current_track_index()}")
                     self.player.next()
                 self._load_subtitles_for_current_track()
                 self.filters_widget.reset_filters()
@@ -763,9 +762,6 @@ class PlayerWidget(QWidget):
                 if media_file == file_path:
                     start_index = i
 
-            names = [os.path.basename(e.location) for e in playlist.entries]
-            print(f"[TRACE] widget.load_file: file={os.path.basename(file_path)} start_index={start_index} total={len(names)} first3={names[:3]}")
-
             self.load_playlist(playlist, start_index=start_index)
             self.player_controls.set_current_track(os.path.basename(file_path))
             self.player_controls.load_last_position()
@@ -775,7 +771,6 @@ class PlayerWidget(QWidget):
             self._reset_ui_to_default()
 
     def load_url(self, url: str):
-        print(f"[TRACE] widget.load_url: url={url}")
         signal_manager.statusbar_message.emit(_("Loading URL: {url}").format(url=url))
         try:
             self.player.load_url(url)
@@ -792,8 +787,6 @@ class PlayerWidget(QWidget):
                 title=playlist.title or _("Untitled")
             )
         )
-        names = [os.path.basename(e.location) for e in playlist.entries]
-        print(f"[TRACE] widget.load_playlist: title={playlist.title} start_index={start_index} total={len(names)} first3={names[:3]}")
         try:
             if self.player.primary_instance is not None:
                 try:
@@ -837,14 +830,12 @@ class PlayerWidget(QWidget):
         
     @Slot()
     def _on_url_extraction_started(self):
-        logger.info("URL extraction started, showing loading message")
         self.video_display.show_loading(_("Extracting URL..."))
         self.player_controls.set_controls_enabled(False)
         signal_manager.statusbar_message.emit(_("Extracting URL..."))
 
     @Slot(object)
     def _on_url_extraction_complete(self, _result):
-        logger.info("URL extraction completed")
         self.video_display.hide_loading()
         self.player_controls.set_controls_enabled(True)
         self._load_subtitles_for_current_track()

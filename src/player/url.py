@@ -261,7 +261,6 @@ def is_url_supported(url: str) -> bool:
 
 
 def resolve_webpage_url(url: str, cookies: Optional[str] = None) -> str:
-    print(f"[TRACE] url.resolve_webpage_url: yt-dlp={YTDLP_PATH} url={url[:80]}")
     info = run_ytdlp(url, as_playlist=False, cookies=cookies)
     if isinstance(info, list):
         info = info[0]
@@ -271,7 +270,6 @@ def resolve_webpage_url(url: str, cookies: Optional[str] = None) -> str:
 def run_ytdlp_flat_playlist(url: str, cookies: Optional[str] = None) -> List[dict]:
     from app_config import prefs
 
-    print(f"[TRACE] url.run_ytdlp_flat: yt-dlp={YTDLP_PATH} url={url[:80]}")
     cmd = [YTDLP_PATH, "--flat-playlist", "--dump-json"] + _get_deno_arg()
 
     if cookies:
