@@ -1,14 +1,16 @@
---only-binary=:all:
+--only-binary=AppGuard,cchardet,SpeechCore
+
 PySide6==6.10.2
 PySide6_Addons==6.10.2
 PySide6_Essentials==6.10.2
+
 shiboken6==6.10.2
 QDarkStyle==3.2.3
 
 AVPlay
 python-ffmpeg==2.0.12
-pyffmpeg==2.4.3
-music-tag==0.4.3
+pyffmpeg
+music-tag
 mutagen==1.47.0
 pysubs2
 pycaption
@@ -57,3 +59,5 @@ AppGuard==1.0.2
 ordered-set==4.1.0
 patool==4.0.1
 pyee==13.0.0
+peewee
+peewee[aiosqlite]
