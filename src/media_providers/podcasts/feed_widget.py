@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QMenu, QMessageBox, QInputDialog, QProgressDialog, QHeaderView, QApplication
 )
 from PySide6.QtCore import Qt, QUrl, Signal
-from PySide6.QtGui import QAction, QShortcut, QKeySequence, QDesktopServices
+from PySide6.QtGui import QAction, QDesktopServices
 
 from urllib.parse import urlparse
 from datetime import datetime
@@ -123,20 +123,6 @@ class FeedWidget(QWidget):
         splitter.setStretchFactor(1, 3)
         
         main_layout.addWidget(splitter)
-        
-        self._shortcuts = []
-        shortcuts = [
-            (Qt.Key.Key_Up, self.select_prev_entry),
-            (Qt.Key.Key_Down, self.select_next_entry),
-            (Qt.Key.Key_PageUp, self.select_page_up),
-            (Qt.Key.Key_PageDown, self.select_page_down),
-            (Qt.Key.Key_Home, self.select_first_entry),
-            (Qt.Key.Key_End, self.select_last_entry),
-        ]
-        for key, handler in shortcuts:
-            sc = QShortcut(QKeySequence(key), self)
-            sc.activated.connect(handler)
-            self._shortcuts.append(sc)
 
     def validate_url(self, url):
         try:
@@ -650,58 +636,3 @@ class FeedWidget(QWidget):
             if isinstance(value, list) and value:
                 value = value[0].get('name', str(value[0])) if isinstance(value[0], dict) else str(value[0])
             QApplication.clipboard().setText(str(value))
-
-    def select_next_entry(self):
-        current = self.entry_tree.currentItem()
-        if current:
-            index = self.entry_tree.indexOfTopLevelItem(current)
-            if index < self.entry_tree.topLevelItemCount() - 1:
-                item = self.entry_tree.topLevelItem(index + 1)
-                if item:
-                    self.entry_tree.setCurrentItem(item)
-
-    def select_prev_entry(self):
-        current = self.entry_tree.currentItem()
-        if current:
-            index = self.entry_tree.indexOfTopLevelItem(current)
-            if index > 0:
-                item = self.entry_tree.topLevelItem(index - 1)
-                if item:
-                    self.entry_tree.setCurrentItem(item)
-
-    def select_page_down(self):
-        current = self.entry_tree.currentItem()
-        if current:
-            index = self.entry_tree.indexOfTopLevelItem(current)
-            viewport_height = self.entry_tree.viewport().height()
-            row_height = self.entry_tree.sizeHintForRow(0) if self.entry_tree.topLevelItemCount() > 0 else 20
-            visible_rows = max(1, viewport_height // max(1, row_height))
-            new_index = min(index + visible_rows, self.entry_tree.topLevelItemCount() - 1)
-            item = self.entry_tree.topLevelItem(new_index)
-            if item:
-                self.entry_tree.setCurrentItem(item)
-
-    def select_page_up(self):
-        current = self.entry_tree.currentItem()
-        if current:
-            index = self.entry_tree.indexOfTopLevelItem(current)
-            viewport_height = self.entry_tree.viewport().height()
-            row_height = self.entry_tree.sizeHintForRow(0) if self.entry_tree.topLevelItemCount() > 0 else 20
-            visible_rows = max(1, viewport_height // max(1, row_height))
-            new_index = max(index - visible_rows, 0)
-            item = self.entry_tree.topLevelItem(new_index)
-            if item:
-                self.entry_tree.setCurrentItem(item)
-
-    def select_first_entry(self):
-        if self.entry_tree.topLevelItemCount() > 0:
-            item = self.entry_tree.topLevelItem(0)
-            if item:
-                self.entry_tree.setCurrentItem(item)
-
-    def select_last_entry(self):
-        count = self.entry_tree.topLevelItemCount()
-        if count > 0:
-            item = self.entry_tree.topLevelItem(count - 1)
-            if item:
-                self.entry_tree.setCurrentItem(item)
