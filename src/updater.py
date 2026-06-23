@@ -384,33 +384,34 @@ def update(temp_dir, zip_filename, install_dir=None):
                 logger.close()
                 return False
             logger.success(f"Signature verified: {file_entry['path']}")
-        
-        if file_path.resolve() == current_updater or file_path.name == current_updater.name:
-            updater_file = file_path
-            logger.info(f"Detected updater file: {file_entry['path']}")
-    
+
     logger.info("All files validated successfully")
-    logger.info("Beginning file replacement...")
-    
-    for file_entry in manifest['files']:
-        file_path = extract_path / file_entry['path']
-        dest_path = install_dir / file_entry['path']
-        
-        if file_path == updater_file:
-            logger.info(f"Skipping updater (will replace later): {file_entry['path']}")
-            continue
-        
-        dest_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        try:
-            shutil.copy2(file_path, dest_path)
-            logger.success(f"Replaced: {file_entry['path']}")
-        except Exception as e:
-            logger.error(f"Failed to replace {file_entry['path']}: {e}")
-            logger.close()
-            return False
-    
-    logger.success("All files replaced successfully")
+    logger.info("Replacing all application files...")
+
+    current_updater_name = current_updater.name
+    replaced_count = 0
+
+    for root, dirs, filenames in os.walk(extract_path):
+        for filename in filenames:
+            src_file = Path(root) / filename
+            rel = src_file.relative_to(extract_path)
+            dest_file = install_dir / rel
+
+            if filename == current_updater_name and src_file.resolve() != current_updater:
+                updater_file = src_file
+                logger.info(f"Detected new updater: {rel}")
+                continue
+
+            dest_file.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                shutil.copy2(src_file, dest_file)
+                replaced_count += 1
+            except Exception as e:
+                logger.error(f"Failed to replace {rel}: {e}")
+                logger.close()
+                return False
+
+    logger.success(f"Replaced {replaced_count} files")
     
     if updater_file:
         replace_self_and_restart(logger, updater_file, str(current_updater))
