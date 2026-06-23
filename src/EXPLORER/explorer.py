@@ -183,7 +183,3 @@ class Explorer:
             rev = self._sort_mode == "name_desc"
             self.folders.sort(key=lambda x: x.lower(), reverse=rev)
             self.files.sort(key=lambda x: x.lower(), reverse=rev)
-
-        if self._current_path != "drives" and self.files:
-            f3 = self.files[:3]
-            print(f"[TRACE] explorer: dir={os.path.basename(self._current_path)} sort={self._sort_mode} total={len(self.files)} first3={f3}")

@@ -28,7 +28,4 @@ def get_media_files_from_directory(directory: str, audio_formats: list, video_fo
     except (FileNotFoundError, PermissionError):
         pass
 
-    if media_files:
-        names = [os.path.basename(f) for f in media_files]
-        print(f"[TRACE] media_utils: dir={os.path.basename(directory)} total={len(names)} first={names[0]} last={names[-1]}")
     return media_files
