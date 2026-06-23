@@ -160,7 +160,7 @@ def bundle(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_V
     dist.sign(c, binary=str(updater_bin), key=private_key, output=str(updater_bin) + ".sig")
 
     archive_name = BIN_DIR / f"{app_name}-{version}-{plat}"
-    shutil.make_archive(str(archive_name), "zip", root_dir=str(BIN_DIR), base_dir=app_dist_dir.name)
+    shutil.make_archive(str(archive_name), "zip", root_dir=str(app_dist_dir), base_dir=".")
     print(f"Packed {app_dist_dir.name} -> {archive_name}.zip")
 
 

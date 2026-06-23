@@ -23,6 +23,7 @@ class SystemTrayIcon:
 
         app_name = os.environ.get("APP_NAME", "PlayForm")
         self.tray_icon.setToolTip(app_name)
+        self.app_name = app_name
         
         tray_menu = QMenu()
         
@@ -47,7 +48,7 @@ class SystemTrayIcon:
                 self.show_hide_action.setText(_("Show"))
             if hasattr(self.tray_icon, 'showMessage'):
                 self.tray_icon.showMessage(
-                    app_name,
+                    self.app_name,
                     _("Application was minimized to tray"),
                     QSystemTrayIcon.MessageIcon.Information,
                     2000
