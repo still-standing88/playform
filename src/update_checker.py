@@ -23,6 +23,17 @@ def _current_platform() -> str:
     return "macos" if system_name == "darwin" else ("windows" if system_name == "windows" else "linux")
 
 
+def _current_arch() -> str:
+    machine = _platform_mod.machine().lower()
+    if machine in ("amd64", "x86_64"):
+        return "x64"
+    elif machine in ("arm64", "aarch64"):
+        return "arm64"
+    elif machine in ("i386", "i686", "x86"):
+        return "x86"
+    return machine if machine else "unknown"
+
+
 def _strip_v(tag: str) -> str:
     return tag.lstrip("vV")
 
@@ -187,6 +198,7 @@ class UpdateChecker(QObject):
         self._repo = os.environ.get("APP_GITHUB_REPO", "")
         self._version = os.environ.get("APP_VERSION", "0.0.0")
         self._platform = _current_platform()
+        self._arch = _current_arch()
         self._parent_widget: QWidget | None = parent
 
         self._nam = QNetworkAccessManager(self)
@@ -314,7 +326,7 @@ class UpdateChecker(QObject):
             )
             return
 
-        manifest_name = f"{self._platform}-manifest.json"
+        manifest_name = f"{self._platform}-{self._arch}-manifest.json"
         manifest_asset = next((a for a in assets if a["name"] == manifest_name), None)
         if manifest_asset is None:
             QMessageBox.warning(
