@@ -1060,4 +1060,17 @@ class MainWindow(QMainWindow):
 
 
     def cli_load_file(self, ipc_msg_data:dict[str, str]):
-        self.play_file(ipc_msg_data["msg_data"])
+        path = ipc_msg_data.get("msg_data", "")
+        if path:
+            self.load_external_path(path)
+
+    def load_external_path(self, path: str):
+        import av_play
+        if av_play.is_url(path):
+            self.play_url(path)
+        elif os.path.isdir(path):
+            self.load_folder_as_playlist(path)
+        elif os.path.isfile(path):
+            self.play_file(path)
+        else:
+            signal_manager.statusbar_message.emit(_("Unrecognized path: {path}").format(path=path))

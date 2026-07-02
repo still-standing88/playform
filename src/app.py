@@ -31,6 +31,7 @@ def main():
             initialize_app_guard,
             initialize_modules,
             create_main_window,
+            start_local_server,
             setup_ipc_handlers,
             setup_cleanup
         )
@@ -45,6 +46,7 @@ def main():
             sys.exit(0)
         app_db, key_config = initialize_modules(splash)
         window = create_main_window(splash, cli_args)
+        start_local_server(window)
         setup_ipc_handlers(app_instance, window)
         key_config.initialize(window.global_hotkeys)
         setup_cleanup(app, app_instance, app_db)
