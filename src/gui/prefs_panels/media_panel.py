@@ -24,11 +24,18 @@ class MediaPanel(QWidget):
     def load_settings(self, prefs):
         self.volume_offset_spin.setValue(prefs["offset"]["volume"])
         self.seek_offset_spin.setValue(prefs["offset"]["seek"])
-        
-        if len(self.audio_devices) > 0 and prefs["device"] < len(self.audio_devices):
-            self.audio_device_combo.setCurrentIndex(prefs["device"])
-            
+
+        if len(self.audio_devices) > 0:
+            saved_name = prefs.get("device_name", "")
+            if saved_name and saved_name in self.audio_devices:
+                self.audio_device_combo.setCurrentIndex(self.audio_devices.index(saved_name))
+            elif prefs.get("device", 0) < len(self.audio_devices):
+                self.audio_device_combo.setCurrentIndex(prefs["device"])
+
     def save_settings(self, prefs):
         prefs["offset"]["volume"] = self.volume_offset_spin.value()
         prefs["offset"]["seek"] = self.seek_offset_spin.value()
-        prefs["device"] = self.audio_device_combo.currentIndex()
+        idx = self.audio_device_combo.currentIndex()
+        prefs["device"] = idx
+        if 0 <= idx < len(self.audio_devices):
+            prefs["device_name"] = self.audio_devices[idx]

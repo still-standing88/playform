@@ -15,6 +15,7 @@ prefs = {
 "yt-dlp_verbose_output": False,
 "last_path": "",
 "device": 0,
+"device_name": "",
 "default path": "",
 "ffmpeg_binary": "",
 "ffmpeg_path": os.path.join(get_parent_dir(), "bin"),

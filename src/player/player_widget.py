@@ -1,4 +1,5 @@
 import os
+import sys
 import datetime as dt
 import time
 import logging
@@ -112,18 +113,47 @@ class PlayerWidget(QWidget):
             ])
 
         try:
+            device_name = prefs.prefs.get("device_name", "")
+            device_id = None
+            if device_name and sys.platform.startswith("win"):
+                try:
+                    import vlc as _vlc
+                    tmp = _vlc.Instance(["--intf", "dummy"])
+                    head = tmp.audio_output_device_list_get("mmdevice")
+                    if head:
+                        cur = head
+                        while cur:
+                            cur = cur.contents
+                            if cur.description.decode('utf-8', errors='ignore') == device_name:
+                                device_id = cur.device.decode('utf-8', errors='ignore')
+                                break
+                            cur = cur.next
+                        _vlc.libvlc_audio_output_device_list_release(head)
+                    tmp.release()
+                except Exception:
+                    pass
+
             try:
                 extra_args = parse_vlc_args(prefs.prefs.get("vlc_args", ""))
-                self.player.init(vlc_args=vlc_args+extra_args)
+                self.player.init(vlc_args=vlc_args+extra_args, device_id=device_id)
             except:
-                self.player.init(vlc_args=vlc_args)
+                self.player.init(vlc_args=vlc_args, device_id=device_id)
             self.player.set_window(self.video_display.winId())
             self.player.set_auto_play(prefs.prefs["autoplay"]) 
             self.player.set_track_end_callback(self._update_current_track)
             self.filters_widget.set_player(self.player)
-            device = prefs.prefs.get("device", 0)
-            if device < self.player.get_devices():
-                self.player.set_device(device)
+            device_name = prefs.prefs.get("device_name", "")
+            if device_name:
+                device_count = self.player.get_devices()
+                for i in range(device_count):
+                    device_info = self.player.get_device(i)
+                    if device_info and device_info.name == device_name:
+                        self.player.set_device(i)
+                        break
+            else:
+                device = prefs.prefs.get("device", 0)
+                if device < self.player.get_devices():
+                    self.player.set_device(device)
 
 
             rm = prefs.prefs.get("repeat_mode", 0)

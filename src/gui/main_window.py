@@ -66,6 +66,7 @@ from utilities.functions import get_restart_flag
 
 
 
+
 class MainWindow(QMainWindow):
     fileOpened = Signal(str)
     urlOpened = Signal(str)
@@ -791,28 +792,41 @@ class MainWindow(QMainWindow):
         dlg = LogsViewerDialog(self)
         dlg.exec()
         
-    def apply_audio_device(self, device_index):
+    def _find_device_index(self, player, device_name: str) -> int:
+        if not device_name:
+            return -1
+        try:
+            device_count = player.get_devices()
+            for i in range(device_count):
+                device_info = player.get_device(i)
+                if device_info and device_info.name == device_name:
+                    return i
+        except Exception:
+            pass
+        return -1
+
+    def apply_audio_device(self, device_name: str):
 
         try:
 
             if hasattr(self.player_widget, 'player') and self.player_widget.player:
 
-                device_count = self.player_widget.player.get_devices()
-                if device_index < device_count:
-                    self.player_widget.player.set_device(device_index)
+                idx = self._find_device_index(self.player_widget.player, device_name)
+                if idx >= 0:
+                    self.player_widget.player.set_device(idx)
         except Exception as e:
             pass
-        
+
         try:
 
             if hasattr(self.explorer_widget, '_player') and self.explorer_widget._player:
 
-                device_count = self.explorer_widget._player.get_devices()
-                if device_index < device_count:
-                    self.explorer_widget._player.set_device(device_index)
+                idx = self._find_device_index(self.explorer_widget._player, device_name)
+                if idx >= 0:
+                    self.explorer_widget._player.set_device(idx)
         except Exception as e:
             pass
-    
+
     def open_preferences(self):
 
         audio_devices = []
@@ -826,7 +840,7 @@ class MainWindow(QMainWindow):
                         audio_devices.append(device_info.name)
         except Exception:
             pass
-        
+
         dialog = PreferencesDialog(self, audio_devices, self.apply_audio_device)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             signal_manager.statusbar_message.emit(_("Preferences saved"))

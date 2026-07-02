@@ -114,7 +114,7 @@ class PreferencesDialog(QDialog):
         reinit_ytdlp_settings()
         
         if self.audio_device_callback:
-            self.audio_device_callback(prefs.prefs["device"])
+            self.audio_device_callback(prefs.prefs.get("device_name", ""))
         
         self.preferences_saved.emit(prefs.prefs.copy())
         return restart_requested

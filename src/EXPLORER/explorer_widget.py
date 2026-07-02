@@ -1,3 +1,5 @@
+import os
+import sys
 from PySide6.QtWidgets import (
     QWidget, QFrame, QVBoxLayout, QHBoxLayout, QTreeView, QPushButton, 
     QTextEdit, QListWidget, QCheckBox, QSpinBox, QLabel, 
@@ -64,13 +66,42 @@ class ExplorerWidget(QWidget):
                 "--verbose", str(int(get_debug_level()))
             ])
 
+        device_name = prefs.prefs.get("device_name", "")
+        device_id = None
+        if device_name and sys.platform.startswith("win"):
+            try:
+                import vlc as _vlc
+                tmp = _vlc.Instance(["--intf", "dummy"])
+                head = tmp.audio_output_device_list_get("mmdevice")
+                if head:
+                    cur = head
+                    while cur:
+                        cur = cur.contents
+                        if cur.description.decode('utf-8', errors='ignore') == device_name:
+                            device_id = cur.device.decode('utf-8', errors='ignore')
+                            break
+                        cur = cur.next
+                    _vlc.libvlc_audio_output_device_list_release(head)
+                tmp.release()
+            except Exception:
+                pass
+
         self._setup_ui()
-        self._player.init(vlc_args = vlc_args)
+        self._player.init(vlc_args=vlc_args, device_id=device_id)
         self._player.set_window(self.video_widget.winId())
         
-        device = prefs.prefs.get("device", 0)
-        if device < self._player.get_devices():
-            self._player.set_device(device)
+        device_name = prefs.prefs.get("device_name", "")
+        if device_name:
+            device_count = self._player.get_devices()
+            for i in range(device_count):
+                device_info = self._player.get_device(i)
+                if device_info and device_info.name == device_name:
+                    self._player.set_device(i)
+                    break
+        else:
+            device = prefs.prefs.get("device", 0)
+            if device < self._player.get_devices():
+                self._player.set_device(device)
 
 
     def _setup_ui(self):
