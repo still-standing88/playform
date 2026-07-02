@@ -678,7 +678,7 @@ class PlayerWidget(QWidget):
             if state == av_play.AVPlaybackState.AV_STATE_NOTHING and self._last_known_state == av_play.AVPlaybackState.AV_STATE_PLAYING:
                 self._last_known_state = state
                 if not self._loading:
-                    self.player.next()
+                    pass #self.player.next()
                 self._load_subtitles_for_current_track()
                 self.filters_widget.reset_filters()
                 self._update_current_file()
@@ -836,8 +836,8 @@ class PlayerWidget(QWidget):
                     pass
             self.player.stop_playlist()
             self._loading = True
-            self.player.load_playlist(playlist, auto_play=False, start_index = start_index)
-            self.player._play_playlist_track()
+            self.player.load_playlist(playlist, auto_play=True, start_index = start_index)
+            #self.player._play_playlist_track()
             self._load_subtitles_for_current_track()
             self._update_current_file()
             self._update_player_state()

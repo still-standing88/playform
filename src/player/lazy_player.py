@@ -158,8 +158,7 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
                         title=entry.get("title"),
                     )
                 )
-            self.load_playlist(playlist, auto_play=False, start_index=0)
-            self._play_playlist_track()
+            self.load_playlist(playlist, auto_play=True, start_index=0)
             self.signals.extraction_complete.emit(playlist)
         except Exception as e:
             logger.error(f"Failed to build playlist from extraction: {e}")
