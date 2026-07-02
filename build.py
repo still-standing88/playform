@@ -7,7 +7,7 @@ from invoke_config import *
 
 
 APP_NAME        = "PlayForm"
-APP_VERSION     = "1.0.0"
+APP_VERSION     = "1.0.1"
 APP_PUBLISHER   = "JoyBytes"
 APP_DESCRIPTION = "PlayForm Media Player"
 APP_COPYRIGHT   = f"Copyright (c) 2026 {APP_PUBLISHER}"
