@@ -43,7 +43,7 @@ video_resolutions = {
     "X1920-1080": {"width": 1920, "height": 1080},
 }
 
-video_speeds = [1.0,1.5,2.0,2.5,3]
+video_speeds = [0.25, 0.50, 0.75, 1.0,1.25, 1.5,1.75,2.0,2.5,3.0]
 
 video_aspect_ratios = [
     "16:9",
