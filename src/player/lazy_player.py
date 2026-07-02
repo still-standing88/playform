@@ -13,6 +13,7 @@ from .url import (
     is_url_supported,
     resolve_webpage_url,
     run_ytdlp_flat_playlist,
+    run_ytdlp,
     has_playlist_param,
     is_playlist,
 )
@@ -324,7 +325,14 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
 
     def _fetch_webpage_playlist(self, url: str) -> dict:
         if not is_playlist(url) and not has_playlist_param(url):
-            return {"title": "Extracted URL", "entries": [{"location": url}]}
+            try:
+                info = run_ytdlp(url, as_playlist=False)
+                if isinstance(info, list):
+                    info = info[0]
+                title = info.get("title") or info.get("webpage_url") or url
+                return {"title": title, "entries": [{"location": url, "title": title}]}
+            except Exception:
+                return {"title": url, "entries": [{"location": url, "title": url}]}
 
         flat_entries = run_ytdlp_flat_playlist(url)
         entries = []

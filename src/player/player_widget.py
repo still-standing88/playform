@@ -656,7 +656,8 @@ class PlayerWidget(QWidget):
             try:
                 entry = self.player.current_playlist.get_entry(index)
                 if entry:
-                    self.player_controls.set_current_track(os.path.basename(entry.location))
+                    track_name = entry.title or os.path.basename(entry.location)
+                    self.player_controls.set_current_track(track_name)
                     self._load_subtitles_for_current_track()
                     self.filters_widget.reset_filters()
             except av_play.AVError:
@@ -688,7 +689,15 @@ class PlayerWidget(QWidget):
             self.player_controls.set_play_pause_state(state == av_play.AVPlaybackState.AV_STATE_PLAYING)
             self.player_controls.set_mute_state(instance.get_mute_state() == av_play.AVMuteState.AV_AUDIO_MUTED)
             self.player_controls.set_volume(int(instance.get_volume()))
-            self.player_controls.set_current_track(os.path.basename(instance.file_path))
+            track_name = os.path.basename(instance.file_path)
+            if self.player.current_playlist is not None:
+                try:
+                    entry = self.player.current_playlist.get_entry(self.player._current_playlist_index)
+                    if entry and entry.title:
+                        track_name = entry.title
+                except Exception:
+                    pass
+            self.player_controls.set_current_track(track_name)
             
             if length > 0:
                 self.player_controls.set_controls_enabled(True)
