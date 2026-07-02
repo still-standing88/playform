@@ -787,9 +787,10 @@ class PlayerWidget(QWidget):
             
             playlist = av_play.Playlist(title=os.path.basename(dir_path))
             start_index = 0
+            norm_file_path = os.path.normpath(file_path)
             for i, media_file in enumerate(media_files):
                 playlist.add_entry(av_play.PlaylistEntry(location=media_file, title=os.path.basename(media_file)))
-                if media_file == file_path:
+                if os.path.normpath(media_file) == norm_file_path:
                     start_index = i
 
             self.load_playlist(playlist, start_index=start_index)

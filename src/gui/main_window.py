@@ -362,7 +362,7 @@ class MainWindow(QMainWindow):
             self, _("Open Media File"), "", file_filter
         )
         if file_path:
-            self.play_file(file_path)
+            self.play_file(os.path.normpath(file_path))
     
     def open_folder_dialog(self):
         folder_path = QFileDialog.getExistingDirectory(
