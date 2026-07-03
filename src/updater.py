@@ -390,6 +390,27 @@ def update(temp_dir, zip_filename, install_dir=None):
 
     current_updater_name = current_updater.name
     replaced_count = 0
+    pending_del_files: list[Path] = []
+
+    def _safe_replace(src: Path, dest: Path) -> bool:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.copy2(str(src), str(dest))
+            return True
+        except OSError:
+            if sys.platform != "win32" or not dest.exists():
+                raise
+            try:
+                import ctypes
+                old = dest.with_suffix(dest.suffix + ".old")
+                os.replace(str(dest), str(old))
+                shutil.copy2(str(src), str(dest))
+                MOVEFILE_DELAY_UNTIL_REBOOT = 0x4
+                ctypes.windll.kernel32.MoveFileExW(str(old), None, MOVEFILE_DELAY_UNTIL_REBOOT)
+                pending_del_files.append(old)
+                return True
+            except Exception:
+                raise
 
     for root, dirs, filenames in os.walk(extract_path):
         for filename in filenames:
@@ -402,14 +423,16 @@ def update(temp_dir, zip_filename, install_dir=None):
                 logger.info(f"Detected new updater: {rel}")
                 continue
 
-            dest_file.parent.mkdir(parents=True, exist_ok=True)
             try:
-                shutil.copy2(src_file, dest_file)
+                _safe_replace(src_file, dest_file)
                 replaced_count += 1
             except Exception as e:
                 logger.error(f"Failed to replace {rel}: {e}")
                 logger.close()
                 return False
+
+    if pending_del_files:
+        logger.info(f"Scheduled {len(pending_del_files)} locked file(s) for cleanup on reboot")
 
     logger.success(f"Replaced {replaced_count} files")
     

@@ -133,6 +133,18 @@ def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_
     else:
         print(f"[warn] updater.dist not found after compile: {updater_dist}")
 
+    for stale in app_dist_dir.glob("*.crc32"):
+        stale.unlink()
+    for stale in app_dist_dir.glob("*.sha256"):
+        stale.unlink()
+    for stale in app_dist_dir.glob("*.sha512"):
+        stale.unlink()
+    for stale in app_dist_dir.glob("*.sig"):
+        stale.unlink()
+    for stale in app_dist_dir.glob("*-manifest.json"):
+        stale.unlink()
+        print(f"Removed stale manifest: {stale.name}")
+
     _sync_translation_files(app_dist_dir)
     _copy_dir(ROOT_DIR / "bin",  app_dist_dir / "bin")
     _copy_dir(ROOT_DIR / "lib",  app_dist_dir / "lib")
@@ -143,25 +155,6 @@ def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_
         docs_dist = app_dist_dir / "docs"
         shutil.copytree(str(docs_build), str(docs_dist), dirs_exist_ok=True)
         print(f"Copied docs/build -> {docs_dist}")
-
-
-@task
-def bundle(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_VERSION, key=None):
-    plat = _detect_plat(target_platform)
-    app_dist_dir = _app_dist_dir(plat)
-    private_key = key or str(ROOT_DIR / "private_key.pem")
-
-    _sync_translation_files(app_dist_dir)
-
-    app_bin     = app_dist_dir / _binary_name(app_name, plat)
-    updater_bin = app_dist_dir / _binary_name("updater", plat)
-
-    dist.sign(c, binary=str(app_bin),     key=private_key, output=str(app_bin)     + ".sig")
-    dist.sign(c, binary=str(updater_bin), key=private_key, output=str(updater_bin) + ".sig")
-
-    archive_name = BIN_DIR / f"{app_name}-{version}-{plat}"
-    shutil.make_archive(str(archive_name), "zip", root_dir=str(app_dist_dir), base_dir=".")
-    print(f"Packed {app_dist_dir.name} -> {archive_name}.zip")
 
 
 @task
@@ -180,6 +173,21 @@ def release(c, version=build.APP_VERSION, target_platform=None, app_name=build.A
     dist.sign(c, binary=str(updater_bin), key=private_key, output=str(updater_bin) + ".sig")
 
     dist.manifest(c, folder=str(app_dist_dir), version=version)
+
+
+@task
+def bundle(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_VERSION):
+    plat = _detect_plat(target_platform)
+    app_dist_dir = _app_dist_dir(plat)
+
+    _sync_translation_files(app_dist_dir)
+
+    if not (app_dist_dir / f"{app_name}-{version}-{plat}").exists():
+        print(f"[warn] No .sig files found in {app_dist_dir}. Run 'inv release' first.")
+
+    archive_name = BIN_DIR / f"{app_name}-{version}-{plat}"
+    shutil.make_archive(str(archive_name), "zip", root_dir=str(app_dist_dir), base_dir=".")
+    print(f"Packed {app_dist_dir.name} -> {archive_name}.zip")
 
 
 namespace = Collection(build, dist)
