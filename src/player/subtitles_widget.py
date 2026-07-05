@@ -88,33 +88,34 @@ class SubtitlesWidget(QWidget):
         self._all_subtitles_loaded = True
         
     def highlight_subtitle_at_time(self, timestamp_usec):
-        """Highlight the subtitle at given timestamp"""
         if not self._all_subtitles_loaded:
             return
-        
-        for i in range(self.subtitles_list.count()):
-            item = self.subtitles_list.item(i)
-            item_timestamp = item.data(Qt.ItemDataRole.UserRole)
-            
-            # Clear previous highlight
-            item.setBackground(QColor(0, 0, 0, 0))  # Transparent
-            
-            # Check if this is the active subtitle
+
+        count = self.subtitles_list.count()
+        if count == 0:
+            return
+
+        active_idx = -1
+        for i in range(count):
+            item_timestamp = self.subtitles_list.item(i).data(Qt.ItemDataRole.UserRole)
             if item_timestamp is not None and item_timestamp <= timestamp_usec:
-                # Check if next subtitle exists and hasn't started yet
-                if i + 1 < self.subtitles_list.count():
-                    next_item = self.subtitles_list.item(i + 1)
-                    next_timestamp = next_item.data(Qt.ItemDataRole.UserRole)
-                    if next_timestamp and next_timestamp > timestamp_usec:
-                        # This is the current subtitle
-                        item.setBackground(QColor(255, 255, 0, 80))  # Yellow highlight
-                        self.subtitles_list.scrollToItem(item)
-                        break
-                else:
-                    # Last subtitle
-                    item.setBackground(QColor(255, 255, 0, 80))
-                    self.subtitles_list.scrollToItem(item)
-                    break
+                active_idx = i
+            else:
+                break
+
+        prev_idx = getattr(self, "_highlighted_idx", -1)
+        if active_idx == prev_idx:
+            return
+
+        if prev_idx >= 0:
+            self.subtitles_list.item(prev_idx).setBackground(QColor(0, 0, 0, 0))
+
+        if active_idx >= 0:
+            item = self.subtitles_list.item(active_idx)
+            item.setBackground(QColor(255, 255, 0, 80))
+            self.subtitles_list.scrollToItem(item)
+
+        self._highlighted_idx = active_idx
                 
     def _install_event_filter(self):
         widgets = [self.subtitles_list, self.toggle_btn]

@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QTextEdit, QPushButton, 
     QLabel, QProgressBar, QWidget
 )
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt, QThread, Signal, QMutex, QWaitCondition
 from PySide6.QtGui import QFont, QTextCursor
 
 
@@ -16,11 +16,26 @@ class YtDlpWorker(QThread):
     def __init__(self, url: str):
         super().__init__()
         self.url = url
+        self._mutex = QMutex()
+        self._cond = QWaitCondition()
+        self._abort = False
+    
+    def abort(self):
+        self._mutex.lock()
+        self._abort = True
+        self._mutex.unlock()
+        self._cond.wakeAll()
     
     def run(self):
         try:
             from player.url import fetch_full_info
             info = fetch_full_info(self.url)
+
+            self._mutex.lock()
+            cancelled = self._abort
+            self._mutex.unlock()
+            if cancelled:
+                return
 
             json_str = json.dumps(info, indent=2, ensure_ascii=False)
             self.finished.emit(json_str)
@@ -118,6 +133,10 @@ class YouTubeInfoDialog(QDialog):
     
     def closeEvent(self, event):
         if self.worker and self.worker.isRunning():
-            self.worker.terminate()
-            self.worker.wait()
+            self.worker.abort()
+            self.worker.quit()
+            self.worker.wait(3000)
+            if self.worker.isRunning():
+                self.worker.terminate()
+                self.worker.wait()
         super().closeEvent(event)

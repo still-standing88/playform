@@ -356,6 +356,10 @@ class MainWindow(QMainWindow):
             self.explorer_dock.visibilityChanged.connect(self.menu_manager.update_explorer_menu)
         if self.playlists_dock and hasattr(self.playlists_dock, 'visibilityChanged'):
             self.playlists_dock.visibilityChanged.connect(self.menu_manager.update_playlists_menu)
+
+        self.player_widget.playbackStateChanged.connect(self.menu_manager.update_media_playback_state)
+        self.player_widget.muteStateChanged.connect(self.menu_manager.update_media_mute_state)
+        self.player_widget.mediaAvailable.connect(self.menu_manager.update_media_available)
             
     def open_file_dialog(self):
         file_path, selected_filter = QFileDialog.getOpenFileName(
@@ -588,6 +592,8 @@ class MainWindow(QMainWindow):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             try:
                 if self.player_widget.player.primary_instance:
+                    instance = self.player_widget.player.primary_instance
+                    instance.mute() if instance.get_mute_state() == 0 else instance.unmute()
                     signal_manager.statusbar_message.emit(_("Mute toggled"))
             except Exception as e:
                 signal_manager.statusbar_message.emit(_("No media loaded"))
@@ -611,10 +617,22 @@ class MainWindow(QMainWindow):
                 pass
                 
     def previous_track(self):
-        signal_manager.statusbar_message.emit(_("Previous track"))
-        
+        if hasattr(self.player_widget, 'player') and self.player_widget.player:
+            try:
+                if self.player_widget.player.primary_instance:
+                    self.player_widget.player.previous()
+                    signal_manager.statusbar_message.emit(_("Previous track"))
+            except Exception:
+                signal_manager.statusbar_message.emit(_("No media loaded"))
+
     def next_track(self):
-        signal_manager.statusbar_message.emit(_("Next track"))
+        if hasattr(self.player_widget, 'player') and self.player_widget.player:
+            try:
+                if self.player_widget.player.primary_instance:
+                    self.player_widget.player.next()
+                    signal_manager.statusbar_message.emit(_("Next track"))
+            except Exception:
+                signal_manager.statusbar_message.emit(_("No media loaded"))
 
     def volume_down(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:

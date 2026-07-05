@@ -38,11 +38,16 @@ logger = logging.getLogger(__name__)
 
 class PlayerWidget(QWidget):
 
+    playbackStateChanged = Signal(bool)
+    muteStateChanged = Signal(bool)
+    mediaAvailable = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.is_seeking = False
         self._last_known_state = av_play.AVPlaybackState.AV_STATE_NOTHING
+        self._last_muted: Optional[bool] = None
+        self._had_media = False
         self._shortcuts:Dict[str, QShortcut] = {}
         self._key_event_filter = KeyEventFilter(self)
         self._youtube_info_cache: Dict[str, str] = {}
@@ -477,14 +482,8 @@ class PlayerWidget(QWidget):
                 self.player.release()
                 self._init_player()
                 self._reset_ui_to_default()
-
-                #self.player.primary_instance.release()
-            
-            #self.player.stop_playlist()
-            #self.subtitle_manager = SubtitleManager()
-            #self.player_controls._current_file = None
-            #self.player_controls._current_bookmark_index = -1
-            #self._youtube_info_cache.clear()
+                self._had_media = False
+                self.mediaAvailable.emit(False)
         except Exception as e:
             pass
 
@@ -667,6 +666,9 @@ class PlayerWidget(QWidget):
     def _update_player_state(self):
         instance = self.player.primary_instance
         if not instance:
+            if self._had_media:
+                self._had_media = False
+                self.mediaAvailable.emit(False)
             self._reset_ui_to_default()
             return
         
@@ -674,6 +676,10 @@ class PlayerWidget(QWidget):
             state = instance.get_playback_state()
             pos = instance.get_position()
             length = instance.get_length()
+
+            if not self._had_media:
+                self._had_media = True
+                self.mediaAvailable.emit(True)
             
             if state == av_play.AVPlaybackState.AV_STATE_NOTHING and self._last_known_state == av_play.AVPlaybackState.AV_STATE_PLAYING:
                 self._last_known_state = state
@@ -685,9 +691,17 @@ class PlayerWidget(QWidget):
                 return
 
             self._last_known_state = state
+
+            is_playing = state == av_play.AVPlaybackState.AV_STATE_PLAYING
+            is_muted = instance.get_mute_state() == av_play.AVMuteState.AV_AUDIO_MUTED
             
-            self.player_controls.set_play_pause_state(state == av_play.AVPlaybackState.AV_STATE_PLAYING)
-            self.player_controls.set_mute_state(instance.get_mute_state() == av_play.AVMuteState.AV_AUDIO_MUTED)
+            self.playbackStateChanged.emit(is_playing)
+            if is_muted != self._last_muted:
+                self._last_muted = is_muted
+                self.muteStateChanged.emit(is_muted)
+            
+            self.player_controls.set_play_pause_state(is_playing)
+            self.player_controls.set_mute_state(is_muted)
             self.player_controls.set_volume(int(instance.get_volume()))
             track_name = os.path.basename(instance.file_path)
             if self.player.current_playlist is not None:

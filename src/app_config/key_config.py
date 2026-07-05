@@ -37,6 +37,7 @@ def is_valid_config():
         for default_hotkey, current_hotkey in zip(list(default_keys.key_dict[default_hotkeys_section].keys()), list(key_config[current_hotkeys_section].keys())):
             if default_hotkey != current_hotkey:
                 return False
+    return True
 
 def saveConfig():
     key_config_file = f"{get_app_path()}/data/key_config.cfg"

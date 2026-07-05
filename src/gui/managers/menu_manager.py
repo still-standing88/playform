@@ -79,6 +79,7 @@ class MenuManager:
         
     def setup_media_menu(self):
         self.main_window.play_pause_action = QAction(_("&Play/Pause"), self.main_window)
+        self.main_window.play_pause_action.setCheckable(True)
         self.main_window.play_pause_action.triggered.connect(self.main_window.toggle_play_pause)
         self.main_window.media_menu.addAction(self.main_window.play_pause_action)
         
@@ -90,6 +91,7 @@ class MenuManager:
         self.main_window.media_menu.addSeparator()
         
         self.main_window.mute_action = QAction(_("&Mute/Unmute"), self.main_window)
+        self.main_window.mute_action.setCheckable(True)
         self.main_window.mute_action.setIcon(load_icon("volume.svg"))
         self.main_window.mute_action.triggered.connect(self.main_window.toggle_mute)
         self.main_window.media_menu.addAction(self.main_window.mute_action)
@@ -119,6 +121,28 @@ class MenuManager:
         self.main_window.repeat_action = QAction(_("Toggle &Repeat: Off"), self.main_window)
         self.main_window.repeat_action.triggered.connect(self.main_window.toggle_repeat)
         self.main_window.media_menu.addAction(self.main_window.repeat_action)
+
+        self._set_media_actions_enabled(False)
+        
+    def _set_media_actions_enabled(self, enabled: bool):
+        for name in ("play_pause_action", "stop_action", "mute_action",
+                     "forward_action", "backward_action",
+                     "previous_action", "next_action", "repeat_action"):
+            action = getattr(self.main_window, name, None)
+            if action:
+                action.setEnabled(enabled)
+
+    def update_media_playback_state(self, is_playing: bool):
+        self.main_window.play_pause_action.setChecked(is_playing)
+
+    def update_media_mute_state(self, is_muted: bool):
+        self.main_window.mute_action.setChecked(is_muted)
+
+    def update_media_available(self, available: bool):
+        self._set_media_actions_enabled(available)
+        if not available:
+            self.main_window.play_pause_action.setChecked(False)
+            self.main_window.mute_action.setChecked(False)
         
     def setup_view_menu(self):
         self.main_window.show_recents_favorites_action = QAction(_("Show &Recents/Favorites"), self.main_window)

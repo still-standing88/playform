@@ -12,6 +12,7 @@ class AdvancedPanel(QWidget):
         layout = QVBoxLayout(self)
         
         vlc_group = QGroupBox(_("VLC Settings"))
+        vlc_group.setObjectName("vlcGroupBox")
         vlc_layout = QFormLayout(vlc_group)
         
         self.vlc_logging_check = QCheckBox(_("Enable VLC Logging"))
@@ -85,7 +86,7 @@ class AdvancedPanel(QWidget):
         layout.addStretch()
         
     def toggle_vlc_logging_options(self, checked):
-        vlc_group = self.findChild(QGroupBox, "")
+        vlc_group = self.findChild(QGroupBox, "vlcGroupBox")
         if vlc_group:
             vlc_layout = vlc_group.findChild(QFormLayout)
             if vlc_layout:
