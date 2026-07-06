@@ -9,7 +9,7 @@ from PySide6.QtCore import QObject, Signal, Slot, QTimer, QUrl, Qt
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QTextBrowser, QListWidget, QListWidgetItem,
+    QPushButton, QTextEdit, QListWidget, QListWidgetItem,
     QMessageBox, QWidget,
 )
 
@@ -97,7 +97,9 @@ class UpdateAvailableDialog(QDialog):
         notes_label = QLabel(_("<b>Release notes:</b>"))
         layout.addWidget(notes_label)
 
-        notes = QTextBrowser()
+        notes = QTextEdit()
+        notes.setReadOnly(True)
+        notes.setTabChangesFocus(True)
         notes.setMarkdown(release.get("body") or _("No release notes provided."))
         notes.setMinimumHeight(160)
         layout.addWidget(notes, 1)

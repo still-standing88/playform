@@ -61,6 +61,7 @@ class LogsViewerDialog(QDialog):
 		right_panel = QVBoxLayout()
 		self.viewer = QTextEdit()
 		self.viewer.setReadOnly(True)
+		self.viewer.setTabChangesFocus(True)
 		self.viewer.setTextInteractionFlags(
 			Qt.TextInteractionFlag.TextSelectableByKeyboard | Qt.TextInteractionFlag.TextSelectableByMouse
 		)
