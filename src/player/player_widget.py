@@ -51,7 +51,7 @@ class PlayerWidget(QWidget):
         self._had_media = False
         self._shortcuts:Dict[str, QShortcut] = {}
         self._key_event_filter = KeyEventFilter(self)
-        self._youtube_info_cache: Dict[str, str] = {}
+        self._youtube_info_cache: Dict[str, dict] = {}
         self._last_subtitle_text: Optional[str] = None
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -1018,31 +1018,25 @@ class PlayerWidget(QWidget):
             return
         
         from gui.dialogs.youtube_info_dialog import YouTubeInfoDialog
-        from PySide6.QtGui import QTextCursor
         
         dialog = YouTubeInfoDialog(current_file, parent=self)
         
 
         if current_file in self._youtube_info_cache:
-            dialog.cached_result = self._youtube_info_cache[current_file]
-            dialog.loading_widget.hide()
-            dialog.result_widget.show()
-            dialog.text_edit.setPlainText(dialog.cached_result)
-            cursor = dialog.text_edit.textCursor()
-            cursor.movePosition(QTextCursor.MoveOperation.Start)
-            dialog.text_edit.setTextCursor(cursor)
+            dialog.cached_info = self._youtube_info_cache[current_file]
+            dialog.on_info_loaded(dialog.cached_info)
         else:
 
             if dialog.worker:
                 dialog.worker.finished.connect(
-                    lambda json_str: self._cache_youtube_info(current_file, json_str)
+                    lambda info: self._cache_youtube_info(current_file, info)
                 )
         
         dialog.exec()
     
-    def _cache_youtube_info(self, url: str, json_str: str):
+    def _cache_youtube_info(self, url: str, info: dict):
 
-        self._youtube_info_cache[url] = json_str
+        self._youtube_info_cache[url] = info
 
     def closeEvent(self, event):
         try:

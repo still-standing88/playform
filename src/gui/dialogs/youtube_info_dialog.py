@@ -1,16 +1,16 @@
 import json
 from typing import Optional
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QTextEdit, QPushButton, 
-    QLabel, QProgressBar, QWidget
+    QDialog, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, 
+    QLabel, QProgressBar, QWidget, QFormLayout, QFrame
 )
 from PySide6.QtCore import Qt, QThread, Signal, QMutex, QWaitCondition
-from PySide6.QtGui import QFont, QTextCursor
+from PySide6.QtGui import QFont
 
 
 class YtDlpWorker(QThread):
 
-    finished = Signal(str)
+    finished = Signal(object)
     error = Signal(str)
     
     def __init__(self, url: str):
@@ -37,36 +37,50 @@ class YtDlpWorker(QThread):
             if cancelled:
                 return
 
-            json_str = json.dumps(info, indent=2, ensure_ascii=False)
-            self.finished.emit(json_str)
+            self.finished.emit(info)
         except Exception as e:
             self.error.emit(str(e))
 
 
 class YouTubeInfoDialog(QDialog):
 
+    STAT_FIELDS = [
+        ("title", "Title"),
+        ("uploader", "Uploader"),
+        ("upload_date", "Upload date"),
+        ("duration", "Duration"),
+        ("view_count", "Views"),
+        ("like_count", "Likes"),
+        ("average_rating", "Rating"),
+        ("age_limit", "Age limit"),
+        ("categories", "Categories"),
+        ("tags", "Tags"),
+        ("format", "Format"),
+        ("ext", "Extension"),
+        ("resolution", "Resolution"),
+        ("fps", "FPS"),
+        ("filesize_approx", "File size"),
+    ]
 
     def __init__(self, url: str, parent=None):
         super().__init__(parent)
         self.url = url
         self.worker: Optional[YtDlpWorker] = None
-        self.cached_result: Optional[str] = None
+        self.cached_info: Optional[dict] = None
         
         self.setWindowTitle(_("YouTube Video Information"))
         self.setWindowFlags(
             Qt.WindowType.Dialog | 
             Qt.WindowType.WindowCloseButtonHint
         )
-        self.resize(700, 500)
+        self.resize(700, 600)
         
         self.setup_ui()
         self.start_loading()
     
     def setup_ui(self):
-
         layout = QVBoxLayout(self)
         
-        # Loading widget (initially visible)
         self.loading_widget = QWidget()
         loading_layout = QVBoxLayout(self.loading_widget)
         
@@ -75,37 +89,57 @@ class YouTubeInfoDialog(QDialog):
         loading_layout.addWidget(self.loading_label)
         
         self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 0)  # Indeterminate progress
+        self.progress_bar.setRange(0, 0)
         loading_layout.addWidget(self.progress_bar)
         
         layout.addWidget(self.loading_widget)
         
-        # Result widget (initially hidden)
         self.result_widget = QWidget()
         result_layout = QVBoxLayout(self.result_widget)
         
-        self.info_label = QLabel(_("Video Information:"))
-        result_layout.addWidget(self.info_label)
+        self.stats_label = QLabel(_("Video Stats"))
+        stats_font = QFont()
+        stats_font.setBold(True)
+        stats_font.setPointSize(11)
+        self.stats_label.setFont(stats_font)
+        result_layout.addWidget(self.stats_label)
         
-        self.text_edit = QTextEdit()
-        self.text_edit.setReadOnly(True)
-        self.text_edit.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
-        self.text_edit.setTabChangesFocus(True)
-        self.text_edit.setTextInteractionFlags(
+        self.stats_form = QFormLayout()
+        self.stats_form.setContentsMargins(0, 4, 0, 0)
+        self._stat_labels: list[QLabel] = []
+        for _, _ in self.STAT_FIELDS:
+            label = QLabel("-")
+            label.setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.TextSelectableByKeyboard
+            )
+            label.setWordWrap(True)
+            self._stat_labels.append(label)
+        result_layout.addLayout(self.stats_form)
+        
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setFrameShadow(QFrame.Shadow.Sunken)
+        result_layout.addWidget(sep)
+        
+        self.desc_label = QLabel(_("Description"))
+        desc_font = QFont()
+        desc_font.setBold(True)
+        desc_font.setPointSize(11)
+        self.desc_label.setFont(desc_font)
+        result_layout.addWidget(self.desc_label)
+        
+        self.desc_edit = QTextEdit()
+        self.desc_edit.setReadOnly(True)
+        self.desc_edit.setTabChangesFocus(True)
+        self.desc_edit.setMinimumHeight(200)
+        self.desc_edit.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse |
             Qt.TextInteractionFlag.TextSelectableByKeyboard
         )
-        
-        # Monospace font for better JSON readability
-        font = QFont("Consolas", 9)
-        if not font.exactMatch():
-            font = QFont("Courier New", 9)
-        self.text_edit.setFont(font)
-        
-        result_layout.addWidget(self.text_edit)
+        result_layout.addWidget(self.desc_edit, 1)
         
         self.result_widget.hide()
-        layout.addWidget(self.result_widget)
+        layout.addWidget(self.result_widget, 1)
         
         self.close_button = QPushButton(_("Close"))
         self.close_button.clicked.connect(self.accept)
@@ -117,19 +151,41 @@ class YouTubeInfoDialog(QDialog):
         self.worker.error.connect(self.on_error)
         self.worker.start()
     
-    def on_info_loaded(self, json_str: str):
-        self.cached_result = json_str
+    def _format_value(self, value) -> str:
+        if value is None:
+            return "-"
+        if isinstance(value, float):
+            return f"{value:.0f}" if value == int(value) else f"{value:.2f}"
+        if isinstance(value, int):
+            if value > 1000000000:
+                return f"{value / 1000000000:.1f}B"
+            if value > 1000000:
+                return f"{value / 1000000:.1f}M"
+            if value > 1000:
+                return f"{value:,}"
+            return str(value)
+        if isinstance(value, list):
+            return ", ".join(str(v) for v in value[:5])
+        return str(value)
+    
+    def on_info_loaded(self, info: dict):
+        self.cached_info = info
         self.loading_widget.hide()
         self.result_widget.show()
-        self.text_edit.setPlainText(json_str)
-        cursor = self.text_edit.textCursor()
-        cursor.movePosition(QTextCursor.MoveOperation.Start)
-        self.text_edit.setTextCursor(cursor)
+
+        for i, (key, label_text) in enumerate(self.STAT_FIELDS):
+            value = info.get(key)
+            if value is not None and value != "":
+                self.stats_form.addRow(_(label_text) + ":", self._stat_labels[i])
+                self._stat_labels[i].setText(self._format_value(value))
+
+        description = info.get("description") or info.get("Description") or ""
+        self.desc_edit.setPlainText(description)
     
     def on_error(self, error_msg: str):
         self.loading_widget.hide()
         self.result_widget.show()
-        self.text_edit.setPlainText(f"{_("Error fetching video information:")}\n\n{error_msg}")
+        self.desc_edit.setPlainText(f"{_('Error fetching video information:')}\n\n{error_msg}")
     
     def closeEvent(self, event):
         if self.worker and self.worker.isRunning():
