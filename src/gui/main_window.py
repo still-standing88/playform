@@ -79,7 +79,6 @@ class MainWindow(QMainWindow):
         
         self.user_db = app_db.user_db
         self.current_player_instance = None
-        self.is_repeat_enabled = False
         self.tool_dialogs = {}
         self.active_tool_name = None
         self.show_tool_button: QPushButton
@@ -361,6 +360,7 @@ class MainWindow(QMainWindow):
         self.player_widget.playbackStateChanged.connect(self.menu_manager.update_media_playback_state)
         self.player_widget.muteStateChanged.connect(self.menu_manager.update_media_mute_state)
         self.player_widget.mediaAvailable.connect(self.menu_manager.update_media_available)
+        self.player_widget.repeatModeChanged.connect(self.menu_manager.update_media_repeat_mode)
             
     def open_file_dialog(self):
         file_path, selected_filter = QFileDialog.getOpenFileName(
@@ -735,22 +735,8 @@ class MainWindow(QMainWindow):
             )
         
     def toggle_repeat(self):
-        self.is_repeat_enabled = not self.is_repeat_enabled
-        prefs.prefs['repeat'] = self.is_repeat_enabled
-        prefs.save()
-        
-        repeat_text = (
-            _("Toggle Repeat: On")
-            if self.is_repeat_enabled
-            else _("Toggle Repeat: Off")
-        )
-        if self.repeat_action:
-            self.repeat_action.setText(repeat_text)
-        signal_manager.statusbar_message.emit(
-            _("Repeat: {state}").format(
-                state=_("On") if self.is_repeat_enabled else _("Off")
-            )
-        )
+        if hasattr(self.player_widget, '_on_repeat_clicked'):
+            self.player_widget._on_repeat_clicked()
         
 
     

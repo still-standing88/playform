@@ -41,6 +41,7 @@ class PlayerWidget(QWidget):
     playbackStateChanged = Signal(bool)
     muteStateChanged = Signal(bool)
     mediaAvailable = Signal(bool)
+    repeatModeChanged = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -325,6 +326,7 @@ class PlayerWidget(QWidget):
             self.player_controls.set_repeat_mode("one")
             prefs.prefs["repeat_mode"] = 2
         self.player.set_playlist_repeat_mode(new_mode)
+        self.repeatModeChanged.emit(prefs.prefs["repeat_mode"])
         try:
             prefs.save()
         except Exception:

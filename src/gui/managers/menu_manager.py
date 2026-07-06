@@ -143,6 +143,12 @@ class MenuManager:
         if not available:
             self.main_window.play_pause_action.setChecked(False)
             self.main_window.mute_action.setChecked(False)
+
+    def update_media_repeat_mode(self, mode: int):
+        labels = {0: _("Toggle &Repeat: Off"), 1: _("Toggle &Repeat: All"), 2: _("Toggle &Repeat: One")}
+        text = labels.get(mode, labels[0])
+        if self.main_window.repeat_action:
+            self.main_window.repeat_action.setText(text)
         
     def setup_view_menu(self):
         self.main_window.show_recents_favorites_action = QAction(_("Show &Recents/Favorites"), self.main_window)
