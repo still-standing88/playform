@@ -123,6 +123,9 @@ class MenuManager:
         self.main_window.media_menu.addAction(self.main_window.repeat_action)
 
         self._set_media_actions_enabled(False)
+
+        from app_config import prefs
+        self.update_media_repeat_mode(prefs.prefs.get("repeat_mode", 0))
         
     def _set_media_actions_enabled(self, enabled: bool):
         for name in ("play_pause_action", "stop_action", "mute_action",
