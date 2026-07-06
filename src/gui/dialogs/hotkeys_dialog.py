@@ -74,7 +74,7 @@ class HotkeysDialog(QDialog):
                     action_item.setData(1, Qt.ItemDataRole.AccessibleDescriptionRole, desc)
                     action_item.setFlags(action_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.tree.addTopLevelItem(category_item)
-            category_item.setExpanded(True)
+            category_item.setExpanded(False)
         self.tree.header().setSectionsMovable(False)
         self.tree.header().setSectionsClickable(False)
 
