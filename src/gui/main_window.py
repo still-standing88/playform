@@ -17,6 +17,7 @@ from app_db import UserFiles
 from app_config import prefs
 from EXPLORER.explorer_widget import ExplorerWidget
 import app_db
+import av_play
 from player.player_widget import PlayerWidget
 from playlist_manager.playlists_widget import PlaylistsWidget
 from playlist_manager.playlist_selection_dialog import PlaylistSelectionDialog
@@ -570,7 +571,7 @@ class MainWindow(QMainWindow):
             try:
                 if self.player_widget.player.primary_instance:
                     state = self.player_widget.player.primary_instance.get_playback_state()
-                    if state == "playing":
+                    if state == av_play.AVPlaybackState.AV_STATE_PLAYING:
                         self.player_widget.player.primary_instance.pause()
                         signal_manager.statusbar_message.emit(_("Paused"))
                     else:
@@ -593,7 +594,10 @@ class MainWindow(QMainWindow):
             try:
                 if self.player_widget.player.primary_instance:
                     instance = self.player_widget.player.primary_instance
-                    instance.mute() if instance.get_mute_state() == 0 else instance.unmute()
+                    if instance.get_mute_state() == av_play.AVMuteState.AV_AUDIO_UNMUTED:
+                        instance.mute()
+                    else:
+                        instance.unmute()
                     signal_manager.statusbar_message.emit(_("Mute toggled"))
             except Exception as e:
                 signal_manager.statusbar_message.emit(_("No media loaded"))
