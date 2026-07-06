@@ -37,23 +37,27 @@ class MenuManager:
         self.setup_options_menu()
         
     def setup_file_menu(self):
+        self.main_window.open_menu = QMenu(_("&Open"), self.main_window)
+
         self.main_window.open_file_action = QAction(_("&Open File..."), self.main_window)
         self.main_window.open_file_action.triggered.connect(self.main_window.open_file_dialog)
-        self.main_window.file_menu.addAction(self.main_window.open_file_action)
+        self.main_window.open_menu.addAction(self.main_window.open_file_action)
         
         self.main_window.open_folder_action = QAction(_("Open &Folder..."), self.main_window)
         self.main_window.open_folder_action.setIcon(load_icon("explorer.svg"))
         self.main_window.open_folder_action.triggered.connect(self.main_window.open_folder_dialog)
-        self.main_window.file_menu.addAction(self.main_window.open_folder_action)
+        self.main_window.open_menu.addAction(self.main_window.open_folder_action)
 
         self.main_window.open_playlist_action = QAction(_("Open &Playlist..."), self.main_window)
         self.main_window.open_playlist_action.triggered.connect(self.main_window.open_playlist_dialog)
-        self.main_window.file_menu.addAction(self.main_window.open_playlist_action)
+        self.main_window.open_menu.addAction(self.main_window.open_playlist_action)
         
         self.main_window.open_url_action = QAction(_("Open &URL..."), self.main_window)
         self.main_window.open_url_action.triggered.connect(self.main_window.open_url_dialog)
-        self.main_window.file_menu.addAction(self.main_window.open_url_action)
-        
+        self.main_window.open_menu.addAction(self.main_window.open_url_action)
+
+        self.main_window.file_menu.addMenu(self.main_window.open_menu)
+
         self.main_window.file_menu.addSeparator()
         
         self.main_window.close_media_action = QAction(_("&Close Media"), self.main_window)
