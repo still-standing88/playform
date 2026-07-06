@@ -61,6 +61,7 @@ class PlayerControls(QWidget):
         self.is_fullscreen = False
         
         self._current_file: Optional[str] = None
+        self._source_url: Optional[str] = None
         self._bookmarks: Dict[str, List[float]] = {}
         self._last_positions: Dict[str, float] = {}
         self._repeat_loops: Dict[str, List[Tuple[Optional[float], Optional[float]]]] = {}
@@ -879,7 +880,8 @@ class PlayerControls(QWidget):
                 explorer_action.triggered.connect(lambda p=self._current_file: open_file_location(p) if p else None)
         
         # Emit signal for parent to handle YouTube info
-        if is_youtube_url(self._current_file):
+        source = self._source_url or self._current_file
+        if is_youtube_url(source):
             menu.addSeparator()
             yt_info_action = menu.addAction(_("Show YouTube Info"))
             # Call parent method if it's PlayerWidget

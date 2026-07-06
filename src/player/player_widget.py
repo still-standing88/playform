@@ -485,6 +485,7 @@ class PlayerWidget(QWidget):
                 self._init_player()
                 self._reset_ui_to_default()
                 self._had_media = False
+                self.player_controls._source_url = None
                 self.mediaAvailable.emit(False)
         except Exception as e:
             pass
@@ -511,7 +512,8 @@ class PlayerWidget(QWidget):
                 explorer_action = menu.addAction(_("Open in Explorer"))
                 explorer_action.triggered.connect(lambda: open_file_location(current_file))
 
-        if is_youtube_url(current_file):
+        source = self.player_controls._source_url or current_file
+        if is_youtube_url(source):
             menu.addSeparator()
             yt_info_action = menu.addAction(_("Show YouTube Info"))
             yt_info_action.triggered.connect(self.show_youtube_info_dialog)
@@ -797,6 +799,7 @@ class PlayerWidget(QWidget):
         signal_manager.statusbar_message.emit(
             _("Loading: {filename}").format(filename=os.path.basename(file_path))
         )
+        self.player_controls._source_url = None
         #if self.loading: return
         #self.loading = True
         try:
@@ -828,6 +831,7 @@ class PlayerWidget(QWidget):
 
     def load_url(self, url: str):
         signal_manager.statusbar_message.emit(_("Loading URL: {url}").format(url=url))
+        self.player_controls._source_url = url
         try:
             self.player.load_url(url)
         except Exception as e:
@@ -867,6 +871,7 @@ class PlayerWidget(QWidget):
 
         try:
             if av_play.is_url(path):
+                self.player_controls._source_url = path
                 self.load_url(path)
             elif os.path.isfile(path):
                 ext = path.split('.')[-1].lower()
@@ -1009,7 +1014,7 @@ class PlayerWidget(QWidget):
 
     def show_youtube_info_dialog(self):
 
-        current_file = self.player_controls._current_file
+        current_file = self.player_controls._source_url or self.player_controls._current_file
         if not current_file:
             return
         
