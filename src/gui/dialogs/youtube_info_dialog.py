@@ -1,7 +1,6 @@
-import json
 from typing import Optional
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, 
+    QDialog, QVBoxLayout, QTextEdit, QPushButton, 
     QLabel, QProgressBar, QWidget, QFormLayout, QFrame
 )
 from PySide6.QtCore import Qt, QThread, Signal, QMutex, QWaitCondition
@@ -45,21 +44,18 @@ class YtDlpWorker(QThread):
 class YouTubeInfoDialog(QDialog):
 
     STAT_FIELDS = [
-        ("title", "Title"),
-        ("uploader", "Uploader"),
-        ("upload_date", "Upload date"),
-        ("duration", "Duration"),
-        ("view_count", "Views"),
-        ("like_count", "Likes"),
-        ("average_rating", "Rating"),
-        ("age_limit", "Age limit"),
-        ("categories", "Categories"),
-        ("tags", "Tags"),
-        ("format", "Format"),
-        ("ext", "Extension"),
-        ("resolution", "Resolution"),
-        ("fps", "FPS"),
-        ("filesize_approx", "File size"),
+        ("title",         "Title"),
+        ("uploader",      "Channel"),
+        ("channel",       "Channel name"),
+        ("upload_date",   "Uploaded"),
+        ("duration",      "Duration"),
+        ("view_count",    "Views"),
+        ("like_count",    "Likes"),
+        ("comment_count", "Comments"),
+        ("age_limit",     "Age limit"),
+        ("categories",    "Categories"),
+        ("tags",          "Tags"),
+        ("webpage_url",   "URL"),
     ]
 
     def __init__(self, url: str, parent=None):
@@ -68,12 +64,12 @@ class YouTubeInfoDialog(QDialog):
         self.worker: Optional[YtDlpWorker] = None
         self.cached_info: Optional[dict] = None
         
-        self.setWindowTitle(_("YouTube Video Information"))
+        self.setWindowTitle(_("Video Information"))
         self.setWindowFlags(
             Qt.WindowType.Dialog | 
             Qt.WindowType.WindowCloseButtonHint
         )
-        self.resize(700, 600)
+        self.resize(680, 600)
         
         self.setup_ui()
         self.start_loading()
@@ -106,6 +102,7 @@ class YouTubeInfoDialog(QDialog):
         
         self.stats_form = QFormLayout()
         self.stats_form.setContentsMargins(0, 4, 0, 0)
+        self.stats_form.setSpacing(2)
         self._stat_labels: list[QLabel] = []
         for _, _ in self.STAT_FIELDS:
             label = QLabel("-")
@@ -131,7 +128,7 @@ class YouTubeInfoDialog(QDialog):
         self.desc_edit = QTextEdit()
         self.desc_edit.setReadOnly(True)
         self.desc_edit.setTabChangesFocus(True)
-        self.desc_edit.setMinimumHeight(200)
+        self.desc_edit.setMinimumHeight(180)
         self.desc_edit.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse |
             Qt.TextInteractionFlag.TextSelectableByKeyboard
@@ -151,21 +148,31 @@ class YouTubeInfoDialog(QDialog):
         self.worker.error.connect(self.on_error)
         self.worker.start()
     
-    def _format_value(self, value) -> str:
-        if value is None:
+    def _format_value(self, key: str, value) -> str:
+        if value is None or value == "":
             return "-"
+        if key == "upload_date" and isinstance(value, str) and len(value) == 8:
+            try:
+                y, m, d = int(value[:4]), int(value[4:6]), int(value[6:8])
+                from datetime import date
+                return date(y, m, d).strftime("%d %B %Y")
+            except Exception:
+                return value
+        if key == "duration" and isinstance(value, (int, float)):
+            seconds = int(value)
+            h, remainder = divmod(seconds, 3600)
+            m, s = divmod(remainder, 60)
+            if h > 0:
+                return f"{h}:{m:02d}:{s:02d}"
+            return f"{m}:{s:02d}"
         if isinstance(value, float):
             return f"{value:.0f}" if value == int(value) else f"{value:.2f}"
         if isinstance(value, int):
-            if value > 1000000000:
-                return f"{value / 1000000000:.1f}B"
-            if value > 1000000:
-                return f"{value / 1000000:.1f}M"
-            if value > 1000:
+            if key in ("view_count", "like_count", "comment_count"):
                 return f"{value:,}"
             return str(value)
         if isinstance(value, list):
-            return ", ".join(str(v) for v in value[:5])
+            return ", ".join(str(v) for v in value[:10])
         return str(value)
     
     def on_info_loaded(self, info: dict):
@@ -175,11 +182,14 @@ class YouTubeInfoDialog(QDialog):
 
         for i, (key, label_text) in enumerate(self.STAT_FIELDS):
             value = info.get(key)
-            if value is not None and value != "":
+            if value is not None and value != "" and value != [] and value != 0:
+                if key == "uploader" and info.get("channel") == value:
+                    continue
+                formatted = self._format_value(key, value)
                 self.stats_form.addRow(_(label_text) + ":", self._stat_labels[i])
-                self._stat_labels[i].setText(self._format_value(value))
+                self._stat_labels[i].setText(formatted)
 
-        description = info.get("description") or info.get("Description") or ""
+        description = info.get("description") or ""
         self.desc_edit.setPlainText(description)
     
     def on_error(self, error_msg: str):
