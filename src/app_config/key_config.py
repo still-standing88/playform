@@ -93,13 +93,15 @@ def apply_global_hotkeys():
     hotkeys.clear()
 
     bridge = _get_bridge()
-    global_section = key_config.get("Global", {}) or key_dict.get("Global", {})
+    if "Global" in key_config:
+        global_section = key_config["Global"]
+    else:
+        global_section = key_dict.get("Global", {})
     for action, sequence in global_section.items():
         if not sequence:
             continue
         try:
-            name = action
-            hid = keyboard.add_hotkey(sequence, lambda n=name: bridge.triggered.emit(n))
+            hid = keyboard.add_hotkey(sequence, lambda n=action: bridge.triggered.emit(n))
             hotkeys[action] = hid
         except Exception:
             pass

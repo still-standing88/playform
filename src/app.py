@@ -49,6 +49,7 @@ def main():
         start_local_server(window)
         setup_ipc_handlers(app_instance, window)
         key_config.initialize(window.global_hotkeys)
+        key_config.apply_global_hotkeys()
         setup_cleanup(app, app_instance, app_db)
         
         splash.update_message(_("Starting application..."))
