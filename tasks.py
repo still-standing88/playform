@@ -64,6 +64,26 @@ def _run_python_script(c, script_name, *args):
     c.run(cmd, pty=False, in_stream=False)
 
 
+def _copy_speechcore_dlls(app_dist_dir):
+    if sys.platform != "win32":
+        return
+    try:
+        import importlib
+        sc = importlib.import_module("SpeechCore")
+        sc_dir = Path(sc.__file__).parent
+    except Exception:
+        print("[warn] SpeechCore not found, skipping DLL copy")
+        return
+    dlls = list(sc_dir.glob("*.dll"))
+    if not dlls:
+        print("[warn] No DLLs found in SpeechCore package")
+        return
+    for dll in dlls:
+        dest = app_dist_dir / dll.name
+        shutil.copy2(str(dll), str(dest))
+        print(f"Copied {dll.name} -> {dest}")
+
+
 def _sync_translation_files(app_dist_dir):
     _copy_dir(ROOT_DIR / "lang", app_dist_dir / "lang")
 
@@ -144,6 +164,8 @@ def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_
     for stale in app_dist_dir.glob("*-manifest.json"):
         stale.unlink()
         print(f"Removed stale manifest: {stale.name}")
+
+    _copy_speechcore_dlls(app_dist_dir)
 
     _sync_translation_files(app_dist_dir)
     _copy_dir(ROOT_DIR / "bin",  app_dist_dir / "bin")
