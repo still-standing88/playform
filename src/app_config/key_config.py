@@ -43,12 +43,18 @@ def keysToDefault():
 
 
 def is_valid_config():
-    for default_hotkeys_section, current_hotkeys_section in zip(list(default_keys.key_dict.keys()), list(key_config.keys())):
-        if default_hotkeys_section != current_hotkeys_section:
+    default_sections = {s.lower() for s in default_keys.key_dict}
+    config_sections = {s.lower() for s in key_config}
+    if default_sections != config_sections:
+        return False
+    for section in default_keys.key_dict:
+        config_section = next((s for s in key_config if s.lower() == section.lower()), None)
+        if not config_section:
             return False
-        for default_hotkey, current_hotkey in zip(list(default_keys.key_dict[default_hotkeys_section].keys()), list(key_config[current_hotkeys_section].keys())):
-            if default_hotkey != current_hotkey:
-                return False
+        default_opts = {k.lower() for k in default_keys.key_dict[section]}
+        config_opts = {k.lower() for k in key_config[config_section]}
+        if default_opts != config_opts:
+            return False
     return True
 
 
