@@ -105,7 +105,7 @@ class YouTubeInfoDialog(QDialog):
         self.stats_form.setContentsMargins(0, 4, 0, 0)
         self.stats_form.setSpacing(2)
         self._stat_labels: list[QLabel] = []
-        for _, _ in self.STAT_FIELDS:
+        for _field in self.STAT_FIELDS:
             label = QLabel("-")
             label.setTextInteractionFlags(
                 Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.TextSelectableByKeyboard
