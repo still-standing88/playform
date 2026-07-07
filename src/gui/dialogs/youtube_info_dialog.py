@@ -1,11 +1,10 @@
 from gettext import gettext as _
 from typing import Optional
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QTextEdit, QPushButton, 
-    QLabel, QProgressBar, QWidget, QListWidget, QListWidgetItem,
-    QSplitter, QFrame
+    QDialog, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, 
+    QLabel, QProgressBar, QWidget, QListWidget, QListWidgetItem, QFrame
 )
-from PySide6.QtCore import Qt, QThread, Signal, QMutex, QWaitCondition, QTimer
+from PySide6.QtCore import Qt, QThread, Signal, QMutex, QWaitCondition
 from PySide6.QtGui import QFont
 
 
@@ -31,13 +30,11 @@ class YtDlpWorker(QThread):
         try:
             from player.url import fetch_full_info
             info = fetch_full_info(self.url)
-
             self._mutex.lock()
             cancelled = self._abort
             self._mutex.unlock()
             if cancelled:
                 return
-
             self.finished.emit(info)
         except Exception as e:
             self.error.emit(str(e))
@@ -67,7 +64,6 @@ class YouTubeInfoDialog(QDialog):
         self.url = url
         self.worker: Optional[YtDlpWorker] = None
         self.cached_info = cached_info
-        self._loading_started = False
         
         self.setWindowTitle(_("Video Information"))
         self.setWindowFlags(
@@ -77,6 +73,14 @@ class YouTubeInfoDialog(QDialog):
         self.resize(680, 600)
         
         self.setup_ui()
+
+        if self.cached_info:
+            self.on_info_loaded(self.cached_info)
+        else:
+            self.worker = YtDlpWorker(self.url)
+            self.worker.finished.connect(self.on_info_loaded)
+            self.worker.error.connect(self.on_error)
+            self.worker.start()
     
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -114,7 +118,6 @@ class YouTubeInfoDialog(QDialog):
         self.stats_list.setAlternatingRowColors(True)
         self.stats_list.setSelectionMode(QListWidget.SelectionMode.NoSelection)
         self.stats_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.stats_list.setTabChangesFocus(True)
         self.stats_list.setFixedHeight(200)
         result_layout.addWidget(self.stats_list)
         
@@ -142,27 +145,12 @@ class YouTubeInfoDialog(QDialog):
         self.result_widget.hide()
         layout.addWidget(self.result_widget, 1)
         
-        button_layout = __import__("PySide6.QtWidgets", fromlist=["QHBoxLayout"]).QHBoxLayout()
+        button_layout = QHBoxLayout()
         button_layout.addStretch()
         self.close_button = QPushButton(_("Close"))
         self.close_button.clicked.connect(self.accept)
         button_layout.addWidget(self.close_button)
         layout.addLayout(button_layout)
-    
-    def showEvent(self, event):
-        super().showEvent(event)
-        if not self._loading_started:
-            self._loading_started = True
-            if self.cached_info:
-                self.on_info_loaded(self.cached_info)
-            else:
-                QTimer.singleShot(100, self.start_loading)
-    
-    def start_loading(self):
-        self.worker = YtDlpWorker(self.url)
-        self.worker.finished.connect(self.on_info_loaded)
-        self.worker.error.connect(self.on_error)
-        self.worker.start()
     
     def _format_value(self, key: str, value) -> str:
         if value is None or value == "":

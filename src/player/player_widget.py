@@ -1025,7 +1025,7 @@ class PlayerWidget(QWidget):
         from gui.dialogs.youtube_info_dialog import YouTubeInfoDialog
         
         cached = self._youtube_info_cache.get(current_file)
-        dialog = YouTubeInfoDialog(current_file, parent=self, cached_info=cached)
+        dialog = YouTubeInfoDialog(current_file, parent=self.window(), cached_info=cached)
         dialog.exec()
         
         if dialog.cached_info and current_file not in self._youtube_info_cache:
