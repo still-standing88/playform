@@ -35,6 +35,7 @@ validators==0.35.0
 pyperclip
 bleach
 cchardet
+keyboard
 charset-normalizer==3.4.2
 py-notifier
 recursive-size
