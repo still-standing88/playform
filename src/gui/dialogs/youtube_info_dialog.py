@@ -1,3 +1,4 @@
+from gettext import gettext as _
 from typing import Optional
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QTextEdit, QPushButton, 
