@@ -2,9 +2,10 @@ from gettext import gettext as _
 from typing import Optional
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QTextEdit, QPushButton, 
-    QLabel, QProgressBar, QWidget, QFormLayout, QFrame
+    QLabel, QProgressBar, QWidget, QListWidget, QListWidgetItem,
+    QSplitter, QFrame
 )
-from PySide6.QtCore import Qt, QThread, Signal, QMutex, QWaitCondition
+from PySide6.QtCore import Qt, QThread, Signal, QMutex, QWaitCondition, QTimer
 from PySide6.QtGui import QFont
 
 
@@ -54,16 +55,19 @@ class YouTubeInfoDialog(QDialog):
         ("like_count",    "Likes"),
         ("comment_count", "Comments"),
         ("age_limit",     "Age limit"),
+        ("availability",  "Availability"),
+        ("live_status",   "Live status"),
         ("categories",    "Categories"),
         ("tags",          "Tags"),
         ("webpage_url",   "URL"),
     ]
 
-    def __init__(self, url: str, parent=None):
+    def __init__(self, url: str, parent=None, cached_info: Optional[dict] = None):
         super().__init__(parent)
         self.url = url
         self.worker: Optional[YtDlpWorker] = None
-        self.cached_info: Optional[dict] = None
+        self.cached_info = cached_info
+        self._loading_started = False
         
         self.setWindowTitle(_("Video Information"))
         self.setWindowFlags(
@@ -73,13 +77,15 @@ class YouTubeInfoDialog(QDialog):
         self.resize(680, 600)
         
         self.setup_ui()
-        self.start_loading()
     
     def setup_ui(self):
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(6)
         
         self.loading_widget = QWidget()
         loading_layout = QVBoxLayout(self.loading_widget)
+        loading_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         self.loading_label = QLabel(_("Fetching video information..."))
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -87,12 +93,15 @@ class YouTubeInfoDialog(QDialog):
         
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 0)
-        loading_layout.addWidget(self.progress_bar)
+        self.progress_bar.setMaximumWidth(300)
+        loading_layout.addWidget(self.progress_bar, 0, Qt.AlignmentFlag.AlignCenter)
         
         layout.addWidget(self.loading_widget)
         
         self.result_widget = QWidget()
         result_layout = QVBoxLayout(self.result_widget)
+        result_layout.setContentsMargins(0, 0, 0, 0)
+        result_layout.setSpacing(6)
         
         self.stats_label = QLabel(_("Video Stats"))
         stats_font = QFont()
@@ -101,18 +110,13 @@ class YouTubeInfoDialog(QDialog):
         self.stats_label.setFont(stats_font)
         result_layout.addWidget(self.stats_label)
         
-        self.stats_form = QFormLayout()
-        self.stats_form.setContentsMargins(0, 4, 0, 0)
-        self.stats_form.setSpacing(2)
-        self._stat_labels: list[QLabel] = []
-        for _field in self.STAT_FIELDS:
-            label = QLabel("-")
-            label.setTextInteractionFlags(
-                Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.TextSelectableByKeyboard
-            )
-            label.setWordWrap(True)
-            self._stat_labels.append(label)
-        result_layout.addLayout(self.stats_form)
+        self.stats_list = QListWidget()
+        self.stats_list.setAlternatingRowColors(True)
+        self.stats_list.setSelectionMode(QListWidget.SelectionMode.NoSelection)
+        self.stats_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.stats_list.setTabChangesFocus(True)
+        self.stats_list.setFixedHeight(200)
+        result_layout.addWidget(self.stats_list)
         
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
@@ -129,7 +133,6 @@ class YouTubeInfoDialog(QDialog):
         self.desc_edit = QTextEdit()
         self.desc_edit.setReadOnly(True)
         self.desc_edit.setTabChangesFocus(True)
-        self.desc_edit.setMinimumHeight(180)
         self.desc_edit.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse |
             Qt.TextInteractionFlag.TextSelectableByKeyboard
@@ -139,9 +142,21 @@ class YouTubeInfoDialog(QDialog):
         self.result_widget.hide()
         layout.addWidget(self.result_widget, 1)
         
+        button_layout = __import__("PySide6.QtWidgets", fromlist=["QHBoxLayout"]).QHBoxLayout()
+        button_layout.addStretch()
         self.close_button = QPushButton(_("Close"))
         self.close_button.clicked.connect(self.accept)
-        layout.addWidget(self.close_button)
+        button_layout.addWidget(self.close_button)
+        layout.addLayout(button_layout)
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._loading_started:
+            self._loading_started = True
+            if self.cached_info:
+                self.on_info_loaded(self.cached_info)
+            else:
+                QTimer.singleShot(100, self.start_loading)
     
     def start_loading(self):
         self.worker = YtDlpWorker(self.url)
@@ -181,14 +196,17 @@ class YouTubeInfoDialog(QDialog):
         self.loading_widget.hide()
         self.result_widget.show()
 
-        for i, (key, label_text) in enumerate(self.STAT_FIELDS):
+        self.stats_list.clear()
+        for key, label_text in self.STAT_FIELDS:
             value = info.get(key)
-            if value is not None and value != "" and value != [] and value != 0:
-                if key == "uploader" and info.get("channel") == value:
-                    continue
-                formatted = self._format_value(key, value)
-                self.stats_form.addRow(_(label_text) + ":", self._stat_labels[i])
-                self._stat_labels[i].setText(formatted)
+            if value is None or value == "" or value == [] or value == 0:
+                continue
+            if key == "uploader" and info.get("channel") == value:
+                continue
+            formatted = self._format_value(key, value)
+            item = QListWidgetItem(f"{_(label_text)}:  {formatted}")
+            item.setToolTip(formatted)
+            self.stats_list.addItem(item)
 
         description = info.get("description") or ""
         self.desc_edit.setPlainText(description)
@@ -196,6 +214,7 @@ class YouTubeInfoDialog(QDialog):
     def on_error(self, error_msg: str):
         self.loading_widget.hide()
         self.result_widget.show()
+        self.stats_list.clear()
         self.desc_edit.setPlainText(f"{_('Error fetching video information:')}\n\n{error_msg}")
     
     def closeEvent(self, event):
