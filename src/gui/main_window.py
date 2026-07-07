@@ -570,6 +570,8 @@ class MainWindow(QMainWindow):
             speech_manager.output(message, prefs.prefs["tts_speech_interrupt"])
 
     def _on_global_hotkey_triggered(self, name: str):
+        sys.stdout.write(f"[Hotkeys] Triggered: {name}\n")
+        sys.stdout.flush()
         handler = self.global_hotkeys.get(name)
         if handler:
             handler()

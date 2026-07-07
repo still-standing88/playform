@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import keyboard
 import configparser as cfgp
 
@@ -103,8 +104,10 @@ def apply_global_hotkeys():
         try:
             hid = keyboard.add_hotkey(sequence, lambda n=action: bridge.triggered.emit(n))
             hotkeys[action] = hid
-        except Exception:
-            pass
+            sys.__stdout__.write(f"[Hotkeys] Registered: {action} -> {sequence}\n")
+        except Exception as e:
+            sys.__stdout__.write(f"[Hotkeys] FAILED to register {action}: {e}\n")
+    sys.__stdout__.flush()
 
 
 def initialize(func_dict):
