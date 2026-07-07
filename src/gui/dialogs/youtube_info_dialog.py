@@ -117,7 +117,7 @@ class YouTubeInfoDialog(QDialog):
         self.stats_list = QListWidget()
         self.stats_list.setAlternatingRowColors(True)
         self.stats_list.setSelectionMode(QListWidget.SelectionMode.NoSelection)
-        self.stats_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.stats_list.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.stats_list.setFixedHeight(200)
         result_layout.addWidget(self.stats_list)
         
