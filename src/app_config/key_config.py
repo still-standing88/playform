@@ -44,7 +44,7 @@ def keysToDefault():
 
 def is_valid_config():
     default_sections = {s.lower() for s in default_keys.key_dict}
-    config_sections = {s.lower() for s in key_config}
+    config_sections = {s.lower() for s in key_config if s.lower() != "default"}
     if default_sections != config_sections:
         return False
     for section in default_keys.key_dict:
