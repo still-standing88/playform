@@ -79,6 +79,7 @@ class MainWindow(QMainWindow):
         
         self.user_db = app_db.user_db
         self.current_player_instance = None
+        self._dialog_open = False
         self.tool_dialogs = {}
         self.active_tool_name = None
         self.show_tool_button: QPushButton
@@ -837,6 +838,10 @@ class MainWindow(QMainWindow):
 
     def open_preferences(self):
 
+        if self._dialog_open:
+            return
+        self._dialog_open = True
+
         audio_devices = []
         try:
             if hasattr(self.player_widget, 'player') and self.player_widget.player:
@@ -850,11 +855,16 @@ class MainWindow(QMainWindow):
             pass
 
         dialog = PreferencesDialog(self, audio_devices, self.apply_audio_device)
+        dialog.finished.connect(lambda: setattr(self, '_dialog_open', False))
         if dialog.exec() == QDialog.DialogCode.Accepted:
             signal_manager.statusbar_message.emit(_("Preferences saved"))
             
     def open_hotkeys(self):
+        if self._dialog_open:
+            return
+        self._dialog_open = True
         dialog = HotkeysDialog(self, reset_callback=self.reset_shortcuts_callback)
+        dialog.finished.connect(lambda: setattr(self, '_dialog_open', False))
         if dialog.exec() == QDialog.DialogCode.Accepted:
             signal_manager.statusbar_message.emit(_("Hotkeys updated"))
 

@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, Qt, QEvent
 from PySide6.QtGui import QKeySequence
-from PySide6.QtWidgets import (QApplication, QPushButton, QListWidget, QTreeWidget, QLineEdit, QTextEdit, QPlainTextEdit, 
+from PySide6.QtWidgets import (QApplication, QPushButton, QToolButton, QListWidget, QTreeWidget, QLineEdit, QTextEdit, QPlainTextEdit, 
                                QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox, QRadioButton, QSlider, QScrollBar, 
                                QListView, QTreeView, QTableWidget, QTableView, QAbstractItemView, QAbstractSpinBox,
                                QDial, QProgressBar, QTabWidget, QTabBar, QSplitter, QGroupBox, QFrame)
@@ -35,7 +35,7 @@ class ShortcutManager(QObject):
         }
         
         self.clickable_widgets = {
-            QPushButton, QCheckBox, QRadioButton
+            QPushButton, QToolButton, QCheckBox, QRadioButton
         }
         
         self.value_widgets = {

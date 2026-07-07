@@ -493,6 +493,11 @@ class PlayerControls(QWidget):
         bookmarks = self._bookmarks[self._current_file]
         if not bookmarks:
             return
+        mw = self.window()
+        if hasattr(mw, '_dialog_open') and mw._dialog_open:
+            return
+        if hasattr(mw, '_dialog_open'):
+            mw._dialog_open = True
         self._bookmarks_dialog = BookmarksDialog(bookmarks, self)
         dlg = self._bookmarks_dialog
         dlg.deleteRequested.connect(self.delete_bookmark_at)
@@ -502,6 +507,8 @@ class PlayerControls(QWidget):
             if selected_index is not None:
                 self.jump_to_mark(selected_index)
         self._bookmarks_dialog = None
+        if hasattr(mw, '_dialog_open'):
+            mw._dialog_open = False
     
     def add_bookmark_at_current_position(self):
         if not self._current_file:
