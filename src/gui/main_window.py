@@ -361,9 +361,6 @@ class MainWindow(QMainWindow):
         self.player_widget.muteStateChanged.connect(self.menu_manager.update_media_mute_state)
         self.player_widget.mediaAvailable.connect(self.menu_manager.update_media_available)
         self.player_widget.repeatModeChanged.connect(self.menu_manager.update_media_repeat_mode)
-
-        from app_config.key_config import _get_bridge
-        _get_bridge().triggered.connect(self._on_global_hotkey_triggered)
             
     def open_file_dialog(self):
         file_path, selected_filter = QFileDialog.getOpenFileName(
@@ -568,13 +565,6 @@ class MainWindow(QMainWindow):
                 return
 
             speech_manager.output(message, prefs.prefs["tts_speech_interrupt"])
-
-    def _on_global_hotkey_triggered(self, name: str):
-        sys.stdout.write(f"[Hotkeys] Triggered: {name}\n")
-        sys.stdout.flush()
-        handler = self.global_hotkeys.get(name)
-        if handler:
-            handler()
 
     def toggle_play_pause(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:

@@ -1,31 +1,16 @@
 import os
 import re
-import sys
 import keyboard
 import configparser as cfgp
 
-from PySide6.QtCore import QObject, Signal
-
 from utilities.functions import get_app_path
 from app_constance import default_keys
-
-
-class HotkeyBridge(QObject):
-    triggered = Signal(str)
-
 
 key_dict = default_keys.key_dict.copy()
 hotkeys = {}
 hotkeys_funcs = {}
 key_config = cfgp.ConfigParser()
-_bridge: HotkeyBridge | None = None
-
-
-def _get_bridge() -> HotkeyBridge:
-    global _bridge
-    if _bridge is None:
-        _bridge = HotkeyBridge()
-    return _bridge
+key_config.optionxform = str
 
 
 def modifyKey(section, hotkey, sequence):
@@ -37,9 +22,10 @@ def modifyKey(section, hotkey, sequence):
                 keyboard.remove_hotkey(old_id)
             except Exception:
                 pass
-        bridge = _get_bridge()
-        hid = keyboard.add_hotkey(sequence, lambda n=hotkey: bridge.triggered.emit(n))
-        hotkeys[hotkey] = hid
+        func = hotkeys_funcs.get(hotkey)
+        if func:
+            hid = keyboard.add_hotkey(sequence, func)
+            hotkeys[hotkey] = hid
 
 
 def is_valid_hotkey(hotkey):
@@ -93,7 +79,6 @@ def apply_global_hotkeys():
             pass
     hotkeys.clear()
 
-    bridge = _get_bridge()
     if "Global" in key_config:
         global_section = key_config["Global"]
     else:
@@ -101,13 +86,13 @@ def apply_global_hotkeys():
     for action, sequence in global_section.items():
         if not sequence:
             continue
-        try:
-            hid = keyboard.add_hotkey(sequence, lambda n=action: bridge.triggered.emit(n))
-            hotkeys[action] = hid
-            sys.__stdout__.write(f"[Hotkeys] Registered: {action} -> {sequence}\n")
-        except Exception as e:
-            sys.__stdout__.write(f"[Hotkeys] FAILED to register {action}: {e}\n")
-    sys.__stdout__.flush()
+        func = hotkeys_funcs.get(action)
+        if func:
+            try:
+                hid = keyboard.add_hotkey(sequence, func)
+                hotkeys[action] = hid
+            except Exception:
+                pass
 
 
 def initialize(func_dict):
