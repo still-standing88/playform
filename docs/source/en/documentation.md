@@ -6,99 +6,19 @@
 
 ## 1.1 Introduction
 
-PlayForm is a free, modern media player for Windows that brings together your music, videos, podcasts, and internet radio in one place. It is designed to be straightforward to use while packing the features you need for everyday listening and viewing.
-
-The interface is organized into panels — Recents & Favorites, Player, File Explorer, Playlists, Podcasts, and Internet Radio — that you can show, hide, or rearrange to suit your workflow. Everything is keyboard-accessible, and most actions are available through the menu bar, toolbar buttons, or customizable keyboard shortcuts.
-
-PlayForm is published by Joybytes, authored by Still Standing, and licensed under the GPL-3.0 open-source license. The source code and updates are available on [GitHub](https://github.com/still-standing88/playform).
+PlayForm is a cross-platform media player that lets you play audio and video files, stream online content from YouTube and other websites, listen to internet radio, and follow podcasts — all from a single application.
 
 ---
 
 ## 1.2. Features
 
-PlayForm includes the following capabilities:
-
-**Playback**
-- Play local audio and video files from your computer.
-- Open individual files, entire folders, or type in a web address (URL) to stream media directly.
-- Full playback controls: play, pause, stop, rewind, fast-forward, previous track, and next track.
-- Adjustable playback speed with a range of speeds from 0.25× to 3.0×.
-- Volume control with mute toggle.
-- Seek bar for jumping to any point in the current file.
-- Three-state repeat mode: Off, Repeat One (current track), and Repeat All (entire playlist).
-- Shuffle playback order with on/off toggle.
-- Jump to the beginning or end of a track with a single key press.
-
-**Video**
-- Dedicated video display area with full-screen support (F11, exit with Esc).
-- Adjustable aspect ratio and video scale.
-- Take screenshots from video in JPG, PNG, or TIFF format (Ctrl+S).
-- Automatic subtitle loading — if a subtitle file with the same name as your video is in the same folder, PlayForm loads it automatically. Language selection is configurable.
-
-**Subtitles**
-- Subtitles are displayed in a collapsible list panel below the video, with the current line auto-highlighted during playback.
-- Supported external subtitle formats: SRT, VTT, SMI, SAMI, SCC, DFXP, TTML, SUB, ASS.
-- Optionally, subtitles can be spoken aloud via text-to-speech (configurable in Preferences).
-
-**Bookmarks & Repeat Loops**
-- Add bookmarks at any playback position and jump back to them anytime.
-- Up to 10 numbered bookmarks per file accessible via quick-jump keys.
-- View and manage all bookmarks via the Bookmarks dialog.
-- Set A-B repeat loops to play a section on repeat. Multiple non-overlapping loops per file are supported.
-- Bookmarks and loop segments are saved per-file and restored between sessions.
-- See [Section 3.1](#31-shortcuts) for the full list of bookmark and repeat loop keyboard shortcuts.
-
-**Playlists**
-- Create, name, and manage multiple playlists.
-- Add files and folders to any playlist.
-- Import and export playlists in JSON, M3U, M3U8, PLS, and XSPF formats.
-- Playlists are automatically saved and restored each time you open the app.
-
-**File Explorer**
-- Built-in file browser panel with tree-view navigation, path bar, and image preview support.
-- Filter items by media type and search for files by name (F3).
-- Double-click or press Space to play any file directly from the explorer into the main player.
-- Includes its own audio preview player for quick in-panel listening without affecting the main player.
-
-**Recents & Favorites**
-- Automatically tracks recently played files so you can quickly return to them.
-- Mark any file as a favorite for fast access from the dedicated panel.
-
-**Internet Radio**
-- Browse and search thousands of live internet radio stations, powered by the RadioBrowser community directory.
-- Filter stations by country, language, or tag (genre).
-- Save favorite stations for quick access.
-
-**Podcasts**
-- Subscribe to podcast RSS or Atom feeds by adding their URL.
-- Browse and search episodes within each feed, sorted chronologically.
-- Play any episode directly from within the app.
-
-**Online Media / YouTube**
-- Paste any YouTube URL (or other supported stream URL) into File > Open URL (Ctrl+U) to play it without downloading first.
-- Direct media URLs (ending in .mp4, .mp3, .m3u8, etc.) are played directly.
-- YouTube playlist URLs are resolved lazily — tracks are fetched in the background as needed.
-
-**Downloading**
-- Built-in Download Manager handles HTTP downloads with pause, resume, cancel, and automatic retry.
-- External utilities (FFmpeg and yt-dlp) can be downloaded and installed from within the app via a dedicated utility download dialog.
-
-**Tools**
-- **Batch Converter** — Convert multiple media files to different audio/video formats at once.
-- **Extractor** — Extract audio from video files.
-- **Tag Editor** — View and edit metadata (title, artist, album, genre, etc.) on your audio files.
-- **Thumbnail Generator** — Generate thumbnail images from video files.
-- **Subtitle Converter** — Convert subtitle files between formats.
-- **Subtitle Editor** — Edit subtitle content and timing.
-- **Logs Viewer** — Inspect application logs from within the app (Tools > Debug > View Logs).
-
-**Interface & Accessibility**
-- Fully keyboard-navigable interface with configurable shortcuts across four categories: Global, Main Interface, Explorer, and Player. Shortcuts are automatically suppressed in text fields, lists, and sliders to avoid conflicts with typing or navigation.
-- System tray icon for quick access (show/hide and exit).
-- Customizable toolbar — add, remove, and reorder toolbar buttons (Options > Customize Toolbar).
-- Dockable panels that remember their position between sessions.
-- Text-to-speech for accessibility feedback and subtitle reading, configurable in Preferences.
-- Color theme support (system, light, and custom themes) managed in Preferences.
+- **Play any media format** — PlayForm supports every audio and video format that VLC can handle. See [Section 1.3](#13-supported-media-formats) for a list of the most common formats.
+- **Play media from any source** — Open local files, folders, or paste URLs to stream from YouTube and hundreds of other websites via yt-dlp.
+- **Subtitle integration** — Subtitles are automatically loaded if a matching file is found next to your video. Supports SRT, VTT, ASS, and more. Subtitles can also be read aloud via text-to-speech.
+- **Bookmarks and repeat loops** — Mark any position in a track and jump back to it instantly. Set A-B repeat loops to play a section on repeat, with support for multiple loops per file.
+- **Built-in media explorer with preview** — Browse your folders with a full file browser right inside the app. Preview audio and video files on the fly without needing to open them in the main player.
+- **Media extraction and conversion tools** — Convert between audio and video formats, extract audio from videos, generate thumbnails, and more — all powered by FFmpeg.
+- **Tag and subtitle editing** — Edit metadata tags on your audio files (title, artist, album, genre, etc.) and modify subtitle content and timing with built-in editors.
 
 ---
 
@@ -173,11 +93,9 @@ PlayForm accepts:
 - **YouTube URLs** — paste a YouTube video or playlist link and PlayForm will resolve and play it. No separate download is required.
 - **Other streaming URLs** — most URLs supported by yt-dlp work, including many video-sharing platforms.
 
-> **Note:** Playing YouTube and other online content requires an active internet connection. The first time you use this feature, PlayForm may prompt you to download yt-dlp if it is not already present.
-
 ### Internet Radio
 
-The **Radio** panel (toggle with Ctrl+3) connects to the RadioBrowser public directory, which lists thousands of free, live internet radio stations from around the world. You can search by station name, or filter by country, language, or genre tag. Double-click any station to start listening. Favorites are saved locally. See [Section 2.6.2](./documentation.md) for a full walkthrough.
+The **Radio** panel connects to the [Radio Browser](https://www.radio-browser.info/) community directory, which lists thousands of free, live internet radio stations from around the world. You can search by station name, or filter by country, language, or genre tag. Double-click any station to start listening. See [Section 2.6.2](./documentation.md) for a full walkthrough.
 
 ### Podcasts
 
@@ -205,50 +123,47 @@ The menubar contains five menus: **File**, **Media**, **View**, **Tools**, and *
 
 #### File Menu
 
-| Menu Item | Shortcut | Description |
-|---|---|---|
-| **Open File…** | Ctrl+O | Opens a system file dialog filtered to supported media files. |
-| **Open Folder…** | Ctrl+Shift+O | Opens a folder and loads all playable media files within it. |
-| **Open Playlist…** | — | Opens a saved playlist file (.json, .m3u, .m3u8, .pls, .xspf). |
-| **Open URL…** | Ctrl+U | Opens a dialog to paste a media URL for streaming. |
-| *separator* | | |
-| **Close Media** | Ctrl+W | Stops and unloads the currently playing media. |
-| *separator* | | |
-| **Recent Files** ▶ | — | A submenu listing up to 10 recently played files. Hovering over an entry shows its full path as a tooltip. Selecting one plays it immediately. Shows "No recent files" (disabled) when the list is empty. |
-| *separator* | | |
-| **Minimize to Taskbar** | Alt+H | Hides the main window to the system tray. |
-| **Exit** | Alt+X | Closes the application entirely. |
+| Menu Item | Description |
+|---|---|
+| **Open ▶** | Submenu containing Open File, Open Folder, Open Playlist, and Open URL. |
+| *separator* | |
+| **Close Media** | Stops and unloads the currently playing media. |
+| *separator* | |
+| **Recent Files ▶** | A submenu listing up to 10 recently played files. Hovering over an entry shows its full path as a tooltip. Selecting one plays it immediately. Shows "No recent files" (disabled) when the list is empty. |
+| *separator* | |
+| **Minimize to Taskbar** | Hides the main window to the system tray. |
+| **Exit** | Closes the application entirely. |
 
 #### Media Menu
 
-| Menu Item | Shortcut | Description |
-|---|---|---|
-| **Play/Pause** | Space | Toggles between playing and pausing the current track. |
-| **Stop** | Ctrl+Space | Stops playback completely. |
-| *separator* | | |
-| **Mute/Unmute** | M | Toggles audio mute on or off. |
-| *separator* | | |
-| **Forward** | Right | Seeks forward by the amount configured in Preferences (default 5 seconds). |
-| **Backward** | Left | Seeks backward by the configured offset amount. |
-| *separator* | | |
-| **Previous** | Page Up | Jumps to the previous track in the playlist. |
-| **Next** | Page Down | Jumps to the next track in the playlist. |
-| *separator* | | |
-| **Toggle Repeat** | Ctrl+R | Cycles the repeat mode through three states. The menu label updates to show the current state: **Toggle Repeat: Off**, **Toggle Repeat: All**, or **Toggle Repeat: One**. |
+| Menu Item | Description |
+|---|---|
+| **Play/Pause** | Toggles between playing and pausing the current track. |
+| **Stop** | Stops playback completely. |
+| *separator* | |
+| **Mute/Unmute** | Toggles audio mute on or off. |
+| *separator* | |
+| **Forward** | Seeks forward by the amount configured in Preferences (default 5 seconds). |
+| **Backward** | Seeks backward by the configured offset amount. |
+| *separator* | |
+| **Previous** | Jumps to the previous track in the playlist. |
+| **Next** | Jumps to the next track in the playlist. |
+| *separator* | |
+| **Toggle Repeat** | Cycles the repeat mode through three states. The menu label updates to show the current state: **Toggle Repeat: Off**, **Toggle Repeat: All**, or **Toggle Repeat: One**. |
 
 #### View Menu
 
 All View menu items are checkable, reflecting whether the corresponding panel is currently visible.
 
-| Menu Item | Shortcut | Default | Description |
-|---|---|---|---|
-| **Show Recents/Favorites** | Ctrl+4 | ✓ (on) | Shows or hides the Recents & Favorites dock panel. |
-| **Show Explorer** | Ctrl+E | (off) | Shows or hides the File Explorer dock panel. |
-| **Minimize Player** | Ctrl+H | (off) | When checked, the Player panel is hidden. |
-| **Show Playlists** | Ctrl+L | (off) | Shows or hides the Playlists dock panel. |
-| *separator* | | | |
-| **Show Radio Browser** | Ctrl+3 | (off) | Shows or hides the Radio Browser dock panel. |
-| **Show Podcasts** | Ctrl+2 | (off) | Shows or hides the Podcasts dock panel. |
+| Menu Item | Description |
+|---|---|
+| **Show Recents/Favorites** | Shows or hides the Recents & Favorites dock panel. |
+| **Show Explorer** | Shows or hides the File Explorer dock panel. |
+| **Minimize Player** | When checked, the Player panel is hidden. |
+| **Show Playlists** | Shows or hides the Playlists dock panel. |
+| *separator* | |
+| **Show Radio Browser** | Shows or hides the Radio Browser dock panel. |
+| **Show Podcasts** | Shows or hides the Podcasts dock panel. |
 
 #### Tools Menu
 
@@ -260,20 +175,20 @@ All View menu items are checkable, reflecting whether the corresponding panel is
 | **Thumbnail Generator** | Opens the Thumbnail Generator tool. |
 | *separator* | |
 | **Download Manager** | Opens or restores the Download Manager dialog. |
-| **Subtitle Tools** ▶ | Submenu with two entries: **Subtitle Converter** and **Subtitle Editor**. |
-| **Debug** ▶ | Submenu with two entries: **View Logs…** (opens the log viewer dialog) and **Show Console Dock** (toggles a developer console panel for troubleshooting). |
+| **Subtitle Tools ▶** | Submenu with two entries: **Subtitle Converter** and **Subtitle Editor**. |
+| **Debug ▶** | Submenu with two entries: **View Logs…** (opens the log viewer dialog) and **Show Console Dock** (toggles a developer console panel for troubleshooting). |
 
 #### Options Menu
 
-| Menu Item | Shortcut | Description |
-|---|---|---|
-| **Manage Preferences** | Ctrl+P | Opens the Preferences dialog. |
-| **Manage Hotkeys** | F4 | Opens the Hotkeys configuration dialog where all keyboard shortcuts can be remapped. |
-| **Customize Toolbar…** | — | Opens the Toolbar Customization dialog (see below). |
-| **About PlayForm…** | — | Opens the About dialog with version and license information. |
-| *separator* | | |
-| **Check for Updates…** | — | Checks for a newer version of PlayForm. |
-| **Get/Update Utilities…** | — | Opens the utility download dialog (for downloading or updating FFmpeg and yt-dlp). |
+| Menu Item | Description |
+|---|---|
+| **Manage Preferences** | Opens the Preferences dialog. |
+| **Manage Hotkeys** | Opens the Hotkeys configuration dialog where all keyboard shortcuts can be remapped. |
+| **Customize Toolbar…** | Opens the Toolbar Customization dialog (see below). |
+| **About PlayForm…** | Opens the About dialog with version and license information. |
+| *separator* | |
+| **Check for Updates…** | Checks for a newer version of PlayForm. |
+| **Get/Update Utilities…** | Opens the utility download dialog (for downloading or updating FFmpeg and yt-dlp). |
 
 ---
 
@@ -281,7 +196,7 @@ All View menu items are checkable, reflecting whether the corresponding panel is
 
 The toolbar sits directly below the menubar and provides quick, icon-based access to the most common actions. By default, the toolbar contains buttons for Open File, Open Folder, Open Playlist, Open URL, Play/Pause, Stop, Mute, Previous, and Next.
 
-The toolbar can optionally include buttons for each of the six tools (Batch Converter, Extractor, Tag Editor, Thumbnail Generator, Subtitle Converter, and Subtitle Editor). These are user-configurable via the Toolbar Customization dialog.
+The toolbar can optionally include buttons for any of the six built-in tools. These are user-configurable via the Toolbar Customization dialog.
 
 #### Toolbar Customization
 
@@ -309,19 +224,19 @@ The status bar runs along the bottom of the main window and displays context-sen
 
 PlayForm uses a dockable panel system that lets you arrange the workspace to your liking. You can drag a panel by its title bar to undock it, move it to a different edge of the window, or stack it on top of another panel. Panels can also be resized by dragging their borders.
 
-All panels can be repositioned freely. They cannot be closed via the title bar — panels are toggled on and off exclusively through the **View** menu or their keyboard shortcuts.
+Panels cannot be closed — they can only be toggled on and off through the **View** menu or their keyboard shortcuts.
 
 #### Panel Reference
 
-| Panel | Default Position | Default Visible | Toggle Shortcut |
-|---|---|---|---|
-| **Recents & Favorites** | Left | Yes | Ctrl+4 |
-| **Explorer** | Left | No | Ctrl+E |
-| **Playlists** | Right | No | Ctrl+L |
-| **Player** | Bottom | Yes | Ctrl+H (minimize) |
-| **Radio Browser** | Right | No | Ctrl+3 |
-| **Podcasts** | Right | No | Ctrl+2 |
-| **Debug Console** | Bottom | No | (Tools menu) |
+| Panel | Default Position | Toggle Shortcut |
+|---|---|---|
+| **Recents & Favorites** | Left | Ctrl+4 |
+| **Explorer** | Left | Ctrl+E |
+| **Playlists** | Right | Ctrl+L |
+| **Player** | Bottom | Ctrl+H (minimize) |
+| **Radio Browser** | Right | Ctrl+3 |
+| **Podcasts** | Right | Ctrl+2 |
+| **Debug Console** | Bottom | (Tools menu) |
 
 > **Note:** The Radio Browser and Podcasts panels are created only when you first toggle them on — they do not consume resources until needed.
 
@@ -641,22 +556,6 @@ The results tree displays stations in five columns: **Name**, **Country**, **Lan
 ## 3.1. Shortcuts
 
 PlayForm has **72 configurable keyboard shortcuts** organized into four categories: **Global**, **Main Interface**, **Explorer**, and **Player**. All shortcuts can be remapped via the Hotkeys dialog (**Options > Manage Hotkeys**, F4).
-
-### How Shortcuts Work
-
-Shortcuts have three scope levels that determine when they fire:
-
-| Scope | Behavior |
-|---|---|
-| **Global** | Always fires regardless of which panel or widget has focus. |
-| **Context-Aware** | Fires only when the focused element is "safe" — i.e., not a text input, list view, slider, or other control where the key would conflict with normal typing or navigation. |
-| **Widget-Local** | Fires only when a specific panel (e.g., the Player) has focus. |
-
-Context-aware shortcuts automatically avoid conflicts with:
-- **Text fields**: Space, Home, End, Left, Right, Backspace, Delete
-- **Lists, trees, and tables**: Up, Down, Left, Right, Home, End, Page Up, Page Down
-- **Sliders and spin boxes**: Up, Down, Left, Right, Home, End, Page Up, Page Down, Plus, Minus
-- **Buttons and checkboxes**: Space, Enter
 
 ### Managing Shortcuts
 
@@ -997,10 +896,7 @@ PlayForm builds upon and includes the following major third-party libraries and 
 | **VLC** | Media playback engine — audio/video decoding, rendering, and streaming for all supported formats | [videolan.org](https://www.videolan.org) |
 | **Qt / PySide6** | Cross-platform graphical user interface framework | [qt.io](https://www.qt.io) |
 | **FFmpeg** | Audio/video transcoding, extraction, thumbnail generation, and format conversion | [ffmpeg.org](https://ffmpeg.org) |
-| **Deno** | JavaScript runtime used internally for resolving streaming URLs | [deno.land](https://deno.land) |
+| **Deno** | JavaScript runtime used internally by yt-dlp for resolving streaming URLs | [deno.land](https://deno.land) |
 | **yt-dlp** | YouTube and streaming platform URL resolver for online media playback | [github.com/yt-dlp/yt-dlp](https://github.com/yt-dlp/yt-dlp) |
 | **mutagen** | Audio metadata reading and writing for the Tag Editor | [github.com/quodlibet/mutagen](https://github.com/quodlibet/mutagen) |
 | **pysubs2** | Subtitle parsing, writing, and conversion library | [github.com/tkarabela/pysubs2](https://github.com/tkarabela/pysubs2) |
-| **cryptography** | Digital signature verification for update security | [cryptography.io](https://cryptography.io) |
-| **SpeechCore** | Text-to-speech integration on Windows | [pypi.org/project/SpeechCore](https://pypi.org/project/SpeechCore) |
-| **AppGuard** | Single-instance enforcement and cross-process messaging | [pypi.org/project/AppGuard](https://pypi.org/project/AppGuard) |
