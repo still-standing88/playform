@@ -80,6 +80,7 @@ class ExplorerView(QListWidget):
 
     def open_file(self):
         if self._focused_item_path:
+            self.media_stop()
             self._execute_callback("open_callback", self._focused_item_path)  # type: ignore[arg-type]
 
     def open_new_tab(self):
