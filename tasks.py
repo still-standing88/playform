@@ -69,11 +69,14 @@ def _copy_speechcore_dlls(app_dist_dir):
         return
     try:
         import importlib
-        sc = importlib.import_module("SpeechCore")
-        sc_dir = Path(sc.__file__).parent
+        sc = importlib.import_module("speech_core")
     except Exception:
-        print("[warn] SpeechCore not found, skipping DLL copy")
-        return
+        try:
+            sc = importlib.import_module("SpeechCore")
+        except Exception:
+            print("[warn] SpeechCore not found, skipping DLL copy")
+            return
+    sc_dir = Path(sc.__file__).parent
     dlls = list(sc_dir.glob("*.dll"))
     if not dlls:
         print("[warn] No DLLs found in SpeechCore package")
