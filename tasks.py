@@ -124,7 +124,13 @@ def build_docs(c, langs=None):
 
 
 @task
-def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_VERSION, compiler=None):
+def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_VERSION, compiler=None, debug_build=False):
+    if debug_build:
+        import os as _os
+        cache = Path(_os.environ.get("LOCALAPPDATA", _os.environ.get("HOME", ""))) / "nuitka"
+        print(f"[debug] Nuitka build cache: {cache}")
+        print(f"[debug] Pass --debug-build to inspect .c/.o files per module")
+
     plat = _detect_plat(target_platform)
 
     build.compile_assets(c)
@@ -139,8 +145,8 @@ def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_
         shutil.rmtree(str(updater_dist))
         print(f"Removed {updater_dist}")
 
-    build.compile(c, target_platform=target_platform, app_name=app_name, version=version, compiler=compiler)
-    build.compile_updater(c, target_platform=target_platform)
+    build.compile(c, target_platform=target_platform, app_name=app_name, version=version, compiler=compiler, debug_build=debug_build)
+    build.compile_updater(c, target_platform=target_platform, debug_build=debug_build)
 
     app_dist_dir = _app_dist_dir(plat)
     if not app_dist_dir.exists():

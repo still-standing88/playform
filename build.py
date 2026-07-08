@@ -126,15 +126,8 @@ def build_assets_pyd(c):
 
 
 @task(pre=[build_assets_pyd])
-def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, compiler=None):
-    """Compile the application with Nuitka.
-
-    Args:
-        target_platform: windows / linux / darwin  (auto-detected if omitted)
-        app_name:        Output executable name     (default: APP_NAME)
-        version:         App version string         (default: APP_VERSION)
-        compiler:        Nuitka compiler flag without leading -- (e.g. msvc, msvc=14.3, clang, mingw64)
-    """
+def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, compiler=None, debug_build=False):
+    """Compile the application with Nuitka."""
     plat = _detect_platform(target_platform)
     output_dir = BIN_DIR
 
@@ -147,6 +140,8 @@ def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, com
     print(f"Output dir  : {output_dir}")
 
     args = _base_args(output_dir)
+    if debug_build:
+        args += ["--show-scons", "--verbose-output", "--show-modules", "--show-progress"]
     args += _translation_data_args()
 
     args += [
@@ -229,7 +224,7 @@ def _updater_linux_args() -> list[str]:
 
 
 @task
-def compile_updater(c, target_platform=None):
+def compile_updater(c, target_platform=None, debug_build=False):
     plat = _detect_platform(target_platform)
     output_dir = BIN_DIR
 
@@ -242,6 +237,8 @@ def compile_updater(c, target_platform=None):
     print(f"Output dir  : {output_dir}")
 
     args = _updater_base_args(output_dir)
+    if debug_build:
+        args += ["--show-scons", "--verbose-output", "--show-modules", "--show-progress"]
 
     if plat == "windows":
         args += _updater_windows_args()
