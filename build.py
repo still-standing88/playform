@@ -39,13 +39,16 @@ def _join_cmd(args) -> str:
     return " ".join(parts)
 
 
-def _base_args(output_dir) -> list[str]:
+def _base_args(output_dir, debug_build=False) -> list[str]:
     """Options that are identical across all platforms."""
-    return [
+    args = [
         sys.executable, "-m", "nuitka",
         "--standalone",
         "--deployment",
-        "--remove-output",
+    ]
+    if not debug_build:
+        args.append("--remove-output")
+    args.extend([
         #"--low-memory",
         "--no-debug-immortal-assumptions",
         "--include-package-data=qdarkstyle",
@@ -60,7 +63,8 @@ def _base_args(output_dir) -> list[str]:
         f"--include-qt-plugins={','.join(QT_PLUGINS)}",
         "--report=compilation-report.xml",
         f"--output-dir={output_dir}",
-    ]
+    ])
+    return args
 
 
 def _translation_data_args() -> list[str]:
@@ -139,7 +143,18 @@ def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, com
     print(f"Entry point : {ENTRY_POINT}")
     print(f"Output dir  : {output_dir}")
 
-    args = _base_args(output_dir)
+    if debug_build:
+        import shutil as _su
+        build_dir = output_dir / "app.build"
+        if build_dir.exists():
+            _su.rmtree(str(build_dir))
+            print(f"Cleaned previous build dir: {build_dir}")
+        dist_dir = output_dir / "app.dist"
+        if dist_dir.exists():
+            _su.rmtree(str(dist_dir))
+            print(f"Cleaned previous dist dir: {dist_dir}")
+
+    args = _base_args(output_dir, debug_build=debug_build)
     if debug_build:
         args += ["--show-scons", "--verbose-output", "--show-modules", "--show-progress"]
     args += _translation_data_args()
@@ -195,16 +210,20 @@ def build(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, compi
     compile(c, target_platform=target_platform, app_name=app_name, version=version, compiler=compiler)
 
 
-def _updater_base_args(output_dir) -> list[str]:
-    return [
+def _updater_base_args(output_dir, debug_build=False) -> list[str]:
+    args = [
         sys.executable, "-m", "nuitka",
         "--standalone",
         "--deployment",
-        "--remove-output",
+    ]
+    if not debug_build:
+        args.append("--remove-output")
+    args.extend([
         "--no-debug-immortal-assumptions",
         "--report=updater-compilation-report.xml",
         f"--output-dir={output_dir}",
-    ]
+    ])
+    return args
 
 
 def _updater_windows_args() -> list[str]:
@@ -236,7 +255,7 @@ def compile_updater(c, target_platform=None, debug_build=False):
     print(f"Entry point : {UPDATER_ENTRY}")
     print(f"Output dir  : {output_dir}")
 
-    args = _updater_base_args(output_dir)
+    args = _updater_base_args(output_dir, debug_build=debug_build)
     if debug_build:
         args += ["--show-scons", "--verbose-output", "--show-modules", "--show-progress"]
 
