@@ -50,6 +50,7 @@ class PlayerControls(QWidget):
     jumpToEndRequested = Signal()
     stopRequested = Signal()
     screenshotRequested = Signal()
+    trackTitleChanged = Signal(str)
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -462,7 +463,9 @@ class PlayerControls(QWidget):
         self.time_label.setText(time_text)
         
     def set_current_track(self, track_name):
-        self.current_track_label.setText(track_name)
+        if self.current_track_label.text() != track_name:
+            self.current_track_label.setText(track_name)
+            self.trackTitleChanged.emit(track_name)
         
     def get_seek_position(self):
         return self.seek_slider.value()
