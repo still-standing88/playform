@@ -2,6 +2,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 from .toggle_button import ToggleButton
+from .player_key_event_filter import KeyEventFilter
 
 
 class AccordionSection(QWidget):
@@ -24,6 +25,9 @@ class AccordionSection(QWidget):
         layout.setSpacing(0)
         layout.addWidget(self.header)
         layout.addWidget(self.content)
+
+        self._key_event_filter = KeyEventFilter(self)
+        self._key_event_filter.install_on_widgets([self.header])
 
     def _on_header_actuated(self, is_open: bool):
         if self._syncing:
