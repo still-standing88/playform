@@ -1,3 +1,4 @@
+import shiboken6
 from PySide6.QtWidgets import QPushButton, QGraphicsOpacityEffect, QGraphicsDropShadowEffect
 from PySide6.QtCore import Signal, QPropertyAnimation, QEasingCurve, QRect, Qt, QParallelAnimationGroup, QSize
 from PySide6.QtGui import QFont, QColor
@@ -52,7 +53,24 @@ class ToggleButton(QPushButton):
         self.shadowAnimation = QPropertyAnimation(self.shadowEffect, b"blurRadius")
         self.shadowAnimation.setDuration(200)
         self.shadowAnimation.setEasingCurve(QEasingCurve.Type.OutQuad)
-        
+
+    def _ensure_opacity_effect(self):
+        # setGraphicsEffect() deletes a widget's previously-installed effect
+        # when swapping to a new one, so opacityEffect/shadowEffect become
+        # dangling C++ objects each time they're swapped out for the other.
+        if not shiboken6.isValid(self.opacityEffect):
+            self.opacityEffect = QGraphicsOpacityEffect()
+            self.opacityAnimation.setTargetObject(self.opacityEffect)
+
+    def _ensure_shadow_effect(self):
+        if not shiboken6.isValid(self.shadowEffect):
+            self.shadowEffect = QGraphicsDropShadowEffect()
+            self.shadowEffect.setBlurRadius(8)
+            self.shadowEffect.setOffset(0, 4)
+            self.shadowEffect.setColor(QColor(46, 204, 113, 76))
+            self.shadowEffect.setEnabled(False)
+            self.shadowAnimation.setTargetObject(self.shadowEffect)
+
     def setupStyle(self):
         self.base_style = """
             QPushButton {
@@ -142,7 +160,8 @@ class ToggleButton(QPushButton):
     def actuatedChange(self):
         if self.animationGroup.state() == QParallelAnimationGroup.State.Running:
             self.animationGroup.stop()
-            
+
+        self._ensure_opacity_effect()
         self.opacityAnimation.setStartValue(1.0)
         self.opacityAnimation.setKeyValueAt(0.5, 0.7)
         self.opacityAnimation.setEndValue(1.0)
@@ -163,7 +182,8 @@ class ToggleButton(QPushButton):
         
     def enterEvent(self, event):
         super().enterEvent(event)
-        if self.activated and hasattr(self, 'shadowEffect'):
+        if self.activated:
+            self._ensure_shadow_effect()
             current_effect = self.graphicsEffect()
             if current_effect != self.shadowEffect:
                 self.setGraphicsEffect(self.shadowEffect)
@@ -172,21 +192,22 @@ class ToggleButton(QPushButton):
             self.shadowAnimation.setStartValue(self.shadowEffect.blurRadius())
             self.shadowAnimation.setEndValue(12)
             self.shadowAnimation.start()
-            
+
     def leaveEvent(self, event):
         super().leaveEvent(event)
-        if hasattr(self, 'shadowEffect') and self.shadowEffect.isEnabled():
+        self._ensure_shadow_effect()
+        if self.shadowEffect.isEnabled():
             self.shadowAnimation.stop()
             self.shadowAnimation.setStartValue(self.shadowEffect.blurRadius())
             self.shadowAnimation.setEndValue(0)
             self.shadowAnimation.finished.connect(self._restoreOpacityEffect)
             self.shadowAnimation.start()
-    
+
     def _restoreOpacityEffect(self):
-        if hasattr(self, 'shadowEffect'):
-            self.shadowEffect.setEnabled(False)
-        if hasattr(self, 'opacityEffect'):
-            self.setGraphicsEffect(self.opacityEffect)
+        self._ensure_shadow_effect()
+        self.shadowEffect.setEnabled(False)
+        self._ensure_opacity_effect()
+        self.setGraphicsEffect(self.opacityEffect)
         try:
             self.shadowAnimation.finished.disconnect(self._restoreOpacityEffect)
         except:
@@ -208,5 +229,5 @@ class ToggleButton(QPushButton):
             self.animationGroup.stop()
             
     def __del__(self):
-        if hasattr(self, 'animationGroup'):
+        if hasattr(self, 'animationGroup') and shiboken6.isValid(self.animationGroup):
             self.animationGroup.stop()
