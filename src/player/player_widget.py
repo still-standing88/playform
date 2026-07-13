@@ -20,6 +20,7 @@ from .video_display_widget import VideoDisplayWidget
 from .timeline import SegmentTimelineWidget
 from gui_controls.player_key_event_filter import KeyEventFilter
 from gui_controls.toggle_button import ToggleButton
+from gui_controls.accordion import Accordion
 from .subtitles import SubtitleManager
 from .filters_widget import FiltersWidget
 from .lazy_player import LazyPlaylistPlayer
@@ -79,6 +80,7 @@ class PlayerWidget(QWidget):
 
         self.subtitles_widget = SubtitlesWidget(self)
         self.filters_widget = FiltersWidget(self)
+        self.side_accordion = Accordion(self)
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
         
 
@@ -102,6 +104,7 @@ class PlayerWidget(QWidget):
         self.video_display.set_position_info(left_layout, 0)
         
         self.main_splitter.addWidget(left_widget)
+        self.main_splitter.addWidget(self.side_accordion)
 
         self.main_splitter.setSizes([800, 300])
         self.main_splitter.setStretchFactor(0, 1)
