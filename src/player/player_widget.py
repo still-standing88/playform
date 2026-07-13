@@ -847,6 +847,17 @@ class PlayerWidget(QWidget):
         if source != self._current_ytdlp_source:
             return  # stale result for a track we've since navigated away from
 
+        chapters = [
+            {
+                "start": chapter.get("start_time", 0.0),
+                "end": chapter.get("end_time", 0.0),
+                "title": chapter.get("title", ""),
+            }
+            for chapter in info.get("chapters") or []
+        ]
+        if chapters:
+            self.chapters_widget.load_chapters(chapters)
+
     def _on_ytdlp_metadata_error(self, source: str, error_msg: str):
         if source != self._current_ytdlp_source:
             return
