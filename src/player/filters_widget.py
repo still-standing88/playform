@@ -3,10 +3,8 @@ import utilities.vlc_bootstrap
 import av_play
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QDoubleSpinBox, QSpinBox
-from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt
 
-from gui_controls.toggle_button import ToggleButton
 from gui_controls.player_key_event_filter import KeyEventFilter
 
 
@@ -19,30 +17,13 @@ class FiltersWidget(QWidget):
 		self.setup_ui()
 		self.connect_signals()
 		self._install_event_filter()
-		
-		self.controls_container.setVisible(False)
-		self.toggle_btn.setText(_("Show Filters"))
-		self.toggle_btn.setActuated(True)
+
 		self.reset_filters()
 
 	def setup_ui(self):
 		layout = QVBoxLayout(self)
 		layout.setContentsMargins(5, 5, 5, 5)
 		layout.setSpacing(5)
-
-		header_layout = QHBoxLayout()
-
-		self.title_label = QLabel(_("Filters"), self)
-		self.title_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
-		header_layout.addWidget(self.title_label)
-
-		header_layout.addStretch()
-
-		self.toggle_btn = ToggleButton(_("Hide Filters"), self)
-		self.toggle_btn.setFixedSize(60, 25)
-		header_layout.addWidget(self.toggle_btn)
-
-		layout.addLayout(header_layout)
 
 		self.controls_container = QWidget(self)
 		controls_layout = QVBoxLayout(self.controls_container)
@@ -98,7 +79,6 @@ class FiltersWidget(QWidget):
 		spin.setAccessibleName(name)
 
 	def connect_signals(self):
-		self.toggle_btn.actuated.connect(self.toggle_filters)
 		self.brightness_spin.valueChanged.connect(lambda v: self._on_value_changed("brightness", float(v)))
 		self.contrast_spin.valueChanged.connect(lambda v: self._on_value_changed("contrast", float(v)))
 		self.gamma_spin.valueChanged.connect(lambda v: self._on_value_changed("gamma", float(v)))
@@ -108,13 +88,6 @@ class FiltersWidget(QWidget):
 	def set_player(self, player: av_play.VLCVideoPlayer):
 		self.player = player
 		self.reset_filters()
-
-	def toggle_filters(self, hidden: bool):
-		self.controls_container.setVisible(not hidden)
-		if hidden:
-			self.toggle_btn.setText(_("Show Filters"))
-		else:
-			self.toggle_btn.setText(_("Hide Filters"))
 
 	def _on_value_changed(self, name: str, value: float):
 		if self._building:
@@ -150,6 +123,6 @@ class FiltersWidget(QWidget):
 	def _install_event_filter(self):
 		widgets = [
 			self.brightness_spin, self.contrast_spin, self.gamma_spin,
-			self.hue_spin, self.saturation_spin, self.toggle_btn
+			self.hue_spin, self.saturation_spin
 		]
 		self._key_event_filter.install_on_widgets(widgets)
