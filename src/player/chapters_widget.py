@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QItemSelectionModel
 from PySide6.QtGui import QColor
 
 from gui_controls.player_key_event_filter import KeyEventFilter
@@ -79,6 +79,10 @@ class ChaptersWidget(QWidget):
             item = self.chapters_list.item(active_idx)
             item.setBackground(QColor(255, 255, 0, 80))
             self.chapters_list.scrollToItem(item)
+            self.chapters_list.selectionModel().setCurrentIndex(
+                self.chapters_list.model().index(active_idx, 0),
+                QItemSelectionModel.SelectionFlag.NoUpdate,
+            )
 
         self._highlighted_idx = active_idx
 
