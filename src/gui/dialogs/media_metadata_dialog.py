@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, QPushButton
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, QApplication
 from PySide6.QtCore import Qt
 
 
@@ -37,21 +37,36 @@ class MediaMetadataDialog(QDialog):
     def setup_ui(self, rows: list[tuple[str, str]]):
         layout = QVBoxLayout(self)
 
-        self.metadata_list = QListWidget(self)
-        self.metadata_list.setAlternatingRowColors(True)
-        self.metadata_list.setSelectionMode(QListWidget.SelectionMode.NoSelection)
-        for label, value in rows:
-            item = QListWidgetItem(f"{label}:  {value}")
-            item.setToolTip(value)
-            self.metadata_list.addItem(item)
-        layout.addWidget(self.metadata_list, 1)
+        self.metadata_edit = QTextEdit(self)
+        self.metadata_edit.setReadOnly(True)
+        self.metadata_edit.setTabChangesFocus(True)
+        self.metadata_edit.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse |
+            Qt.TextInteractionFlag.TextSelectableByKeyboard
+        )
+        self.metadata_edit.setPlainText(self._rows_to_text(rows))
+        layout.addWidget(self.metadata_edit, 1)
 
         button_layout = QHBoxLayout()
+
+        self.copy_button = QPushButton(_("Copy"), self)
+        self.copy_button.clicked.connect(self.copy_to_clipboard)
+        button_layout.addWidget(self.copy_button)
+
         button_layout.addStretch()
+
         self.close_button = QPushButton(_("Close"), self)
         self.close_button.clicked.connect(self.accept)
         button_layout.addWidget(self.close_button)
+
         layout.addLayout(button_layout)
+
+    @staticmethod
+    def _rows_to_text(rows: list[tuple[str, str]]) -> str:
+        return "\n".join(f"{label}: {value}" for label, value in rows)
+
+    def copy_to_clipboard(self):
+        QApplication.clipboard().setText(self.metadata_edit.toPlainText())
 
     @classmethod
     def from_local_metadata(cls, path: str, metadata: dict, parent=None) -> "MediaMetadataDialog":
