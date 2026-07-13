@@ -113,6 +113,27 @@ class _YtdlpSubtitleFetchThread(QThread):
         self.finished_ok.emit(self._source, ok)
 
 
+class _SubtitleFileDownloadThread(QThread):
+    finished_ok = Signal(str)  # save_path
+    error_occurred = Signal(str)
+
+    def __init__(self, url: str, save_path: str, parent=None):
+        super().__init__(parent)
+        self._url = url
+        self._save_path = save_path
+
+    def run(self):
+        try:
+            import httpx
+            response = httpx.get(self._url, timeout=15.0)
+            response.raise_for_status()
+            with open(self._save_path, "wb") as f:
+                f.write(response.content)
+            self.finished_ok.emit(self._save_path)
+        except Exception as e:
+            self.error_occurred.emit(str(e))
+
+
 class PlayerWidget(QWidget):
 
     playbackStateChanged = Signal(bool)
@@ -132,6 +153,8 @@ class PlayerWidget(QWidget):
         self._youtube_info_cache: Dict[str, dict] = {}
         self._ytdlp_metadata_thread: Optional[_YtdlpInfoFetchThread] = None
         self._ytdlp_subtitle_thread: Optional[_YtdlpSubtitleFetchThread] = None
+        self._subtitle_download_thread: Optional[_SubtitleFileDownloadThread] = None
+        self._metadata_dialog_thread: Optional[_YtdlpInfoFetchThread] = None
         self._current_ytdlp_source: Optional[str] = None
         self._ytdlp_subtitle_tracks: Dict[str, list] = {}
         self._last_subtitle_text: Optional[str] = None
@@ -1227,15 +1250,22 @@ class PlayerWidget(QWidget):
         if not save_path:
             return
 
-        try:
-            import httpx
-            response = httpx.get(fmt["url"], timeout=15.0)
-            response.raise_for_status()
-            with open(save_path, "wb") as f:
-                f.write(response.content)
-            signal_manager.statusbar_message.emit(_("Subtitle saved to {path}").format(path=save_path))
-        except Exception as e:
-            QMessageBox.warning(self, _("Download Failed"), str(e))
+        if self._subtitle_download_thread and self._subtitle_download_thread.isRunning():
+            self._subtitle_download_thread.quit()
+            self._subtitle_download_thread.wait(100)
+
+        thread = _SubtitleFileDownloadThread(fmt["url"], save_path, self)
+        thread.finished_ok.connect(self._on_subtitle_download_finished)
+        thread.error_occurred.connect(self._on_subtitle_download_error)
+        self._subtitle_download_thread = thread
+        signal_manager.statusbar_message.emit(_("Downloading subtitle..."))
+        thread.start()
+
+    def _on_subtitle_download_finished(self, save_path: str):
+        signal_manager.statusbar_message.emit(_("Subtitle saved to {path}").format(path=save_path))
+
+    def _on_subtitle_download_error(self, error_msg: str):
+        QMessageBox.warning(self, _("Download Failed"), error_msg)
 
     def view_youtube_comments(self):
         current_file = self.player_controls._source_url or self.player_controls._current_file
@@ -1266,15 +1296,32 @@ class PlayerWidget(QWidget):
             dialog.exec()
         elif is_url_supported(source):
             info = self._youtube_info_cache.get(source)
-            if not info:
-                try:
-                    info = fetch_full_info(source)
-                    self._cache_youtube_info(source, info)
-                except Exception as e:
-                    QMessageBox.warning(self, _("Metadata Error"), str(e))
-                    return
-            dialog = MediaMetadataDialog.from_url_info(source, info, parent=self.window())
-            dialog.exec()
+            if info:
+                dialog = MediaMetadataDialog.from_url_info(source, info, parent=self.window())
+                dialog.exec()
+            else:
+                self._fetch_metadata_for_dialog(source)
+
+    def _fetch_metadata_for_dialog(self, source: str):
+        if self._metadata_dialog_thread and self._metadata_dialog_thread.isRunning():
+            self._metadata_dialog_thread.quit()
+            self._metadata_dialog_thread.wait(100)
+
+        thread = _YtdlpInfoFetchThread(source, self)
+        thread.result_ready.connect(self._on_metadata_dialog_info_ready)
+        thread.error_occurred.connect(self._on_metadata_dialog_info_error)
+        self._metadata_dialog_thread = thread
+        signal_manager.statusbar_message.emit(_("Fetching media metadata..."))
+        thread.start()
+
+    def _on_metadata_dialog_info_ready(self, source: str, info: dict):
+        self._cache_youtube_info(source, info)
+        from gui.dialogs.media_metadata_dialog import MediaMetadataDialog
+        dialog = MediaMetadataDialog.from_url_info(source, info, parent=self.window())
+        dialog.exec()
+
+    def _on_metadata_dialog_info_error(self, source: str, error_msg: str):
+        QMessageBox.warning(self, _("Metadata Error"), error_msg)
 
     def closeEvent(self, event):
         try:
@@ -1287,6 +1334,14 @@ class PlayerWidget(QWidget):
             if self._ytdlp_subtitle_thread and self._ytdlp_subtitle_thread.isRunning():
                 self._ytdlp_subtitle_thread.quit()
                 self._ytdlp_subtitle_thread.wait(2000)
+
+            if self._subtitle_download_thread and self._subtitle_download_thread.isRunning():
+                self._subtitle_download_thread.quit()
+                self._subtitle_download_thread.wait(2000)
+
+            if self._metadata_dialog_thread and self._metadata_dialog_thread.isRunning():
+                self._metadata_dialog_thread.quit()
+                self._metadata_dialog_thread.wait(2000)
 
             self.player_controls.save_last_position()
             if self.player.primary_instance is not None:
