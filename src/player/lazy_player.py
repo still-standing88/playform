@@ -88,6 +88,13 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
         count = vlc.libvlc_audio_equalizer_get_band_count()
         return [vlc.libvlc_audio_equalizer_get_band_frequency(i) for i in range(count)]
 
+    def get_preset_amps(self, preset: int) -> List[float]:
+        eq = vlc.libvlc_audio_equalizer_new_from_preset(preset)
+        band_count = vlc.libvlc_audio_equalizer_get_band_count()
+        amps = [eq.get_amp_at_index(band) for band in range(band_count)]
+        eq.release()
+        return amps
+
     def set_equalizer(self, band_amps: List[float], preamp: float = 0.0, preset: Optional[int] = None,
                        persist: bool = True) -> None:
         def apply():
