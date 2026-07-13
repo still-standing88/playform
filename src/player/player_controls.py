@@ -12,6 +12,7 @@ from PySide6.QtGui import QIcon, QFont
 from gui_controls.toggle_button import ToggleButton
 from app_config import prefs
 from .bookmarks_dialog import BookmarksDialog
+from .goto_dialog import GoToDialog
 from app_constance.misc import video_resolutions, video_speeds, video_aspect_ratios, video_scales
 from app_constance.styles import (PLAYER_CONTROLS_STYLE, BUTTON_STYLE, SLIDER_STYLE,
                                    TIME_LABEL_STYLE, TRACK_LABEL_STYLE, TOOLBUTTON_STYLE,
@@ -135,7 +136,12 @@ class PlayerControls(QWidget):
         self.bookmarks_btn.setIcon(load_icon("bookmarks.svg"))
         self.bookmarks_btn.setText(_("Bookmarks"))
         self.bookmarks_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        
+
+        self.goto_btn = QToolButton(self)
+        self.goto_btn.setIcon(load_icon("seek.svg"))
+        self.goto_btn.setText(_("Go to"))
+        self.goto_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+
         self.screenshot_btn = QToolButton(self)
         self.screenshot_btn.setIcon(load_icon("screenshot.svg"))
         self.screenshot_btn.setText(_("Screenshot"))
@@ -150,6 +156,7 @@ class PlayerControls(QWidget):
             (self.repeat_btn, 90, 40, _("Repeat mode")),
             (self.shuffle_btn, 110, 40, _("Shuffle")),
             (self.bookmarks_btn, 130, 40, _("Bookmarks list")),
+            (self.goto_btn, 110, 40, _("Go to time")),
             (self.screenshot_btn, 130, 40, _("Take screenshot")),
         ]
 
@@ -235,6 +242,7 @@ class PlayerControls(QWidget):
         self.transport_layout.addWidget(self.repeat_btn)
         self.transport_layout.addWidget(self.shuffle_btn)
         self.transport_layout.addWidget(self.bookmarks_btn)
+        self.transport_layout.addWidget(self.goto_btn)
         self.transport_layout.addWidget(self.screenshot_btn)
         
         self.volume_layout = QHBoxLayout()
@@ -262,7 +270,7 @@ class PlayerControls(QWidget):
             self.next_btn, self.repeat_btn, self.separator1,
             self.seek_icon_label, self.seek_slider, self.separator2, self.mute_btn,
             self.volume_icon_label,
-            self.volume_slider, self.time_label, self.current_track_label, self.shuffle_btn, self.bookmarks_btn, self.screenshot_btn, 
+            self.volume_slider, self.time_label, self.current_track_label, self.shuffle_btn, self.bookmarks_btn, self.goto_btn, self.screenshot_btn,
             self.more_btn
         ]
         
@@ -276,6 +284,7 @@ class PlayerControls(QWidget):
         self.repeat_btn.clicked.connect(self.repeatClicked.emit)
         self.shuffle_btn.clicked.connect(self.shuffleClicked.emit)
         self.bookmarks_btn.clicked.connect(self.show_bookmarks_dialog)
+        self.goto_btn.clicked.connect(self.show_goto_dialog)
         self.screenshot_btn.clicked.connect(self.screenshotRequested.emit)
         
         self.seek_slider.valueChanged.connect(self._on_seek_value_changed)
@@ -509,7 +518,29 @@ class PlayerControls(QWidget):
         self._bookmarks_dialog = None
         if hasattr(mw, '_dialog_open'):
             mw._dialog_open = False
-    
+
+    @Slot()
+    def show_goto_dialog(self):
+        if not self._current_file:
+            return
+        mw = self.window()
+        if hasattr(mw, '_dialog_open') and mw._dialog_open:
+            return
+        if hasattr(mw, '_dialog_open'):
+            mw._dialog_open = True
+        dlg = GoToDialog(self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            seconds = dlg.get_seconds()
+            if seconds is not None:
+                self.jump_to_time(seconds)
+        if hasattr(mw, '_dialog_open'):
+            mw._dialog_open = False
+
+    def jump_to_time(self, seconds: float):
+        position = int(seconds)
+        self.set_seek_position(position)
+        self.seekChanged.emit(position)
+
     def add_bookmark_at_current_position(self):
         if not self._current_file:
             return

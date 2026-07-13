@@ -55,6 +55,7 @@ key_dict = {
 "Exit fullscreen": "Esc",
 "Take snapshot": "Ctrl+s",
 "Bookmarks list": "Ctrl+B",
+"Go to time": "Ctrl+G",
 "New mark at current position": "K",
 "Repeat loop start": "[",
 "Repeat loop end": "]",

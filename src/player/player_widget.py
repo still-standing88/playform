@@ -1119,6 +1119,7 @@ class PlayerWidget(QWidget):
             hotkeys["Volume up"]: lambda: self._call_if_enabled(self.player_controls.volume_slider, self.player_controls.volume_up),
             hotkeys["Volume down"]: lambda: self._call_if_enabled(self.player_controls.volume_slider, self.player_controls.volume_down),
             hotkeys["Bookmarks list"]: lambda: self.player_controls.show_bookmarks_dialog(),
+            hotkeys["Go to time"]: lambda: self.player_controls.show_goto_dialog(),
             hotkeys["New mark at current position"]: lambda: self.player_controls.add_bookmark_at_current_position(),
             hotkeys["Repeat loop start"]: lambda: self._on_repeat_start_shortcut(),
             hotkeys["Repeat loop end"]: lambda: self._on_repeat_end_shortcut(),
@@ -1190,7 +1191,7 @@ class PlayerWidget(QWidget):
         widgets = [
             self.player_controls.previous_btn, self.player_controls.backward_btn, self.player_controls.play_pause_btn, 
             self.player_controls.forward_btn, self.player_controls.next_btn, self.player_controls.repeat_btn, self.player_controls.shuffle_btn,
-            self.player_controls.bookmarks_btn, self.player_controls.screenshot_btn,
+            self.player_controls.bookmarks_btn, self.player_controls.goto_btn, self.player_controls.screenshot_btn,
             self.player_controls.seek_slider, self.player_controls.mute_btn, self.player_controls.volume_slider,
             self.player_controls.time_label, self.player_controls.current_track_label, self.player_controls.more_btn,
             self.player_controls.toggle_controls_btn
