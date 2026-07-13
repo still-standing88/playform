@@ -54,6 +54,12 @@ class PlayerControls(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Qt reparents this widget to whatever layout it's later added to
+        # (e.g. PlayerWidget's left_layout reparents it to an anonymous
+        # container widget), so self.parent() no longer reliably points at
+        # the owning PlayerWidget by the time these delegate methods run -
+        # keep our own reference to the constructor-time parent instead.
+        self._player_widget = parent
         self.last_position:Optional[int] = None
         self.is_minimized = False
         self.is_playing = False
@@ -941,19 +947,16 @@ class PlayerControls(QWidget):
         return menu
 
     def _view_media_metadata(self):
-        parent = self.parent()
-        if parent and hasattr(parent, 'view_media_metadata'):
-            parent.view_media_metadata()  # type: ignore
+        if self._player_widget and hasattr(self._player_widget, 'view_media_metadata'):
+            self._player_widget.view_media_metadata()  # type: ignore
 
     def _download_subtitle_file(self):
-        parent = self.parent()
-        if parent and hasattr(parent, 'download_subtitle_file'):
-            parent.download_subtitle_file()  # type: ignore
+        if self._player_widget and hasattr(self._player_widget, 'download_subtitle_file'):
+            self._player_widget.download_subtitle_file()  # type: ignore
 
     def _view_youtube_comments(self):
-        parent = self.parent()
-        if parent and hasattr(parent, 'view_youtube_comments'):
-            parent.view_youtube_comments()  # type: ignore
+        if self._player_widget and hasattr(self._player_widget, 'view_youtube_comments'):
+            self._player_widget.view_youtube_comments()  # type: ignore
 
     def _copy_current_path(self):
         """Copy current file path to clipboard"""
@@ -962,8 +965,7 @@ class PlayerControls(QWidget):
             clipboard.setText(self._current_file)
     
     def _show_youtube_info_dialog(self):
-        """Show YouTube info dialog via parent"""
-        parent = self.parent()
-        if parent and hasattr(parent, 'show_youtube_info_dialog'):
-            parent.show_youtube_info_dialog()  # type: ignore
+        """Show YouTube info dialog via the owning PlayerWidget"""
+        if self._player_widget and hasattr(self._player_widget, 'show_youtube_info_dialog'):
+            self._player_widget.show_youtube_info_dialog()  # type: ignore
 
