@@ -21,6 +21,7 @@ from utilities.functions import get_app_path
 from .playback_state_manager import PlaybackStateManager
 from utilities.functions import is_youtube_url, is_local_file, open_file_location
 from utilities.icon_loader import load_icon, load_pixmap
+from .url import is_url_supported
 
 
 class PlayerControls(QWidget):
@@ -945,7 +946,17 @@ class PlayerControls(QWidget):
             comments_action = menu.addAction(_("View Comments..."))
             comments_action.triggered.connect(self._view_youtube_comments)
 
+        if is_local_file(self._current_file) or is_url_supported(source):
+            menu.addSeparator()
+            metadata_action = menu.addAction(_("View Media Metadata..."))
+            metadata_action.triggered.connect(self._view_media_metadata)
+
         return menu
+
+    def _view_media_metadata(self):
+        parent = self.parent()
+        if parent and hasattr(parent, 'view_media_metadata'):
+            parent.view_media_metadata()  # type: ignore
 
     def _download_subtitle_file(self):
         parent = self.parent()

@@ -26,7 +26,7 @@ from .subtitles import SubtitleManager
 from .filters_widget import FiltersWidget
 from .chapters_widget import ChaptersWidget
 from .equalizer_widget import EqualizerWidget
-from utilities.chapter_probe import get_chapters
+from utilities.chapter_probe import get_chapters, get_media_metadata
 from .url import is_url_supported, fetch_full_info
 from .lazy_player import LazyPlaylistPlayer
 from app_constance.styles import PLAYER_WIDGET_STYLE
@@ -879,6 +879,8 @@ class PlayerWidget(QWidget):
         if source != self._current_ytdlp_source:
             return  # stale result for a track we've since navigated away from
 
+        self._cache_youtube_info(source, info)
+
         chapters = [
             {
                 "start": chapter.get("start_time", 0.0),
@@ -1243,6 +1245,34 @@ class PlayerWidget(QWidget):
         from gui.dialogs.youtube_comments_dialog import YouTubeCommentsDialog
         dialog = YouTubeCommentsDialog(current_file, parent=self.window())
         dialog.exec()
+
+    def view_media_metadata(self):
+        current_file = self.player_controls._current_file
+        source = self.player_controls._source_url or current_file
+        if not source:
+            return
+
+        from gui.dialogs.media_metadata_dialog import MediaMetadataDialog
+
+        if current_file and is_local_file(current_file):
+            try:
+                metadata = get_media_metadata(current_file)
+            except Exception as e:
+                QMessageBox.warning(self, _("Metadata Error"), str(e))
+                return
+            dialog = MediaMetadataDialog.from_local_metadata(current_file, metadata, parent=self.window())
+            dialog.exec()
+        elif is_url_supported(source):
+            info = self._youtube_info_cache.get(source)
+            if not info:
+                try:
+                    info = fetch_full_info(source)
+                    self._cache_youtube_info(source, info)
+                except Exception as e:
+                    QMessageBox.warning(self, _("Metadata Error"), str(e))
+                    return
+            dialog = MediaMetadataDialog.from_url_info(source, info, parent=self.window())
+            dialog.exec()
 
     def closeEvent(self, event):
         try:
