@@ -32,9 +32,10 @@ class ChaptersWidget(QWidget):
         layout.addWidget(self.chapters_list)
 
     def connect_signals(self):
-        self.chapters_list.itemDoubleClicked.connect(self._on_item_double_clicked)
+        self.chapters_list.itemClicked.connect(self._on_item_activated)
+        self.chapters_list.itemActivated.connect(self._on_item_activated)
 
-    def _on_item_double_clicked(self, item: QListWidgetItem):
+    def _on_item_activated(self, item: QListWidgetItem):
         start = item.data(Qt.ItemDataRole.UserRole)
         if start is not None:
             self.chapterActivated.emit(float(start))

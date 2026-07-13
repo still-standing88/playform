@@ -18,6 +18,11 @@ class KeyEventFilter(QObject):
                     event.accept()
                     return True
 
+            if isinstance(watched, QListWidget):
+                if key in (Qt.Key.Key_Enter, Qt.Key.Key_Return, Qt.Key.Key_Space):
+                    event.accept()
+                    return True
+
             if isinstance(watched, (QPushButton, QToolButton, QCheckBox)):
                 if key in (Qt.Key.Key_Space, Qt.Key.Key_Enter, Qt.Key.Key_Return):
                     event.accept()
