@@ -7,7 +7,8 @@ from utilities.functions import isValidURL
 
 class URLDialog(QDialog):
     url_opened = Signal(str)
-    
+    download_requested = Signal(str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(_("Open URL"))
@@ -33,7 +34,11 @@ class URLDialog(QDialog):
         self.open_button.clicked.connect(self.open_url)
         self.open_button.setDefault(True)
         button_layout.addWidget(self.open_button)
-        
+
+        self.download_button = QPushButton(_("Download"))
+        self.download_button.clicked.connect(self.download_url)
+        button_layout.addWidget(self.download_button)
+
         self.cancel_button = QPushButton(_("Cancel"))
         self.cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(self.cancel_button)
@@ -66,18 +71,35 @@ class URLDialog(QDialog):
         prefs.prefs["urlls"] = urls
         prefs.save()
         
-    @Slot()
-    def open_url(self):
+    def _get_validated_url(self) -> str:
         url = self.url_combo.currentText().strip()
-        
+
         if not url:
             QMessageBox.warning(self, _("No URL"), _("Please enter a URL."))
-            return
-            
+            return ""
+
         if not self.is_valid_url(url):
             QMessageBox.warning(self, _("Invalid URL"), f"'{url}' {_("is not a valid URL. Check the URL format and try again.")}")
+            return ""
+
+        return url
+
+    @Slot()
+    def open_url(self):
+        url = self._get_validated_url()
+        if not url:
             return
 
         self.add_url_to_history(url)
         self.accept()
         QTimer.singleShot(0, lambda: self.url_opened.emit(url))
+
+    @Slot()
+    def download_url(self):
+        url = self._get_validated_url()
+        if not url:
+            return
+
+        self.add_url_to_history(url)
+        self.accept()
+        QTimer.singleShot(0, lambda: self.download_requested.emit(url))

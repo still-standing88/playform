@@ -395,7 +395,22 @@ class MainWindow(QMainWindow):
     def open_url_dialog(self):
         dialog = URLDialog(self)
         dialog.url_opened.connect(self.play_url)
+        dialog.download_requested.connect(self.download_url)
         dialog.exec()
+
+    def download_url(self, url: str):
+        from player.url import is_url_supported
+        from player.utilities import ensure_ytdlp_available
+
+        downloader = self._get_shared_downloader()
+        if is_url_supported(url):
+            if not ensure_ytdlp_available(self):
+                return
+            downloader.add_ytdlp_download(url)
+        else:
+            downloader.add_download(url)
+
+        self.open_downloader()
 
     def load_folder_as_playlist(self, folder_path: str):
         media_files = get_media_files_from_directory(folder_path, formats["audio"], formats["video"])
