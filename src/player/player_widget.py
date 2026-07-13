@@ -60,6 +60,48 @@ class _YtdlpInfoFetchThread(QThread):
             self.error_occurred.emit(self._url, str(e))
 
 
+def _pick_ytdlp_subtitle_track(info: dict, preferred_lang: str):
+    preferred_primary = preferred_lang.split("-")[0].lower()
+    for source_key in ("subtitles", "automatic_captions"):
+        tracks = info.get(source_key) or {}
+        if not tracks:
+            continue
+        lang = None
+        if preferred_lang in tracks:
+            lang = preferred_lang
+        else:
+            for key in tracks:
+                if key.split("-")[0].lower() == preferred_primary:
+                    lang = key
+                    break
+        if not lang:
+            lang = next(iter(tracks), None)
+        if not lang:
+            continue
+        formats = tracks[lang]
+        for fmt in formats:
+            if fmt.get("ext") in ("vtt", "srt"):
+                return fmt.get("url"), lang
+        if formats:
+            return formats[0].get("url"), lang
+    return None, None
+
+
+class _YtdlpSubtitleFetchThread(QThread):
+    finished_ok = Signal(str, bool)
+
+    def __init__(self, subtitle_manager, source: str, subtitle_url: str, language: str, parent=None):
+        super().__init__(parent)
+        self._subtitle_manager = subtitle_manager
+        self._source = source
+        self._subtitle_url = subtitle_url
+        self._language = language
+
+    def run(self):
+        ok = self._subtitle_manager.load_from_ytdlp_track(self._subtitle_url, self._language)
+        self.finished_ok.emit(self._source, ok)
+
+
 class PlayerWidget(QWidget):
 
     playbackStateChanged = Signal(bool)
@@ -77,6 +119,7 @@ class PlayerWidget(QWidget):
         self._key_event_filter = KeyEventFilter(self)
         self._youtube_info_cache: Dict[str, dict] = {}
         self._ytdlp_metadata_thread: Optional[_YtdlpInfoFetchThread] = None
+        self._ytdlp_subtitle_thread: Optional[_YtdlpSubtitleFetchThread] = None
         self._current_ytdlp_source: Optional[str] = None
         self._last_subtitle_text: Optional[str] = None
 
@@ -858,6 +901,26 @@ class PlayerWidget(QWidget):
         if chapters:
             self.chapters_widget.load_chapters(chapters)
 
+        subtitle_url, lang = _pick_ytdlp_subtitle_track(info, prefs.prefs.get("subtitle-language", "en-US"))
+        if subtitle_url:
+            self._fetch_ytdlp_subtitles(source, subtitle_url, lang)
+
+    def _fetch_ytdlp_subtitles(self, source: str, subtitle_url: str, language: str):
+        if self._ytdlp_subtitle_thread and self._ytdlp_subtitle_thread.isRunning():
+            self._ytdlp_subtitle_thread.quit()
+            self._ytdlp_subtitle_thread.wait(100)
+
+        thread = _YtdlpSubtitleFetchThread(self.subtitle_manager, source, subtitle_url, language, self)
+        thread.finished_ok.connect(self._on_ytdlp_subtitles_ready)
+        self._ytdlp_subtitle_thread = thread
+        thread.start()
+
+    def _on_ytdlp_subtitles_ready(self, source: str, ok: bool):
+        if source != self._current_ytdlp_source:
+            return  # stale result for a track we've since navigated away from
+        if ok:
+            self.subtitles_widget.load_all_subtitles(self.subtitle_manager)
+
     def _on_ytdlp_metadata_error(self, source: str, error_msg: str):
         if source != self._current_ytdlp_source:
             return
@@ -1147,6 +1210,10 @@ class PlayerWidget(QWidget):
             if self._ytdlp_metadata_thread and self._ytdlp_metadata_thread.isRunning():
                 self._ytdlp_metadata_thread.quit()
                 self._ytdlp_metadata_thread.wait(2000)
+
+            if self._ytdlp_subtitle_thread and self._ytdlp_subtitle_thread.isRunning():
+                self._ytdlp_subtitle_thread.quit()
+                self._ytdlp_subtitle_thread.wait(2000)
 
             self.player_controls.save_last_position()
             if self.player.primary_instance is not None:

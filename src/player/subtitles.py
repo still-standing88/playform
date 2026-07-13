@@ -52,26 +52,46 @@ class SubtitleManager:
             encoding = self._get_encoding(self.current_subtitle_path)
             with open(self.current_subtitle_path, "r", encoding=encoding, errors='ignore') as f:
                 content = f.read()
+        except Exception:
+            self.clear()
+            return False
 
+        return self.load_from_content(content, language)
+
+    def load_from_ytdlp_track(self, subtitle_url: str, language: str = 'en-US') -> bool:
+        self.clear()
+        try:
+            import httpx
+            response = httpx.get(subtitle_url, timeout=15.0)
+            response.raise_for_status()
+            content = response.text
+        except Exception:
+            self.clear()
+            return False
+
+        return self.load_from_content(content, language)
+
+    def load_from_content(self, content: str, language: str = 'en-US') -> bool:
+        try:
             reader_class = detect_format(content)
             if not reader_class:
                 return False
-            
+
             caption_set = reader_class().read(content)
-            
+
             available_langs = caption_set.get_languages()
             if not available_langs:
                 return False
 
             lang_to_use = language if language in available_langs else available_langs[0]
-                
+
             captions: CaptionList = caption_set.get_captions(lang_to_use)
-            
+
             for caption in captions:
                 text = ' '.join([node.content for node in caption.nodes if node.type_ == CaptionNode.TEXT]).strip()
                 if text:
                     self.subtitles.append(SubtitleEntry(text.replace('\n', ' '), caption.start, caption.end))
-            
+
             return len(self.subtitles) > 0
         except Exception:
             self.clear()
