@@ -1235,6 +1235,15 @@ class PlayerWidget(QWidget):
         except Exception as e:
             QMessageBox.warning(self, _("Download Failed"), str(e))
 
+    def view_youtube_comments(self):
+        current_file = self.player_controls._source_url or self.player_controls._current_file
+        if not current_file or not is_youtube_url(current_file):
+            return
+
+        from gui.dialogs.youtube_comments_dialog import YouTubeCommentsDialog
+        dialog = YouTubeCommentsDialog(current_file, parent=self.window())
+        dialog.exec()
+
     def closeEvent(self, event):
         try:
             self._youtube_info_cache.clear()

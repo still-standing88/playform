@@ -942,12 +942,20 @@ class PlayerControls(QWidget):
             download_subs_action = menu.addAction(_("Download Subtitle..."))
             download_subs_action.triggered.connect(self._download_subtitle_file)
 
+            comments_action = menu.addAction(_("View Comments..."))
+            comments_action.triggered.connect(self._view_youtube_comments)
+
         return menu
 
     def _download_subtitle_file(self):
         parent = self.parent()
         if parent and hasattr(parent, 'download_subtitle_file'):
             parent.download_subtitle_file()  # type: ignore
+
+    def _view_youtube_comments(self):
+        parent = self.parent()
+        if parent and hasattr(parent, 'view_youtube_comments'):
+            parent.view_youtube_comments()  # type: ignore
 
     def _copy_current_path(self):
         """Copy current file path to clipboard"""

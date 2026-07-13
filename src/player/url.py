@@ -131,8 +131,45 @@ def fetch_full_info(url: str, cookies: Optional[str] = None):
     
     if result.returncode != 0:
         raise ValueError(f"Failed to fetch full info: {result.stderr}")
-    
+
     return json.loads(result.stdout.strip())
+
+def fetch_video_comments(url: str, cookies: Optional[str] = None, max_comments: int = 200) -> List[dict]:
+    from app_config import prefs
+
+    # yt-dlp's own default is to fetch *all* comments, which can take
+    # minutes-to-effectively-forever on popular videos; cap it so this
+    # stays usable from an interactive dialog.
+    cmd = [
+        YTDLP_PATH, '--dump-json', '--no-playlist', '--write-comments',
+        '--extractor-args', f'youtube:max_comments={max_comments}',
+    ] + _get_deno_arg() + [url]
+
+    if cookies:
+        cmd.extend(['--cookies', cookies])
+    else:
+        cookies_file = prefs.prefs.get("youtube_cookies")
+        if cookies_file:
+            cmd.extend(['--cookies', cookies_file])
+
+    if YTDLP_VERBOSE:
+        cmd.append('--verbose')
+
+    if YTDLP_LOG_FILE:
+        with open(YTDLP_LOG_FILE, 'a') as log:
+            result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
+            log.write(f"Command: {' '.join(cmd)}\n")
+            log.write(f"STDOUT:\n{result.stdout}\n")
+            log.write(f"STDERR:\n{result.stderr}\n")
+            log.write("-" * 80 + "\n")
+    else:
+        result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
+
+    if result.returncode != 0:
+        raise ValueError(f"Failed to fetch comments: {result.stderr}")
+
+    info = json.loads(result.stdout.strip())
+    return info.get("comments") or []
 
 def has_playlist_param(url: str) -> bool:
     try:
