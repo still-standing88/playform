@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider,
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QDoubleSpinBox,
                                 QComboBox, QCheckBox)
 from PySide6.QtCore import Qt
 
@@ -13,7 +13,7 @@ class EqualizerWidget(QWidget):
         super().__init__(parent)
         self.player = player
         self._building = False
-        self._band_sliders: List[QSlider] = []
+        self._band_spins: List[QDoubleSpinBox] = []
         self._key_event_filter = KeyEventFilter(self)
 
         self.setup_ui()
@@ -37,20 +37,27 @@ class EqualizerWidget(QWidget):
 
         preamp_row = QHBoxLayout()
         preamp_row.addWidget(QLabel(_("Preamp"), self))
-        self.preamp_slider = QSlider(Qt.Orientation.Horizontal, self)
-        self.preamp_slider.setRange(-20, 20)
-        self.preamp_slider.setValue(0)
-        self.preamp_slider.setAccessibleName(_("Preamp"))
-        preamp_row.addWidget(self.preamp_slider, 1)
+        self.preamp_spin = self._make_band_spin()
+        self.preamp_spin.setAccessibleName(_("Preamp"))
+        preamp_row.addWidget(self.preamp_spin, 1)
         layout.addLayout(preamp_row)
 
         self.bands_layout = QHBoxLayout()
         layout.addLayout(self.bands_layout)
 
+    @staticmethod
+    def _make_band_spin() -> QDoubleSpinBox:
+        spin = QDoubleSpinBox()
+        spin.setRange(-20.0, 20.0)
+        spin.setDecimals(1)
+        spin.setSingleStep(0.5)
+        spin.setValue(0.0)
+        return spin
+
     def connect_signals(self):
         self.enabled_checkbox.toggled.connect(self._on_enabled_toggled)
         self.preset_combo.currentIndexChanged.connect(self._on_preset_changed)
-        self.preamp_slider.valueChanged.connect(self._on_slider_changed)
+        self.preamp_spin.valueChanged.connect(self._on_value_changed)
 
     def set_player(self, player):
         self.player = player
@@ -62,7 +69,7 @@ class EqualizerWidget(QWidget):
 
         self._building = True
         try:
-            self._build_band_sliders(self.player.get_equalizer_bands())
+            self._build_band_spins(self.player.get_equalizer_bands())
 
             self.preset_combo.clear()
             self.preset_combo.addItem(_("Custom"), -1)
@@ -72,7 +79,7 @@ class EqualizerWidget(QWidget):
             self._building = False
 
         self.setEnabled(True)
-        self._key_event_filter.install_on_widgets(self._band_sliders)
+        self._key_event_filter.install_on_widgets(self._band_spins)
         self._load_saved_state()
 
     @staticmethod
@@ -87,23 +94,20 @@ class EqualizerWidget(QWidget):
             if child_layout:
                 EqualizerWidget._clear_layout(child_layout)
 
-    def _build_band_sliders(self, frequencies: List[float]):
+    def _build_band_spins(self, frequencies: List[float]):
         self._clear_layout(self.bands_layout)
-        self._band_sliders = []
+        self._band_spins = []
         for freq in frequencies:
             column = QVBoxLayout()
-            slider = QSlider(Qt.Orientation.Vertical, self)
-            slider.setRange(-20, 20)
-            slider.setValue(0)
-            slider.setMinimumHeight(100)
-            slider.setAccessibleName(self._format_freq(freq))
-            slider.valueChanged.connect(self._on_slider_changed)
             label = QLabel(self._format_freq(freq), self)
             label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-            column.addWidget(slider, 0, Qt.AlignmentFlag.AlignHCenter)
+            spin = self._make_band_spin()
+            spin.setAccessibleName(self._format_freq(freq))
+            spin.valueChanged.connect(self._on_value_changed)
             column.addWidget(label)
+            column.addWidget(spin)
             self.bands_layout.addLayout(column)
-            self._band_sliders.append(slider)
+            self._band_spins.append(spin)
 
     @staticmethod
     def _format_freq(freq: float) -> str:
@@ -115,11 +119,11 @@ class EqualizerWidget(QWidget):
         self._building = True
         try:
             self.enabled_checkbox.setChecked(bool(prefs.prefs.get("equalizer_enabled", False)))
-            self.preamp_slider.setValue(int(prefs.prefs.get("equalizer_preamp", 0.0)))
+            self.preamp_spin.setValue(float(prefs.prefs.get("equalizer_preamp", 0.0)))
 
             bands = prefs.prefs.get("equalizer_bands") or []
-            for slider, amp in zip(self._band_sliders, bands):
-                slider.setValue(int(amp))
+            for spin, amp in zip(self._band_spins, bands):
+                spin.setValue(float(amp))
 
             preset = prefs.prefs.get("equalizer_preset", -1)
             preset = preset if preset is not None else -1
@@ -129,7 +133,7 @@ class EqualizerWidget(QWidget):
             self._building = False
 
     def _current_band_amps(self) -> List[float]:
-        return [float(slider.value()) for slider in self._band_sliders]
+        return [float(spin.value()) for spin in self._band_spins]
 
     def _apply(self):
         if not self.player:
@@ -137,7 +141,7 @@ class EqualizerWidget(QWidget):
         preset = self.preset_combo.currentData()
         self.player.set_equalizer(
             self._current_band_amps(),
-            preamp=float(self.preamp_slider.value()),
+            preamp=float(self.preamp_spin.value()),
             preset=preset if preset is not None and preset >= 0 else None,
         )
 
@@ -157,14 +161,14 @@ class EqualizerWidget(QWidget):
             amps = self.player.get_preset_amps(preset)
             self._building = True
             try:
-                for slider, amp in zip(self._band_sliders, amps):
-                    slider.setValue(int(amp))
+                for spin, amp in zip(self._band_spins, amps):
+                    spin.setValue(float(amp))
             finally:
                 self._building = False
         if self.enabled_checkbox.isChecked():
             self._apply()
 
-    def _on_slider_changed(self, _value: int):
+    def _on_value_changed(self, _value: float):
         if self._building:
             return
         self.preset_combo.blockSignals(True)
@@ -175,5 +179,5 @@ class EqualizerWidget(QWidget):
 
     def _install_event_filter(self):
         self._key_event_filter.install_on_widgets(
-            [self.enabled_checkbox, self.preset_combo, self.preamp_slider]
+            [self.enabled_checkbox, self.preset_combo, self.preamp_spin]
         )
