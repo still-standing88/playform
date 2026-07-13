@@ -123,13 +123,25 @@ def resolve_ffmpeg_binary_path() -> str:
     prefs_dict_copy = {}
     if hasattr(app_prefs, 'prefs'):
         prefs_dict_copy = app_prefs.prefs.copy()
-    
+
     ffmpeg_path, _ = _locate_ffmpeg(prefs_dict_copy)
     if ffmpeg_path and _verify_binary_exists(ffmpeg_path):
         return os.path.normpath(ffmpeg_path)
-    
+
     path = _get_pref_value("ffmpeg_binary", "")
     return os.path.normpath(path) if path else ""
+
+
+def resolve_ffprobe_binary_path() -> str:
+    prefs_dict_copy = {}
+    if hasattr(app_prefs, 'prefs'):
+        prefs_dict_copy = app_prefs.prefs.copy()
+
+    _, ffprobe_path = _locate_ffmpeg(prefs_dict_copy)
+    if ffprobe_path and _verify_binary_exists(ffprobe_path):
+        return os.path.normpath(ffprobe_path)
+
+    return ""
 
 
 def _locate_ffmpeg(prefs: dict) -> Tuple[Optional[str], Optional[str]]:
@@ -325,6 +337,76 @@ def check_ffmpeg(min_major: int = 6) -> BinaryCheckResult:
     )
 
 
+def check_ffprobe(min_major: int = 6) -> BinaryCheckResult:
+    path = resolve_ffprobe_binary_path()
+
+    if not path:
+        return BinaryCheckResult(
+            name="ffprobe",
+            path="",
+            exists=False,
+            runnable=False,
+            detected=False,
+            version=None,
+            major=None,
+            ok=False,
+            message="ffprobe path is not configured. Use Get/Update Utilities to download FFmpeg (ffprobe ships alongside it).",
+        )
+
+    exists = os.path.exists(path)
+    if not exists:
+        return BinaryCheckResult(
+            name="ffprobe",
+            path=path,
+            exists=False,
+            runnable=False,
+            detected=False,
+            version=None,
+            major=None,
+            ok=False,
+            message="ffprobe was not found at the configured path. Use Get/Update Utilities to install FFmpeg.",
+        )
+
+    rc, out, err = _run_command([path, "-version"])
+    runnable = rc == 0
+    combined = (out + "\n" + err).strip()
+    lower = combined.lower()
+
+    detected = "ffprobe version" in lower
+
+    first_line = combined.splitlines()[0].strip() if combined.splitlines() else ""
+    version = first_line if first_line else None
+
+    m = re.search(r"ffprobe version\s+n?(\d+)", lower)
+    major = int(m.group(1)) if m else None
+
+    meets = major is not None and major >= min_major
+    ok = bool(runnable and detected and meets)
+
+    if not runnable:
+        details = err.strip() or "command failed"
+        msg = f"ffprobe was found but could not be executed: {details}"
+    elif not detected:
+        msg = "ffprobe was found but does not appear to be a valid ffprobe executable."
+    elif not meets:
+        found = str(major) if major is not None else "unknown"
+        msg = f"ffprobe version is not sufficient. Required {min_major}.x+, found {found}."
+    else:
+        msg = "ffprobe is available and meets the minimum version requirement."
+
+    return BinaryCheckResult(
+        name="ffprobe",
+        path=path,
+        exists=True,
+        runnable=runnable,
+        detected=detected,
+        version=version,
+        major=major,
+        ok=ok,
+        message=msg,
+    )
+
+
 def show_binary_check_result(parent: Optional[QWidget], result: BinaryCheckResult, title: Optional[str] = None):
     window_title = title or f"{result.name} Check"
 
@@ -359,6 +441,15 @@ def ensure_ffmpeg_available(parent: Optional[QWidget] = None, show_message: bool
         return True
     if show_message:
         show_binary_check_result(parent, result, "FFmpeg Not Available")
+    return False
+
+
+def ensure_ffprobe_available(parent: Optional[QWidget] = None, show_message: bool = True, min_major: int = 6) -> bool:
+    result = check_ffprobe(min_major=min_major)
+    if result.ok:
+        return True
+    if show_message:
+        show_binary_check_result(parent, result, "ffprobe Not Available")
     return False
 
 

@@ -1,11 +1,17 @@
 import json
 
+from ffmpeg import FFmpeg
 from ffmpeg.errors import FFmpegError
-from tools.ffmpeg_handler import FFmpegHandler
+
+from player.utilities import resolve_ffprobe_binary_path
 
 
 def _run_ffprobe(path: str, *show_flags: str) -> dict:
-    ffprobe = FFmpegHandler.create_ffprobe_instance()
+    ffprobe_path = resolve_ffprobe_binary_path()
+    if not ffprobe_path:
+        raise FileNotFoundError("ffprobe binary could not be located.")
+
+    ffprobe = FFmpeg(executable=ffprobe_path)
     ffprobe.option("v", "quiet")
     ffprobe.option("print_format", "json")
     for flag in show_flags:
@@ -14,7 +20,7 @@ def _run_ffprobe(path: str, *show_flags: str) -> dict:
 
     try:
         output = ffprobe.execute()
-    except FFmpegError as e:
+    except (FFmpegError, OSError) as e:
         raise ValueError(f"ffprobe failed for '{path}': {e}") from e
 
     if not output:

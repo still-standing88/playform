@@ -28,6 +28,7 @@ from .chapters_widget import ChaptersWidget
 from .equalizer_widget import EqualizerWidget
 from utilities.chapter_probe import get_chapters, get_media_metadata
 from .url import is_url_supported, fetch_full_info
+from .utilities import ensure_ffprobe_available
 from .lazy_player import LazyPlaylistPlayer
 from app_constance.styles import PLAYER_WIDGET_STYLE
 
@@ -1254,6 +1255,8 @@ class PlayerWidget(QWidget):
         from gui.dialogs.media_metadata_dialog import MediaMetadataDialog
 
         if current_file and is_local_file(current_file):
+            if not ensure_ffprobe_available(self):
+                return
             try:
                 metadata = get_media_metadata(current_file)
             except Exception as e:
