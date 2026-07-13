@@ -36,5 +36,9 @@ prefs = {
 "tts_volume": 80.0,
 "tts_rate": 1.0,
 "save_urls": False,
-"urlls": []
+"urlls": [],
+"equalizer_enabled": False,
+"equalizer_preamp": 0.0,
+"equalizer_bands": [],
+"equalizer_preset": -1
 }

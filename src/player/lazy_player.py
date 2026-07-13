@@ -11,6 +11,8 @@ import vlc
 from av_play.vlc_video_player import handle_vlc_error
 from PySide6.QtCore import QObject, Signal, QThread
 
+from app_config import prefs
+
 from .url import (
     is_url_supported,
     resolve_webpage_url,
@@ -86,7 +88,8 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
         count = vlc.libvlc_audio_equalizer_get_band_count()
         return [vlc.libvlc_audio_equalizer_get_band_frequency(i) for i in range(count)]
 
-    def set_equalizer(self, band_amps: List[float], preamp: float = 0.0, preset: Optional[int] = None) -> None:
+    def set_equalizer(self, band_amps: List[float], preamp: float = 0.0, preset: Optional[int] = None,
+                       persist: bool = True) -> None:
         def apply():
             eq = vlc.libvlc_audio_equalizer_new_from_preset(preset) if preset is not None else vlc.AudioEqualizer()
             eq.set_preamp(preamp)
@@ -95,14 +98,39 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
             media_player = self._controler.get_media_player()
             media_player.set_equalizer(eq)
             self._equalizer = eq
-        return handle_vlc_error(apply)
+        handle_vlc_error(apply)
 
-    def disable_equalizer(self) -> None:
+        if persist:
+            prefs.prefs["equalizer_enabled"] = True
+            prefs.prefs["equalizer_preamp"] = preamp
+            prefs.prefs["equalizer_bands"] = list(band_amps)
+            prefs.prefs["equalizer_preset"] = preset if preset is not None else -1
+            prefs.save()
+
+    def disable_equalizer(self, persist: bool = True) -> None:
         def apply():
             media_player = self._controler.get_media_player()
             media_player.set_equalizer(None)
             self._equalizer = None
-        return handle_vlc_error(apply)
+        handle_vlc_error(apply)
+
+        if persist:
+            prefs.prefs["equalizer_enabled"] = False
+            prefs.save()
+
+    def _apply_saved_equalizer(self) -> None:
+        if not prefs.prefs.get("equalizer_enabled"):
+            return
+        bands = prefs.prefs.get("equalizer_bands") or []
+        if not bands:
+            return
+        preset = prefs.prefs.get("equalizer_preset", -1)
+        self.set_equalizer(
+            bands,
+            preamp=prefs.prefs.get("equalizer_preamp", 0.0),
+            preset=preset if preset is not None and preset >= 0 else None,
+            persist=False,
+        )
 
     def init(self, *args, **kw):
         av_play.VLCVideoPlayer.init(self, *args, **kw)
@@ -112,6 +140,7 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
                 target=self._preload_worker, daemon=True, name="LazyPlaylistPreload"
             )
             self._preload_thread.start()
+        self._apply_saved_equalizer()
 
     def release(self):
         self._preload_stop_event.set()
