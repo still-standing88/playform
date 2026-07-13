@@ -104,6 +104,8 @@ class PlayerWidget(QWidget):
         self.side_accordion.add_section(_("Subtitles"), self.subtitles_widget)
         self.side_accordion.add_section(_("Video Filters"), self.filters_widget)
 
+        self.side_accordion.setMinimumWidth(300)
+
         self.main_splitter.addWidget(left_widget)
         self.main_splitter.addWidget(self.side_accordion)
 
