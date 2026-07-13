@@ -365,6 +365,7 @@ class MainWindow(QMainWindow):
         self.player_widget.repeatModeChanged.connect(self.menu_manager.update_media_repeat_mode)
         self.player_widget.player_controls.trackTitleChanged.connect(self._on_track_title_changed)
         self.player_widget.currentTrackIndexChanged.connect(self._on_current_track_index_changed)
+        self.player_widget.player_controls.expandPlaylistRequested.connect(self.show_playlists_action.trigger)
         self.playlists_widget.playlist_selected.connect(lambda _p: self._apply_now_playing_highlight())
             
     def open_file_dialog(self):

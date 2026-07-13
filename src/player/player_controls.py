@@ -51,6 +51,7 @@ class PlayerControls(QWidget):
     stopRequested = Signal()
     screenshotRequested = Signal()
     trackTitleChanged = Signal(str)
+    expandPlaylistRequested = Signal()
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -213,6 +214,13 @@ class PlayerControls(QWidget):
         self.current_track_label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.current_track_label.customContextMenuRequested.connect(self.show_path_context_menu)
 
+        self.expand_playlist_btn = QToolButton(self)
+        self.expand_playlist_btn.setText(_("Playlists"))
+        self.expand_playlist_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
+        self.expand_playlist_btn.setFixedSize(90, 30)
+        self.expand_playlist_btn.setToolTip(_("Show/Hide playlists"))
+        self.expand_playlist_btn.clicked.connect(self.expandPlaylistRequested.emit)
+
 
         self.separator1 = QFrame(self)
         self.separator1.setFrameStyle(QFrame.Shape.VLine | QFrame.Shadow.Sunken)
@@ -229,6 +237,7 @@ class PlayerControls(QWidget):
         self.track_layout = QHBoxLayout()
         self.track_layout.addWidget(self.current_track_label)
         self.track_layout.addStretch()
+        self.track_layout.addWidget(self.expand_playlist_btn)
         
         self.controls_layout = QHBoxLayout()
         self.controls_layout.setSpacing(15)
@@ -272,7 +281,7 @@ class PlayerControls(QWidget):
             self.seek_icon_label, self.seek_slider, self.separator2, self.mute_btn,
             self.volume_icon_label,
             self.volume_slider, self.time_label, self.current_track_label, self.shuffle_btn, self.bookmarks_btn, self.goto_btn, self.screenshot_btn,
-            self.more_btn
+            self.more_btn, self.expand_playlist_btn
         ]
         
     def connect_signals(self):
