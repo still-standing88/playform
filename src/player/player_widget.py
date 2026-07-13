@@ -996,10 +996,6 @@ class PlayerWidget(QWidget):
         try:
             if self.player:
                 self.player.stop_playlist()
-                instance = self.player.primary_instance
-                if instance:
-                    instance.stop()
-                    instance.release()
             self.player_controls.set_current_file(file_path)
             dir_path = os.path.dirname(file_path)
             media_files = get_media_files_from_directory(dir_path, media_formats["audio"], media_formats["video"])
