@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlide
 from PySide6.QtCore import Qt
 
 from app_config import prefs
+from gui_controls.player_key_event_filter import KeyEventFilter
 
 
 class EqualizerWidget(QWidget):
@@ -13,9 +14,11 @@ class EqualizerWidget(QWidget):
         self.player = player
         self._building = False
         self._band_sliders: List[QSlider] = []
+        self._key_event_filter = KeyEventFilter(self)
 
         self.setup_ui()
         self.connect_signals()
+        self._install_event_filter()
         self.setEnabled(False)
 
     def setup_ui(self):
@@ -69,6 +72,7 @@ class EqualizerWidget(QWidget):
             self._building = False
 
         self.setEnabled(True)
+        self._key_event_filter.install_on_widgets(self._band_sliders)
         self._load_saved_state()
 
     @staticmethod
@@ -91,6 +95,7 @@ class EqualizerWidget(QWidget):
             slider = QSlider(Qt.Orientation.Vertical, self)
             slider.setRange(-20, 20)
             slider.setValue(0)
+            slider.setMinimumHeight(100)
             slider.setAccessibleName(self._format_freq(freq))
             slider.valueChanged.connect(self._on_slider_changed)
             label = QLabel(self._format_freq(freq), self)
@@ -167,3 +172,8 @@ class EqualizerWidget(QWidget):
         self.preset_combo.blockSignals(False)
         if self.enabled_checkbox.isChecked():
             self._apply()
+
+    def _install_event_filter(self):
+        self._key_event_filter.install_on_widgets(
+            [self.enabled_checkbox, self.preset_combo, self.preamp_slider]
+        )
