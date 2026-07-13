@@ -10,7 +10,7 @@ import av_play
 from PySide6.QtWidgets import (QWidget, QLayout, QVBoxLayout, QHBoxLayout, QSplitter,
                                QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox)
 from PySide6.QtGui import QCloseEvent, QFont, QPalette, QColor, QShortcut
-from PySide6.QtCore import Qt, Signal, QTimer, QSize, Slot
+from PySide6.QtCore import Qt, Signal, QTimer, QSize, Slot, QThread
 
 from app_config import prefs, key_config
 from app_constance.vlc_args import log_args
@@ -26,6 +26,7 @@ from .filters_widget import FiltersWidget
 from .chapters_widget import ChaptersWidget
 from .equalizer_widget import EqualizerWidget
 from utilities.chapter_probe import get_chapters
+from .url import is_url_supported, fetch_full_info
 from .lazy_player import LazyPlaylistPlayer
 from app_constance.styles import PLAYER_WIDGET_STYLE
 
@@ -41,6 +42,22 @@ LayoutType = QVBoxLayout | QHBoxLayout
 logger = logging.getLogger(__name__)
 
 _CHAPTER_CAPABLE_EXTENSIONS = {"mp4", "m4v", "mkv", "m4b"}
+
+
+class _YtdlpInfoFetchThread(QThread):
+    result_ready = Signal(str, dict)
+    error_occurred = Signal(str, str)
+
+    def __init__(self, url: str, parent=None):
+        super().__init__(parent)
+        self._url = url
+
+    def run(self):
+        try:
+            info = fetch_full_info(self._url)
+            self.result_ready.emit(self._url, info)
+        except Exception as e:
+            self.error_occurred.emit(self._url, str(e))
 
 
 class PlayerWidget(QWidget):
@@ -59,6 +76,8 @@ class PlayerWidget(QWidget):
         self._shortcuts:Dict[str, QShortcut] = {}
         self._key_event_filter = KeyEventFilter(self)
         self._youtube_info_cache: Dict[str, dict] = {}
+        self._ytdlp_metadata_thread: Optional[_YtdlpInfoFetchThread] = None
+        self._current_ytdlp_source: Optional[str] = None
         self._last_subtitle_text: Optional[str] = None
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -796,13 +815,42 @@ class PlayerWidget(QWidget):
     def _load_subtitles_for_current_track(self):
         self.subtitles_widget.clear_subtitles()
         self._last_subtitle_text = None
+        self.filters_widget.reset_filters()
+
+        source = self.player_controls._source_url
+        if source and is_url_supported(source):
+            self.chapters_widget.clear_chapters()
+            self._fetch_ytdlp_metadata(source)
+            return
+
+        self._current_ytdlp_source = None
         instance = self.player.primary_instance
         if instance and av_play.is_path(instance.file_path):
             if self.subtitle_manager.load_for_video(instance.file_path):
 
                 self.subtitles_widget.load_all_subtitles(self.subtitle_manager)
-        self.filters_widget.reset_filters()
         self._load_chapters_for_current_track()
+
+    def _fetch_ytdlp_metadata(self, source: str):
+        self._current_ytdlp_source = source
+        if self._ytdlp_metadata_thread and self._ytdlp_metadata_thread.isRunning():
+            self._ytdlp_metadata_thread.quit()
+            self._ytdlp_metadata_thread.wait(100)
+
+        thread = _YtdlpInfoFetchThread(source, self)
+        thread.result_ready.connect(self._on_ytdlp_metadata_ready)
+        thread.error_occurred.connect(self._on_ytdlp_metadata_error)
+        self._ytdlp_metadata_thread = thread
+        thread.start()
+
+    def _on_ytdlp_metadata_ready(self, source: str, info: dict):
+        if source != self._current_ytdlp_source:
+            return  # stale result for a track we've since navigated away from
+
+    def _on_ytdlp_metadata_error(self, source: str, error_msg: str):
+        if source != self._current_ytdlp_source:
+            return
+        logger.warning(f"yt-dlp metadata fetch failed for {source}: {error_msg}")
 
     def _load_chapters_for_current_track(self):
         self.chapters_widget.clear_chapters()
@@ -1084,7 +1132,11 @@ class PlayerWidget(QWidget):
     def closeEvent(self, event):
         try:
             self._youtube_info_cache.clear()
-            
+
+            if self._ytdlp_metadata_thread and self._ytdlp_metadata_thread.isRunning():
+                self._ytdlp_metadata_thread.quit()
+                self._ytdlp_metadata_thread.wait(2000)
+
             self.player_controls.save_last_position()
             if self.player.primary_instance is not None:
                 try:
