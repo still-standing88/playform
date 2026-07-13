@@ -7,6 +7,8 @@ import threading
 from typing import List, Optional, Set
 
 import av_play
+import vlc
+from av_play.vlc_video_player import handle_vlc_error
 from PySide6.QtCore import QObject, Signal, QThread
 
 from .url import (
@@ -72,6 +74,35 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
 
         self._extract_worker: Optional[_UrlExtractThread] = None
         self._pending_url: Optional[str] = None
+
+        self._equalizer: Optional[vlc.AudioEqualizer] = None
+
+    def get_equalizer_presets(self) -> List[str]:
+        count = vlc.libvlc_audio_equalizer_get_preset_count()
+        names = [vlc.libvlc_audio_equalizer_get_preset_name(i) for i in range(count)]
+        return [name.decode("utf-8") if isinstance(name, bytes) else name for name in names]
+
+    def get_equalizer_bands(self) -> List[float]:
+        count = vlc.libvlc_audio_equalizer_get_band_count()
+        return [vlc.libvlc_audio_equalizer_get_band_frequency(i) for i in range(count)]
+
+    def set_equalizer(self, band_amps: List[float], preamp: float = 0.0, preset: Optional[int] = None) -> None:
+        def apply():
+            eq = vlc.libvlc_audio_equalizer_new_from_preset(preset) if preset is not None else vlc.AudioEqualizer()
+            eq.set_preamp(preamp)
+            for band, amp in enumerate(band_amps):
+                eq.set_amp_at_index(amp, band)
+            media_player = self._controler.get_media_player()
+            media_player.set_equalizer(eq)
+            self._equalizer = eq
+        return handle_vlc_error(apply)
+
+    def disable_equalizer(self) -> None:
+        def apply():
+            media_player = self._controler.get_media_player()
+            media_player.set_equalizer(None)
+            self._equalizer = None
+        return handle_vlc_error(apply)
 
     def init(self, *args, **kw):
         av_play.VLCVideoPlayer.init(self, *args, **kw)
