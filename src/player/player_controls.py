@@ -914,30 +914,32 @@ class PlayerControls(QWidget):
         """Show dynamic context menu for current file/URL"""
         if not self._current_file:
             return
-        
-        menu = QMenu(self)
-        
-        # Always show: Copy Path
+        menu = self.build_path_context_menu(self)
+        menu.exec(self.current_track_label.mapToGlobal(position))
+
+    def build_path_context_menu(self, parent_widget) -> QMenu:
+        """Build the Copy Path / Open in Explorer / Show YouTube Info menu shared
+        by PlayerControls' own track-label context menu and PlayerWidget's."""
+        menu = QMenu(parent_widget)
+        if not self._current_file:
+            return menu
+
         copy_action = menu.addAction(_("Copy Path"))
         copy_action.triggered.connect(lambda: self._copy_current_path())
-        
-        # Windows only: Open in Explorer (if local file)
+
         if is_local_file(self._current_file):
             import sys
             if sys.platform == "win32":
                 explorer_action = menu.addAction(_("Open in Explorer"))
-                # Type is safe here - is_local_file already checked
                 explorer_action.triggered.connect(lambda p=self._current_file: open_file_location(p) if p else None)
-        
-        # Emit signal for parent to handle YouTube info
+
         source = self._source_url or self._current_file
         if is_youtube_url(source):
             menu.addSeparator()
             yt_info_action = menu.addAction(_("Show YouTube Info"))
-            # Call parent method if it's PlayerWidget
             yt_info_action.triggered.connect(self._show_youtube_info_dialog)
-        
-        menu.exec(self.current_track_label.mapToGlobal(position))
+
+        return menu
     
     def _copy_current_path(self):
         """Copy current file path to clipboard"""

@@ -579,38 +579,11 @@ class PlayerWidget(QWidget):
 
 
     def show_path_context_menu(self, position):
-
-        from PySide6.QtWidgets import QMenu, QApplication
-        
         current_file = self.player_controls._current_file
         if not current_file:
             return
-        
-        menu = QMenu(self)
-        
-
-        copy_action = menu.addAction(_("Copy Path"))
-        copy_action.triggered.connect(lambda: self._copy_path_to_clipboard(current_file))
-        
-
-        if is_local_file(current_file):
-            import sys
-            if sys.platform == "win32":
-                explorer_action = menu.addAction(_("Open in Explorer"))
-                explorer_action.triggered.connect(lambda: open_file_location(current_file))
-
-        source = self.player_controls._source_url or current_file
-        if is_youtube_url(source):
-            menu.addSeparator()
-            yt_info_action = menu.addAction(_("Show YouTube Info"))
-            yt_info_action.triggered.connect(self.show_youtube_info_dialog)
-        
+        menu = self.player_controls.build_path_context_menu(self)
         menu.exec(self.mapToGlobal(position))
-    
-    def _copy_path_to_clipboard(self, path: str):
-        from PySide6.QtWidgets import QApplication
-        clipboard = QApplication.clipboard()
-        clipboard.setText(path)
 
     def _update_media_player_data(self):
         self.player_controls.load_bookmarks()
