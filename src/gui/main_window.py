@@ -364,6 +364,8 @@ class MainWindow(QMainWindow):
         self.player_widget.mediaAvailable.connect(self.menu_manager.update_media_available)
         self.player_widget.repeatModeChanged.connect(self.menu_manager.update_media_repeat_mode)
         self.player_widget.player_controls.trackTitleChanged.connect(self._on_track_title_changed)
+        self.player_widget.currentTrackIndexChanged.connect(self._on_current_track_index_changed)
+        self.playlists_widget.playlist_selected.connect(lambda _p: self._apply_now_playing_highlight())
             
     def open_file_dialog(self):
         file_path, selected_filter = QFileDialog.getOpenFileName(
@@ -646,6 +648,21 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(f"{track_name} - {APP_NAME}")
         else:
             self.setWindowTitle(APP_NAME)
+
+    def _on_current_track_index_changed(self, index: int):
+        self._apply_now_playing_highlight(index)
+
+    def _apply_now_playing_highlight(self, index: Optional[int] = None):
+        if index is None and hasattr(self.player_widget, 'player') and self.player_widget.player:
+            index = self.player_widget.player.get_current_track_index()
+
+        displayed_playlist = self.playlists_widget.playlist_view.current_playlist
+        playing_playlist = getattr(self.player_widget.player, 'current_playlist', None) if hasattr(self.player_widget, 'player') else None
+
+        if displayed_playlist is not None and playing_playlist is not None and displayed_playlist is playing_playlist:
+            self.playlists_widget.playlist_view.update_now_playing(index)
+        else:
+            self.playlists_widget.playlist_view.update_now_playing(None)
 
     def open_bookmarks_dialog(self):
         if hasattr(self.player_widget, 'player_controls'):

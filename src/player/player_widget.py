@@ -112,6 +112,7 @@ class PlayerWidget(QWidget):
     muteStateChanged = Signal(bool)
     mediaAvailable = Signal(bool)
     repeatModeChanged = Signal(int)
+    currentTrackIndexChanged = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -749,6 +750,7 @@ class PlayerWidget(QWidget):
                     self.player_controls.set_current_track(track_name)
                     self._load_subtitles_for_current_track()
                     self.filters_widget.reset_filters()
+                    self.currentTrackIndexChanged.emit(index)
             except av_play.AVError:
                 pass
 
