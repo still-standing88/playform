@@ -1,7 +1,9 @@
 import os
 
+from typing import Optional
+
 from PySide6.QtCore import Qt, QTimer, Signal, Slot
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QFont
 from PySide6.QtWidgets import QAbstractItemView, QFileDialog, QMenu, QMessageBox, QVBoxLayout, QWidget
 
 import utilities.vlc_bootstrap
@@ -64,6 +66,7 @@ class PlaylistView(QWidget):
         self.play_callback = play_callback
         self.playlist_changed_callback = playlist_changed_callback
         self.current_playlist = None
+        self._now_playing_index: Optional[int] = None
         self.setup_ui()
         self.setup_context_menu()
 
@@ -85,6 +88,7 @@ class PlaylistView(QWidget):
 
     def _setup_columns(self):
         self.list_ctrl.clear_all()
+        self.list_ctrl.append_column(_("#"), 40)
         self.list_ctrl.append_column(_("File Name"), 260)
         self.list_ctrl.append_column(_("Title"), 240)
         self.list_ctrl.append_column(_("Artist"), 180)
@@ -160,13 +164,28 @@ class PlaylistView(QWidget):
         if self.current_playlist is None:
             return
 
-        for entry in self.current_playlist.entries:
+        for index, entry in enumerate(self.current_playlist.entries):
             filename = os.path.basename(entry.location)
-            row = self.list_ctrl.append_item(filename)
-            self.list_ctrl.set_item_text(row, 1, entry.title or "")
-            self.list_ctrl.set_item_text(row, 2, entry.artist or "")
-            self.list_ctrl.set_item_text(row, 3, entry.album or "")
+            row = self.list_ctrl.append_item(str(index + 1))
+            self.list_ctrl.set_item_text(row, 1, filename)
+            self.list_ctrl.set_item_text(row, 2, entry.title or "")
+            self.list_ctrl.set_item_text(row, 3, entry.artist or "")
+            self.list_ctrl.set_item_text(row, 4, entry.album or "")
             self.list_ctrl.set_item_data(row, entry)
+
+        self._apply_now_playing_highlight()
+
+    def update_now_playing(self, index: Optional[int]):
+        self._now_playing_index = index
+        self._apply_now_playing_highlight()
+
+    def _apply_now_playing_highlight(self):
+        bold_font = QFont()
+        bold_font.setBold(True)
+        normal_font = QFont()
+        for row in range(self.list_ctrl.get_item_count()):
+            is_current = self._now_playing_index is not None and row == self._now_playing_index
+            self.list_ctrl.set_item_font(row, bold_font if is_current else normal_font)
 
     def _get_focused_row(self) -> int:
         row = self.list_ctrl.get_current_item()
