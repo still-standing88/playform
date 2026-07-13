@@ -939,8 +939,16 @@ class PlayerControls(QWidget):
             yt_info_action = menu.addAction(_("Show YouTube Info"))
             yt_info_action.triggered.connect(self._show_youtube_info_dialog)
 
+            download_subs_action = menu.addAction(_("Download Subtitle..."))
+            download_subs_action.triggered.connect(self._download_subtitle_file)
+
         return menu
-    
+
+    def _download_subtitle_file(self):
+        parent = self.parent()
+        if parent and hasattr(parent, 'download_subtitle_file'):
+            parent.download_subtitle_file()  # type: ignore
+
     def _copy_current_path(self):
         """Copy current file path to clipboard"""
         if self._current_file:

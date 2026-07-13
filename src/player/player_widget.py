@@ -8,7 +8,8 @@ import utilities.vlc_bootstrap
 import av_play
 
 from PySide6.QtWidgets import (QWidget, QLayout, QVBoxLayout, QHBoxLayout, QSplitter,
-                               QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox)
+                               QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox,
+                               QFileDialog)
 from PySide6.QtGui import QCloseEvent, QFont, QPalette, QColor, QShortcut
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, Slot, QThread
 
@@ -60,11 +61,16 @@ class _YtdlpInfoFetchThread(QThread):
             self.error_occurred.emit(self._url, str(e))
 
 
-def _best_subtitle_format_url(formats: list) -> Optional[str]:
+def _best_subtitle_format(formats: list) -> Optional[dict]:
     for fmt in formats:
         if fmt.get("ext") in ("vtt", "srt"):
-            return fmt.get("url")
-    return formats[0].get("url") if formats else None
+            return fmt
+    return formats[0] if formats else None
+
+
+def _best_subtitle_format_url(formats: list) -> Optional[str]:
+    fmt = _best_subtitle_format(formats)
+    return fmt.get("url") if fmt else None
 
 
 def _pick_ytdlp_subtitle_track(info: dict, preferred_lang: str):
@@ -1195,6 +1201,39 @@ class PlayerWidget(QWidget):
     def _cache_youtube_info(self, url: str, info: dict):
 
         self._youtube_info_cache[url] = info
+
+    def download_subtitle_file(self):
+        if not self._ytdlp_subtitle_tracks:
+            QMessageBox.information(
+                self, _("No Subtitles"), _("No subtitle track is available for this source.")
+            )
+            return
+
+        current_lang = self.subtitles_widget.language_combo.currentText()
+        if not current_lang or current_lang not in self._ytdlp_subtitle_tracks:
+            current_lang = next(iter(self._ytdlp_subtitle_tracks), None)
+        if not current_lang:
+            return
+
+        fmt = _best_subtitle_format(self._ytdlp_subtitle_tracks[current_lang])
+        if not fmt or not fmt.get("url"):
+            return
+
+        extension = fmt.get("ext") or "srt"
+        default_name = f"subtitles_{current_lang}.{extension}"
+        save_path, _filter = QFileDialog.getSaveFileName(self, _("Save Subtitle File"), default_name)
+        if not save_path:
+            return
+
+        try:
+            import httpx
+            response = httpx.get(fmt["url"], timeout=15.0)
+            response.raise_for_status()
+            with open(save_path, "wb") as f:
+                f.write(response.content)
+            signal_manager.statusbar_message.emit(_("Subtitle saved to {path}").format(path=save_path))
+        except Exception as e:
+            QMessageBox.warning(self, _("Download Failed"), str(e))
 
     def closeEvent(self, event):
         try:
