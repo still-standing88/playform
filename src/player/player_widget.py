@@ -60,6 +60,13 @@ class _YtdlpInfoFetchThread(QThread):
             self.error_occurred.emit(self._url, str(e))
 
 
+def _best_subtitle_format_url(formats: list) -> Optional[str]:
+    for fmt in formats:
+        if fmt.get("ext") in ("vtt", "srt"):
+            return fmt.get("url")
+    return formats[0].get("url") if formats else None
+
+
 def _pick_ytdlp_subtitle_track(info: dict, preferred_lang: str):
     preferred_primary = preferred_lang.split("-")[0].lower()
     for source_key in ("subtitles", "automatic_captions"):
@@ -78,13 +85,10 @@ def _pick_ytdlp_subtitle_track(info: dict, preferred_lang: str):
             lang = next(iter(tracks), None)
         if not lang:
             continue
-        formats = tracks[lang]
-        for fmt in formats:
-            if fmt.get("ext") in ("vtt", "srt"):
-                return fmt.get("url"), lang
-        if formats:
-            return formats[0].get("url"), lang
-    return None, None
+        url = _best_subtitle_format_url(tracks[lang])
+        if url:
+            return url, lang, tracks
+    return None, None, None
 
 
 class _YtdlpSubtitleFetchThread(QThread):
@@ -121,6 +125,7 @@ class PlayerWidget(QWidget):
         self._ytdlp_metadata_thread: Optional[_YtdlpInfoFetchThread] = None
         self._ytdlp_subtitle_thread: Optional[_YtdlpSubtitleFetchThread] = None
         self._current_ytdlp_source: Optional[str] = None
+        self._ytdlp_subtitle_tracks: Dict[str, list] = {}
         self._last_subtitle_text: Optional[str] = None
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -302,6 +307,7 @@ class PlayerWidget(QWidget):
         self.player.signals.extraction_complete.connect(self._on_url_extraction_complete)
         self.player.signals.extraction_failed.connect(self._on_url_extraction_failed)
         self.chapters_widget.chapterActivated.connect(self._on_chapter_activated)
+        self.subtitles_widget.languageSelected.connect(self._on_subtitle_language_selected)
 
     def apply_styles(self):
         self.setStyleSheet(PLAYER_WIDGET_STYLE)
@@ -867,6 +873,8 @@ class PlayerWidget(QWidget):
             return
 
         self._current_ytdlp_source = None
+        self._ytdlp_subtitle_tracks = {}
+        self.subtitles_widget.set_available_languages([])
         instance = self.player.primary_instance
         if instance and av_play.is_path(instance.file_path):
             if self.subtitle_manager.load_for_video(instance.file_path):
@@ -901,9 +909,18 @@ class PlayerWidget(QWidget):
         if chapters:
             self.chapters_widget.load_chapters(chapters)
 
-        subtitle_url, lang = _pick_ytdlp_subtitle_track(info, prefs.prefs.get("subtitle-language", "en-US"))
+        subtitle_url, lang, tracks = _pick_ytdlp_subtitle_track(info, prefs.prefs.get("subtitle-language", "en-US"))
+        self._ytdlp_subtitle_tracks = tracks or {}
+        self.subtitles_widget.set_available_languages(list(self._ytdlp_subtitle_tracks.keys()), lang)
         if subtitle_url:
             self._fetch_ytdlp_subtitles(source, subtitle_url, lang)
+
+    def _on_subtitle_language_selected(self, language: str):
+        if language not in self._ytdlp_subtitle_tracks:
+            return
+        url = _best_subtitle_format_url(self._ytdlp_subtitle_tracks[language])
+        if url and self._current_ytdlp_source:
+            self._fetch_ytdlp_subtitles(self._current_ytdlp_source, url, language)
 
     def _fetch_ytdlp_subtitles(self, source: str, subtitle_url: str, language: str):
         if self._ytdlp_subtitle_thread and self._ytdlp_subtitle_thread.isRunning():

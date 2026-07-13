@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QComboBox
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
 
 from gui_controls.player_key_event_filter import KeyEventFilter
@@ -7,18 +7,26 @@ from app_constance.styles import SUBTITLES_LIST_STYLE
 
 
 class SubtitlesWidget(QWidget):
+    languageSelected = Signal(str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._key_event_filter = KeyEventFilter(self)
         self._all_subtitles_loaded = False  # Track if we've loaded all subtitles
 
         self.setup_ui()
+        self.connect_signals()
         self._install_event_filter()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
+
+        self.language_combo = QComboBox(self)
+        self.language_combo.setAccessibleName(_("Subtitle language"))
+        self.language_combo.setVisible(False)
+        layout.addWidget(self.language_combo)
 
         self.subtitles_list = QListWidget(self)
         self.subtitles_list.setAccessibleName(_("Subtitles display"))
@@ -29,6 +37,22 @@ class SubtitlesWidget(QWidget):
         self.subtitles_list.setStyleSheet(SUBTITLES_LIST_STYLE)
 
         layout.addWidget(self.subtitles_list)
+
+    def connect_signals(self):
+        self.language_combo.currentTextChanged.connect(self._on_language_changed)
+
+    def _on_language_changed(self, language: str):
+        if language:
+            self.languageSelected.emit(language)
+
+    def set_available_languages(self, languages: list[str], current: str | None = None):
+        self.language_combo.blockSignals(True)
+        self.language_combo.clear()
+        self.language_combo.addItems(languages)
+        if current and current in languages:
+            self.language_combo.setCurrentText(current)
+        self.language_combo.blockSignals(False)
+        self.language_combo.setVisible(len(languages) > 1)
 
     def add_subtitle_line(self, text, timestamp=None):
         item = QListWidgetItem(text)
@@ -81,4 +105,4 @@ class SubtitlesWidget(QWidget):
         self._highlighted_idx = active_idx
 
     def _install_event_filter(self):
-        self._key_event_filter.install_on_widgets([self.subtitles_list])
+        self._key_event_filter.install_on_widgets([self.subtitles_list, self.language_combo])
