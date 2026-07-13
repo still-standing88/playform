@@ -24,6 +24,7 @@ from gui_controls.accordion import Accordion
 from .subtitles import SubtitleManager
 from .filters_widget import FiltersWidget
 from .chapters_widget import ChaptersWidget
+from .equalizer_widget import EqualizerWidget
 from utilities.chapter_probe import get_chapters
 from .lazy_player import LazyPlaylistPlayer
 from app_constance.styles import PLAYER_WIDGET_STYLE
@@ -85,6 +86,7 @@ class PlayerWidget(QWidget):
         self.subtitles_widget = SubtitlesWidget(self)
         self.filters_widget = FiltersWidget(self)
         self.chapters_widget = ChaptersWidget(self)
+        self.equalizer_widget = EqualizerWidget(self)
         self.side_accordion = Accordion(self)
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
         
@@ -106,9 +108,10 @@ class PlayerWidget(QWidget):
         left_layout.addWidget(self.player_controls)
         self.video_display.set_position_info(left_layout, 0)
 
-        self.side_accordion.add_section(_("Subtitles"), self.subtitles_widget)
-        self.side_accordion.add_section(_("Video Filters"), self.filters_widget)
         self.side_accordion.add_section(_("Chapters"), self.chapters_widget)
+        self.side_accordion.add_section(_("Subtitles"), self.subtitles_widget)
+        self.side_accordion.add_section(_("Equalizer"), self.equalizer_widget)
+        self.side_accordion.add_section(_("Video Filters"), self.filters_widget)
 
         self.side_accordion.setMinimumWidth(300)
 
@@ -161,6 +164,7 @@ class PlayerWidget(QWidget):
             self.player.set_auto_play(prefs.prefs["autoplay"]) 
             self.player.set_track_end_callback(self._update_current_track)
             self.filters_widget.set_player(self.player)
+            self.equalizer_widget.set_player(self.player)
             device_name = prefs.prefs.get("device_name", "")
             if device_name:
                 device_count = self.player.get_devices()
