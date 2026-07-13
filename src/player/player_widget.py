@@ -23,6 +23,8 @@ from gui_controls.toggle_button import ToggleButton
 from gui_controls.accordion import Accordion
 from .subtitles import SubtitleManager
 from .filters_widget import FiltersWidget
+from .chapters_widget import ChaptersWidget
+from utilities.chapter_probe import get_chapters
 from .lazy_player import LazyPlaylistPlayer
 from app_constance.styles import PLAYER_WIDGET_STYLE
 
@@ -33,9 +35,11 @@ from utilities.formats import formats as media_formats
 from utilities import signal_manager
 
 
-LayoutType = QVBoxLayout | QHBoxLayout 
+LayoutType = QVBoxLayout | QHBoxLayout
 
 logger = logging.getLogger(__name__)
+
+_CHAPTER_CAPABLE_EXTENSIONS = {"mp4", "m4v", "mkv", "m4b"}
 
 
 class PlayerWidget(QWidget):
@@ -80,6 +84,7 @@ class PlayerWidget(QWidget):
 
         self.subtitles_widget = SubtitlesWidget(self)
         self.filters_widget = FiltersWidget(self)
+        self.chapters_widget = ChaptersWidget(self)
         self.side_accordion = Accordion(self)
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
         
@@ -103,6 +108,7 @@ class PlayerWidget(QWidget):
 
         self.side_accordion.add_section(_("Subtitles"), self.subtitles_widget)
         self.side_accordion.add_section(_("Video Filters"), self.filters_widget)
+        self.side_accordion.add_section(_("Chapters"), self.chapters_widget)
 
         self.side_accordion.setMinimumWidth(300)
 
@@ -229,6 +235,7 @@ class PlayerWidget(QWidget):
         self.player.signals.extraction_started.connect(self._on_url_extraction_started)
         self.player.signals.extraction_complete.connect(self._on_url_extraction_complete)
         self.player.signals.extraction_failed.connect(self._on_url_extraction_failed)
+        self.chapters_widget.chapterActivated.connect(self._on_chapter_activated)
 
     def apply_styles(self):
         self.setStyleSheet(PLAYER_WIDGET_STYLE)
@@ -791,6 +798,33 @@ class PlayerWidget(QWidget):
 
                 self.subtitles_widget.load_all_subtitles(self.subtitle_manager)
         self.filters_widget.reset_filters()
+        self._load_chapters_for_current_track()
+
+    def _load_chapters_for_current_track(self):
+        self.chapters_widget.clear_chapters()
+        instance = self.player.primary_instance
+        if not instance or not av_play.is_path(instance.file_path):
+            return
+
+        ext = os.path.splitext(instance.file_path)[1].lower().lstrip(".")
+        if ext not in _CHAPTER_CAPABLE_EXTENSIONS:
+            return
+
+        try:
+            chapters = get_chapters(instance.file_path)
+        except Exception:
+            return
+
+        if chapters:
+            self.chapters_widget.load_chapters(chapters)
+
+    def _on_chapter_activated(self, start_seconds: float):
+        instance = self.player.primary_instance
+        if instance:
+            try:
+                instance.set_position(start_seconds)
+            except av_play.AVError:
+                pass
 
     def _reset_ui_to_default(self):
         self.player_controls.set_current_track(_("No media loaded"))
@@ -801,6 +835,7 @@ class PlayerWidget(QWidget):
         self.player_controls.set_controls_enabled(False)
         self.subtitles_widget.clear_subtitles()
         self.filters_widget.reset_filters()
+        self.chapters_widget.clear_chapters()
 
     def load_file(self, file_path: str):
         signal_manager.statusbar_message.emit(
