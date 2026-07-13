@@ -1176,7 +1176,7 @@ class PlayerWidget(QWidget):
             self.player_controls.bookmarks_btn, self.player_controls.goto_btn, self.player_controls.screenshot_btn,
             self.player_controls.seek_slider, self.player_controls.mute_btn, self.player_controls.volume_slider,
             self.player_controls.time_label, self.player_controls.current_track_label, self.player_controls.more_btn,
-            self.player_controls.toggle_controls_btn, self.player_controls.expand_playlist_btn
+            self.player_controls.toggle_controls_btn
         ]
         self._key_event_filter.install_on_widgets(widgets)
 
