@@ -187,15 +187,14 @@ class PlayerWidget(QWidget):
         self.side_accordion.add_section(_("Equalizer"), self.equalizer_widget)
         self.side_accordion.add_section(_("Video Filters"), self.filters_widget)
 
-        self.side_accordion.setMinimumWidth(300)
+        left_layout.addWidget(self.side_accordion)
 
         self.main_splitter.addWidget(left_widget)
-        self.main_splitter.addWidget(self.side_accordion)
 
         self.main_splitter.setSizes([800, 300])
         self.main_splitter.setStretchFactor(0, 1)
         self.main_splitter.setStretchFactor(1, 0)
-        
+
         self.main_layout.addWidget(self.main_splitter)
 
     def _init_player(self):
