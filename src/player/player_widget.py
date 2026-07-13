@@ -99,10 +99,10 @@ class PlayerWidget(QWidget):
         left_layout.addWidget(self.video_display, 1)
         left_layout.addWidget(self.timeline)
         left_layout.addWidget(self.player_controls)
-        left_layout.addWidget(self.subtitles_widget)
-        left_layout.addWidget(self.filters_widget)
         self.video_display.set_position_info(left_layout, 0)
-        
+
+        self.side_accordion.add_section(_("Subtitles"), self.subtitles_widget)
+
         self.main_splitter.addWidget(left_widget)
         self.main_splitter.addWidget(self.side_accordion)
 
