@@ -639,6 +639,14 @@ class MainWindow(QMainWindow):
             except Exception:
                 signal_manager.statusbar_message.emit(_("No media loaded"))
 
+    def open_bookmarks_dialog(self):
+        if hasattr(self.player_widget, 'player_controls'):
+            self.player_widget.player_controls.show_bookmarks_dialog()
+
+    def open_goto_dialog(self):
+        if hasattr(self.player_widget, 'player_controls'):
+            self.player_widget.player_controls.show_goto_dialog()
+
     def volume_down(self):
         if hasattr(self.player_widget, 'player') and self.player_widget.player:
             instance = self.player_widget.player.primary_instance

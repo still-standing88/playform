@@ -126,6 +126,18 @@ class MenuManager:
         self.main_window.repeat_action.triggered.connect(self.main_window.toggle_repeat)
         self.main_window.media_menu.addAction(self.main_window.repeat_action)
 
+        self.main_window.media_menu.addSeparator()
+
+        self.main_window.bookmarks_action = QAction(_("&Bookmarks..."), self.main_window)
+        self.main_window.bookmarks_action.setIcon(load_icon("bookmarks.svg"))
+        self.main_window.bookmarks_action.triggered.connect(self.main_window.open_bookmarks_dialog)
+        self.main_window.media_menu.addAction(self.main_window.bookmarks_action)
+
+        self.main_window.goto_action = QAction(_("&Go to Time..."), self.main_window)
+        self.main_window.goto_action.setIcon(load_icon("seek.svg"))
+        self.main_window.goto_action.triggered.connect(self.main_window.open_goto_dialog)
+        self.main_window.media_menu.addAction(self.main_window.goto_action)
+
         self._set_media_actions_enabled(False)
 
         from app_config import prefs
@@ -134,7 +146,8 @@ class MenuManager:
     def _set_media_actions_enabled(self, enabled: bool):
         for name in ("play_pause_action", "stop_action", "mute_action",
                      "forward_action", "backward_action",
-                     "previous_action", "next_action", "repeat_action"):
+                     "previous_action", "next_action", "repeat_action",
+                     "bookmarks_action", "goto_action"):
             action = getattr(self.main_window, name, None)
             if action:
                 action.setEnabled(enabled)
