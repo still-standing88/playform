@@ -28,6 +28,7 @@ from app_constance.styles import PLAYER_WIDGET_STYLE
 from utilities.functions import get_app_path, get_debug_level, get_parent_dir, get_vlclog_file, parse_vlc_args
 from utilities.functions import is_youtube_url, is_local_file, open_file_location
 from utilities.media_utils import format_time, seconds_to_microseconds, get_media_files_from_directory
+from utilities.formats import formats as media_formats
 from utilities import signal_manager
 
 
@@ -811,7 +812,7 @@ class PlayerWidget(QWidget):
                     instance.release()
             self.player_controls.set_current_file(file_path)
             dir_path = os.path.dirname(file_path)
-            media_files = get_media_files_from_directory(dir_path, av_play.formats["audio"], av_play.formats["video"])
+            media_files = get_media_files_from_directory(dir_path, media_formats["audio"], media_formats["video"])
             
             playlist = av_play.Playlist(title=os.path.basename(dir_path))
             start_index = 0
