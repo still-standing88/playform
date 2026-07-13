@@ -123,20 +123,54 @@ class Downloader(QObject):
         
         self.queue.append(item)
         self.queue_changed.emit()
-        
+
         if not self._is_paused:
             self._process_queue()
-        
+
         return item
-    
+
+    def add_ytdlp_download(self, url, destination=None, filename=None, progress_callback=None, finished_callback=None):
+        from .ytdlp_download import YtdlpDownloadItem
+
+        dest = Path(destination) if destination else self.destination
+        item = YtdlpDownloadItem(url, dest, filename)
+
+        if progress_callback:
+            item.progress_changed.connect(progress_callback)
+        if finished_callback:
+            item.finished.connect(finished_callback)
+
+        self.queue.append(item)
+        self.queue_changed.emit()
+
+        if not self._is_paused:
+            self._process_queue()
+
+        return item
+
     def pause_queue(self):
         self._is_paused = True
-    
+
     def resume_queue(self):
         self._is_paused = False
         self._process_queue()
-    
+
     def cancel_download(self, item):
+        from .ytdlp_download import YtdlpDownloadItem
+
+        if isinstance(item, YtdlpDownloadItem):
+            if item in self.active_downloads:
+                item.cancel()
+                self.active_downloads.remove(item)
+                self.failed_downloads.append(item)
+                self._process_queue()
+            elif item in self.queue:
+                item.set_status(DownloadStatus.CANCELLED)
+                self.queue.remove(item)
+                self.failed_downloads.append(item)
+                self.queue_changed.emit()
+            return
+
         if item in self.active_downloads:
             if item._reply:
                 item._reply.abort()
@@ -182,6 +216,12 @@ class Downloader(QObject):
             self.queue_changed.emit()
     
     def _start_download(self, item):
+        from .ytdlp_download import YtdlpDownloadItem
+
+        if isinstance(item, YtdlpDownloadItem):
+            self._start_ytdlp_download(item)
+            return
+
         manager_index = len(self.active_downloads) % len(self._network_managers)
         manager = self._network_managers[manager_index]
         
@@ -211,7 +251,28 @@ class Downloader(QObject):
         
         self.active_downloads.append(item)
         self.download_started.emit(item)
-    
+
+    def _start_ytdlp_download(self, item):
+        item.finished.connect(lambda success: self._on_ytdlp_finished(item, success))
+        self.active_downloads.append(item)
+        self.download_started.emit(item)
+        item.start()
+
+    def _on_ytdlp_finished(self, item, success):
+        if item in self.active_downloads:
+            self.active_downloads.remove(item)
+
+        if success:
+            self.completed_downloads.append(item)
+        else:
+            self.failed_downloads.append(item)
+
+        self.download_finished.emit(item, success)
+        self._process_queue()
+
+        if not self.active_downloads and not self.queue:
+            self.all_finished.emit()
+
     def _on_progress(self, item, bytes_received, bytes_total):
         item.downloaded_size = bytes_received
         item.total_size = bytes_total
