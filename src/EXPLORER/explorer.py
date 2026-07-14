@@ -83,6 +83,7 @@ class Explorer:
         self._pre_search_path = None
         self._search_query = None
         self.search_results: list[PathItem] = []
+        self.last_navigation_error: "str | None" = None
 
         self.__retrieve_listing()
 
@@ -235,7 +236,8 @@ class Explorer:
         self.folders.clear()
         self.files.clear()
         self.items.clear()
-        
+        self.last_navigation_error = None
+
         if self._current_path == "drives":
             drives = self.list_drives()
             for drive in drives:
@@ -248,12 +250,15 @@ class Explorer:
         else:
             try:
                 contents = os.listdir(self._current_path)
-            except (PermissionError, FileNotFoundError, OSError):
+            except (PermissionError, FileNotFoundError, OSError) as e:
+                failed_path = self._current_path
                 self._current_path = self.default_path
                 self._root_path = self.get_root(self._current_path)
                 try:
                     contents = os.listdir(self._current_path)
+                    self.last_navigation_error = f"{failed_path}: {e.strerror or e}"
                 except (PermissionError, FileNotFoundError, OSError):
+                    self.last_navigation_error = f"{failed_path}: {e.strerror or e}"
                     return
             for item in contents:
                 item_path = os.path.join(self._current_path, item)

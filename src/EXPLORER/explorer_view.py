@@ -14,6 +14,7 @@ from gui_controls.key_event_filter import ShortcutManager
 from app_config import key_config
 from utilities.functions import copyText
 from utilities.util_gui import menuItem, contextMenu
+from utilities import signal_manager
 from .explorer import Explorer, PathInfo, PathType, ExplorerMode
 import app_db
 
@@ -137,11 +138,21 @@ class ExplorerView(QListWidget):
                     self._player_bar.setState(False)
         self._pending_media_path = None
 
+    def _notify_navigation_error(self):
+        # Explorer already falls back to a safe folder silently on
+        # permission/IO errors - surface a brief status-bar note so the
+        # user isn't left wondering why they got redirected, without
+        # interrupting them with a modal dialog for a routine error.
+        error = self._explorer.last_navigation_error
+        if error:
+            signal_manager.statusbar_message.emit(_("Couldn't open {error}").format(error=error))
+
     def change_path(self, path:str):
         self._explorer.set_current_path(path)
         self.relist_contents()
         self.update_path()
         self.set_last_path(self._explorer.current_path)
+        self._notify_navigation_error()
 
     def forward(self):
         if self._focused_item_path is not None:
@@ -149,6 +160,7 @@ class ExplorerView(QListWidget):
             self.relist_contents()
             self.update_path()
             self.set_last_path(self._explorer.current_path)
+            self._notify_navigation_error()
 
     def backward(self):
         item_name = os.path.basename(self._explorer.current_path)
@@ -157,7 +169,8 @@ class ExplorerView(QListWidget):
         self.update_path()
         if item_name in self._explorer.items:
             self.setCurrentItem(self.findItems(item_name, qt.MatchFlag.MatchExactly)[0])
-        self.set_last_path(self._explorer.current_path)        
+        self.set_last_path(self._explorer.current_path)
+        self._notify_navigation_error()
 
     @Slot()
     def onItemActivate(self):
