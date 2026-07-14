@@ -799,7 +799,22 @@ class MainWindow(QMainWindow):
                 return i
         return -1
 
+    def _return_to_main_window_if_elsewhere(self) -> bool:
+        # If a floated dock (its own top-level window) currently has OS
+        # activation, F6/Shift+F6 should first bring MainWindow back rather
+        # than trying to cycle - QApplication.focusWidget() only reflects
+        # the *active* window's focus child, so cycling logic can't reliably
+        # reach across from a different active window anyway.
+        if QApplication.activeWindow() is not self:
+            self.activateWindow()
+            self.raise_()
+            return True
+        return False
+
     def focus_next_widget(self):
+        if self._return_to_main_window_if_elsewhere():
+            return
+
         self.dock_manager.update_focusable_widgets()
         if not self.focusable_widgets:
             return
@@ -809,6 +824,9 @@ class MainWindow(QMainWindow):
         self._focus_navigation_target(self.focusable_widgets[self.current_focus_index])
 
     def focus_previous_widget(self):
+        if self._return_to_main_window_if_elsewhere():
+            return
+
         self.dock_manager.update_focusable_widgets()
         if not self.focusable_widgets:
             return
