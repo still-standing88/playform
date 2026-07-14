@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QMenu
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QKeySequence
 import os
 from app_config import key_config
 from utilities.icon_loader import load_icon
@@ -171,6 +171,18 @@ class MenuManager:
             self.main_window.repeat_action.setText(text)
         
     def setup_view_menu(self):
+        self.main_window.zoom_in_action = QAction(_("Zoom &In"), self.main_window)
+        self.main_window.zoom_in_action.setShortcut(QKeySequence.StandardKey.ZoomIn)
+        self.main_window.zoom_in_action.triggered.connect(self.main_window.zoom_in)
+        self.main_window.view_menu.addAction(self.main_window.zoom_in_action)
+
+        self.main_window.zoom_out_action = QAction(_("Zoom &Out"), self.main_window)
+        self.main_window.zoom_out_action.setShortcut(QKeySequence.StandardKey.ZoomOut)
+        self.main_window.zoom_out_action.triggered.connect(self.main_window.zoom_out)
+        self.main_window.view_menu.addAction(self.main_window.zoom_out_action)
+
+        self.main_window.view_menu.addSeparator()
+
         self.main_window.minimize_player_action = QAction(_("&Minimize Player"), self.main_window)
         self.main_window.minimize_player_action.setCheckable(True)
         self.main_window.minimize_player_action.triggered.connect(self.main_window.dock_manager.toggle_player_minimize)

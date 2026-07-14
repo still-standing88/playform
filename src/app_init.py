@@ -9,6 +9,14 @@ from PySide6.QtGui import QFont
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from utilities.i18n import install_translation
 
+
+def _log(msg: str) -> None:
+    """Write to stdout if available (None in windowed frozen builds)."""
+    out = sys.__stdout__
+    if out is not None:
+        out.write(msg)
+        out.flush()
+
 LOCAL_SERVER_NAME = "PlayFormLocalIPC"
 
 
@@ -57,11 +65,24 @@ def setup_environment():
     return BASE_DIR
 
 
+BASE_FONT_POINT_SIZE = 9
+MIN_UI_ZOOM_LEVEL = -4
+MAX_UI_ZOOM_LEVEL = 10
+
+
+def apply_ui_zoom(app, zoom_level=None):
+    from app_config import prefs
+    if zoom_level is None:
+        zoom_level = prefs.prefs.get("ui_zoom_level", 0)
+    zoom_level = max(MIN_UI_ZOOM_LEVEL, min(MAX_UI_ZOOM_LEVEL, zoom_level))
+    app.setFont(QFont("Segoe UI", BASE_FONT_POINT_SIZE + zoom_level))
+    return zoom_level
+
+
 def setup_application_style(app):
     from utilities.theme_manager import setup_theme
     app.setStyle('Fusion')
-    font = QFont("Segoe UI", 9)
-    app.setFont(font)
+    apply_ui_zoom(app)
     setup_theme(app)
 
 
@@ -73,8 +94,7 @@ def initialize_app_guard(cli_args):
     if not app_instance.is_primary_instance():
         if cli_args and len(cli_args) > 1:
             path = _clean_path_arg(cli_args[1])
-            sys.__stdout__.write(f"[PlayForm IPC] Secondary sending: {path}\n")
-            sys.__stdout__.flush()
+            _log(f"[PlayForm IPC] Secondary sending: {path}\n")
             if not _send_via_local_socket(path):
                 app_instance.send_msg_request("cli-args", path)
         app_instance.focus_window("PlayForm")
@@ -123,8 +143,7 @@ def start_local_server(window):
     QLocalServer.removeServer(LOCAL_SERVER_NAME)
     server = QLocalServer()
     if not server.listen(LOCAL_SERVER_NAME):
-        sys.__stdout__.write("[PlayForm IPC] Primary: failed to start local server\n")
-        sys.__stdout__.flush()
+        _log("[PlayForm IPC] Primary: failed to start local server\n")
         return None
 
     def on_new_connection():
@@ -134,8 +153,7 @@ def start_local_server(window):
         client.readyRead.connect(lambda c=client: _read_client(c, window))
 
     server.newConnection.connect(on_new_connection)
-    sys.__stdout__.write(f"[PlayForm IPC] Primary: local server started\n")
-    sys.__stdout__.flush()
+    _log(f"[PlayForm IPC] Primary: local server started\n")
     return server
 
 
@@ -144,8 +162,7 @@ def _read_client(client, window):
     if not data:
         return
     path = data.data().decode("utf-8").strip()
-    sys.__stdout__.write(f"[PlayForm IPC] Primary local: received '{path}'\n")
-    sys.__stdout__.flush()
+    _log(f"[PlayForm IPC] Primary local: received '{path}'\n")
     client.disconnectFromServer()
     QTimer.singleShot(0, lambda p=path: window.load_external_path(p))
 
@@ -154,16 +171,14 @@ def setup_ipc_handlers(app_instance, window):
     import app_guard
 
     def handle_cli_args(data):
-        sys.__stdout__.write(f"[PlayForm IPC] AppGuard received: {data}\n")
-        sys.__stdout__.flush()
+        _log(f"[PlayForm IPC] AppGuard received: {data}\n")
         path = data.get("msg_data", "") if isinstance(data, dict) else ""
         if path:
             QTimer.singleShot(0, lambda p=path: window.load_external_path(p))
 
     cli_args_msg = app_instance.create_ipc_msg("cli-args", handle_cli_args)
     app_instance.register_msg(cli_args_msg)
-    sys.__stdout__.write("[PlayForm IPC] AppGuard handler registered\n")
-    sys.__stdout__.flush()
+    _log("[PlayForm IPC] AppGuard handler registered\n")
 
 
 def setup_cleanup(app, app_instance, app_db):

@@ -916,6 +916,19 @@ class MainWindow(QMainWindow):
         except Exception as e:
             pass
 
+    def zoom_in(self):
+        self._adjust_ui_zoom(1)
+
+    def zoom_out(self):
+        self._adjust_ui_zoom(-1)
+
+    def _adjust_ui_zoom(self, delta):
+        import app_init
+        current = prefs.prefs.get("ui_zoom_level", 0)
+        new_level = app_init.apply_ui_zoom(QApplication.instance(), current + delta)
+        prefs.prefs["ui_zoom_level"] = new_level
+        prefs.save()
+
     def open_preferences(self):
 
         if self._dialog_open:

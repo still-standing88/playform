@@ -40,5 +40,6 @@ prefs = {
 "equalizer_enabled": False,
 "equalizer_preamp": 0.0,
 "equalizer_bands": [],
-"equalizer_preset": -1
+"equalizer_preset": -1,
+"ui_zoom_level": 0
 }
