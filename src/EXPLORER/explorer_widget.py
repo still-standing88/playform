@@ -181,13 +181,14 @@ class ExplorerWidget(QWidget):
         content_splitter.addWidget(preview_group)
         main_splitter.addWidget(right_panel)
         
-        controls_layout = QHBoxLayout()
+        media_group = QGroupBox(_("Media"))
+        controls_layout = QHBoxLayout(media_group)
         self.autoplay_cb = QCheckBox(_("Auto Play"))
         self.autoplay_cb.stateChanged.connect(self.autoplayState)
         self.autoplay_cb.setChecked(prefs.prefs["autoplay"])
         controls_layout.addWidget(self.autoplay_cb)
         controls_layout.addStretch()
-        
+
         volume_label = QLabel(_("Volume:"))
         controls_layout.addWidget(volume_label)
         self.volume_spinbox = QSpinBox()
@@ -197,8 +198,8 @@ class ExplorerWidget(QWidget):
         self.volume_spinbox.setAccessibleName(_("volume"))
         self.volume_spinbox.valueChanged.connect(self.volumeChange)
         controls_layout.addWidget(self.volume_spinbox)
-        
-        main_layout.addLayout(controls_layout)
+
+        main_layout.addWidget(media_group)
 
     def repeat_media(self):
         if prefs.prefs['repeat'] == True:
