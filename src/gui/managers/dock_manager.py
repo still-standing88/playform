@@ -212,6 +212,9 @@ class DockManager:
         if hasattr(self.main_window, 'toolbar') and self.main_window.toolbar.isVisible():
             self.main_window.focusable_widgets.append(self.main_window.toolbar)
 
+        if hasattr(self.main_window, 'panels_toolbar') and self.main_window.panels_toolbar.isVisible():
+            self.main_window.focusable_widgets.append(self.main_window.panels_toolbar)
+
         dock_widgets = [
             (self.main_window.recents_favorites_dock, self.main_window.recents_and_favorites_widget),
             (self.main_window.explorer_dock, self.main_window.explorer_widget),

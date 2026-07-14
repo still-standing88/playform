@@ -818,7 +818,7 @@ class MainWindow(QMainWindow):
                 widget.setActiveAction(first_action)
             return
 
-        if widget is self.toolbar:
+        if widget is self.toolbar or widget is getattr(self, 'panels_toolbar', None):
             widget.setFocus()
             toolbar_actions = [action for action in widget.actions() if action.isVisible() and not action.isSeparator()]
             if toolbar_actions:
