@@ -62,7 +62,9 @@ from .managers.playlist_handler import PlaylistHandler
 from system_tray import SystemTrayIcon
 from .dialogs.downloader_dialog import DownloaderDialog
 from .dialogs.about_dialog import AboutDialog
+from .dialogs.catalog_progress_dialog import CatalogProgressDialog
 from downloader.downloader import Downloader
+from app_db.catalog_worker import CatalogWorker
 from utilities.functions import get_restart_flag
 
 
@@ -88,7 +90,12 @@ class MainWindow(QMainWindow):
         self._shared_downloader: Optional[Downloader] = None
         self._downloader_dialog: Optional[DownloaderDialog] = None
         self.show_downloader_button: QPushButton
-        
+
+        # Catalog worker singleton
+        self._catalog_worker: Optional[CatalogWorker] = None
+        self._catalog_dialog: Optional[CatalogProgressDialog] = None
+        self.show_catalog_button: QPushButton
+
         self.radio_widget = None
         self.radio_dock = None
         self.podcast_widget = None
@@ -344,6 +351,13 @@ class MainWindow(QMainWindow):
         self.show_downloader_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.show_downloader_button.setVisible(False)
         self.status_bar.addPermanentWidget(self.show_downloader_button)
+
+        self.show_catalog_button = QPushButton(_("Show Cataloging"))
+        self.show_catalog_button.setObjectName("showCatalogButton")
+        self.show_catalog_button.clicked.connect(self._show_minimized_catalog)
+        self.show_catalog_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self.show_catalog_button.setVisible(False)
+        self.status_bar.addPermanentWidget(self.show_catalog_button)
         
         self.status_bar.show()
         
@@ -852,6 +866,8 @@ class MainWindow(QMainWindow):
                 self.show_tool_button.setFocus()
             elif self.show_downloader_button.isVisible():
                 self.show_downloader_button.setFocus()
+            elif self.show_catalog_button.isVisible():
+                self.show_catalog_button.setFocus()
             elif self.media_info_label.isVisible():
                 self.media_info_label.setFocus()
             else:
@@ -1038,7 +1054,47 @@ class MainWindow(QMainWindow):
             self._downloader_dialog.show_dialog()
             self.show_downloader_button.setVisible(False)
             signal_manager.statusbar_message.emit(_("Download Manager restored"))
-            
+
+    # ------------------------------------------------------------------
+    # Singleton catalog worker/dialog management
+    # ------------------------------------------------------------------
+    def get_catalog_worker(self) -> CatalogWorker:
+        """Return the singleton CatalogWorker, creating it on first call."""
+        if self._catalog_worker is None:
+            self._catalog_worker = CatalogWorker(self)
+        return self._catalog_worker
+
+    def open_catalog_dialog(self):
+        """Open (or raise) the singleton cataloging progress dialog."""
+        if self._catalog_dialog is not None:
+            self._catalog_dialog.show_dialog()
+            self.show_catalog_button.setVisible(False)
+            signal_manager.statusbar_message.emit(_("Database Cataloging opened"))
+            return
+
+        dlg = CatalogProgressDialog(self.get_catalog_worker(), parent=self)
+        dlg.dialog_hidden.connect(self._on_catalog_hidden)
+        dlg.dialog_closed.connect(self._on_catalog_closed)
+        self._catalog_dialog = dlg
+        dlg.show_dialog()
+        self.show_catalog_button.setVisible(False)
+        signal_manager.statusbar_message.emit(_("Database Cataloging opened"))
+
+    def _on_catalog_hidden(self):
+        self.show_catalog_button.setVisible(True)
+        signal_manager.statusbar_message.emit(_("Database Cataloging minimized"))
+
+    def _on_catalog_closed(self):
+        self._catalog_dialog = None
+        self.show_catalog_button.setVisible(False)
+        signal_manager.statusbar_message.emit(_("Database Cataloging closed"))
+
+    def _show_minimized_catalog(self):
+        if self._catalog_dialog is not None:
+            self._catalog_dialog.show_dialog()
+            self.show_catalog_button.setVisible(False)
+            signal_manager.statusbar_message.emit(_("Database Cataloging restored"))
+
     def hide_to_tray(self):
         if self.tray:
             self.tray.hide_window_to_tray()
