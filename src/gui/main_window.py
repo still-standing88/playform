@@ -1070,6 +1070,22 @@ class MainWindow(QMainWindow):
         self.get_catalog_worker().enqueue_folder(path)
         self.open_catalog_dialog()
 
+    def rebuild_catalog(self):
+        """Clear the entire media database and re-scan every previously
+        cataloged folder."""
+        import app_db
+        roots = app_db.media_db.get_catalog_roots()
+        for media in app_db.media_db.get_all_media():
+            app_db.media_db.delete_media_file(media.id)
+        for root in roots:
+            app_db.media_db.remove_catalog_root(root)
+
+        worker = self.get_catalog_worker()
+        for root in roots:
+            worker.enqueue_folder(root)
+        if roots:
+            self.open_catalog_dialog()
+
     def open_catalog_dialog(self):
         """Open (or raise) the singleton cataloging progress dialog."""
         if self._catalog_dialog is not None:
