@@ -1,6 +1,7 @@
 import os
 import hashlib
 import json
+import time
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 
@@ -24,6 +25,14 @@ class MediaDatabase(BaseDatabaseHandler):
     CREATE INDEX IF NOT EXISTS idx_media_type ON media_files(media_type);
     CREATE INDEX IF NOT EXISTS idx_filename ON media_files(filename);
     CREATE INDEX IF NOT EXISTS idx_path ON media_files(path);
+    CREATE TABLE IF NOT EXISTS catalog_roots (
+        id TEXT PRIMARY KEY NOT NULL,
+        path TEXT NOT NULL UNIQUE,
+        date_added TEXT NOT NULL,
+        date_last_scanned TEXT,
+        file_count INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_catalog_roots_path ON catalog_roots(path);
     """
 
     def __init__(self, db_path: str = os.path.join("data", "media.sqlite3"), simple_mode: bool = False):
@@ -37,6 +46,12 @@ class MediaDatabase(BaseDatabaseHandler):
             self._add_media_worker(data, connection)
         elif operation == "add_media_batch":
             self._add_media_batch_worker(data, connection)
+        elif operation == "add_catalog_root":
+            self._add_catalog_root_worker(data, connection)
+        elif operation == "remove_catalog_root":
+            self._remove_catalog_root_worker(data, connection)
+        elif operation == "update_catalog_root_scan_stats":
+            self._update_catalog_root_scan_stats_worker(data, connection)
 
     def _add_media_worker(self, media: MediaFile, db):
         db.execute_sql(
@@ -105,6 +120,58 @@ class MediaDatabase(BaseDatabaseHandler):
                     media_files.append(media_file)
 
         return media_files
+
+    def _generate_root_id(self, path: str) -> str:
+        return hashlib.md5(os.path.normcase(os.path.normpath(path)).encode()).hexdigest()
+
+    def _add_catalog_root_worker(self, path: str, db):
+        now = str(time.time())
+        db.execute_sql(
+            "INSERT OR IGNORE INTO catalog_roots (id, path, date_added, date_last_scanned, file_count) VALUES (?, ?, ?, NULL, 0)",
+            (self._generate_root_id(path), path, now),
+        )
+
+    def _remove_catalog_root_worker(self, path: str, db):
+        db.execute_sql("DELETE FROM catalog_roots WHERE id = ?", (self._generate_root_id(path),))
+
+    def _update_catalog_root_scan_stats_worker(self, data: Dict[str, Any], db):
+        db.execute_sql(
+            "UPDATE catalog_roots SET date_last_scanned = ?, file_count = ? WHERE id = ?",
+            (str(time.time()), data["file_count"], self._generate_root_id(data["path"])),
+        )
+
+    def add_catalog_root(self, path: str):
+        path = os.path.normpath(path)
+        if self._simple_mode:
+            self._add_catalog_root_worker(path, self._db)
+        else:
+            self._entry_queue.put(("add_catalog_root", path))
+
+    def remove_catalog_root(self, path: str):
+        path = os.path.normpath(path)
+        if self._simple_mode:
+            self._remove_catalog_root_worker(path, self._db)
+        else:
+            self._entry_queue.put(("remove_catalog_root", path))
+
+    def update_catalog_root_scan_stats(self, path: str, file_count: int):
+        data = {"path": os.path.normpath(path), "file_count": file_count}
+        if self._simple_mode:
+            self._update_catalog_root_scan_stats_worker(data, self._db)
+        else:
+            self._entry_queue.put(("update_catalog_root_scan_stats", data))
+
+    def get_catalog_roots(self) -> List[str]:
+        cursor = self._db.execute_sql("SELECT path FROM catalog_roots ORDER BY date_added ASC")
+        return [row[0] for row in cursor.fetchall()]
+
+    def is_path_cataloged(self, path: str) -> bool:
+        normalized = os.path.normcase(os.path.normpath(path))
+        for root in self.get_catalog_roots():
+            root_normalized = os.path.normcase(os.path.normpath(root))
+            if normalized == root_normalized or normalized.startswith(root_normalized + os.sep):
+                return True
+        return False
 
     def search_by_filename(self, query: str, media_type: Optional[MediaType] = None, limit: Optional[int] = None) -> List[MediaFile]:
         like_q = f"%{query}%"

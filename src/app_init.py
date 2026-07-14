@@ -194,6 +194,11 @@ def setup_cleanup(app, app_instance, app_db):
             app_db.user_db.close_connection()
         except Exception:
             pass
+
+        try:
+            app_db.media_db.close_connection()
+        except Exception:
+            pass
         app_instance.release()
 
     app.aboutToQuit.connect(release)
