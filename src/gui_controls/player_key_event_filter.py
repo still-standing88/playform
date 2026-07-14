@@ -1,5 +1,5 @@
 # this will become the default key filter in the future.
-from PySide6.QtWidgets import QSpinBox, QDoubleSpinBox, QSlider, QListWidget, QPushButton, QToolButton, QComboBox, QCheckBox
+from PySide6.QtWidgets import QSpinBox, QDoubleSpinBox, QSlider, QListWidget, QTreeWidget, QPushButton, QToolButton, QComboBox, QCheckBox
 from PySide6.QtCore import QObject, QEvent, Qt
 
 
@@ -13,12 +13,12 @@ class KeyEventFilter(QObject):
         if event.type() == QEvent.Type.ShortcutOverride:
             key = event.key()
 
-            if isinstance(watched, (QSpinBox, QDoubleSpinBox, QSlider, QListWidget, QComboBox)):
+            if isinstance(watched, (QSpinBox, QDoubleSpinBox, QSlider, QListWidget, QTreeWidget, QComboBox)):
                 if key in [Qt.Key.Key_Up, Qt.Key.Key_Down, Qt.Key.Key_Left, Qt.Key.Key_Right]:
                     event.accept()
                     return True
 
-            if isinstance(watched, QListWidget):
+            if isinstance(watched, (QListWidget, QTreeWidget)):
                 if key in (Qt.Key.Key_Enter, Qt.Key.Key_Return, Qt.Key.Key_Space):
                     event.accept()
                     return True
