@@ -69,6 +69,7 @@ class DockManager:
             | QDockWidget.DockWidgetFeature.DockWidgetClosable
         )
         self._make_float_a_real_window(self.player_dock)
+        self.player_dock.visibilityChanged.connect(self.main_window.menu_manager.update_player_menu)
         self.main_window.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.player_dock)
         self.main_window.player_dock = self.player_dock
 
