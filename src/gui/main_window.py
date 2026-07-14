@@ -805,6 +805,11 @@ class MainWindow(QMainWindow):
         if widget is None:
             return
 
+        target_window = widget.window()
+        if target_window is not None and target_window is not self:
+            target_window.activateWindow()
+            target_window.raise_()
+
         if widget is self.menuBar():
             widget.setFocus()
             first_action = next((action for action in widget.actions() if action.isVisible()), None)
