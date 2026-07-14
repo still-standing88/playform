@@ -171,43 +171,51 @@ class MenuManager:
             self.main_window.repeat_action.setText(text)
         
     def setup_view_menu(self):
+        self.main_window.minimize_player_action = QAction(_("&Minimize Player"), self.main_window)
+        self.main_window.minimize_player_action.setCheckable(True)
+        self.main_window.minimize_player_action.triggered.connect(self.main_window.dock_manager.toggle_player_minimize)
+        self.main_window.view_menu.addAction(self.main_window.minimize_player_action)
+
+        self.main_window.view_menu.addSeparator()
+
+        # Panels toolbar already surfaces show/hide (+ float) for every pane;
+        # the individual actions still live here too (reused, not duplicated)
+        # but nested in their own submenu instead of cluttering View directly.
+        self.main_window.panels_menu = self.main_window.view_menu.addMenu(_("&Panels"))
+        self.main_window.panels_menu.setObjectName("panelsMenu")
+
         self.main_window.show_recents_favorites_action = QAction(_("Show &Recents/Favorites"), self.main_window)
         self.main_window.show_recents_favorites_action.setCheckable(True)
         self.main_window.show_recents_favorites_action.setChecked(True)
         self.main_window.show_recents_favorites_action.triggered.connect(self.main_window.dock_manager.toggle_recents_favorites)
-        self.main_window.view_menu.addAction(self.main_window.show_recents_favorites_action)
-        
+        self.main_window.panels_menu.addAction(self.main_window.show_recents_favorites_action)
+
         self.main_window.show_explorer_action = QAction(_("Show &Explorer"), self.main_window)
         self.main_window.show_explorer_action.setIcon(load_icon("explorer.svg"))
         self.main_window.show_explorer_action.setCheckable(True)
         self.main_window.show_explorer_action.setChecked(False)
         self.main_window.show_explorer_action.triggered.connect(self.main_window.dock_manager.toggle_explorer)
-        self.main_window.view_menu.addAction(self.main_window.show_explorer_action)
-        
-        self.main_window.minimize_player_action = QAction(_("&Minimize Player"), self.main_window)
-        self.main_window.minimize_player_action.setCheckable(True)
-        self.main_window.minimize_player_action.triggered.connect(self.main_window.dock_manager.toggle_player_minimize)
-        self.main_window.view_menu.addAction(self.main_window.minimize_player_action)
-        
+        self.main_window.panels_menu.addAction(self.main_window.show_explorer_action)
+
         self.main_window.show_playlists_action = QAction(_("Show &Playlists"), self.main_window)
         self.main_window.show_playlists_action.setCheckable(True)
         self.main_window.show_playlists_action.setChecked(False)
         self.main_window.show_playlists_action.triggered.connect(self.main_window.dock_manager.toggle_playlists)
-        self.main_window.view_menu.addAction(self.main_window.show_playlists_action)
-        
-        self.main_window.view_menu.addSeparator()
-        
+        self.main_window.panels_menu.addAction(self.main_window.show_playlists_action)
+
+        self.main_window.panels_menu.addSeparator()
+
         self.main_window.show_radio_action = QAction(_("Show &Radio Browser"), self.main_window)
         self.main_window.show_radio_action.setCheckable(True)
         self.main_window.show_radio_action.setChecked(False)
         self.main_window.show_radio_action.triggered.connect(self.main_window.dock_manager.toggle_radio)
-        self.main_window.view_menu.addAction(self.main_window.show_radio_action)
-        
+        self.main_window.panels_menu.addAction(self.main_window.show_radio_action)
+
         self.main_window.show_podcast_action = QAction(_("Show &Podcasts"), self.main_window)
         self.main_window.show_podcast_action.setCheckable(True)
         self.main_window.show_podcast_action.setChecked(False)
         self.main_window.show_podcast_action.triggered.connect(self.main_window.dock_manager.toggle_podcast)
-        self.main_window.view_menu.addAction(self.main_window.show_podcast_action)
+        self.main_window.panels_menu.addAction(self.main_window.show_podcast_action)
 
     def setup_tools_menu(self):
         self.main_window.batch_converter_action = QAction(_("&Batch Converter"), self.main_window)
