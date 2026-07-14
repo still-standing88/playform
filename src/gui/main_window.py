@@ -786,20 +786,35 @@ class MainWindow(QMainWindow):
     
 
     
+    def _current_focus_list_index(self) -> int:
+        # current_focus_index only remembers where F6/Shift+F6 last put focus;
+        # it goes stale the moment the user clicks or Tabs somewhere else
+        # (e.g. into a floated dock), so derive the real position from
+        # QApplication's actual focus widget instead of trusting the counter.
+        focus_widget = QApplication.focusWidget()
+        if focus_widget is None:
+            return -1
+        for i, widget in enumerate(self.focusable_widgets):
+            if widget is focus_widget or widget.isAncestorOf(focus_widget):
+                return i
+        return -1
+
     def focus_next_widget(self):
         self.dock_manager.update_focusable_widgets()
         if not self.focusable_widgets:
             return
-        
-        self.current_focus_index = (self.current_focus_index + 1) % len(self.focusable_widgets)
+
+        current = self._current_focus_list_index()
+        self.current_focus_index = (current + 1) % len(self.focusable_widgets)
         self._focus_navigation_target(self.focusable_widgets[self.current_focus_index])
-    
+
     def focus_previous_widget(self):
         self.dock_manager.update_focusable_widgets()
         if not self.focusable_widgets:
             return
-        
-        self.current_focus_index = (self.current_focus_index - 1) % len(self.focusable_widgets)
+
+        current = self._current_focus_list_index()
+        self.current_focus_index = (current - 1) % len(self.focusable_widgets)
         self._focus_navigation_target(self.focusable_widgets[self.current_focus_index])
 
     def _focus_navigation_target(self, widget):
