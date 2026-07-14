@@ -144,6 +144,10 @@ class PlayerWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Stored explicitly because a dock's content widget gets reparented
+        # internally by Qt (and again if the dock is later floated), so
+        # self.window() no longer reliably resolves back to MainWindow.
+        self._main_window = parent
         self.is_seeking = False
         self._last_known_state = av_play.AVPlaybackState.AV_STATE_NOTHING
         self._last_muted: Optional[bool] = None

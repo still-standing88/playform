@@ -508,7 +508,7 @@ class PlayerControls(QWidget):
         bookmarks = self._bookmarks[self._current_file]
         if not bookmarks:
             return
-        mw = self.window()
+        mw = getattr(self._player_widget, "_main_window", None) or self.window()
         if hasattr(mw, '_dialog_open') and mw._dialog_open:
             return
         if hasattr(mw, '_dialog_open'):
@@ -529,7 +529,7 @@ class PlayerControls(QWidget):
     def show_goto_dialog(self):
         if not self._current_file:
             return
-        mw = self.window()
+        mw = getattr(self._player_widget, "_main_window", None) or self.window()
         if hasattr(mw, '_dialog_open') and mw._dialog_open:
             return
         if hasattr(mw, '_dialog_open'):
