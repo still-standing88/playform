@@ -97,23 +97,36 @@ class EqualizerWidget(QWidget):
     def _build_band_spins(self, frequencies: List[float]):
         self._clear_layout(self.bands_layout)
         self._band_spins = []
+        prev_widget = self.preamp_spin
         for freq in frequencies:
             column = QVBoxLayout()
             label = QLabel(self._format_freq(freq), self)
             label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
             spin = self._make_band_spin()
-            spin.setAccessibleName(self._format_freq(freq))
+            spin.setAccessibleName(_("{freq} band gain").format(freq=self._format_freq_full(freq)))
             spin.valueChanged.connect(self._on_value_changed)
             column.addWidget(label)
             column.addWidget(spin)
             self.bands_layout.addLayout(column)
             self._band_spins.append(spin)
+            # Band spinboxes are (re)built after the whole accordion is already
+            # constructed, so Qt's default tab order would otherwise append them
+            # after unrelated widgets built later (e.g. the next section's
+            # header) instead of right after the preamp spinbox.
+            QWidget.setTabOrder(prev_widget, spin)
+            prev_widget = spin
 
     @staticmethod
     def _format_freq(freq: float) -> str:
         if freq >= 1000:
             return f"{freq / 1000:.1f}k"
         return f"{freq:.0f}"
+
+    @staticmethod
+    def _format_freq_full(freq: float) -> str:
+        if freq >= 1000:
+            return f"{freq / 1000:.1f} kHz"
+        return f"{freq:.0f} Hz"
 
     def _load_saved_state(self):
         self._building = True
