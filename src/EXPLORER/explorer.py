@@ -98,6 +98,10 @@ class Explorer:
     def root_path(self):
         return self._root_path
 
+    @property
+    def search_query(self) -> "str | None":
+        return self._search_query
+
     def get_prev_path(self): return self._prev_path
 
     def set_default_path(self, path): self.default_path = path

@@ -308,7 +308,8 @@ class MainWindow(QMainWindow):
             open_callback=self.play_file,
             recent_callback=self.add_to_recents,
             playlist_callback=self.add_to_playlist,
-            create_playlist_callback=self.create_playlist_from_folder
+            create_playlist_callback=self.create_playlist_from_folder,
+            catalog_folder_callback=self.catalog_folder
         )
         self.explorer_widget.setObjectName("explorerWidget")
         
@@ -1063,6 +1064,11 @@ class MainWindow(QMainWindow):
         if self._catalog_worker is None:
             self._catalog_worker = CatalogWorker(self)
         return self._catalog_worker
+
+    def catalog_folder(self, path: str):
+        """Enqueue a folder for cataloging and surface the progress dialog."""
+        self.get_catalog_worker().enqueue_folder(path)
+        self.open_catalog_dialog()
 
     def open_catalog_dialog(self):
         """Open (or raise) the singleton cataloging progress dialog."""

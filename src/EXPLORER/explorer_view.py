@@ -4,7 +4,7 @@ import os
 from typing import Optional, Callable
 from PySide6.QtGui import QKeyEvent, QKeySequence
 from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel
-from PySide6.QtCore import Qt as qt, Slot
+from PySide6.QtCore import Qt as qt, Slot, QSize
 import utilities.vlc_bootstrap
 from av_play import AVMediaInstance, VLCVideoPlayer, AVPlaybackState
 from utilities.formats import image_extensions
@@ -14,7 +14,8 @@ from gui_controls.key_event_filter import ShortcutManager
 from app_config import key_config
 from utilities.functions import copyText
 from utilities.util_gui import menuItem, contextMenu
-from .explorer import Explorer, PathInfo, PathType
+from .explorer import Explorer, PathInfo, PathType, ExplorerMode
+import app_db
 
 
 class ExplorerView(QListWidget):
@@ -36,6 +37,7 @@ class ExplorerView(QListWidget):
         
         self._pending_media_path:Optional[str] = None
         self._player_bar = None
+        self._search_item_paths: dict[str, str] = {}
 
         super().__init__(kw.get("parent", None))
         self.currentItemChanged.connect(self.onItemChange)
@@ -110,6 +112,10 @@ class ExplorerView(QListWidget):
         if self._focused_item_path:
             self._execute_callback("library_callback", self._focused_item_path)  # type: ignore[arg-type]
 
+    def add_to_database(self):
+        if self._focused_item_path:
+            self._execute_callback("catalog_folder_callback", self._focused_item_path)  # type: ignore[arg-type]
+
     def copy_path(self):
         copyText(self._focused_item_path)
 
@@ -166,7 +172,42 @@ class ExplorerView(QListWidget):
         self.list_contents()
 
     def list_contents(self):
-        self.addItems(self._explorer.folders+ self._explorer.files)
+        if self._explorer.mode == ExplorerMode.SEARCH_RESULTS:
+            self._search_item_paths = {}
+            root = self._explorer.current_path
+            labels = []
+            for item in self._explorer.search_results:
+                try:
+                    label = os.path.relpath(item.path, root)
+                except ValueError:
+                    label = item.path
+                if label in self._search_item_paths:
+                    label = item.path
+                self._search_item_paths[label] = item.path
+                labels.append(label)
+            self.addItems(labels)
+        else:
+            self._search_item_paths = {}
+            self.addItems(self._explorer.folders + self._explorer.files)
+
+    def set_view_mode(self, list_mode: bool):
+        self.setViewMode(QListWidget.ViewMode.ListMode if list_mode else QListWidget.ViewMode.IconMode)
+        if not list_mode:
+            self.setGridSize(QSize(96, 96))
+            self.setResizeMode(QListWidget.ResizeMode.Adjust)
+        self.setWrapping(not list_mode)
+
+    def perform_search(self, query: str):
+        self._explorer.search(query, media_db=app_db.media_db)
+        self.relist_contents()
+        self.update_path()
+        self.set_last_path(self._explorer.current_path)
+
+    def refresh(self):
+        if self._explorer.mode == ExplorerMode.SEARCH_RESULTS and self._explorer.search_query:
+            self._explorer.search(self._explorer.search_query, media_db=app_db.media_db)
+        self.relist_contents()
+        self.update_path()
 
 
     def media_play_pause(self):
@@ -233,6 +274,20 @@ class ExplorerView(QListWidget):
                 callback()
 
     def context_menu(self, event):
+        if self._explorer.mode == ExplorerMode.SEARCH_RESULTS:
+            if self.currentItem() is None: return
+            full_path = self._search_item_paths.get(self.currentItem().text())
+            if full_path is None: return
+            menu = QMenu()
+            menuItem(menu, _("Open"), self.open_file, self)
+            menuItem(menu, _("copy path"), self.copy_path, self)
+            menuItem(menu, _("Add to playlist"), self.add_to_playlist, self)
+            menuItem(menu, _("Add to favorites"), self.add_to_favorites, self)
+            menu.addSeparator()
+            menuItem(menu, _("Refresh"), self.refresh, self)
+            menu.exec()
+            return
+
         if self.currentItem() is None: return
         item = self.currentItem().text()
         item_info:Optional[PathInfo] = self._explorer.items.get(item, None)
@@ -256,9 +311,17 @@ class ExplorerView(QListWidget):
         if item_info.type == PathType.FOLDER:
             menuItem(menu, _("Add to library"), self.add_to_library, self)
             menuItem(menu, _("Create playlist from folder"), self.create_playlist_from_folder, self)
+            if app_db.media_db.is_path_cataloged(self._focused_item_path):
+                already_action = menu.addAction(_("Already in Database"))
+                already_action.setEnabled(False)
+            else:
+                menuItem(menu, _("Add to Database"), self.add_to_database, self)
         elif item_info.type == PathType.FILE:
                 menuItem(menu, _("Add to playlist"), self.add_to_playlist, self)
                 menuItem(menu, _("Add to favorites"), self.add_to_favorites, self)
+
+        menu.addSeparator()
+        menuItem(menu, _("Refresh"), self.refresh, self)
 
         menu.exec()
 
@@ -272,10 +335,24 @@ class ExplorerView(QListWidget):
         if c is None: return
 
         item_name = c.text()
+
+        if self._explorer.mode == ExplorerMode.SEARCH_RESULTS:
+            full_path = self._search_item_paths.get(item_name)
+            if full_path is None: return
+            self._focused_item_path = full_path
+            c.setData(qt.ItemDataRole.AccessibleDescriptionRole, f", {full_path}")
+
+            img_path = full_path if os.path.splitext(full_path)[1].lower() in image_extensions else ""
+            self._execute_callback("image_preview_callback", img_path)
+            self._pending_media_path = full_path
+            self._delayed_media_load()
+            if self._just_launched: self._just_launched = False
+            return
+
         item_info:Optional[PathInfo] = self._explorer.items.get(item_name, None)
-        
+
         if item_info is None: return
-        
+
         if self._explorer.current_path == "drives":
             self._focused_item_path = self._explorer.items[item_name].path
         else:

@@ -1,12 +1,12 @@
 import os
 import sys
 from PySide6.QtWidgets import (
-    QWidget, QFrame, QVBoxLayout, QHBoxLayout, QTreeView, QPushButton, 
-    QTextEdit, QListWidget, QCheckBox, QSpinBox, QLabel, 
-    QSplitter, QGroupBox
+    QWidget, QFrame, QVBoxLayout, QHBoxLayout, QTreeView, QPushButton,
+    QTextEdit, QListWidget, QCheckBox, QSpinBox, QLabel,
+    QSplitter, QGroupBox, QToolBar, QLineEdit, QMenu
 )
 from PySide6.QtCore import Qt as qt, QTimer, Slot
-from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap
+from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap, QAction, QActionGroup
 
 from typing import Optional, Callable
 import utilities.vlc_bootstrap
@@ -129,7 +129,16 @@ class ExplorerWidget(QWidget):
 
         path_layout.addWidget(self.path_edit)
         right_layout.addWidget(path_group)
-        
+
+        search_group = QGroupBox(_("Search"))
+        search_layout = QHBoxLayout(search_group)
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText(_("Search current folder..."))
+        self.search_edit.setAccessibleName(_("Search current folder"))
+        self.search_edit.returnPressed.connect(self._on_search_submitted)
+        search_layout.addWidget(self.search_edit)
+        right_layout.addWidget(search_group)
+
         content_splitter = QSplitter(qt.Orientation.Vertical)
         right_layout.addWidget(content_splitter)
         explorer_group = QGroupBox(_("Files"))
@@ -139,6 +148,49 @@ class ExplorerWidget(QWidget):
 
         self.explorer_view = ExplorerView(self._explorer, self._player, **{"parent": self, **self._callbacks})
         files_splitter.addWidget(self.explorer_view)
+
+        self.toolbar = QToolBar(_("Explorer Toolbar"))
+        self.toolbar.setToolButtonStyle(qt.ToolButtonStyle.ToolButtonTextOnly)
+
+        self.view_mode_group = QActionGroup(self)
+        self.view_mode_group.setExclusive(True)
+
+        self.view_list_action = QAction(_("List View"), self)
+        self.view_list_action.setCheckable(True)
+        self.view_list_action.setChecked(True)
+        self.view_list_action.triggered.connect(lambda: self.explorer_view.set_view_mode(list_mode=True))
+        self.view_mode_group.addAction(self.view_list_action)
+        self.toolbar.addAction(self.view_list_action)
+
+        self.view_icon_action = QAction(_("Icon View"), self)
+        self.view_icon_action.setCheckable(True)
+        self.view_icon_action.triggered.connect(lambda: self.explorer_view.set_view_mode(list_mode=False))
+        self.view_mode_group.addAction(self.view_icon_action)
+        self.toolbar.addAction(self.view_icon_action)
+
+        self.toolbar.addSeparator()
+
+        self.refresh_action = QAction(_("Refresh"), self)
+        self.refresh_action.setShortcut(qt.Key.Key_F5)
+        self.refresh_action.setShortcutContext(qt.ShortcutContext.WidgetWithChildrenShortcut)
+        self.refresh_action.triggered.connect(self.explorer_view.refresh)
+        self.toolbar.addAction(self.refresh_action)
+        self.addAction(self.refresh_action)
+
+        self.toolbar.addSeparator()
+
+        more_button_menu = QMenu(self.toolbar)
+        self.add_to_database_action = QAction(_("Add Current Folder to Database"), self)
+        self.add_to_database_action.triggered.connect(self._on_add_current_folder_to_database)
+        more_button_menu.addAction(self.add_to_database_action)
+        more_action = QAction(_("More"), self)
+        more_action.setMenu(more_button_menu)
+        self.toolbar.addAction(more_action)
+        more_toolbutton = self.toolbar.widgetForAction(more_action)
+        if more_toolbutton is not None:
+            more_toolbutton.setPopupMode(more_toolbutton.ToolButtonPopupMode.InstantPopup)
+
+        main_layout.insertWidget(1, self.toolbar)
 
         self.image_preview_label = QLabel()
         self.image_preview_label.setAlignment(qt.AlignmentFlag.AlignCenter)
@@ -247,6 +299,21 @@ class ExplorerWidget(QWidget):
 
     def add_to_library(self, path):
         self.library_view.add_path(path)
+
+    def _on_search_submitted(self):
+        query = self.search_edit.text().strip()
+        if query:
+            self.explorer_view.perform_search(query)
+
+    def _on_add_current_folder_to_database(self):
+        path = self._explorer.current_path
+        if os.path.isdir(path):
+            self._execute_callback("catalog_folder_callback", path)
+
+    def _execute_callback(self, callback_name: str, param=None):
+        callback = self._callbacks.get(callback_name, None)
+        if callback is not None:
+            callback(param) if param is not None else callback()
 
     def _on_image_preview(self, path: str):
         if path:
