@@ -2,7 +2,7 @@ from genericpath import isfile
 import os
 
 from typing import Optional, Callable
-from PySide6.QtGui import QKeyEvent, QKeySequence
+from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel
 from PySide6.QtCore import Qt as qt, Slot, QSize
 import utilities.vlc_bootstrap
@@ -10,8 +10,6 @@ from av_play import AVMediaInstance, VLCVideoPlayer, AVPlaybackState
 from utilities.formats import image_extensions
 
 from app_config import prefs
-from gui_controls.key_event_filter import ShortcutManager
-from app_config import key_config
 from utilities.functions import copyText
 from utilities.util_gui import menuItem, contextMenu
 from utilities import signal_manager
@@ -46,9 +44,6 @@ class ExplorerView(QListWidget):
         self.itemActivated.connect(self.onItemActivate)
         contextMenu(self, self.context_menu)
 
-        self._shortcut_manager:ShortcutManager = ShortcutManager(self)
-        self.set_shortcuts()
-
         last_path = prefs.prefs["last_path"]
         if last_path != "" and os.path.exists(last_path):
             self.change_path(last_path)
@@ -57,29 +52,6 @@ class ExplorerView(QListWidget):
 
     def set_player_bar(self, player_bar):
         self._player_bar = player_bar
-
-    def set_shortcuts(self):
-        hotkeys = key_config.key_config["Explorer"]
-        shortcuts:dict[str, Callable] = {
-        hotkeys["Play/Pause"]: self.media_play_pause,
-        hotkeys["Stop"]: self.media_stop,
-        hotkeys["Forward"]: self.media_forward,
-        hotkeys["Backward"]: self.media_backward,
-        }
-
-        self._shortcut_manager.clear_shortcuts()
-        for shortcut in shortcuts:
-            self._shortcut_manager.add_widget_shortcut(self, shortcut, shortcuts[shortcut])
-        self.install_shortcuts()
-
-    def reset_shortcuts(self):
-        self.set_shortcuts()
-    
-    def install_shortcuts(self):
-        self._shortcut_manager.install_on_application()
-    
-    def uninstall_shortcuts(self):
-        self._shortcut_manager.uninstall_from_application()
 
     def open_file(self):
         if self._focused_item_path:

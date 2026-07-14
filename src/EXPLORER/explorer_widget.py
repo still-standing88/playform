@@ -6,16 +6,17 @@ from PySide6.QtWidgets import (
     QSplitter, QGroupBox, QToolBar, QLineEdit, QMenu
 )
 from PySide6.QtCore import Qt as qt, QTimer, Slot
-from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap, QAction, QActionGroup
+from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap, QAction, QActionGroup, QShortcut, QKeySequence
 
-from typing import Optional, Callable
+from typing import Optional, Callable, Dict
 import utilities.vlc_bootstrap
 from av_play import VLCVideoPlayer, AVMediaInstance, AVPlaybackState
 from utilities.formats import formats, image_extensions
-from app_config import prefs
+from app_config import prefs, key_config
 from app_constance.vlc_args import log_args
 from app_constance.styles import COLORS
 from app_db import UserFiles
+from gui_controls.player_key_event_filter import KeyEventFilter
 from .explorer import Explorer
 from .explorer_view import ExplorerView
 from .library_view import LibraryView
@@ -48,6 +49,7 @@ class ExplorerWidget(QWidget):
         self._player:VLCVideoPlayer = VLCVideoPlayer()
         self._instance:Optional[AVMediaInstance] = None
         self._explorer = Explorer(extensions)
+        self._shortcuts: Dict[str, QShortcut] = {}
 
         super().__init__(kw.get("parent", None))
         self.setWindowTitle(_("Explorer"))
@@ -87,6 +89,11 @@ class ExplorerWidget(QWidget):
                 pass
 
         self._setup_ui()
+
+        self._key_event_filter = KeyEventFilter(self)
+        self._install_key_event_filter()
+        self.set_shortcuts()
+
         self._player.init(vlc_args=vlc_args, device_id=device_id)
         self._player.set_window(self.video_widget.winId())
         
@@ -330,5 +337,42 @@ class ExplorerWidget(QWidget):
                 return
         self.image_preview_label.hide()
 
+    def _install_key_event_filter(self):
+        # Installed across the whole panel (not just the file list), per
+        # request - prevents the QShortcuts below from stealing keys meant
+        # for a focused input (arrow keys on the volume spinbox, etc.).
+        self._key_event_filter.install_on_widgets([
+            self.explorer_view,
+            self.library_view,
+            self.path_edit,
+            self.search_edit,
+            self.autoplay_cb,
+            self.volume_spinbox,
+            self.parent_btn,
+        ])
+
+    def set_shortcuts(self):
+        for shortcut in self._shortcuts.values():
+            shortcut.setParent(None)
+        self._shortcuts = {}
+
+        hotkeys = key_config.key_config["Explorer"]
+        mapping: Dict[str, Callable] = {
+            hotkeys["Play/Pause"]: self.explorer_view.media_play_pause,
+            hotkeys["Stop"]: self.explorer_view.media_stop,
+            hotkeys["Forward"]: self.explorer_view.media_forward,
+            hotkeys["Backward"]: self.explorer_view.media_backward,
+            hotkeys["Search files/folders"]: self._focus_search,
+        }
+        for key_sequence, callback in mapping.items():
+            shortcut = QShortcut(QKeySequence(key_sequence), self)
+            shortcut.setContext(qt.ShortcutContext.WidgetWithChildrenShortcut)
+            shortcut.activated.connect(callback)
+            self._shortcuts[key_sequence] = shortcut
+
+    def _focus_search(self):
+        self.search_edit.setFocus()
+        self.search_edit.selectAll()
+
     def reset_shortcuts(self):
-        pass
+        self.set_shortcuts()
