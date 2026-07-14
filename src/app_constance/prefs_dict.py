@@ -1,6 +1,7 @@
 import os
 
 from utilities.functions import get_parent_dir
+from utilities.formats import formats as media_formats
 from .misc import screenshot_formats
 
 prefs = {
@@ -41,5 +42,7 @@ prefs = {
 "equalizer_preamp": 0.0,
 "equalizer_bands": [],
 "equalizer_preset": -1,
-"ui_zoom_level": 0
+"ui_zoom_level": 0,
+"catalog_extensions": media_formats["audio"] + media_formats["video"],
+"catalog_auto_rescan": False
 }
