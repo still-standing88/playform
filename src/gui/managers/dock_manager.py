@@ -4,6 +4,7 @@ from tools.debug_console_dock import DebugConsoleDock
 from media_providers.radio import RadioBrowserWidget
 from media_providers.podcasts.feed_widget import FeedWidget
 from utilities.session import dock_session
+from gui_controls.floatable_dock_widget import FloatableDockWidget
 
 
 class DockManager:
@@ -54,14 +55,18 @@ class DockManager:
         self.main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.playlists_dock)
         self.main_window.playlists_dock = self.playlists_dock
 
-        self.player_dock = QDockWidget(_("Player"), self.main_window)
+        self.player_dock = FloatableDockWidget(_("Player"), self.main_window)
         self.player_dock.setObjectName("playerDock")
         self.player_dock.setWidget(self.main_window.player_widget)
         self.player_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
         # Floatable pilot dock for the dock-panels accessibility spike; the
         # other docks stay on the shared, non-floatable _dock_features.
+        # Closable so a close button renders once floated - FloatableDockWidget
+        # overrides closeEvent so it re-docks and hides instead of destroying.
         self.player_dock.setFeatures(
-            self._dock_features | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+            self._dock_features
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+            | QDockWidget.DockWidgetFeature.DockWidgetClosable
         )
         self._make_float_a_real_window(self.player_dock)
         self.main_window.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.player_dock)
