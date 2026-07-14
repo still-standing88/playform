@@ -7,7 +7,38 @@ from gui.dialogs.toolbar_customize_dialog import ToolbarCustomizeDialog
 class ToolbarManager:
     def __init__(self, main_window):
         self.main_window = main_window
-        
+
+    def setup_panels_toolbar(self):
+        self.main_window.panels_toolbar = QToolBar(_("Panels"))
+        self.main_window.panels_toolbar.setObjectName("panelsToolbar")
+        self.main_window.panels_toolbar.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self.main_window.panels_toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
+        self.main_window.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.main_window.panels_toolbar)
+
+        if self.main_window.minimize_player_action:
+            self.main_window.panels_toolbar.addAction(self.main_window.minimize_player_action)
+
+        player_dock = self.main_window.player_dock
+        self.main_window.float_player_action = QAction(_("Float Player"), self.main_window)
+        self.main_window.float_player_action.setCheckable(True)
+        self.main_window.float_player_action.setChecked(player_dock.isFloating())
+        self.main_window.float_player_action.toggled.connect(self._on_float_player_toggled)
+        self.main_window.panels_toolbar.addAction(self.main_window.float_player_action)
+
+        player_dock.topLevelChanged.connect(self._sync_float_player_action)
+
+    def _on_float_player_toggled(self, checked):
+        player_dock = self.main_window.player_dock
+        if player_dock.isFloating() != checked:
+            player_dock.setFloating(checked)
+
+    def _sync_float_player_action(self, floating):
+        action = self.main_window.float_player_action
+        if action.isChecked() != floating:
+            action.blockSignals(True)
+            action.setChecked(floating)
+            action.blockSignals(False)
+
     def setup_toolbar(self):
         self.main_window.toolbar = QToolBar(_("Main Toolbar"))
         self.main_window.toolbar.setObjectName("mainToolbar")

@@ -145,6 +145,7 @@ class MainWindow(QMainWindow):
         self.menu_manager.setup_menus()
         self.toolbar_manager.setup_toolbar()
         self.dock_manager.setup_dock_widgets()
+        self.toolbar_manager.setup_panels_toolbar()
         self.dock_manager.restore_dock_session()
         self.tray = SystemTrayIcon(self)
         QApplication.instance()._tray_icon = self.tray.tray_icon
