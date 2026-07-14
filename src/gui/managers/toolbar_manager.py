@@ -27,6 +27,14 @@ class ToolbarManager:
 
         player_dock.topLevelChanged.connect(self._sync_float_player_action)
 
+        # QToolBar.setFocusPolicy only makes the toolbar itself one Tab stop;
+        # the QToolButtons addAction() creates default to NoFocus, so without
+        # this they're mouse-only and invisible to Tab/keyboard navigation.
+        for action in self.main_window.panels_toolbar.actions():
+            button = self.main_window.panels_toolbar.widgetForAction(action)
+            if button is not None:
+                button.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
     def _on_float_player_toggled(self, checked):
         player_dock = self.main_window.player_dock
         if player_dock.isFloating() != checked:
