@@ -11,6 +11,19 @@ class DockManager:
         self.main_window = main_window
         self._dock_features = QDockWidget.DockWidgetFeature.DockWidgetMovable
 
+    @staticmethod
+    def _make_float_a_real_window(dock: QDockWidget):
+        """A floated QDockWidget defaults to Qt::Tool, which most window
+        managers (including Windows) exclude from Alt-Tab/taskbar switching.
+        Force Qt::Window instead so it behaves like a normal, switchable
+        top-level window once floated."""
+        def on_top_level_changed(floating: bool):
+            if floating:
+                dock.setWindowFlags(dock.windowFlags() | Qt.WindowType.Window)
+                dock.show()
+
+        dock.topLevelChanged.connect(on_top_level_changed)
+
     def setup_dock_widgets(self):
         self.recents_favorites_dock = QDockWidget(_("Recents && Favorites"), self.main_window)
         self.recents_favorites_dock.setObjectName("recentsFavoritesDock")
