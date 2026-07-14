@@ -246,10 +246,10 @@ class DockManager:
     def update_focusable_widgets(self):
         self.main_window.focusable_widgets = []
 
-        menu_bar = self.main_window.menuBar()
-        if menu_bar is not None and menu_bar.isVisible():
-            self.main_window.focusable_widgets.append(menu_bar)
-
+        # Menu bar deliberately excluded: it's already reachable via Alt, and
+        # having it in the F6/Shift+F6 cycle too interferes with focus (it
+        # grabs an "active action" highlight that competes with the rest of
+        # pane navigation).
         if hasattr(self.main_window, 'toolbar') and self.main_window.toolbar.isVisible():
             self.main_window.focusable_widgets.append(self.main_window.toolbar)
 
