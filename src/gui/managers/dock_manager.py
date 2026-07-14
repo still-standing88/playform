@@ -58,7 +58,12 @@ class DockManager:
         self.player_dock.setObjectName("playerDock")
         self.player_dock.setWidget(self.main_window.player_widget)
         self.player_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
-        self.player_dock.setFeatures(self._dock_features)
+        # Floatable pilot dock for the dock-panels accessibility spike; the
+        # other docks stay on the shared, non-floatable _dock_features.
+        self.player_dock.setFeatures(
+            self._dock_features | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
+        self._make_float_a_real_window(self.player_dock)
         self.main_window.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.player_dock)
         self.main_window.player_dock = self.player_dock
 
