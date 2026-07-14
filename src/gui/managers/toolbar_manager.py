@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QToolBar, QMenu, QDialog
+from PySide6.QtWidgets import QToolBar, QMenu, QDialog, QLabel, QWidget
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from app_config.toolbar_config import toolbar_config
@@ -9,42 +9,120 @@ class ToolbarManager:
         self.main_window = main_window
 
     def setup_panels_toolbar(self):
-        self.main_window.panels_toolbar = QToolBar(_("Panels"))
-        self.main_window.panels_toolbar.setObjectName("panelsToolbar")
-        self.main_window.panels_toolbar.setFocusPolicy(Qt.FocusPolicy.TabFocus)
-        self.main_window.panels_toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
-        self.main_window.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.main_window.panels_toolbar)
+        mw = self.main_window
+        mw.panels_toolbar = QToolBar(_("Panels"))
+        mw.panels_toolbar.setObjectName("panelsToolbar")
+        mw.panels_toolbar.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        mw.panels_toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
+        # Without its own row, this toolbar shares the cramped remainder of
+        # the main toolbar's row and Qt collapses almost everything into an
+        # overflow chevron - the buttons report isVisible() False and are
+        # unreachable by Tab (confirmed by testing: geometry read back as a
+        # ~100x30 stub for every button past the first).
+        mw.addToolBarBreak(Qt.ToolBarArea.TopToolBarArea)
+        mw.addToolBar(Qt.ToolBarArea.TopToolBarArea, mw.panels_toolbar)
 
-        if self.main_window.minimize_player_action:
-            self.main_window.panels_toolbar.addAction(self.main_window.minimize_player_action)
+        # Default Tab order follows widget-creation order across the WHOLE
+        # window, not containment - without explicitly chaining these
+        # buttons together, Tab escapes the toolbar into whatever other
+        # widget happened to be constructed next (confirmed by testing:
+        # it jumped straight into the Explorer search box after one hop).
+        self._last_tab_widget = None
 
-        player_dock = self.main_window.player_dock
-        self.main_window.float_player_action = QAction(_("Float Player"), self.main_window)
-        self.main_window.float_player_action.setCheckable(True)
-        self.main_window.float_player_action.setChecked(player_dock.isFloating())
-        self.main_window.float_player_action.toggled.connect(self._on_float_player_toggled)
-        self.main_window.panels_toolbar.addAction(self.main_window.float_player_action)
-
-        player_dock.topLevelChanged.connect(self._sync_float_player_action)
+        self._add_pane_group(_("Player"), mw.minimize_player_action, "player_dock", "float_player_action",
+                              show_button_text=_("Minimize"))
+        self._add_pane_group(_("Recents/Favorites"), mw.show_recents_favorites_action,
+                              "recents_favorites_dock", "float_recents_favorites_action")
+        self._add_pane_group(_("Explorer"), mw.show_explorer_action, "explorer_dock", "float_explorer_action")
+        self._add_pane_group(_("Playlists"), mw.show_playlists_action, "playlists_dock", "float_playlists_action")
+        self._add_pane_group(_("Radio"), mw.show_radio_action, "radio_dock", "float_radio_action",
+                              ensure_dock=mw.dock_manager._create_radio_dock)
+        self._add_pane_group(_("Podcasts"), mw.show_podcast_action, "podcast_dock", "float_podcast_action",
+                              ensure_dock=mw.dock_manager._create_podcast_dock)
+        self._add_pane_group(_("Console"), mw.show_console_dock_action, "debug_console_dock", "float_console_action")
 
         # QToolBar.setFocusPolicy only makes the toolbar itself one Tab stop;
         # the QToolButtons addAction() creates default to NoFocus, so without
         # this they're mouse-only and invisible to Tab/keyboard navigation.
-        for action in self.main_window.panels_toolbar.actions():
-            button = self.main_window.panels_toolbar.widgetForAction(action)
+        for action in mw.panels_toolbar.actions():
+            button = mw.panels_toolbar.widgetForAction(action)
             if button is not None:
                 button.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
-    def _on_float_player_toggled(self, checked):
-        player_dock = self.main_window.player_dock
-        if player_dock.isFloating() != checked:
-            player_dock.setFloating(checked)
+    def ensure_panels_toolbar_break(self):
+        # QMainWindow.restoreState() (called from restore_window_state, right
+        # before this runs) can silently drop the break added in
+        # setup_panels_toolbar() if it's restoring a layout saved before this
+        # toolbar existed - re-assert it unconditionally afterward so an
+        # upgrading user with an old saved window_state doesn't end up with
+        # this toolbar squeezed into an overflow chevron.
+        mw = self.main_window
+        if not mw.toolBarBreak(mw.panels_toolbar):
+            mw.insertToolBarBreak(mw.panels_toolbar)
 
-    def _sync_float_player_action(self, floating):
-        action = self.main_window.float_player_action
-        if action.isChecked() != floating:
+    def _add_pane_group(self, label_text, show_action, dock_attr, float_action_attr, ensure_dock=None,
+                         show_button_text=None):
+        """Add a labeled [show/hide][float] button pair for one pane to the
+        Panels toolbar. dock_attr is looked up on main_window lazily (via
+        getattr each time) so this works for docks not yet created, like
+        Radio/Podcasts - ensure_dock creates the dock on first float."""
+        mw = self.main_window
+        toolbar = mw.panels_toolbar
+
+        if toolbar.actions():
+            toolbar.addSeparator()
+        toolbar.addWidget(QLabel(label_text))
+        toolbar.addAction(show_action)
+
+        float_action = QAction(_("Float"), mw)
+        float_action.setCheckable(True)
+        setattr(mw, float_action_attr, float_action)
+        toolbar.addAction(float_action)
+
+        show_button = toolbar.widgetForAction(show_action)
+        if show_button is not None:
+            # The group label already names the pane, so the show/hide
+            # button's own full action text ("Show &Radio Browser") is
+            # redundant width - shorten just this button's display text,
+            # leaving show_action.text() (and its View-menu entry) untouched.
+            show_button.setText(show_button_text or _("Show"))
+
+        for button in (show_button, toolbar.widgetForAction(float_action)):
+            if button is None:
+                continue
+            if getattr(self, "_last_tab_widget", None) is not None:
+                QWidget.setTabOrder(self._last_tab_widget, button)
+            self._last_tab_widget = button
+
+        def get_dock():
+            return getattr(mw, dock_attr, None)
+
+        def on_toggled(checked):
+            dock = get_dock()
+            if dock is None and checked and ensure_dock is not None:
+                # For lazily-created panes (Radio/Podcasts), ensure_dock's own
+                # creation method wires the Float-toggle sync itself (via
+                # DockManager._sync_float_action_for_dock), since that's the
+                # one true creation point regardless of what triggers it.
+                ensure_dock()
+                dock = get_dock()
+            if dock is not None and dock.isFloating() != checked:
+                dock.setFloating(checked)
+
+        float_action.toggled.connect(on_toggled)
+
+        # Eagerly-created docks (everything except Radio/Podcasts) already
+        # exist by the time this runs, so wire the sync directly here.
+        dock = get_dock()
+        if dock is not None:
+            float_action.setChecked(dock.isFloating())
+            dock.topLevelChanged.connect(lambda floating: self._sync_toggle(float_action, floating))
+
+    @staticmethod
+    def _sync_toggle(action, checked):
+        if action.isChecked() != checked:
             action.blockSignals(True)
-            action.setChecked(floating)
+            action.setChecked(checked)
             action.blockSignals(False)
 
     def setup_toolbar(self):

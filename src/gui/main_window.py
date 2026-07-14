@@ -151,8 +151,9 @@ class MainWindow(QMainWindow):
         QApplication.instance()._tray_icon = self.tray.tray_icon
         self.connect_signals()
         self.set_shortcuts()
-        
+
         self.restore_window_state()
+        self.toolbar_manager.ensure_panels_toolbar_break()
 
     def set_shortcuts(self):
         hotkeys = key_config.key_config["Main interface"]

@@ -182,6 +182,26 @@ class DockManager:
                 self.main_window.podcast_widget.setFocus()
             self.update_focusable_widgets()
 
+    def _sync_float_action_for_dock(self, dock, action_attr):
+        # Radio/Podcast docks are lazily created, and can come into existence
+        # through paths other than the Panels toolbar's own Float toggle
+        # (e.g. restore_dock_session() runs after the toolbar is built and
+        # may create them directly) - wire the sync here, at the one true
+        # creation point, so the toolbar toggle stays correct regardless of
+        # what actually triggered creation.
+        action = getattr(self.main_window, action_attr, None)
+        if action is None:
+            return
+
+        def sync(floating):
+            if action.isChecked() != floating:
+                action.blockSignals(True)
+                action.setChecked(floating)
+                action.blockSignals(False)
+
+        dock.topLevelChanged.connect(sync)
+        action.setChecked(dock.isFloating())
+
     def _create_radio_dock(self):
         if self.main_window.radio_dock is None:
             self.main_window.radio_widget = RadioBrowserWidget(self.main_window)
@@ -192,6 +212,7 @@ class DockManager:
             self.main_window.radio_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
             self.main_window.radio_dock.setFeatures(self._floatable_features())
             self._make_float_a_real_window(self.main_window.radio_dock)
+            self._sync_float_action_for_dock(self.main_window.radio_dock, "float_radio_action")
             self.main_window.radio_dock.visibilityChanged.connect(self.main_window.menu_manager.update_radio_menu)
             self.main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.main_window.radio_dock)
 
@@ -205,6 +226,7 @@ class DockManager:
             self.main_window.podcast_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
             self.main_window.podcast_dock.setFeatures(self._floatable_features())
             self._make_float_a_real_window(self.main_window.podcast_dock)
+            self._sync_float_action_for_dock(self.main_window.podcast_dock, "float_podcast_action")
             self.main_window.podcast_dock.visibilityChanged.connect(self.main_window.menu_manager.update_podcast_menu)
             self.main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.main_window.podcast_dock)
 
