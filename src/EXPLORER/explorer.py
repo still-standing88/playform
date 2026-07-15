@@ -103,6 +103,10 @@ class Explorer:
     def search_query(self) -> "str | None":
         return self._search_query
 
+    @property
+    def file_extensions(self):
+        return self._file_extensions
+
     def get_prev_path(self): return self._prev_path
 
     def set_default_path(self, path): self.default_path = path
@@ -190,6 +194,39 @@ class Explorer:
 
         self._search_query = query
         self.search_results = self._perform_search(self._pre_search_path, query, media_db)
+        self.mode = ExplorerMode.SEARCH_RESULTS
+        self._current_path = self._pre_search_path
+
+    def begin_search(self, query: str, media_db=None) -> tuple:
+        """Record search state without performing the (potentially slow)
+        lookup itself - the caller runs the actual search off the UI thread
+        and reports back through apply_search_results(). Returns
+        (root_path, use_db) for the caller to act on."""
+        if self.mode == ExplorerMode.NORMAL:
+            self._pre_search_path = self._current_path
+
+        self._search_query = query
+        root_path = self._pre_search_path
+
+        use_db = False
+        if media_db is not None:
+            try:
+                use_db = media_db.is_path_cataloged(root_path)
+            except Exception:
+                use_db = False
+
+        return root_path, use_db
+
+    def apply_search_results(self, paths: list) -> None:
+        """Called once a background search (started via begin_search) has
+        produced its raw file-path results."""
+        results = []
+        for path in paths:
+            try:
+                results.append(PathItem(path=path, type=PathType.FILE, info=PathInfo(path)))
+            except (OSError, ValueError):
+                continue
+        self.search_results = results
         self.mode = ExplorerMode.SEARCH_RESULTS
         self._current_path = self._pre_search_path
 

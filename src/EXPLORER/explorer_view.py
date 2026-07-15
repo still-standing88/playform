@@ -14,6 +14,7 @@ from utilities.functions import copyText
 from utilities.util_gui import menuItem, contextMenu
 from utilities import signal_manager
 from .explorer import Explorer, PathInfo, PathType, ExplorerMode
+from .search_worker import SearchWorker
 import app_db
 
 
@@ -39,6 +40,9 @@ class ExplorerView(QListWidget):
         self._search_item_paths: dict[str, str] = {}
 
         super().__init__(kw.get("parent", None))
+        self._search_worker = SearchWorker(self)
+        self._search_worker.results_ready.connect(self._on_search_results)
+        self._search_worker.error.connect(self._on_search_error)
         self.currentItemChanged.connect(self.onItemChange)
         self.itemClicked.connect(self.onItemActivate)
         self.itemActivated.connect(self.onItemActivate)
@@ -135,6 +139,7 @@ class ExplorerView(QListWidget):
             self._notify_navigation_error()
 
     def backward(self):
+        self._search_worker.cancel()
         item_name = os.path.basename(self._explorer.current_path)
         self._explorer.backward()
         self.relist_contents()
@@ -183,16 +188,28 @@ class ExplorerView(QListWidget):
         self.setWrapping(not list_mode)
 
     def perform_search(self, query: str):
-        self._explorer.search(query, media_db=app_db.media_db)
+        root_path, use_db = self._explorer.begin_search(query, media_db=app_db.media_db)
+        signal_manager.statusbar_message.emit(_("Searching..."))
+        self._search_worker.start_search(root_path, query, self._explorer.file_extensions, use_db)
+
+    @Slot(str, str, list)
+    def _on_search_results(self, root_path, query, paths):
+        self._explorer.apply_search_results(paths)
         self.relist_contents()
         self.update_path()
         self.set_last_path(self._explorer.current_path)
+        signal_manager.statusbar_message.emit(_("Search complete: {count} result(s)").format(count=len(paths)))
+
+    @Slot(str, str)
+    def _on_search_error(self, root_path, message):
+        signal_manager.statusbar_message.emit(_("Search failed: {error}").format(error=message))
 
     def refresh(self):
         if self._explorer.mode == ExplorerMode.SEARCH_RESULTS and self._explorer.search_query:
-            self._explorer.search(self._explorer.search_query, media_db=app_db.media_db)
-        self.relist_contents()
-        self.update_path()
+            self.perform_search(self._explorer.search_query)
+        else:
+            self.relist_contents()
+            self.update_path()
 
 
     def media_play_pause(self):
