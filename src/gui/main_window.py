@@ -1086,6 +1086,12 @@ class MainWindow(QMainWindow):
         if roots:
             self.open_catalog_dialog()
 
+    def clear_explorer_search_history(self):
+        """Clear both the persisted search history and the live Explorer
+        search box's dropdown, if it's currently constructed."""
+        if self.explorer_widget is not None:
+            self.explorer_widget.clear_search_history()
+
     def open_catalog_dialog(self):
         """Open (or raise) the singleton cataloging progress dialog."""
         if self._catalog_dialog is not None:

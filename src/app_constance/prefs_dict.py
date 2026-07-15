@@ -44,5 +44,9 @@ prefs = {
 "equalizer_preset": -1,
 "ui_zoom_level": 0,
 "catalog_extensions": media_formats["audio"] + media_formats["video"],
-"catalog_auto_rescan": False
+"catalog_auto_rescan": False,
+"explorer_view_mode": "list",
+"explorer_sort_mode": "name_asc",
+"store_search_history": True,
+"search_history": []
 }

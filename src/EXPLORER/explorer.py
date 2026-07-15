@@ -70,8 +70,9 @@ class Explorer:
         drive, tail = os.path.splitdrive(normalized)
         return os.name == "nt" and bool(drive) and tail in ("\\", "/")
 
-    def __init__(self, file_extensions=None):
+    def __init__(self, file_extensions=None, sort_mode: str = "name_asc"):
         self._file_extensions = [ext.lower() for ext in file_extensions] if file_extensions is not None else []
+        self._sort_mode = sort_mode
         self._current_path = self.get_current()
         self._root_path = self.get_root(self._current_path)
         self._prev_path = self._current_path

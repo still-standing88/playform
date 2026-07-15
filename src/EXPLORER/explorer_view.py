@@ -83,6 +83,8 @@ class ExplorerView(QListWidget):
 
     def _sort(self, mode: str):
         self._explorer.set_sort(mode)
+        prefs.prefs["explorer_sort_mode"] = mode
+        prefs.save()
         self.relist_contents()
 
     def add_to_library(self):
@@ -185,7 +187,14 @@ class ExplorerView(QListWidget):
         if not list_mode:
             self.setGridSize(QSize(96, 96))
             self.setResizeMode(QListWidget.ResizeMode.Adjust)
+            # The detail overlay widget (set_item_info) doesn't fit inside a
+            # fixed icon-grid cell - drop it so Icon view shows plain
+            # icons/text instead of a broken/invisible overlay.
+            for i in range(self.count()):
+                self.removeItemWidget(self.item(i))
         self.setWrapping(not list_mode)
+        if self.currentItem() is not None:
+            self.set_item_info()
 
     def perform_search(self, query: str):
         root_path, use_db = self._explorer.begin_search(query, media_db=app_db.media_db)
@@ -259,13 +268,22 @@ class ExplorerView(QListWidget):
         item_info:Optional[PathInfo] = self._explorer.items.get(current_item, None)
         if item_info is None: return
         info = f"{_("Type extension")}: {item_info.info.ext}\r{_("Date modified")}: {item_info.info.modify_date}{f"\r{_("size")}: " + item_info.info.size if item_info.type == PathType.FILE else ""}"
-        infoText  = QLabel(info,self)
-        infoText.adjustSize()
-        self.setItemWidget(self.currentItem(),infoText)
-        infoText.setMinimumHeight(50)
-        infoText.setMinimumWidth(200)
-        self.currentItem().setSizeHint(infoText.sizeHint())
-        self.currentItem().setData(qt.ItemDataRole.AccessibleDescriptionRole,f", {info}")
+
+        # Accessible description + tooltip work regardless of view mode.
+        self.currentItem().setData(qt.ItemDataRole.AccessibleDescriptionRole, f", {info}")
+        self.currentItem().setToolTip(info.replace("\r", "\n"))
+
+        if self.viewMode() == QListWidget.ViewMode.ListMode:
+            # The overlay widget only fits properly in List/Details view -
+            # Icon view's fixed grid cells can't accommodate it (see
+            # set_view_mode), so it's Icon-mode users get the tooltip/
+            # accessible description above instead.
+            infoText  = QLabel(info,self)
+            infoText.adjustSize()
+            self.setItemWidget(self.currentItem(),infoText)
+            infoText.setMinimumHeight(50)
+            infoText.setMinimumWidth(200)
+            self.currentItem().setSizeHint(infoText.sizeHint())
 
     def _execute_callback(self, callback_name:str, param:str = "", with_param :bool = True):
         callback:Optional[Callable[[str], None]] = self._callbacks.get(callback_name, None)

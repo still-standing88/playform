@@ -3,7 +3,7 @@ import sys
 from PySide6.QtWidgets import (
     QWidget, QFrame, QVBoxLayout, QHBoxLayout, QTreeView, QPushButton,
     QTextEdit, QListWidget, QCheckBox, QSpinBox, QLabel,
-    QSplitter, QGroupBox, QToolBar, QLineEdit
+    QSplitter, QGroupBox, QToolBar, QComboBox
 )
 from PySide6.QtCore import Qt as qt, QTimer, Slot
 from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap, QAction, QActionGroup, QShortcut, QKeySequence
@@ -48,7 +48,7 @@ class ExplorerWidget(QWidget):
         self._user_db = user_db
         self._player:VLCVideoPlayer = VLCVideoPlayer()
         self._instance:Optional[AVMediaInstance] = None
-        self._explorer = Explorer(extensions)
+        self._explorer = Explorer(extensions, sort_mode=prefs.prefs.get("explorer_sort_mode", "name_asc"))
         self._shortcuts: Dict[str, QShortcut] = {}
 
         super().__init__(kw.get("parent", None))
@@ -139,10 +139,15 @@ class ExplorerWidget(QWidget):
 
         search_group = QGroupBox(_("Search"))
         search_layout = QHBoxLayout(search_group)
-        self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText(_("Search current folder..."))
+        self.search_edit = QComboBox()
+        self.search_edit.setEditable(True)
+        self.search_edit.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.search_edit.lineEdit().setPlaceholderText(_("Search current folder..."))
         self.search_edit.setAccessibleName(_("Search current folder"))
-        self.search_edit.returnPressed.connect(self._on_search_submitted)
+        if prefs.prefs.get("store_search_history", True):
+            self.search_edit.addItems(prefs.prefs.get("search_history", []))
+        self.search_edit.setCurrentText("")
+        self.search_edit.lineEdit().returnPressed.connect(self._on_search_submitted)
         search_layout.addWidget(self.search_edit)
         right_layout.addWidget(search_group)
 
@@ -164,16 +169,22 @@ class ExplorerWidget(QWidget):
 
         self.view_list_action = QAction(_("List View"), self)
         self.view_list_action.setCheckable(True)
-        self.view_list_action.setChecked(True)
-        self.view_list_action.triggered.connect(lambda: self.explorer_view.set_view_mode(list_mode=True))
+        self.view_list_action.triggered.connect(lambda: self._on_view_mode_selected(list_mode=True))
         self.view_mode_group.addAction(self.view_list_action)
         self.toolbar.addAction(self.view_list_action)
 
         self.view_icon_action = QAction(_("Icon View"), self)
         self.view_icon_action.setCheckable(True)
-        self.view_icon_action.triggered.connect(lambda: self.explorer_view.set_view_mode(list_mode=False))
+        self.view_icon_action.triggered.connect(lambda: self._on_view_mode_selected(list_mode=False))
         self.view_mode_group.addAction(self.view_icon_action)
         self.toolbar.addAction(self.view_icon_action)
+
+        saved_view_mode = prefs.prefs.get("explorer_view_mode", "list")
+        if saved_view_mode == "icon":
+            self.view_icon_action.setChecked(True)
+        else:
+            self.view_list_action.setChecked(True)
+        self.explorer_view.set_view_mode(list_mode=(saved_view_mode != "icon"))
 
         self.toolbar.addSeparator()
 
@@ -300,10 +311,40 @@ class ExplorerWidget(QWidget):
     def add_to_library(self, path):
         self.library_view.add_path(path)
 
+    def _on_view_mode_selected(self, list_mode: bool):
+        self.explorer_view.set_view_mode(list_mode=list_mode)
+        prefs.prefs["explorer_view_mode"] = "list" if list_mode else "icon"
+        prefs.save()
+
     def _on_search_submitted(self):
-        query = self.search_edit.text().strip()
-        if query:
-            self.explorer_view.perform_search(query)
+        query = self.search_edit.currentText().strip()
+        if not query:
+            return
+        self.explorer_view.perform_search(query)
+        if prefs.prefs.get("store_search_history", True):
+            self._remember_search(query)
+
+    def _remember_search(self, query: str):
+        history = [q for q in prefs.prefs.get("search_history", []) if q != query]
+        history.insert(0, query)
+        history = history[:20]
+        prefs.prefs["search_history"] = history
+        prefs.save()
+
+        existing_index = self.search_edit.findText(query)
+        if existing_index != -1:
+            self.search_edit.removeItem(existing_index)
+        self.search_edit.insertItem(0, query)
+        while self.search_edit.count() > 20:
+            self.search_edit.removeItem(self.search_edit.count() - 1)
+        self.search_edit.setCurrentIndex(0)
+
+    def clear_search_history(self):
+        prefs.prefs["search_history"] = []
+        prefs.save()
+        current_text = self.search_edit.currentText()
+        self.search_edit.clear()
+        self.search_edit.setCurrentText(current_text)
 
     def _on_add_current_folder_to_database(self):
         path = self._explorer.current_path
@@ -339,6 +380,7 @@ class ExplorerWidget(QWidget):
             self.library_view,
             self.path_edit,
             self.search_edit,
+            self.search_edit.lineEdit(),
             self.autoplay_cb,
             self.volume_spinbox,
             self.parent_btn,
@@ -364,8 +406,11 @@ class ExplorerWidget(QWidget):
             self._shortcuts[key_sequence] = shortcut
 
     def _focus_search(self):
+        # QComboBox's internal line edit sets its focus proxy back to the
+        # combo box itself, so the combo (not the line edit) is what ends
+        # up as the actual QApplication.focusWidget().
         self.search_edit.setFocus()
-        self.search_edit.selectAll()
+        self.search_edit.lineEdit().selectAll()
 
     def reset_shortcuts(self):
         self.set_shortcuts()
