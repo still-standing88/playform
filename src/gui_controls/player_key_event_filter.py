@@ -13,13 +13,26 @@ class KeyEventFilter(QObject):
         if event.type() == QEvent.Type.ShortcutOverride:
             key = event.key()
 
-            if isinstance(watched, (QSpinBox, QDoubleSpinBox, QSlider, QListWidget, QTreeWidget, QComboBox)):
+            if isinstance(watched, (QSpinBox, QDoubleSpinBox, QSlider, QComboBox)):
                 if key in [Qt.Key.Key_Up, Qt.Key.Key_Down, Qt.Key.Key_Left, Qt.Key.Key_Right]:
                     event.accept()
                     return True
 
             if isinstance(watched, (QListWidget, QTreeWidget)):
-                if key in (Qt.Key.Key_Enter, Qt.Key.Key_Return, Qt.Key.Key_Space):
+                if key in (Qt.Key.Key_Up, Qt.Key.Key_Down):
+                    event.accept()
+                    return True
+
+            # QTreeWidget natively uses Left/Right to collapse/expand nodes;
+            # a flat QListWidget does nothing with them, so they're left free
+            # to reach widget-level shortcuts (e.g. Explorer's Forward/Backward).
+            if isinstance(watched, QTreeWidget):
+                if key in (Qt.Key.Key_Left, Qt.Key.Key_Right):
+                    event.accept()
+                    return True
+
+            if isinstance(watched, (QListWidget, QTreeWidget)):
+                if key in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
                     event.accept()
                     return True
 

@@ -3,7 +3,7 @@ import sys
 from PySide6.QtWidgets import (
     QWidget, QFrame, QVBoxLayout, QHBoxLayout, QTreeView, QPushButton,
     QTextEdit, QListWidget, QCheckBox, QSpinBox, QLabel,
-    QSplitter, QGroupBox, QToolBar, QLineEdit, QMenu
+    QSplitter, QGroupBox, QToolBar, QLineEdit
 )
 from PySide6.QtCore import Qt as qt, QTimer, Slot
 from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap, QAction, QActionGroup, QShortcut, QKeySequence
@@ -186,16 +186,9 @@ class ExplorerWidget(QWidget):
 
         self.toolbar.addSeparator()
 
-        more_button_menu = QMenu(self.toolbar)
         self.add_to_database_action = QAction(_("Add Current Folder to Database"), self)
         self.add_to_database_action.triggered.connect(self._on_add_current_folder_to_database)
-        more_button_menu.addAction(self.add_to_database_action)
-        more_action = QAction(_("More"), self)
-        more_action.setMenu(more_button_menu)
-        self.toolbar.addAction(more_action)
-        more_toolbutton = self.toolbar.widgetForAction(more_action)
-        if more_toolbutton is not None:
-            more_toolbutton.setPopupMode(more_toolbutton.ToolButtonPopupMode.InstantPopup)
+        self.toolbar.addAction(self.add_to_database_action)
 
         main_layout.insertWidget(1, self.toolbar)
 
