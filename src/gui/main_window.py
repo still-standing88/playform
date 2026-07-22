@@ -20,30 +20,17 @@ import app_db
 import av_play
 from player.player_widget import PlayerWidget
 from playlist_manager.playlists_widget import PlaylistsWidget
-from playlist_manager.playlist_selection_dialog import PlaylistSelectionDialog
-from playlist_manager.playlist_create_dialog import PlaylistCreateDialog
 from .recents_favorites import RecentsAndFavoritesWidget
 from .dialogs.hotkeys_dialog import HotkeysDialog
 from .dialogs.url_dialog import URLDialog
 from .dialogs.prefs_dialog import PreferencesDialog
-from utilities.util_gui import menuItem, messageBox
-from utilities.media_utils import get_media_files_from_directory
+from utilities.util_gui import menuItem
 from utilities.speech import speech_manager
 from utilities import signal_manager
-from player.utilities import ensure_ffmpeg_available
 import utilities.vlc_bootstrap
 from av_play import Playlist, PlaylistEntry
-from utilities.formats import formats
-from tools.batch_converter_ui import BatchConverterUI
-from tools.extractor_ui import ExtractorUI
-from tools.tag_editor_ui import TagEditorUI
-from tools.thumbnail_generator_ui import ThumbnailGeneratorUI
-from tools.subtitle_converter_ui import SubtitleConverterUI
-from tools.subtitle_editor_ui import SubtitleEditorUI
 from gui_controls.key_event_filter import ShortcutManager
-from app_config import key_config
 from app_constance.file_filter import file_filter
-from .dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from tools.debug_console_dock import DebugConsoleDock
 from media_providers.radio import RadioBrowserWidget
@@ -59,6 +46,10 @@ from .managers.toolbar_manager import ToolbarManager
 from .managers.dock_manager import DockManager
 from .managers.tool_window_manager import ToolWindowManager
 from .managers.playlist_handler import PlaylistHandler
+from .managers.focus_navigation_manager import FocusNavigationManager
+from .managers.global_playback_actions import GlobalPlaybackActions
+from .managers.singleton_dialogs_manager import SingletonDialogsManager
+from .managers.shortcuts_manager import MainWindowShortcuts
 from system_tray import SystemTrayIcon
 from .dialogs.downloader_dialog import DownloaderDialog
 from .dialogs.about_dialog import AboutDialog
@@ -145,6 +136,11 @@ class MainWindow(QMainWindow):
         self.toolbar_manager = ToolbarManager(self)
         self.dock_manager = DockManager(self)
         self.tool_manager = ToolWindowManager(self)
+        self.playlist_handler = PlaylistHandler(self)
+        self.focus_nav = FocusNavigationManager(self)
+        self.global_actions = GlobalPlaybackActions(self)
+        self.singleton_dialogs = SingletonDialogsManager(self)
+        self.shortcuts = MainWindowShortcuts(self)
         self.tray = None
         
         self.setup_ui()
@@ -163,137 +159,13 @@ class MainWindow(QMainWindow):
         self.toolbar_manager.ensure_panels_toolbar_break()
 
     def set_shortcuts(self):
-        hotkeys = key_config.key_config["Main interface"]
-        shortcuts = {
-            hotkeys["Open file"]: self.open_file_dialog,
-            hotkeys["Open folder"]: self.open_folder_dialog,
-            hotkeys["Open URL"]: self.open_url_dialog,
-            hotkeys["Show/Hide explorer"]: self.toggle_explorer_shortcut,
-            hotkeys["Show/Hide player controls"]: self.toggle_player_shortcut,
-            hotkeys["Toggle playlists"]: self.toggle_playlists_shortcut,
-            hotkeys["Toggle podcasts"]: self.toggle_podcasts_shortcut,
-            hotkeys["Toggle radio"]: self.toggle_radio_shortcut,
-            hotkeys["Toggle recents/favorites"]: self.toggle_recents_favorites_shortcut,
-            hotkeys["Focus playlists"]: self.focus_playlists,
-            hotkeys["Focus podcasts"]: self.focus_podcasts,
-            hotkeys["Focus radio"]: self.focus_radio,
-            hotkeys["Focus recents/favorites"]: self.focus_recents_favorites,
-            hotkeys["Hide window"]: self.hide_to_tray,
-            hotkeys["Exit"]: self.close_application,
-            hotkeys["Focus explorer"]: self.focus_explorer,
-            hotkeys["Focus player"]: self.focus_player,
-            hotkeys["Documentation"]: self.open_documentation,
-            hotkeys["Hotkeys dialog"]: self.open_hotkeys,
-            hotkeys["Prefrences Dialog"]: self.open_preferences,
-            "F6": self.focus_next_widget,
-            "Shift+F6": self.focus_previous_widget,
-        }
-
-        self._shortcut_manager.clear_shortcuts()
-        for shortcut in shortcuts:
-            self._shortcut_manager.add_context_shortcut(shortcut, shortcuts[shortcut])
-        self.install_shortcuts()
+        self.shortcuts.setup()
 
     def reset_shortcuts(self):
-        self.set_shortcuts()
+        self.shortcuts.reset_shortcuts()
 
     def reset_shortcuts_callback(self):
-        self.reset_shortcuts()
-        
-        if hasattr(self.explorer_widget, 'reset_shortcuts'):
-            self.explorer_widget.reset_shortcuts()
-            
-        if hasattr(self.player_widget, 'reset_shortcuts'):
-            self.player_widget.reset_shortcuts()
-
-    def install_shortcuts(self):
-        self._shortcut_manager.install_on_application()
-    
-    def uninstall_shortcuts(self):
-        self._shortcut_manager.uninstall_from_application()
-
-    def focus_explorer(self):
-        if self.explorer_dock and self.explorer_dock.isVisible():
-            if self.explorer_widget:
-                self.explorer_widget.setFocus()
-
-    def focus_player(self):
-        if self.player_dock and self.player_dock.isVisible():
-            self.player_widget.setFocus()
-
-    def focus_playlists(self):
-        if self.playlists_dock and self.playlists_dock.isVisible():
-            if self.playlists_widget:
-                self.playlists_widget.setFocus()
-
-    def focus_podcasts(self):
-        if self.podcast_dock and self.podcast_dock.isVisible():
-            if self.podcast_widget:
-                self.podcast_widget.setFocus()
-
-    def focus_radio(self):
-        if self.radio_dock and self.radio_dock.isVisible():
-            if self.radio_widget:
-                self.radio_widget.setFocus()
-
-    def focus_recents_favorites(self):
-        if self.recents_favorites_dock and self.recents_favorites_dock.isVisible():
-            if self.recents_and_favorites_widget:
-                self.recents_and_favorites_widget.setFocus()
-    
-    def toggle_explorer_shortcut(self):
-        if self.show_explorer_action:
-            self.show_explorer_action.trigger()  # type: ignore
-    
-    def toggle_player_shortcut(self):
-
-        if self.minimize_player_action:
-            self.minimize_player_action.trigger()  # type: ignore
-    
-    def toggle_playlists_shortcut(self):
-        if self.playlists_dock:
-            is_visible = self.playlists_dock.isVisible()
-            self.playlists_dock.setVisible(not is_visible)
-            if self.show_playlists_action:
-                self.show_playlists_action.setChecked(not is_visible)
-            if not is_visible and self.playlists_widget:
-                self.playlists_widget.setFocus()
-    
-    def toggle_podcasts_shortcut(self):
-
-        if self.podcast_dock:
-            is_visible = self.podcast_dock.isVisible()
-            self.podcast_dock.setVisible(not is_visible)
-            if self.show_podcast_action:
-                self.show_podcast_action.setChecked(not is_visible)
-            if not is_visible and self.podcast_widget:
-                self.podcast_widget.setFocus()
-        elif self.show_podcast_action:
-            # Create dock if it doesn't exist
-            self.show_podcast_action.setChecked(True)
-            self.show_podcast_action.trigger()
-    
-    def toggle_radio_shortcut(self):
-        if self.radio_dock:
-            is_visible = self.radio_dock.isVisible()
-            self.radio_dock.setVisible(not is_visible)
-            if self.show_radio_action:
-                self.show_radio_action.setChecked(not is_visible)
-            if not is_visible and self.radio_widget:
-                self.radio_widget.setFocus()
-        elif self.show_radio_action:
-            # Create dock if it doesn't exist
-            self.show_radio_action.setChecked(True)
-            self.show_radio_action.trigger()
-    
-    def toggle_recents_favorites_shortcut(self):
-        if self.recents_favorites_dock:
-            is_visible = self.recents_favorites_dock.isVisible()
-            self.recents_favorites_dock.setVisible(not is_visible)
-            if self.show_recents_favorites_action:
-                self.show_recents_favorites_action.setChecked(not is_visible)
-            if not is_visible and self.recents_and_favorites_widget:
-                self.recents_and_favorites_widget.setFocus()
+        self.shortcuts.reset_shortcuts_callback()
 
     def setup_ui(self):
         self.setCentralWidget(None)
@@ -413,8 +285,8 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def download_url(self, url: str):
-        from player.url import is_url_supported
-        from player.utilities import ensure_ytdlp_available
+        from player.util.url import is_url_supported
+        from player.util.utilities import ensure_ytdlp_available
 
         downloader = self._get_shared_downloader()
         if is_url_supported(url):
@@ -427,24 +299,9 @@ class MainWindow(QMainWindow):
         self.open_downloader()
 
     def load_folder_as_playlist(self, folder_path: str):
-        media_files = get_media_files_from_directory(folder_path, formats["audio"], formats["video"])
-        
-        if not media_files:
-            QMessageBox.information(
-                self, 
-                _("No Media Found"), 
-                f"{_('No supported media files were found in the selected folder:')}\n{folder_path}\n\n{_('Supported formats include audio and video files.')}"
-            )
-            return
-        
-        playlist = Playlist(title=os.path.basename(folder_path))
-        for media_file in media_files:
-            playlist.add_entry(PlaylistEntry(location=media_file, title=os.path.basename(media_file)))
-        
-        if media_files:
-            self.player_widget.load_playlist(playlist, start_index=0)
-            self.play_file(media_files[0])
-            
+        self.playlist_handler.load_folder_as_playlist(folder_path)
+
+
     def play_file(self, file_path: str):
         signal_manager.statusbar_message.emit(f"{_("Loading:")} {os.path.basename(file_path)}")
         signal_manager.media_info_message.emit(file_path)
@@ -490,105 +347,21 @@ class MainWindow(QMainWindow):
         self.recents_and_favorites_widget.add_recent(file_path)
         
     def add_to_playlist(self, file_path: str):
+        self.playlist_handler.add_to_playlist(file_path)
 
-        playlist_manager = self.playlists_widget.playlist_manager
-        
-        if not playlist_manager.list_playlists():
-            reply = QMessageBox.question(
-                self, _("No Playlists"),
-                _("No playlists exist. Would you like to create a new playlist?"),
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            )
-            if reply == QMessageBox.StandardButton.Yes:
-                self.create_new_playlist_with_file(file_path)
-            return
-        
-        dialog = PlaylistSelectionDialog(playlist_manager, self)
-        dialog.playlist_selected.connect(
-            lambda playlist_name: self.add_file_to_playlist(file_path, playlist_name)
-        )
-        dialog.exec()
-        
     def create_playlist_from_folder(self, folder_path: str):
+        self.playlist_handler.create_playlist_from_folder(folder_path)
 
-        if not os.path.isdir(folder_path):
-            messageBox(_("Error"), _("Selected path is not a directory"))
-            return
-            
-        audio_formats = [ext.lower() for ext in formats.get("audio", [])]
-        video_formats = [ext.lower() for ext in formats.get("video", [])]
-        
-        media_files = get_media_files_from_directory(folder_path, audio_formats, video_formats)
-        
-        if not media_files:
-            messageBox(_("No Media Files"), _("No supported media files found in the selected folder"))
-            return
-            
-        folder_name = os.path.basename(folder_path)
-        playlist_name = f"{_("Playlist from")} {folder_name}"
-        
-        playlist = Playlist(title=playlist_name)
-        for file_path in media_files:
-            entry = PlaylistEntry(location=file_path)
-            playlist.add_entry(entry)
-            
-        self.playlists_widget.playlist_manager.playlists[playlist_name] = playlist
-        self.playlists_widget.add_playlist_to_list(playlist_name)
-        self.playlists_widget.save_playlists_data()
-        
-
-        self.player_widget.load_playlist(playlist, start_index=0, auto_play=True)
-
-        signal_manager.statusbar_message.emit(
-            _("Created and loaded playlist '{playlist_name}' with {track_count} tracks").format(
-                playlist_name=playlist_name,
-                track_count=len(media_files),
-            )
-        )
-        
     def add_file_to_playlist(self, file_path: str, playlist_name: str):
+        self.playlist_handler.add_file_to_playlist(file_path, playlist_name)
 
-        playlist = self.playlists_widget.playlist_manager.get_playlist(playlist_name)
-        if playlist is not None:
-            entry = PlaylistEntry(location=file_path)
-            playlist.add_entry(entry)
-            self.playlists_widget.save_playlists_data()
-            
-            filename = os.path.basename(file_path)
-            signal_manager.statusbar_message.emit(
-                _("Added '{filename}' to playlist '{playlist_name}'").format(
-                    filename=filename,
-                    playlist_name=playlist_name,
-                )
-            )
-        else:
-            messageBox(
-                _("Error"),
-                _("Playlist '{playlist_name}' not found").format(
-                    playlist_name=playlist_name
-                ),
-            )
-            
     def create_new_playlist_with_file(self, file_path: str):
+        self.playlist_handler.create_new_playlist_with_file(file_path)
 
-        dialog = PlaylistCreateDialog(self)
-        dialog.tracks = [file_path]
-        dialog.tracks_list.addItem(os.path.basename(file_path))
-        
-        dialog.playlist_created.connect(
-            lambda name, playlist: self.handle_new_playlist_created(name, playlist)
-        )
-        dialog.exec()
-        
     def handle_new_playlist_created(self, name: str, playlist: Playlist):
+        self.playlist_handler.handle_new_playlist_created(name, playlist)
 
-        self.playlists_widget.playlist_manager.playlists[name] = playlist
-        self.playlists_widget.add_playlist_to_list(name)
-        self.playlists_widget.save_playlists_data()
-        signal_manager.statusbar_message.emit(
-            _("Created new playlist '{name}'").format(name=name)
-        )
-        
+
 
 
     def _update_status_message(self, message: str):
@@ -602,76 +375,25 @@ class MainWindow(QMainWindow):
             speech_manager.output(message, prefs.prefs["tts_speech_interrupt"])
 
     def toggle_play_pause(self):
-        if hasattr(self.player_widget, 'player') and self.player_widget.player:
-            try:
-                if self.player_widget.player.primary_instance:
-                    state = self.player_widget.player.primary_instance.get_playback_state()
-                    if state == av_play.AVPlaybackState.AV_STATE_PLAYING:
-                        self.player_widget.player.primary_instance.pause()
-                        signal_manager.statusbar_message.emit(_("Paused"))
-                    else:
-                        self.player_widget.player.primary_instance.play()
-                        signal_manager.statusbar_message.emit(_("Playing"))
-            except Exception as e:
-                signal_manager.statusbar_message.emit(_("No media loaded"))
-                
+        self.global_actions.toggle_play_pause()
+
     def stop_playback(self):
-        if hasattr(self.player_widget, 'player') and self.player_widget.player:
-            try:
-                if self.player_widget.player.primary_instance:
-                    self.player_widget.player.primary_instance.stop()
-                    signal_manager.statusbar_message.emit(_("Stopped"))
-            except Exception as e:
-                signal_manager.statusbar_message.emit(_("No media loaded"))
-                
+        self.global_actions.stop_playback()
+
     def toggle_mute(self):
-        if hasattr(self.player_widget, 'player') and self.player_widget.player:
-            try:
-                if self.player_widget.player.primary_instance:
-                    instance = self.player_widget.player.primary_instance
-                    if instance.get_mute_state() == av_play.AVMuteState.AV_AUDIO_UNMUTED:
-                        instance.mute()
-                    else:
-                        instance.unmute()
-                    signal_manager.statusbar_message.emit(_("Mute toggled"))
-            except Exception as e:
-                signal_manager.statusbar_message.emit(_("No media loaded"))
-                
+        self.global_actions.toggle_mute()
+
     def seek_forward(self):
-        if hasattr(self.player_widget, 'player') and self.player_widget.player:
-            try:
-                if self.player_widget.player.primary_instance:
-                    current_pos = self.player_widget.player.primary_instance.get_position()
-                    self.player_widget.player.primary_instance.set_position(current_pos + 10)
-            except Exception as e:
-                pass
-                
+        self.global_actions.seek_forward()
+
     def seek_backward(self):
-        if hasattr(self.player_widget, 'player') and self.player_widget.player:
-            try:
-                if self.player_widget.player.primary_instance:
-                    current_pos = self.player_widget.player.primary_instance.get_position()
-                    self.player_widget.player.primary_instance.set_position(max(0, current_pos - 10))
-            except Exception as e:
-                pass
-                
+        self.global_actions.seek_backward()
+
     def previous_track(self):
-        if hasattr(self.player_widget, 'player') and self.player_widget.player:
-            try:
-                if self.player_widget.player.primary_instance:
-                    self.player_widget.player.previous()
-                    signal_manager.statusbar_message.emit(_("Previous track"))
-            except Exception:
-                signal_manager.statusbar_message.emit(_("No media loaded"))
+        self.global_actions.previous_track()
 
     def next_track(self):
-        if hasattr(self.player_widget, 'player') and self.player_widget.player:
-            try:
-                if self.player_widget.player.primary_instance:
-                    self.player_widget.player.next()
-                    signal_manager.statusbar_message.emit(_("Next track"))
-            except Exception:
-                signal_manager.statusbar_message.emit(_("No media loaded"))
+        self.global_actions.next_track()
 
     def _on_current_track_index_changed(self, index: int):
         self._apply_now_playing_highlight(index)
@@ -689,100 +411,17 @@ class MainWindow(QMainWindow):
             self.playlists_widget.playlist_view.update_now_playing(None)
 
     def open_bookmarks_dialog(self):
-        if hasattr(self.player_widget, 'player_controls'):
-            self.player_widget.player_controls.show_bookmarks_dialog()
+        self.global_actions.open_bookmarks_dialog()
 
     def open_goto_dialog(self):
-        if hasattr(self.player_widget, 'player_controls'):
-            self.player_widget.player_controls.show_goto_dialog()
+        self.global_actions.open_goto_dialog()
 
     def volume_down(self):
-        if hasattr(self.player_widget, 'player') and self.player_widget.player:
-            instance = self.player_widget.player.primary_instance
-            if instance and hasattr(instance, "get_volume") and hasattr(instance, "set_volume"):
-                current_volume = instance.get_volume()
-                instance.set_volume(max(0, current_volume - 5))
+        self.global_actions.volume_down()
 
     def volume_up(self):
-        if hasattr(self.player_widget, 'player') and self.player_widget.player:
-            instance = self.player_widget.player.primary_instance
-            if instance and hasattr(instance, "get_volume") and hasattr(instance, "set_volume"):
-                current_volume = instance.get_volume()
-                instance.set_volume(min(100, current_volume + 5))
-    
-    def open_batch_converter(self):
-        if not ensure_ffmpeg_available(self, show_message=True, min_major=6):
-            return
-        self.open_tool_dialog("batch_converter", BatchConverterUI(), _("Batch Converter"))
-        
-    def open_extractor(self):
-        if not ensure_ffmpeg_available(self, show_message=True, min_major=6):
-            return
-        self.open_tool_dialog("extractor", ExtractorUI(), _("Media Extractor"))
-        
-    def open_tag_editor(self):
-        self.open_tool_dialog("tag_editor", TagEditorUI(), _("Tag Editor"))
-        
-    def open_thumbnail_generator(self):
-        if not ensure_ffmpeg_available(self, show_message=True, min_major=6):
-            return
-        self.open_tool_dialog("thumbnail_generator", ThumbnailGeneratorUI(), _("Thumbnail Generator"))
-    
-    def open_subtitle_converter(self):
-        self.open_tool_dialog("subtitle_converter", SubtitleConverterUI(), _("Subtitle Converter"))
-    
-    def open_subtitle_editor(self):
-        self.open_tool_dialog("subtitle_editor", SubtitleEditorUI(), _("Subtitle Editor"))
-        
-    def open_tool_dialog(self, tool_name, tool_widget, title):
+        self.global_actions.volume_up()
 
-        if self.active_tool_name and self.active_tool_name != tool_name:
-            if self.active_tool_name in self.tool_dialogs:
-                active_dialog = self.tool_dialogs[self.active_tool_name]
-                if active_dialog.isVisible() or self.show_tool_button.isVisible():
-                    QMessageBox.information(
-                        self,
-                        _("Tool Already Open"),
-                        _("'{title}' is already open. Please close it before opening another tool.").format(
-                            title=active_dialog.title
-                        ),
-                        QMessageBox.StandardButton.Ok
-                    )
-                    return
-        
-        if tool_name in self.tool_dialogs:
-            dialog = self.tool_dialogs[tool_name]
-            dialog.show_dialog()
-            self.show_tool_button.setVisible(False)
-        else:
-            dialog = ToolDialog(tool_widget, title, self)
-            dialog.dialog_hidden.connect(lambda: self.on_tool_hidden(tool_name, title))
-            dialog.finished.connect(lambda: self.on_tool_closed(tool_name))
-            self.tool_dialogs[tool_name] = dialog
-            dialog.show_dialog()
-        
-        self.active_tool_name = tool_name
-        signal_manager.statusbar_message.emit(
-            _("Opened {title}").format(title=title)
-        )
-    
-    def on_tool_hidden(self, tool_name, title):
-
-        self.show_tool_button.setText(_("Show {title}").format(title=title))
-        self.show_tool_button.setVisible(True)
-        signal_manager.statusbar_message.emit(
-            _("{title} hidden").format(title=title)
-        )
-    
-    def on_tool_closed(self, tool_name):
-
-        if tool_name in self.tool_dialogs:
-            del self.tool_dialogs[tool_name]
-        if self.active_tool_name == tool_name:
-            self.active_tool_name = None
-        self.show_tool_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Tool closed"))
-    
     def show_hidden_tool(self):
         if self.active_tool_name and self.active_tool_name in self.tool_dialogs:
             dialog = self.tool_dialogs[self.active_tool_name]
@@ -793,91 +432,13 @@ class MainWindow(QMainWindow):
             )
         
     def toggle_repeat(self):
-        if hasattr(self.player_widget, '_on_repeat_clicked'):
-            self.player_widget._on_repeat_clicked()
-        
-
-    
-
-    
-
-    
-    def _current_focus_list_index(self) -> int:
-        # current_focus_index only remembers where F6/Shift+F6 last put focus;
-        # it goes stale the moment the user clicks or Tabs somewhere else
-        # (e.g. into a floated dock), so derive the real position from
-        # QApplication's actual focus widget instead of trusting the counter.
-        focus_widget = QApplication.focusWidget()
-        if focus_widget is None:
-            return -1
-        for i, widget in enumerate(self.focusable_widgets):
-            if widget is focus_widget or widget.isAncestorOf(focus_widget):
-                return i
-        return -1
+        self.global_actions.toggle_repeat()
 
     def focus_next_widget(self):
-        self.dock_manager.update_focusable_widgets()
-        if not self.focusable_widgets:
-            return
-
-        current = self._current_focus_list_index()
-        self.current_focus_index = (current + 1) % len(self.focusable_widgets)
-        self._focus_navigation_target(self.focusable_widgets[self.current_focus_index])
+        self.focus_nav.focus_next_widget()
 
     def focus_previous_widget(self):
-        self.dock_manager.update_focusable_widgets()
-        if not self.focusable_widgets:
-            return
-
-        current = self._current_focus_list_index()
-        self.current_focus_index = (current - 1) % len(self.focusable_widgets)
-        self._focus_navigation_target(self.focusable_widgets[self.current_focus_index])
-
-    def _focus_navigation_target(self, widget):
-        if widget is None:
-            return
-
-        # Always activate the target's own window, even when it's this
-        # MainWindow - returning from a floated pane back to MainWindow is
-        # itself one cycle step, and needs the same activation as moving
-        # into a floated pane, or MainWindow never regains OS focus even
-        # though Qt-internal focus moved.
-        target_window = widget.window()
-        if target_window is not None:
-            target_window.activateWindow()
-            target_window.raise_()
-            # Window activation isn't always synchronous - without pumping
-            # the event loop here, the immediately-following setFocus() calls
-            # below can land before the window manager actually hands over
-            # activation, leaving QApplication.focusWidget() empty.
-            QApplication.processEvents()
-
-        if widget is self.toolbar or widget is getattr(self, 'panels_toolbar', None):
-            widget.setFocus()
-            toolbar_actions = [action for action in widget.actions() if action.isVisible() and not action.isSeparator()]
-            if toolbar_actions:
-                toolbar_widget = widget.widgetForAction(toolbar_actions[0])
-                if toolbar_widget is not None:
-                    toolbar_widget.setFocus()
-            return
-
-        if widget is self.status_bar:
-            widget.setFocus()
-            if self.show_tool_button.isVisible():
-                self.show_tool_button.setFocus()
-            elif self.show_downloader_button.isVisible():
-                self.show_downloader_button.setFocus()
-            elif self.show_catalog_button.isVisible():
-                self.show_catalog_button.setFocus()
-            elif self.media_info_label.isVisible():
-                self.media_info_label.setFocus()
-            else:
-                self.status_label.setFocus()
-            return
-
-        widget.setFocus()
-    
-
+        self.focus_nav.focus_previous_widget()
 
     def open_logs_viewer(self):
         dlg = LogsViewerDialog(self)
@@ -1008,83 +569,20 @@ class MainWindow(QMainWindow):
         )
         dlg.exec()
 
-    # ------------------------------------------------------------------
-    # Singleton downloader dialog management
-    # ------------------------------------------------------------------
     def _get_shared_downloader(self) -> Downloader:
-        """Return the singleton Downloader, creating it on first call."""
-        if self._shared_downloader is None:
-            from utilities.functions import get_app_path
-            import os
-            dest = os.path.join(get_app_path(), "downloads")
-            self._shared_downloader = Downloader(destination=dest)
-        return self._shared_downloader
+        return self.singleton_dialogs.get_shared_downloader()
 
     def open_downloader(self):
-        """Open (or raise) the singleton downloader dialog."""
-        if self._downloader_dialog is not None:
-            # Dialog was minimized or still alive – bring it back
-            self._downloader_dialog.show_dialog()
-            self.show_downloader_button.setVisible(False)
-            signal_manager.statusbar_message.emit(_("Download Manager opened"))
-            return
-
-        # First time (or after close) – create fresh dialog
-        dlg = DownloaderDialog(self._get_shared_downloader(), parent=self)
-        dlg.dialog_hidden.connect(self._on_downloader_hidden)
-        dlg.dialog_closed.connect(self._on_downloader_closed)
-        self._downloader_dialog = dlg
-        dlg.show_dialog()
-        self.show_downloader_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Download Manager opened"))
-
-    def _on_downloader_hidden(self):
-        """Called when dialog hides itself (Minimize button)."""
-        self.show_downloader_button.setVisible(True)
-        signal_manager.statusbar_message.emit(_("Download Manager minimized"))
-
-    def _on_downloader_closed(self):
-        """Called when dialog is fully closed so it can be re-created next time."""
-        self._downloader_dialog = None
-        self.show_downloader_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Download Manager closed"))
+        self.singleton_dialogs.open_downloader()
 
     def _show_minimized_downloader(self):
-        """Status-bar button: show the minimized dialog."""
-        if self._downloader_dialog is not None:
-            self._downloader_dialog.show_dialog()
-            self.show_downloader_button.setVisible(False)
-            signal_manager.statusbar_message.emit(_("Download Manager restored"))
-
-    # ------------------------------------------------------------------
-    # Singleton catalog worker/dialog management
-    # ------------------------------------------------------------------
-    def get_catalog_worker(self) -> CatalogWorker:
-        """Return the singleton CatalogWorker, creating it on first call."""
-        if self._catalog_worker is None:
-            self._catalog_worker = CatalogWorker(self)
-        return self._catalog_worker
+        self.singleton_dialogs.show_minimized_downloader()
 
     def catalog_folder(self, path: str):
-        """Enqueue a folder for cataloging and surface the progress dialog."""
-        self.get_catalog_worker().enqueue_folder(path)
-        self.open_catalog_dialog()
+        self.singleton_dialogs.catalog_folder(path)
 
     def rebuild_catalog(self):
-        """Clear the entire media database and re-scan every previously
-        cataloged folder."""
-        import app_db
-        roots = app_db.media_db.get_catalog_roots()
-        for media in app_db.media_db.get_all_media():
-            app_db.media_db.delete_media_file(media.id)
-        for root in roots:
-            app_db.media_db.remove_catalog_root(root)
-
-        worker = self.get_catalog_worker()
-        for root in roots:
-            worker.enqueue_folder(root)
-        if roots:
-            self.open_catalog_dialog()
+        self.singleton_dialogs.rebuild_catalog()
 
     def clear_explorer_search_history(self):
         """Clear both the persisted search history and the live Explorer
@@ -1092,38 +590,16 @@ class MainWindow(QMainWindow):
         if self.explorer_widget is not None:
             self.explorer_widget.clear_search_history()
 
-    def open_catalog_dialog(self):
-        """Open (or raise) the singleton cataloging progress dialog."""
-        if self._catalog_dialog is not None:
-            self._catalog_dialog.show_dialog()
-            self.show_catalog_button.setVisible(False)
-            signal_manager.statusbar_message.emit(_("Database Cataloging opened"))
-            return
-
-        dlg = CatalogProgressDialog(self.get_catalog_worker(), parent=self)
-        dlg.dialog_hidden.connect(self._on_catalog_hidden)
-        dlg.dialog_closed.connect(self._on_catalog_closed)
-        self._catalog_dialog = dlg
-        dlg.show_dialog()
-        self.show_catalog_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Database Cataloging opened"))
-
-    def _on_catalog_hidden(self):
-        self.show_catalog_button.setVisible(True)
-        signal_manager.statusbar_message.emit(_("Database Cataloging minimized"))
-
-    def _on_catalog_closed(self):
-        self._catalog_dialog = None
-        self.show_catalog_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Database Cataloging closed"))
-
     def _show_minimized_catalog(self):
-        if self._catalog_dialog is not None:
-            self._catalog_dialog.show_dialog()
-            self.show_catalog_button.setVisible(False)
-            signal_manager.statusbar_message.emit(_("Database Cataloging restored"))
+        self.singleton_dialogs.show_minimized_catalog()
 
     def hide_to_tray(self):
+        # Keep the persisted floating/geometry blob fresh on every hide, not
+        # just on a true exit - otherwise it only reflects whatever the
+        # layout was the last time the user actually quit via close_application(),
+        # which can drift out of sync with dock_session.json's (always-fresh)
+        # visibility flags across a full app restart.
+        self.save_window_state()
         if self.tray:
             self.tray.hide_window_to_tray()
         else:
@@ -1145,19 +621,19 @@ class MainWindow(QMainWindow):
             if dialog.is_tool_active():
                 return True
         return False
-    
+
     def get_active_tool_names(self):
         active_tools = []
         for tool_name, dialog in self.tool_dialogs.items():
             if dialog.is_tool_active():
                 active_tools.append(dialog.title)
         return active_tools
-    
+
     def confirm_close_with_active_tools(self):
         active_tools = self.get_active_tool_names()
         if not active_tools:
             return True
-        
+
         tools_text = "\n".join(f"• {tool}" for tool in active_tools)
         reply = QMessageBox.question(
             self,
@@ -1168,7 +644,7 @@ class MainWindow(QMainWindow):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
-        
+
         return reply == QMessageBox.StandardButton.Yes
 
     def close_application(self):
@@ -1187,31 +663,11 @@ class MainWindow(QMainWindow):
         QApplication.quit()
         
     def save_window_state(self):
-        prefs.prefs['window_geometry'] = self.saveGeometry().data().hex()
-        prefs.prefs['window_state'] = self.saveState().data().hex()
-        prefs.prefs['player_visible'] = self.player_dock.isVisible() if self.player_dock else True
-        prefs.save()
-        
-    def restore_window_state(self):
-        if 'window_geometry' in prefs.prefs and prefs.prefs['window_geometry']:
-            try:
-                geometry = bytes.fromhex(prefs.prefs['window_geometry'])
-                self.restoreGeometry(geometry)
-            except:
-                pass
-                
-        if 'window_state' in prefs.prefs and prefs.prefs['window_state']:
-            try:
-                state = bytes.fromhex(prefs.prefs['window_state'])
-                self.restoreState(state)
-            except:
-                pass
+        self.dock_manager.save_window_state()
 
-        if self.player_dock:
-            self.player_dock.setVisible(prefs.prefs.get('player_visible', True))
-        if self.minimize_player_action:
-            self.minimize_player_action.setChecked(not (self.player_dock.isVisible() if self.player_dock else True))
-                
+    def restore_window_state(self):
+        self.dock_manager.restore_window_state()
+
     def closeEvent(self, event):
 
         is_restarting = get_restart_flag()

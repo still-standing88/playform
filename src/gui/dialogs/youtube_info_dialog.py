@@ -28,7 +28,7 @@ class YtDlpWorker(QThread):
     
     def run(self):
         try:
-            from player.url import fetch_full_info
+            from player.util.url import fetch_full_info
             info = fetch_full_info(self.url)
             self._mutex.lock()
             cancelled = self._abort

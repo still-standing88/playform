@@ -4,13 +4,13 @@ import sys
 
 from app_config import prefs
 from utilities.functions import get_logs_dir, get_parent_dir
-from .utilities import resolve_ytdlp_binary_path
-from .url import set_ytdlp_path, set_ytdlp_log, preload_extractors
+from .util.utilities import resolve_ytdlp_binary_path
+from .util.url import set_ytdlp_path, set_ytdlp_log, preload_extractors
 
 __all__ = ['init_binaries', 'reinit_ytdlp_settings']
 
 def init_binaries():
-    from .utilities import update_prefs_with_found_binaries
+    from .util.utilities import update_prefs_with_found_binaries
     current_path = get_parent_dir()
     bin_dir = os.path.join(current_path, "bin")
 

@@ -1,39 +1,37 @@
 import os
-import sys
 import datetime as dt
 import time
 import logging
-from typing import Callable, Optional, Dict
+from typing import Optional, Dict
 import utilities.vlc_bootstrap
 import av_play
 
 from PySide6.QtWidgets import (QWidget, QLayout, QVBoxLayout, QHBoxLayout, QSplitter,
-                               QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox,
-                               QFileDialog)
+                               QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox)
 from PySide6.QtGui import QCloseEvent, QFont, QPalette, QColor, QShortcut
-from PySide6.QtCore import Qt, Signal, QTimer, QSize, Slot, QThread
+from PySide6.QtCore import Qt, Signal, QTimer, QSize, Slot
 
-from app_config import prefs, key_config
-from app_constance.vlc_args import log_args
+from app_config import prefs
 from .player_controls import PlayerControls
-from .subtitles_widget import SubtitlesWidget
-from .video_display_widget import VideoDisplayWidget
+from .widgets.subtitles_widget import SubtitlesWidget
+from .widgets.video_display_widget import VideoDisplayWidget
 from .timeline import SegmentTimelineWidget
 from gui_controls.player_key_event_filter import KeyEventFilter
 from gui_controls.toggle_button import ToggleButton
 from gui_controls.accordion import Accordion
-from .subtitles import SubtitleManager
-from .filters_widget import FiltersWidget
-from .chapters_widget import ChaptersWidget
-from .equalizer_widget import EqualizerWidget
-from utilities.chapter_probe import get_chapters, get_media_metadata
-from .url import is_url_supported, fetch_full_info
-from .utilities import ensure_ffprobe_available
-from .lazy_player import LazyPlaylistPlayer
+from .core.subtitles import SubtitleManager
+from .widgets.filters_widget import FiltersWidget
+from .widgets.chapters_widget import ChaptersWidget
+from .widgets.equalizer_widget import EqualizerWidget
+from .core.lazy_playlist_player import LazyPlaylistPlayer
+from .core.player_init import init_vlc_player
+from .core.player_shortcuts import PlayerShortcuts
+from .core.timeline_sync import TimelineSyncController
+from .core.track_metadata_loader import TrackMetadataLoader
+from .core.track_info_dialogs import TrackInfoDialogs
 from app_constance.styles import PLAYER_WIDGET_STYLE
 
-from utilities.functions import get_app_path, get_debug_level, get_parent_dir, get_vlclog_file, parse_vlc_args
-from utilities.functions import is_youtube_url, is_local_file, open_file_location
+from utilities.functions import get_app_path, get_parent_dir
 from utilities.media_utils import format_time, seconds_to_microseconds, get_media_files_from_directory
 from utilities.formats import formats as media_formats
 from utilities import signal_manager
@@ -42,96 +40,6 @@ from utilities import signal_manager
 LayoutType = QVBoxLayout | QHBoxLayout
 
 logger = logging.getLogger(__name__)
-
-_CHAPTER_CAPABLE_EXTENSIONS = {"mp4", "m4v", "mkv", "m4b"}
-
-
-class _YtdlpInfoFetchThread(QThread):
-    result_ready = Signal(str, dict)
-    error_occurred = Signal(str, str)
-
-    def __init__(self, url: str, parent=None):
-        super().__init__(parent)
-        self._url = url
-
-    def run(self):
-        try:
-            info = fetch_full_info(self._url)
-            self.result_ready.emit(self._url, info)
-        except Exception as e:
-            self.error_occurred.emit(self._url, str(e))
-
-
-def _best_subtitle_format(formats: list) -> Optional[dict]:
-    for fmt in formats:
-        if fmt.get("ext") in ("vtt", "srt"):
-            return fmt
-    return formats[0] if formats else None
-
-
-def _best_subtitle_format_url(formats: list) -> Optional[str]:
-    fmt = _best_subtitle_format(formats)
-    return fmt.get("url") if fmt else None
-
-
-def _pick_ytdlp_subtitle_track(info: dict, preferred_lang: str):
-    preferred_primary = preferred_lang.split("-")[0].lower()
-    for source_key in ("subtitles", "automatic_captions"):
-        tracks = info.get(source_key) or {}
-        if not tracks:
-            continue
-        lang = None
-        if preferred_lang in tracks:
-            lang = preferred_lang
-        else:
-            for key in tracks:
-                if key.split("-")[0].lower() == preferred_primary:
-                    lang = key
-                    break
-        if not lang:
-            lang = next(iter(tracks), None)
-        if not lang:
-            continue
-        url = _best_subtitle_format_url(tracks[lang])
-        if url:
-            return url, lang, tracks
-    return None, None, None
-
-
-class _YtdlpSubtitleFetchThread(QThread):
-    finished_ok = Signal(str, bool)
-
-    def __init__(self, subtitle_manager, source: str, subtitle_url: str, language: str, parent=None):
-        super().__init__(parent)
-        self._subtitle_manager = subtitle_manager
-        self._source = source
-        self._subtitle_url = subtitle_url
-        self._language = language
-
-    def run(self):
-        ok = self._subtitle_manager.load_from_ytdlp_track(self._subtitle_url, self._language)
-        self.finished_ok.emit(self._source, ok)
-
-
-class _SubtitleFileDownloadThread(QThread):
-    finished_ok = Signal(str)  # save_path
-    error_occurred = Signal(str)
-
-    def __init__(self, url: str, save_path: str, parent=None):
-        super().__init__(parent)
-        self._url = url
-        self._save_path = save_path
-
-    def run(self):
-        try:
-            import httpx
-            response = httpx.get(self._url, timeout=15.0)
-            response.raise_for_status()
-            with open(self._save_path, "wb") as f:
-                f.write(response.content)
-            self.finished_ok.emit(self._save_path)
-        except Exception as e:
-            self.error_occurred.emit(str(e))
 
 
 class PlayerWidget(QWidget):
@@ -154,14 +62,12 @@ class PlayerWidget(QWidget):
         self._had_media = False
         self._shortcuts:Dict[str, QShortcut] = {}
         self._key_event_filter = KeyEventFilter(self)
-        self._youtube_info_cache: Dict[str, dict] = {}
-        self._ytdlp_metadata_thread: Optional[_YtdlpInfoFetchThread] = None
-        self._ytdlp_subtitle_thread: Optional[_YtdlpSubtitleFetchThread] = None
-        self._subtitle_download_thread: Optional[_SubtitleFileDownloadThread] = None
-        self._metadata_dialog_thread: Optional[_YtdlpInfoFetchThread] = None
-        self._current_ytdlp_source: Optional[str] = None
-        self._ytdlp_subtitle_tracks: Dict[str, list] = {}
         self._last_subtitle_text: Optional[str] = None
+
+        self._shortcuts_ctrl = PlayerShortcuts(self)
+        self._timeline_sync = TimelineSyncController(self)
+        self._track_loader = TrackMetadataLoader(self)
+        self._info_dialogs = TrackInfoDialogs(self)
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
@@ -171,14 +77,14 @@ class PlayerWidget(QWidget):
         self.player:LazyPlaylistPlayer = LazyPlaylistPlayer()
         self.subtitle_manager = SubtitleManager()
         self._loading = False
-        
+
 
         self._init_player()
         self.connect_signals()
         self.apply_styles()
         self.set_shortcuts()
         self._install_event_filters()
-        
+
     def setup_ui(self):
         self.player_controls = PlayerControls(self)
         self.video_display = VideoDisplayWidget(parent = self, on_close_callback=self._update_fullscreen_state)
@@ -191,20 +97,20 @@ class PlayerWidget(QWidget):
         self.equalizer_widget = EqualizerWidget(self)
         self.side_accordion = Accordion(self)
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
-        
+
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_path_context_menu)
-        
+
     def layout_widgets(self):
         self.main_layout = QHBoxLayout(self)
         self.main_layout.setContentsMargins(5, 5, 5, 5)
-        
+
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(5)
-        
+
         left_layout.addWidget(self.video_display, 1)
         left_layout.addWidget(self.timeline)
         left_layout.addWidget(self.player_controls)
@@ -226,82 +132,7 @@ class PlayerWidget(QWidget):
         self.main_layout.addWidget(self.main_splitter)
 
     def _init_player(self):
-        vlc_args = list(log_args)
-        if prefs.prefs.get("vlc_logging", True):
-            vlc_args.extend([
-                "--file-logging",
-                "--logmode", "text",
-                "--logfile", get_vlclog_file(),
-                "--verbose", str(int(get_debug_level()))
-            ])
-
-        try:
-            device_name = prefs.prefs.get("device_name", "")
-            device_id = None
-            if device_name and sys.platform.startswith("win"):
-                try:
-                    import vlc as _vlc
-                    tmp = _vlc.Instance(["--intf", "dummy"])
-                    head = tmp.audio_output_device_list_get("mmdevice")
-                    if head:
-                        cur = head
-                        while cur:
-                            cur = cur.contents
-                            if cur.description.decode('utf-8', errors='ignore') == device_name:
-                                device_id = cur.device.decode('utf-8', errors='ignore')
-                                break
-                            cur = cur.next
-                        _vlc.libvlc_audio_output_device_list_release(head)
-                    tmp.release()
-                except Exception:
-                    pass
-
-            try:
-                extra_args = parse_vlc_args(prefs.prefs.get("vlc_args", ""))
-                self.player.init(vlc_args=vlc_args+extra_args, device_id=device_id)
-            except:
-                self.player.init(vlc_args=vlc_args, device_id=device_id)
-            self.player.set_window(self.video_display.winId())
-            self.player.set_auto_play(prefs.prefs["autoplay"]) 
-            self.player.set_track_end_callback(self._update_current_track)
-            self.filters_widget.set_player(self.player)
-            self.equalizer_widget.set_player(self.player)
-            device_name = prefs.prefs.get("device_name", "")
-            if device_name:
-                device_count = self.player.get_devices()
-                for i in range(device_count):
-                    device_info = self.player.get_device(i)
-                    if device_info and device_info.name == device_name:
-                        self.player.set_device(i)
-                        break
-            else:
-                device = prefs.prefs.get("device", 0)
-                if device < self.player.get_devices():
-                    self.player.set_device(device)
-
-
-            rm = prefs.prefs.get("repeat_mode", 0)
-            if rm == 2:
-                self.player.set_playlist_repeat_mode(av_play.AVPlaylistRepeatMode.REPEAT_ONE)
-                self.player_controls.set_repeat_mode("one")
-            elif rm == 1:
-                self.player.set_playlist_repeat_mode(av_play.AVPlaylistRepeatMode.REPEAT_ALL)
-                self.player_controls.set_repeat_mode("all")
-            else:
-                self.player.set_playlist_repeat_mode(av_play.AVPlaylistRepeatMode.REPEAT_OFF)
-                self.player_controls.set_repeat_mode("off")
-
-            sh = bool(prefs.prefs.get("shuffle", False))
-            if sh:
-                self.player.set_playlist_shuffle_mode(av_play.AVPlaylistShuffleMode.SHUFFLE)
-                self.player_controls.set_shuffle_state(True)
-            else:
-                self.player.set_playlist_shuffle_mode(av_play.AVPlaylistShuffleMode.SEQUENTIAL)
-                self.player_controls.set_shuffle_state(False)
-
-        except av_play.AVError as e:
-            self.player_controls.set_controls_enabled(False)
-
+        init_vlc_player(self)
 
     def connect_signals(self):
         self.player_controls.playPauseClicked.connect(self._on_play_pause_clicked)
@@ -312,12 +143,12 @@ class PlayerWidget(QWidget):
         self.player_controls.nextClicked.connect(self._on_next_clicked)
         self.player_controls.repeatClicked.connect(self._on_repeat_clicked)
         self.player_controls.shuffleClicked.connect(self._on_shuffle_clicked)
-        
+
         self.player_controls.seekChanged.connect(self._on_seek_changed)
         self.player_controls.seekPressed.connect(self._on_seek_pressed)
         self.player_controls.seekReleased.connect(self._on_seek_released)
         self.player_controls.volumeChanged.connect(self._on_volume_changed)
-        
+
         self.player_controls.volumeUpRequested.connect(self._on_volume_up)
         self.player_controls.volumeDownRequested.connect(self._on_volume_down)
         self.player_controls.jumpToBeginningRequested.connect(self._on_jump_to_beginning)
@@ -326,22 +157,22 @@ class PlayerWidget(QWidget):
         self.player_controls.speedChanged.connect(self._on_speed_changed)
         self.player_controls.fullscreenToggled.connect(self._on_fullscreen_toggled)
         self.player_controls.timeUpdateRequested.connect(self._update_player_state)
-        self.timeline.segmentAdded.connect(self._on_timeline_segment_added)
-        self.timeline.segmentUpdated.connect(self._on_timeline_segment_updated)
-        self.timeline.segmentRemoved.connect(self._on_timeline_segment_removed)
-        self.timeline.segmentSelected.connect(self._on_timeline_segment_selected)
-        self.timeline.markerAdded.connect(self._on_timeline_marker_added)
-        self.timeline.markerMoved.connect(self._on_timeline_marker_moved)
-        self.timeline.markerRemoved.connect(self._on_timeline_marker_removed)
-        self.timeline.markerSelected.connect(self._on_timeline_marker_selected)
+        self.timeline.segmentAdded.connect(self._timeline_sync.on_segment_added)
+        self.timeline.segmentUpdated.connect(self._timeline_sync.on_segment_updated)
+        self.timeline.segmentRemoved.connect(self._timeline_sync.on_segment_removed)
+        self.timeline.segmentSelected.connect(self._timeline_sync.on_segment_selected)
+        self.timeline.markerAdded.connect(self._timeline_sync.on_marker_added)
+        self.timeline.markerMoved.connect(self._timeline_sync.on_marker_moved)
+        self.timeline.markerRemoved.connect(self._timeline_sync.on_marker_removed)
+        self.timeline.markerSelected.connect(self._timeline_sync.on_marker_selected)
         self.player_controls.aspectRatioChanged.connect(self._on_aspect_ratio_changed)
         self.player_controls.scaleChanged.connect(self._on_scale_changed)
         self.player_controls.screenshotRequested.connect(self._on_screenshot)
         self.player.signals.extraction_started.connect(self._on_url_extraction_started)
         self.player.signals.extraction_complete.connect(self._on_url_extraction_complete)
         self.player.signals.extraction_failed.connect(self._on_url_extraction_failed)
-        self.chapters_widget.chapterActivated.connect(self._on_chapter_activated)
-        self.subtitles_widget.languageSelected.connect(self._on_subtitle_language_selected)
+        self.chapters_widget.chapterActivated.connect(self._track_loader.on_chapter_activated)
+        self.subtitles_widget.languageSelected.connect(self._track_loader.on_subtitle_language_selected)
 
     def apply_styles(self):
         self.setStyleSheet(PLAYER_WIDGET_STYLE)
@@ -362,7 +193,7 @@ class PlayerWidget(QWidget):
         except av_play.AVError as e:
             msg = f"Playback error: {getattr(e, 'message', str(e))}"
             QMessageBox.critical(self, _("Playback Error"), msg)
-        
+
     @Slot()
     def _on_mute_unmute_clicked(self):
         instance = self.player.primary_instance
@@ -378,57 +209,32 @@ class PlayerWidget(QWidget):
             msg = f"Mute error: {getattr(e, 'message', str(e))}"
             QMessageBox.critical(self, _("Mute Error"), msg)
 
-    def _has_active_media_instance(self) -> bool:
-        try:
-            return bool(getattr(self, 'player', None) and self.player.primary_instance is not None)
-        except Exception:
-            return False
-
-    def _call_if_enabled(self, widget, callback: Callable[[], None]):
-        try:
-            if widget is not None and not widget.isEnabled():
-                return
-        except Exception:
-            return
-        try:
-            callback()
-        except Exception:
-            pass
-
-    def _call_if_media(self, callback: Callable[[], None]):
-        if not self._has_active_media_instance():
-            return
-        try:
-            callback()
-        except Exception:
-            pass
-        
     @Slot()
     def _on_forward_clicked(self):
         if self.player:
             self.player_controls._is_user_seeking = True
             self.player.forward(prefs.prefs["offset"]["seek"])
             self.player_controls._is_user_seeking = False
-        
+
     @Slot()
     def _on_backward_clicked(self):
         if self.player:
             self.player_controls._is_user_seeking = True
             self.player.backward(prefs.prefs["offset"]["seek"])
             self.player_controls._is_user_seeking = False
-        
+
     @Slot()
     def _on_previous_clicked(self):
         if self.player:
             self.player.previous()
             self.filters_widget.reset_filters()
-        
+
     @Slot()
     def _on_next_clicked(self):
         if self.player:
             self.player.next()
             self.filters_widget.reset_filters()
-        
+
     @Slot()
     def _on_repeat_clicked(self):
         current_mode = self.player.get_playlist_repeat_mode()
@@ -451,7 +257,7 @@ class PlayerWidget(QWidget):
             prefs.save()
         except Exception:
             pass
-        
+
     @Slot()
     def _on_shuffle_clicked(self):
         current_mode = self.player.get_playlist_shuffle_mode()
@@ -469,7 +275,7 @@ class PlayerWidget(QWidget):
             prefs.save()
         except Exception:
             pass
-        
+
     @Slot(int)
     def _on_seek_changed(self, position):
         if self.player.primary_instance is not None:
@@ -481,7 +287,7 @@ class PlayerWidget(QWidget):
     def _on_seek_pressed(self):
         self.is_seeking = True
         self.player_controls._is_user_seeking = True
-        
+
     def _on_seek_released(self):
         self.is_seeking = False
         self.player_controls._is_user_seeking = False
@@ -496,7 +302,7 @@ class PlayerWidget(QWidget):
             except av_play.AVError as e:
                 msg = f"Seek error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, _("Seek Error"), msg)
-        
+
     @Slot(int)
     def _on_volume_changed(self, volume):
         instance = self.player.primary_instance
@@ -518,7 +324,7 @@ class PlayerWidget(QWidget):
             except av_play.AVError as e:
                 msg = f"Volume error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, _("Volume Error"), msg)
-    
+
     def _on_volume_down(self):
         instance = self.player.primary_instance
         if instance:
@@ -529,7 +335,7 @@ class PlayerWidget(QWidget):
             except av_play.AVError as e:
                 msg = f"Volume error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, _("Volume Error"), msg)
-    
+
     @Slot()
     def _on_jump_to_beginning(self):
         instance = self.player.primary_instance
@@ -539,7 +345,7 @@ class PlayerWidget(QWidget):
             except av_play.AVError as e:
                 msg = f"Seek error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, _("Seek Error"), msg)
-    
+
     @Slot()
     def _on_jump_to_end(self):
         instance = self.player.primary_instance
@@ -550,7 +356,7 @@ class PlayerWidget(QWidget):
             except av_play.AVError as e:
                 msg = f"Seek error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, _("Seek Error"), msg)
-    
+
     @Slot()
     def _on_stop(self):
         instance = self.player.primary_instance
@@ -595,7 +401,7 @@ class PlayerWidget(QWidget):
             )
         except Exception:
             signal_manager.statusbar_message.emit(_("Failed to take screenshot"))
-    
+
     def close_current_media(self):
         try:
             if self.player.primary_instance is not None:
@@ -623,125 +429,9 @@ class PlayerWidget(QWidget):
         self.player_controls.load_last_positions()
         self.player_controls.load_repeat_loops()
         try:
-            self._update_timeline_from_data()
+            self._timeline_sync.update_timeline_from_data()
         except Exception:
             pass
-
-    def _update_timeline_from_data(self):
-        length = None
-        try:
-            if self.player and self.player.primary_instance is not None:
-                length = float(self.player.primary_instance.get_length())
-        except Exception:
-            length = None
-
-        if not length or length <= 0:
-
-            length = float(self.player_controls.seek_slider.maximum() or 0)
-
-        loops = self.player_controls.get_current_loops()
-        segments_norm = []
-        for start, end in loops:
-            if start is None or end is None:
-                continue
-            if length > 0:
-                segments_norm.append((start / length, end / length))
-
-        self.timeline.setSegments(segments_norm)
-
-        self._timeline_seg_map = {}
-        for idx, seg in enumerate(self.timeline.segments):
-            self._timeline_seg_map[seg['id']] = idx
-
-        bookmarks = self.player_controls.get_bookmarks()
-        markers_norm = []
-        for pos in bookmarks:
-            if length > 0:
-                markers_norm.append(pos / length)
-
-        self.timeline.setMarkers(markers_norm)
-        self._timeline_marker_map = {}
-        for idx, m in enumerate(self.timeline.markers):
-            self._timeline_marker_map[m['id']] = idx
-
-    def _norm_to_seconds(self, norm:float) -> float:
-        try:
-            if self.player and self.player.primary_instance is not None:
-                length = float(self.player.primary_instance.get_length())
-                return norm * length
-        except Exception:
-            pass
-        return norm * float(self.player_controls.seek_slider.maximum() or 0)
-
-    def _seconds_to_norm(self, sec:float) -> float:
-        try:
-            if self.player and self.player.primary_instance is not None:
-                length = float(self.player.primary_instance.get_length())
-                if length > 0:
-                    return sec / length
-        except Exception:
-            pass
-        maxv = float(self.player_controls.seek_slider.maximum() or 1)
-        if maxv <= 0:
-            return 0.0
-        return sec / maxv
-
-    def _on_timeline_segment_added(self, start_norm:float, end_norm:float):
-        start_sec = self._norm_to_seconds(start_norm)
-        end_sec = self._norm_to_seconds(end_norm)
-        try:
-            self.player_controls.set_loop_start_precise(start_sec)
-            self.player_controls.set_loop_end_precise(end_sec)
-        except Exception:
-            pass
-        self._update_timeline_from_data()
-
-    @Slot(int, float, float)
-    def _on_timeline_segment_updated(self, seg_id:int, start_norm:float, end_norm:float):
-        if seg_id in self._timeline_seg_map:
-            loop_index = self._timeline_seg_map[seg_id]
-            start_sec = self._norm_to_seconds(start_norm)
-            end_sec = self._norm_to_seconds(end_norm)
-            self.player_controls.update_loop_by_index(loop_index, start_sec, end_sec)
-            self._update_timeline_from_data()
-
-    @Slot(int)
-    def _on_timeline_segment_removed(self, seg_id:int):
-        if seg_id in self._timeline_seg_map:
-            loop_index = self._timeline_seg_map[seg_id]
-            self.player_controls.delete_loop_by_index(loop_index)
-            self._update_timeline_from_data()
-
-    @Slot(int)
-    def _on_timeline_segment_selected(self, seg_id:int):
-        if seg_id in self._timeline_seg_map:
-            self.player_controls._current_loop_index = self._timeline_seg_map[seg_id]
-
-    @Slot(float)
-    def _on_timeline_marker_added(self, pos_norm:float):
-        pos_sec = self._norm_to_seconds(pos_norm)
-        self.player_controls.add_bookmark_at_position(pos_sec)
-        self._update_timeline_from_data()
-
-    @Slot(int, float)
-    def _on_timeline_marker_moved(self, marker_id:int, pos_norm:float):
-        if marker_id in self._timeline_marker_map:
-            bm_index = self._timeline_marker_map[marker_id]
-            pos_sec = self._norm_to_seconds(pos_norm)
-            self.player_controls.update_bookmark_at_index(bm_index, pos_sec)
-            self._update_timeline_from_data()
-
-    @Slot(int)
-    def _on_timeline_marker_removed(self, marker_id:int):
-        if marker_id in self._timeline_marker_map:
-            bm_index = self._timeline_marker_map[marker_id]
-            self.player_controls.delete_bookmark_at(bm_index)
-            self._update_timeline_from_data()
-
-    @Slot(int)
-    def _on_timeline_marker_selected(self, marker_id:int):
-        if marker_id in self._timeline_marker_map:
-            self.player_controls._current_bookmark_index = self._timeline_marker_map[marker_id]
 
     def _update_fullscreen_state(self, state:bool):
         self.player_controls.set_fullscreen_state(state)
@@ -754,7 +444,7 @@ class PlayerWidget(QWidget):
                 if entry:
                     track_name = entry.title or os.path.basename(entry.location)
                     self.player_controls.set_current_track(track_name)
-                    self._load_subtitles_for_current_track()
+                    self._track_loader.load_subtitles_for_current_track()
                     self.filters_widget.reset_filters()
                     self.currentTrackIndexChanged.emit(index)
             except av_play.AVError:
@@ -769,7 +459,7 @@ class PlayerWidget(QWidget):
                 self.mediaAvailable.emit(False)
             self._reset_ui_to_default()
             return
-        
+
         try:
             state = instance.get_playback_state()
             pos = instance.get_position()
@@ -778,12 +468,12 @@ class PlayerWidget(QWidget):
             if not self._had_media:
                 self._had_media = True
                 self.mediaAvailable.emit(True)
-            
+
             if state == av_play.AVPlaybackState.AV_STATE_NOTHING and self._last_known_state == av_play.AVPlaybackState.AV_STATE_PLAYING:
                 self._last_known_state = state
                 if not self._loading:
                     pass #self.player.next()
-                self._load_subtitles_for_current_track()
+                self._track_loader.load_subtitles_for_current_track()
                 self.filters_widget.reset_filters()
                 self._update_current_file()
                 return
@@ -792,12 +482,12 @@ class PlayerWidget(QWidget):
 
             is_playing = state == av_play.AVPlaybackState.AV_STATE_PLAYING
             is_muted = instance.get_mute_state() == av_play.AVMuteState.AV_AUDIO_MUTED
-            
+
             self.playbackStateChanged.emit(is_playing)
             if is_muted != self._last_muted:
                 self._last_muted = is_muted
                 self.muteStateChanged.emit(is_muted)
-            
+
             self.player_controls.set_play_pause_state(is_playing)
             self.player_controls.set_mute_state(is_muted)
             self.player_controls.set_volume(int(instance.get_volume()))
@@ -810,21 +500,21 @@ class PlayerWidget(QWidget):
                 except Exception:
                     pass
             self.player_controls.set_current_track(track_name)
-            
+
             if length > 0:
                 self.player_controls.set_controls_enabled(True)
                 self.player_controls.set_seek_range(0, length)
-                
+
                 if not self.is_seeking:
                     self.player_controls.set_seek_position(pos)
                     self.player_controls.check_loop_position(pos)
-                
+
                 self.player_controls.set_time_text(f"{format_time(pos)} / {format_time(length)}")
-            
+
             current_subtitle = self.subtitle_manager.get_subtitle_at(seconds_to_microseconds(pos))
-            
+
             self.subtitles_widget.highlight_subtitle_at_time(seconds_to_microseconds(pos))
-            
+
             if current_subtitle:
 
                 from app_config import prefs
@@ -869,116 +559,6 @@ class PlayerWidget(QWidget):
         except av_play.AVError:
             pass
 
-    def _load_subtitles_for_current_track(self):
-        self.subtitles_widget.clear_subtitles()
-        self._last_subtitle_text = None
-        self.filters_widget.reset_filters()
-
-        source = self.player_controls._source_url
-        if source and is_url_supported(source):
-            self.chapters_widget.clear_chapters()
-            self._fetch_ytdlp_metadata(source)
-            return
-
-        self._current_ytdlp_source = None
-        self._ytdlp_subtitle_tracks = {}
-        self.subtitles_widget.set_available_languages([])
-        instance = self.player.primary_instance
-        if instance and av_play.is_path(instance.file_path):
-            if self.subtitle_manager.load_for_video(instance.file_path):
-
-                self.subtitles_widget.load_all_subtitles(self.subtitle_manager)
-        self._load_chapters_for_current_track()
-
-    def _fetch_ytdlp_metadata(self, source: str):
-        self._current_ytdlp_source = source
-        if self._ytdlp_metadata_thread and self._ytdlp_metadata_thread.isRunning():
-            self._ytdlp_metadata_thread.quit()
-            self._ytdlp_metadata_thread.wait(100)
-
-        thread = _YtdlpInfoFetchThread(source, self)
-        thread.result_ready.connect(self._on_ytdlp_metadata_ready)
-        thread.error_occurred.connect(self._on_ytdlp_metadata_error)
-        self._ytdlp_metadata_thread = thread
-        thread.start()
-
-    def _on_ytdlp_metadata_ready(self, source: str, info: dict):
-        if source != self._current_ytdlp_source:
-            return  # stale result for a track we've since navigated away from
-
-        self._cache_youtube_info(source, info)
-
-        chapters = [
-            {
-                "start": chapter.get("start_time", 0.0),
-                "end": chapter.get("end_time", 0.0),
-                "title": chapter.get("title", ""),
-            }
-            for chapter in info.get("chapters") or []
-        ]
-        if chapters:
-            self.chapters_widget.load_chapters(chapters)
-
-        subtitle_url, lang, tracks = _pick_ytdlp_subtitle_track(info, prefs.prefs.get("subtitle-language", "en-US"))
-        self._ytdlp_subtitle_tracks = tracks or {}
-        self.subtitles_widget.set_available_languages(list(self._ytdlp_subtitle_tracks.keys()), lang)
-        if subtitle_url:
-            self._fetch_ytdlp_subtitles(source, subtitle_url, lang)
-
-    def _on_subtitle_language_selected(self, language: str):
-        if language not in self._ytdlp_subtitle_tracks:
-            return
-        url = _best_subtitle_format_url(self._ytdlp_subtitle_tracks[language])
-        if url and self._current_ytdlp_source:
-            self._fetch_ytdlp_subtitles(self._current_ytdlp_source, url, language)
-
-    def _fetch_ytdlp_subtitles(self, source: str, subtitle_url: str, language: str):
-        if self._ytdlp_subtitle_thread and self._ytdlp_subtitle_thread.isRunning():
-            self._ytdlp_subtitle_thread.quit()
-            self._ytdlp_subtitle_thread.wait(100)
-
-        thread = _YtdlpSubtitleFetchThread(self.subtitle_manager, source, subtitle_url, language, self)
-        thread.finished_ok.connect(self._on_ytdlp_subtitles_ready)
-        self._ytdlp_subtitle_thread = thread
-        thread.start()
-
-    def _on_ytdlp_subtitles_ready(self, source: str, ok: bool):
-        if source != self._current_ytdlp_source:
-            return  # stale result for a track we've since navigated away from
-        if ok:
-            self.subtitles_widget.load_all_subtitles(self.subtitle_manager)
-
-    def _on_ytdlp_metadata_error(self, source: str, error_msg: str):
-        if source != self._current_ytdlp_source:
-            return
-        logger.warning(f"yt-dlp metadata fetch failed for {source}: {error_msg}")
-
-    def _load_chapters_for_current_track(self):
-        self.chapters_widget.clear_chapters()
-        instance = self.player.primary_instance
-        if not instance or not av_play.is_path(instance.file_path):
-            return
-
-        ext = os.path.splitext(instance.file_path)[1].lower().lstrip(".")
-        if ext not in _CHAPTER_CAPABLE_EXTENSIONS:
-            return
-
-        try:
-            chapters = get_chapters(instance.file_path)
-        except Exception:
-            return
-
-        if chapters:
-            self.chapters_widget.load_chapters(chapters)
-
-    def _on_chapter_activated(self, start_seconds: float):
-        instance = self.player.primary_instance
-        if instance:
-            try:
-                instance.set_position(start_seconds)
-            except av_play.AVError:
-                pass
-
     def _reset_ui_to_default(self):
         self.player_controls.set_current_track(_("No media loaded"))
         self.player_controls.set_time_text("00:00 / 00:00")
@@ -1003,7 +583,7 @@ class PlayerWidget(QWidget):
             self.player_controls.set_current_file(file_path)
             dir_path = os.path.dirname(file_path)
             media_files = get_media_files_from_directory(dir_path, media_formats["audio"], media_formats["video"])
-            
+
             playlist = av_play.Playlist(title=os.path.basename(dir_path))
             start_index = 0
             norm_file_path = os.path.normpath(file_path)
@@ -1049,7 +629,7 @@ class PlayerWidget(QWidget):
             self._loading = True
             self.player.load_playlist(playlist, auto_play=True, start_index = start_index)
             #self.player._play_playlist_track()
-            self._load_subtitles_for_current_track()
+            self._track_loader.load_subtitles_for_current_track()
             self._update_current_file()
             self._update_player_state()
         except Exception as e:
@@ -1073,13 +653,13 @@ class PlayerWidget(QWidget):
                     self.load_file(path)
         except Exception:
             self._reset_ui_to_default()
-            
+
     def sizeHint(self):
         return QSize(1200, 800)
-        
+
     def minimumSizeHint(self):
         return QSize(800, 600)
-        
+
     @Slot()
     def _on_url_extraction_started(self):
         self.video_display.show_loading(_("Extracting URL..."))
@@ -1090,7 +670,7 @@ class PlayerWidget(QWidget):
     def _on_url_extraction_complete(self, _result):
         self.video_display.hide_loading()
         self.player_controls.set_controls_enabled(True)
-        self._load_subtitles_for_current_track()
+        self._track_loader.load_subtitles_for_current_track()
         self._update_current_file()
         self._update_player_state()
 
@@ -1109,239 +689,30 @@ class PlayerWidget(QWidget):
         msg.exec()
 
     def set_shortcuts(self):
-        hotkeys = key_config.key_config["Player"]
-        
-        shortcuts: Dict[str, Callable] = {
-            hotkeys["Play/Pause"]: lambda: self._call_if_enabled(self.player_controls.play_pause_btn, self.player_controls.playPauseClicked.emit),
-            hotkeys["Backward"]: lambda: self._call_if_enabled(self.player_controls.backward_btn, self.player_controls.backwardClicked.emit),
-            hotkeys["Forward"]: lambda: self._call_if_enabled(self.player_controls.forward_btn, self.player_controls.forwardClicked.emit),
-            hotkeys["Stop"]: lambda: self._call_if_media(self.player_controls.stopRequested.emit),
-            hotkeys["Mute/Unmute"]: lambda: self._call_if_enabled(self.player_controls.mute_btn, self.player_controls.muteUnmuteClicked.emit),
-            hotkeys["Previous"]: lambda: self._call_if_enabled(self.player_controls.previous_btn, self.player_controls.previousClicked.emit),
-            hotkeys["Next"]: lambda: self._call_if_enabled(self.player_controls.next_btn, self.player_controls.nextClicked.emit),
-            hotkeys["Jump to beginning"]: lambda: self._call_if_enabled(self.player_controls.seek_slider, self.player_controls.jumpToBeginningRequested.emit),
-            hotkeys["Jump to the end"]: lambda: self._call_if_enabled(self.player_controls.seek_slider, self.player_controls.jumpToEndRequested.emit),
-            hotkeys["Toggle repeat"]: lambda: self._call_if_enabled(self.player_controls.repeat_btn, self.player_controls.repeatClicked.emit),
-            hotkeys["Volume up"]: lambda: self._call_if_enabled(self.player_controls.volume_slider, self.player_controls.volume_up),
-            hotkeys["Volume down"]: lambda: self._call_if_enabled(self.player_controls.volume_slider, self.player_controls.volume_down),
-            hotkeys["Bookmarks list"]: lambda: self.player_controls.show_bookmarks_dialog(),
-            hotkeys["Go to time"]: lambda: self.player_controls.show_goto_dialog(),
-            hotkeys["New mark at current position"]: lambda: self.player_controls.add_bookmark_at_current_position(),
-            hotkeys["Repeat loop start"]: lambda: self._on_repeat_start_shortcut(),
-            hotkeys["Repeat loop end"]: lambda: self._on_repeat_end_shortcut(),
-            hotkeys["Clear repeat loop"]: lambda: self.player_controls.clear_repeat_loop(),
-            hotkeys["Take snapshot"]: lambda: self._call_if_media(self.player_controls.screenshotRequested.emit),
-            hotkeys["Delete current bookmark"]: lambda: self.player_controls.delete_current_bookmark(),
-            hotkeys["Fullscreen"]: lambda: self.player_controls.fullscreenToggled.emit(True),
-            hotkeys["Exit fullscreen"]: lambda: self.player_controls.fullscreenToggled.emit(False),
-            hotkeys["Previous bookmark"]: lambda: self.player_controls.jump_to_previous_bookmark(),
-            hotkeys["Next bookmark"]: lambda: self.player_controls.jump_to_next_bookmark(),
-            hotkeys["Previous repeat loop"]: lambda: self.player_controls.jump_to_previous_loop(),
-            hotkeys["Next repeat loop"]: lambda: self.player_controls.jump_to_next_loop(),
-            hotkeys["Mark1 position"]: lambda: self.player_controls.jump_to_mark(0),
-            hotkeys["Mark2 position"]: lambda: self.player_controls.jump_to_mark(1),
-            hotkeys["Mark3 position"]: lambda: self.player_controls.jump_to_mark(2),
-            hotkeys["Mark4 position"]: lambda: self.player_controls.jump_to_mark(3),
-            hotkeys["Mark5 position"]: lambda: self.player_controls.jump_to_mark(4),
-            hotkeys["Mark6 position"]: lambda: self.player_controls.jump_to_mark(5),
-            hotkeys["Mark7 position"]: lambda: self.player_controls.jump_to_mark(6),
-            hotkeys["Mark8 position"]: lambda: self.player_controls.jump_to_mark(7),
-            hotkeys["Mark9 position"]: lambda: self.player_controls.jump_to_mark(8),
-            hotkeys["Mark10 position"]: lambda: self.player_controls.jump_to_mark(9),
-            hotkeys["close media"]: lambda: self.close_current_media()
-        }
-        
-        for shortcut in self._shortcuts.values():
-            shortcut.activated.disconnect()
-            shortcut.setParent(None)
-        self._shortcuts.clear()
-
-        for shortcut, callback in shortcuts.items():
-            sh = QShortcut(shortcut, self)
-            sh.activated.connect(callback)
-            sh.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
-            self._shortcuts[shortcut] = sh
+        self._shortcuts_ctrl.setup()
 
     def reset_shortcuts(self):
         pass
 
-    def _on_repeat_start_shortcut(self):
-        try:
-            pos = None
-            if hasattr(self, 'player') and self.player and self.player.primary_instance is not None:
-                try:
-                    pos = float(self.player.primary_instance.get_position())
-                except Exception:
-                    pos = None
-            if pos is None:
-                pos = float(self.player_controls.get_seek_position())
-            self.player_controls.set_loop_start_precise(pos)
-        except Exception:
-            pass
-
-    def _on_repeat_end_shortcut(self):
-        try:
-            pos = None
-            if hasattr(self, 'player') and self.player and self.player.primary_instance is not None:
-                try:
-                    pos = float(self.player.primary_instance.get_position())
-                except Exception:
-                    pos = None
-            if pos is None:
-                pos = float(self.player_controls.get_seek_position())
-            self.player_controls.set_loop_end_precise(pos)
-        except Exception:
-            pass
-
     def _install_event_filters(self):
-        widgets = [
-            self.player_controls.previous_btn, self.player_controls.backward_btn, self.player_controls.play_pause_btn, 
-            self.player_controls.forward_btn, self.player_controls.next_btn, self.player_controls.repeat_btn, self.player_controls.shuffle_btn,
-            self.player_controls.bookmarks_btn, self.player_controls.goto_btn, self.player_controls.screenshot_btn,
-            self.player_controls.seek_slider, self.player_controls.mute_btn, self.player_controls.volume_slider,
-            self.player_controls.time_label, self.player_controls.current_track_label, self.player_controls.more_btn,
-            self.player_controls.toggle_controls_btn
-        ]
-        self._key_event_filter.install_on_widgets(widgets)
+        self._shortcuts_ctrl.install_event_filters()
 
     def show_youtube_info_dialog(self):
-
-        current_file = self.player_controls._source_url or self.player_controls._current_file
-        if not current_file:
-            return
-        
-        from utilities.functions import is_youtube_url
-        if not is_youtube_url(current_file):
-            return
-        
-        from gui.dialogs.youtube_info_dialog import YouTubeInfoDialog
-        
-        cached = self._youtube_info_cache.get(current_file)
-        dialog = YouTubeInfoDialog(current_file, parent=self.window(), cached_info=cached)
-        dialog.exec()
-        
-        if dialog.cached_info and current_file not in self._youtube_info_cache:
-            self._cache_youtube_info(current_file, dialog.cached_info)
-    
-    def _cache_youtube_info(self, url: str, info: dict):
-
-        self._youtube_info_cache[url] = info
+        self._info_dialogs.show_youtube_info_dialog()
 
     def download_subtitle_file(self):
-        if not self._ytdlp_subtitle_tracks:
-            QMessageBox.information(
-                self, _("No Subtitles"), _("No subtitle track is available for this source.")
-            )
-            return
-
-        current_lang = self.subtitles_widget.language_combo.currentText()
-        if not current_lang or current_lang not in self._ytdlp_subtitle_tracks:
-            current_lang = next(iter(self._ytdlp_subtitle_tracks), None)
-        if not current_lang:
-            return
-
-        fmt = _best_subtitle_format(self._ytdlp_subtitle_tracks[current_lang])
-        if not fmt or not fmt.get("url"):
-            return
-
-        extension = fmt.get("ext") or "srt"
-        default_name = f"subtitles_{current_lang}.{extension}"
-        save_path, _filter = QFileDialog.getSaveFileName(self, _("Save Subtitle File"), default_name)
-        if not save_path:
-            return
-
-        if self._subtitle_download_thread and self._subtitle_download_thread.isRunning():
-            self._subtitle_download_thread.quit()
-            self._subtitle_download_thread.wait(100)
-
-        thread = _SubtitleFileDownloadThread(fmt["url"], save_path, self)
-        thread.finished_ok.connect(self._on_subtitle_download_finished)
-        thread.error_occurred.connect(self._on_subtitle_download_error)
-        self._subtitle_download_thread = thread
-        signal_manager.statusbar_message.emit(_("Downloading subtitle..."))
-        thread.start()
-
-    def _on_subtitle_download_finished(self, save_path: str):
-        signal_manager.statusbar_message.emit(_("Subtitle saved to {path}").format(path=save_path))
-
-    def _on_subtitle_download_error(self, error_msg: str):
-        QMessageBox.warning(self, _("Download Failed"), error_msg)
+        self._info_dialogs.download_subtitle_file()
 
     def view_youtube_comments(self):
-        current_file = self.player_controls._source_url or self.player_controls._current_file
-        if not current_file or not is_youtube_url(current_file):
-            return
-
-        from gui.dialogs.youtube_comments_dialog import YouTubeCommentsDialog
-        dialog = YouTubeCommentsDialog(current_file, parent=self.window())
-        dialog.exec()
+        self._info_dialogs.view_youtube_comments()
 
     def view_media_metadata(self):
-        current_file = self.player_controls._current_file
-        source = self.player_controls._source_url or current_file
-        if not source:
-            return
-
-        from gui.dialogs.media_metadata_dialog import MediaMetadataDialog
-
-        if current_file and is_local_file(current_file):
-            if not ensure_ffprobe_available(self):
-                return
-            try:
-                metadata = get_media_metadata(current_file)
-            except Exception as e:
-                QMessageBox.warning(self, _("Metadata Error"), str(e))
-                return
-            dialog = MediaMetadataDialog.from_local_metadata(current_file, metadata, parent=self.window())
-            dialog.exec()
-        elif is_url_supported(source):
-            info = self._youtube_info_cache.get(source)
-            if info:
-                dialog = MediaMetadataDialog.from_url_info(source, info, parent=self.window())
-                dialog.exec()
-            else:
-                self._fetch_metadata_for_dialog(source)
-
-    def _fetch_metadata_for_dialog(self, source: str):
-        if self._metadata_dialog_thread and self._metadata_dialog_thread.isRunning():
-            self._metadata_dialog_thread.quit()
-            self._metadata_dialog_thread.wait(100)
-
-        thread = _YtdlpInfoFetchThread(source, self)
-        thread.result_ready.connect(self._on_metadata_dialog_info_ready)
-        thread.error_occurred.connect(self._on_metadata_dialog_info_error)
-        self._metadata_dialog_thread = thread
-        signal_manager.statusbar_message.emit(_("Fetching media metadata..."))
-        thread.start()
-
-    def _on_metadata_dialog_info_ready(self, source: str, info: dict):
-        self._cache_youtube_info(source, info)
-        from gui.dialogs.media_metadata_dialog import MediaMetadataDialog
-        dialog = MediaMetadataDialog.from_url_info(source, info, parent=self.window())
-        dialog.exec()
-
-    def _on_metadata_dialog_info_error(self, source: str, error_msg: str):
-        QMessageBox.warning(self, _("Metadata Error"), error_msg)
+        self._info_dialogs.view_media_metadata()
 
     def closeEvent(self, event):
         try:
-            self._youtube_info_cache.clear()
-
-            if self._ytdlp_metadata_thread and self._ytdlp_metadata_thread.isRunning():
-                self._ytdlp_metadata_thread.quit()
-                self._ytdlp_metadata_thread.wait(2000)
-
-            if self._ytdlp_subtitle_thread and self._ytdlp_subtitle_thread.isRunning():
-                self._ytdlp_subtitle_thread.quit()
-                self._ytdlp_subtitle_thread.wait(2000)
-
-            if self._subtitle_download_thread and self._subtitle_download_thread.isRunning():
-                self._subtitle_download_thread.quit()
-                self._subtitle_download_thread.wait(2000)
-
-            if self._metadata_dialog_thread and self._metadata_dialog_thread.isRunning():
-                self._metadata_dialog_thread.quit()
-                self._metadata_dialog_thread.wait(2000)
+            self._track_loader.cleanup()
+            self._info_dialogs.cleanup()
 
             self.player_controls.save_last_position()
             if self.player.primary_instance is not None:

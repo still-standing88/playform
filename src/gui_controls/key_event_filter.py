@@ -1,3 +1,4 @@
+# is going to b deprecated in the future, don't use in future widgets.
 from PySide6.QtCore import QObject, Qt, QEvent
 from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import (QApplication, QPushButton, QToolButton, QListWidget, QTreeWidget, QLineEdit, QTextEdit, QPlainTextEdit, 

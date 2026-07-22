@@ -3,7 +3,7 @@ import json
 from ffmpeg import FFmpeg
 from ffmpeg.errors import FFmpegError
 
-from player.utilities import resolve_ffprobe_binary_path
+from player.util.utilities import resolve_ffprobe_binary_path
 
 
 def _run_ffprobe(path: str, *show_flags: str) -> dict:

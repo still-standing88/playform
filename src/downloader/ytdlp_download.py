@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from PySide6.QtCore import QObject, Signal, QProcess
 
-import player.url as ytdlp_url
+import player.util.url as ytdlp_url
 from .downloader import DownloadStatus
 
 _PROGRESS_PREFIX = "YTDLP_PROGRESS:"

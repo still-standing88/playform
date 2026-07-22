@@ -43,6 +43,7 @@ class SystemTrayIcon:
     
     def hide_window_to_tray(self):
         if self.tray_icon:
+            self.window.dock_manager.hide_floating_docks()
             self.window.hide()
             if self.show_hide_action:
                 self.show_hide_action.setText(_("Show"))
@@ -58,6 +59,7 @@ class SystemTrayIcon:
     
     def toggle_window_visibility(self):
         if self.window.isVisible() and not self.window.isMinimized():
+            self.window.dock_manager.hide_floating_docks()
             self.window.hide()
             if self.show_hide_action:
                 self.show_hide_action.setText(_("Show"))
@@ -65,6 +67,7 @@ class SystemTrayIcon:
             self.window.show()
             self.window.raise_()
             self.window.activateWindow()
+            self.window.dock_manager.restore_floating_docks()
             if self.show_hide_action:
                 self.show_hide_action.setText(_("Hide"))
     

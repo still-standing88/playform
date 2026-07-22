@@ -301,6 +301,12 @@ class MenuManager:
         self.main_window.get_utilities_action.triggered.connect(self.main_window.open_utility_download_dialog)
         self.main_window.options_menu.addAction(self.main_window.get_utilities_action)
 
+        self.main_window.options_menu.addSeparator()
+
+        self.main_window.documentation_action = QAction(_("&Documentation..."), self.main_window)
+        self.main_window.documentation_action.triggered.connect(self.main_window.open_documentation)
+        self.main_window.options_menu.addAction(self.main_window.documentation_action)
+
     def update_recent_files_menu(self):
         self.main_window.recent_files_menu.clear()
         recent_files = self.main_window.recents_and_favorites_widget.get_recent_files_list()

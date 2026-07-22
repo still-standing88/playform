@@ -8,7 +8,7 @@ from tools.subtitle_editor_ui import SubtitleEditorUI
 from gui.dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
-from player.utilities import ensure_ffmpeg_available
+from player.util.utilities import ensure_ffmpeg_available
 
 class ToolWindowManager:
     def __init__(self, main_window):
@@ -64,12 +64,12 @@ class ToolWindowManager:
         
         self.main_window.active_tool_name = tool_name
         signal_manager.statusbar_message.emit(f"{_('Opened')} {title}")
-    
+
     def on_tool_hidden(self, tool_name, title):
         self.main_window.show_tool_button.setText(f"{_('Show')} {title}")
         self.main_window.show_tool_button.setVisible(True)
         signal_manager.statusbar_message.emit(f"{title} {_('hidden')}")
-    
+
     def on_tool_closed(self, tool_name):
         if tool_name in self.main_window.tool_dialogs:
             del self.main_window.tool_dialogs[tool_name]
@@ -77,39 +77,3 @@ class ToolWindowManager:
             self.main_window.active_tool_name = None
         self.main_window.show_tool_button.setVisible(False)
         signal_manager.statusbar_message.emit(_("Tool closed"))
-    
-    def show_hidden_tool(self):
-        if self.main_window.active_tool_name and self.main_window.active_tool_name in self.main_window.tool_dialogs:
-            dialog = self.main_window.tool_dialogs[self.main_window.active_tool_name]
-            dialog.show_dialog()
-            self.main_window.show_tool_button.setVisible(False)
-            signal_manager.statusbar_message.emit(f"{_('Showing')} {dialog.title}")
-
-    def has_active_tools(self):
-        for tool_name, dialog in self.main_window.tool_dialogs.items():
-            if dialog.is_tool_active():
-                return True
-        return False
-    
-    def get_active_tool_names(self):
-        active_tools = []
-        for tool_name, dialog in self.main_window.tool_dialogs.items():
-            if dialog.is_tool_active():
-                active_tools.append(dialog.title)
-        return active_tools
-    
-    def confirm_close_with_active_tools(self):
-        active_tools = self.get_active_tool_names()
-        if not active_tools:
-            return True
-        
-        tools_text = ", ".join(active_tools)
-        reply = QMessageBox.question(
-            self.main_window,
-            _("Active Tools"),
-            f"{_('The following tools are currently active:')}\n{tools_text}\n\n{_('Closing the application will stop these processes. Do you want to continue?')}",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
-        )
-        
-        return reply == QMessageBox.StandardButton.Yes

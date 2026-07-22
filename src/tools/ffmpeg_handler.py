@@ -3,7 +3,7 @@ from ffmpeg import FFmpeg
 from ffmpeg.asyncio import FFmpeg as AsyncFFmpeg
 
 from utilities.functions import get_parent_dir
-from player.utilities import resolve_ffmpeg_binary_path
+from player.util.utilities import resolve_ffmpeg_binary_path
 from app_config import prefs
 
 class FFmpegHandler:

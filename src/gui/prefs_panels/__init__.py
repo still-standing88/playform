@@ -118,7 +118,7 @@ class PreferencesDialog(QDialog):
                 restart_requested = True
         
         from player import reinit_ytdlp_settings
-        from player.utilities import update_prefs_with_found_binaries
+        from player.util.utilities import update_prefs_with_found_binaries
         update_prefs_with_found_binaries(prefs.prefs)
         reinit_ytdlp_settings()
         

@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QDockWidget
 from PySide6.QtCore import Qt
+from app_config import prefs
 from tools.debug_console_dock import DebugConsoleDock
 from media_providers.radio import RadioBrowserWidget
 from media_providers.podcasts.feed_widget import FeedWidget
@@ -202,6 +203,15 @@ class DockManager:
         dock.topLevelChanged.connect(sync)
         action.setChecked(dock.isFloating())
 
+        # A hidden pane shouldn't be floatable - floating an invisible dock
+        # just makes an invisible floating window appear detached from
+        # nothing the user asked to see. Track dock.isVisible() directly
+        # (ground truth) rather than a "show" action's checked state, since
+        # some show actions (e.g. Player's minimize_player_action) use
+        # inverted checked semantics.
+        action.setEnabled(dock.isVisible())
+        dock.visibilityChanged.connect(action.setEnabled)
+
     def _create_radio_dock(self):
         if self.main_window.radio_dock is None:
             self.main_window.radio_widget = RadioBrowserWidget(self.main_window)
@@ -242,6 +252,59 @@ class DockManager:
             self.main_window.debug_console_dock.raise_()
         else:
             self.main_window.debug_console_dock.hide()
+
+    def save_window_state(self):
+        mw = self.main_window
+        prefs.prefs['window_geometry'] = mw.saveGeometry().data().hex()
+        prefs.prefs['window_state'] = mw.saveState().data().hex()
+        prefs.save()
+
+    def restore_window_state(self):
+        mw = self.main_window
+        if 'window_geometry' in prefs.prefs and prefs.prefs['window_geometry']:
+            try:
+                geometry = bytes.fromhex(prefs.prefs['window_geometry'])
+                mw.restoreGeometry(geometry)
+            except:
+                pass
+
+        if 'window_state' in prefs.prefs and prefs.prefs['window_state']:
+            try:
+                state = bytes.fromhex(prefs.prefs['window_state'])
+                mw.restoreState(state)
+            except:
+                pass
+
+        # player_dock's visible/floating end-state is already authoritative
+        # from restoreState() above (and, before that, restore_dock_session()'s
+        # dock_session.json-based visibility) - just sync the action's
+        # checked-state display from it. A legacy 'player_visible' pref used
+        # to re-force visibility here *after* restoreState(), which silently
+        # discarded whatever floating state restoreState() had just restored
+        # for the player dock specifically (no other dock had this override).
+        if mw.minimize_player_action:
+            mw.minimize_player_action.setChecked(not (self.player_dock.isVisible() if self.player_dock else True))
+
+    def _all_docks(self):
+        mw = self.main_window
+        docks = [mw.recents_favorites_dock, mw.explorer_dock, mw.playlists_dock, self.player_dock]
+        docks += [d for d in (mw.radio_dock, mw.podcast_dock, getattr(mw, 'debug_console_dock', None)) if d is not None]
+        return docks
+
+    def hide_floating_docks(self):
+        # A floated QDockWidget is a separate top-level Qt window - hiding
+        # MainWindow (e.g. to the system tray) doesn't hide it too, so it's
+        # left behind, visible, with no main window backing it. Remember
+        # which ones were floating+visible so they can come back exactly as
+        # they were.
+        self._hidden_floating_docks = [d for d in self._all_docks() if d.isFloating() and d.isVisible()]
+        for dock in self._hidden_floating_docks:
+            dock.hide()
+
+    def restore_floating_docks(self):
+        for dock in getattr(self, '_hidden_floating_docks', []):
+            dock.show()
+        self._hidden_floating_docks = []
 
     def update_focusable_widgets(self):
         self.main_window.focusable_widgets = []

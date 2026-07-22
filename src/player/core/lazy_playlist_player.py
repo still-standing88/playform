@@ -13,7 +13,7 @@ from PySide6.QtCore import QObject, Signal, QThread
 
 from app_config import prefs
 
-from .url import (
+from ..util.url import (
     is_url_supported,
     resolve_webpage_url,
     run_ytdlp_flat_playlist,
@@ -21,7 +21,7 @@ from .url import (
     has_playlist_param,
     is_playlist,
 )
-from .utilities import ensure_ytdlp_available
+from ..util.utilities import ensure_ytdlp_available
 
 
 logger = logging.getLogger(__name__)

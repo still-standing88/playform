@@ -41,11 +41,15 @@ class ToolbarManager:
                               ensure_dock=mw.dock_manager._create_podcast_dock)
         self._add_pane_group(_("Console"), mw.show_console_dock_action, "debug_console_dock", "float_console_action")
 
+        self._apply_focus_policy(mw.panels_toolbar)
+
+    @staticmethod
+    def _apply_focus_policy(toolbar):
         # QToolBar.setFocusPolicy only makes the toolbar itself one Tab stop;
         # the QToolButtons addAction() creates default to NoFocus, so without
         # this they're mouse-only and invisible to Tab/keyboard navigation.
-        for action in mw.panels_toolbar.actions():
-            button = mw.panels_toolbar.widgetForAction(action)
+        for action in toolbar.actions():
+            button = toolbar.widgetForAction(action)
             if button is not None:
                 button.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
@@ -118,6 +122,19 @@ class ToolbarManager:
             float_action.setChecked(dock.isFloating())
             dock.topLevelChanged.connect(lambda floating: self._sync_toggle(float_action, floating))
 
+            # A hidden pane shouldn't be floatable - track dock.isVisible()
+            # directly (ground truth) rather than show_action's checked
+            # state, since Player's show_action (minimize_player_action) uses
+            # inverted checked semantics (checked == minimized/hidden).
+            float_action.setEnabled(dock.isVisible())
+            dock.visibilityChanged.connect(float_action.setEnabled)
+        else:
+            # Lazily-created docks (Radio/Podcasts) don't exist yet - nothing
+            # to float until they're first shown. DockManager's
+            # _sync_float_action_for_dock takes over enabling/disabling once
+            # ensure_dock() actually creates the dock.
+            float_action.setEnabled(False)
+
     @staticmethod
     def _sync_toggle(action, checked):
         if action.isChecked() != checked:
@@ -151,7 +168,8 @@ class ToolbarManager:
         
         self.main_window.toolbar.addSeparator()
         self.load_toolbar_tools()
-    
+        self._apply_focus_policy(self.main_window.toolbar)
+
     def show_toolbar_context_menu(self, pos):
         menu = QMenu(self.main_window)
         customize_action = QAction(_("Customize Toolbar..."), self.main_window)
@@ -189,8 +207,9 @@ class ToolbarManager:
         for action in actions:
             if action in self.main_window.tool_actions_map.values():
                 self.main_window.toolbar.removeAction(action)
-        
+
         selected_tools = toolbar_config.load_config()
         for tool_id in selected_tools:
             if tool_id in self.main_window.tool_actions_map:
                 self.main_window.toolbar.addAction(self.main_window.tool_actions_map[tool_id])
+        self._apply_focus_policy(self.main_window.toolbar)

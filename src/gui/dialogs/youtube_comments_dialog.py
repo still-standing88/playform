@@ -17,7 +17,7 @@ class CommentsFetchThread(QThread):
 
     def run(self):
         try:
-            from player.url import fetch_video_comments
+            from player.util.url import fetch_video_comments
             comments = fetch_video_comments(self.url)
             self.finished_ok.emit(comments)
         except Exception as e:
