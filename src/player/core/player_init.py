@@ -1,57 +1,35 @@
-import sys
-
 import av_play
 
 from app_config import prefs
-from app_constance.vlc_args import log_args
-from utilities.functions import get_debug_level, get_vlclog_file, parse_vlc_args
+from utilities.functions import get_debug_level, get_mpvlog_file, parse_mpv_options
 
 
-def init_vlc_player(widget):
-    """Initialize widget.player (a LazyPlaylistPlayer) with VLC args, the
+def init_mpv_player(widget):
+    """Initialize widget.player (a LazyPlaylistPlayer) with MPV config, the
     configured audio output device, and persisted repeat/shuffle prefs.
     Extracted out of PlayerWidget._init_player; widget is the owning
     PlayerWidget instance."""
-    vlc_args = list(log_args)
-    if prefs.prefs.get("vlc_logging", True):
-        vlc_args.extend([
-            "--file-logging",
-            "--logmode", "text",
-            "--logfile", get_vlclog_file(),
-            "--verbose", str(int(get_debug_level()))
-        ])
+    config: dict = {}
+    if prefs.prefs.get("mpv_logging", True):
+        level_map = {0: "error", 1: "info", 2: "debug"}
+        config["log_file"] = get_mpvlog_file()
+        config["msg_level"] = f"all={level_map.get(get_debug_level(), 'info')}"
+
+    extra_options = prefs.prefs.get("mpv_extra_options", "")
+    if extra_options:
+        try:
+            config.update(parse_mpv_options(extra_options))
+        except Exception:
+            pass
 
     try:
-        device_name = prefs.prefs.get("device_name", "")
-        device_id = None
-        if device_name and sys.platform.startswith("win"):
-            try:
-                import vlc as _vlc
-                tmp = _vlc.Instance(["--intf", "dummy"])
-                head = tmp.audio_output_device_list_get("mmdevice")
-                if head:
-                    cur = head
-                    while cur:
-                        cur = cur.contents
-                        if cur.description.decode('utf-8', errors='ignore') == device_name:
-                            device_id = cur.device.decode('utf-8', errors='ignore')
-                            break
-                        cur = cur.next
-                    _vlc.libvlc_audio_output_device_list_release(head)
-                tmp.release()
-            except Exception:
-                pass
-
-        try:
-            extra_args = parse_vlc_args(prefs.prefs.get("vlc_args", ""))
-            widget.player.init(vlc_args=vlc_args+extra_args, device_id=device_id)
-        except:
-            widget.player.init(vlc_args=vlc_args, device_id=device_id)
+        widget.player.init(config=config)
         widget.player.set_window(widget.video_display.winId())
         widget.player.set_auto_play(prefs.prefs["autoplay"])
-        widget.player.set_track_end_callback(widget._update_current_track)
+        widget.player.set_track_end_callback(lambda index: widget._trackEndedFromMonitor.emit(index))
         widget.filters_widget.set_player(widget.player)
         widget.equalizer_widget.set_player(widget.player)
+
         device_name = prefs.prefs.get("device_name", "")
         if device_name:
             device_count = widget.player.get_devices()
@@ -64,7 +42,6 @@ def init_vlc_player(widget):
             device = prefs.prefs.get("device", 0)
             if device < widget.player.get_devices():
                 widget.player.set_device(device)
-
 
         rm = prefs.prefs.get("repeat_mode", 0)
         if rm == 2:
