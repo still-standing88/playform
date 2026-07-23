@@ -7,8 +7,8 @@ import threading
 from typing import List, Optional, Set
 
 import av_play
-import vlc
-from av_play.vlc_video_player import handle_vlc_error
+from av_play.mpv_audio_filter import MPVEqualizerFilter
+from av_play.mpv_equalizer_presets import EQUALIZER_PRESETS
 from PySide6.QtCore import QObject, Signal, QThread
 
 from app_config import prefs
@@ -59,7 +59,7 @@ class LazyPlaylistSignals(QObject):
     extraction_failed = Signal(str)
 
 
-class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
+class LazyPlaylistPlayer(av_play.VideoPlayer):
     def __init__(self) -> None:
         super().__init__()
         self.signals = LazyPlaylistSignals()
@@ -77,35 +77,34 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
         self._extract_worker: Optional[_UrlExtractThread] = None
         self._pending_url: Optional[str] = None
 
-        self._equalizer: Optional[vlc.AudioEqualizer] = None
+        self._equalizer_filter: Optional[MPVEqualizerFilter] = None
+        self._equalizer_filter_id: Optional[int] = None
 
     def get_equalizer_presets(self) -> List[str]:
-        count = vlc.libvlc_audio_equalizer_get_preset_count()
-        names = [vlc.libvlc_audio_equalizer_get_preset_name(i) for i in range(count)]
-        return [name.decode("utf-8") if isinstance(name, bytes) else name for name in names]
+        return [name for name, _bands in EQUALIZER_PRESETS]
 
     def get_equalizer_bands(self) -> List[float]:
-        count = vlc.libvlc_audio_equalizer_get_band_count()
-        return [vlc.libvlc_audio_equalizer_get_band_frequency(i) for i in range(count)]
+        return list(MPVEqualizerFilter.BAND_FREQUENCIES)
 
     def get_preset_amps(self, preset: int) -> List[float]:
-        eq = vlc.libvlc_audio_equalizer_new_from_preset(preset)
-        band_count = vlc.libvlc_audio_equalizer_get_band_count()
-        amps = [eq.get_amp_at_index(band) for band in range(band_count)]
-        eq.release()
-        return amps
+        if 0 <= preset < len(EQUALIZER_PRESETS):
+            return list(EQUALIZER_PRESETS[preset][1])
+        return [0.0] * len(MPVEqualizerFilter.BAND_FREQUENCIES)
 
     def set_equalizer(self, band_amps: List[float], preamp: float = 0.0, preset: Optional[int] = None,
                        persist: bool = True) -> None:
-        def apply():
-            eq = vlc.libvlc_audio_equalizer_new_from_preset(preset) if preset is not None else vlc.AudioEqualizer()
-            eq.set_preamp(preamp)
-            for band, amp in enumerate(band_amps):
-                eq.set_amp_at_index(amp, band)
-            media_player = self._controler.get_media_player()
-            media_player.set_equalizer(eq)
-            self._equalizer = eq
-        handle_vlc_error(apply)
+        if preset is not None and 0 <= preset < len(EQUALIZER_PRESETS):
+            band_amps = list(EQUALIZER_PRESETS[preset][1])
+
+        instance = self.primary_instance
+        if instance is not None:
+            if self._equalizer_filter_id is not None:
+                try:
+                    instance.remove_filter(self._equalizer_filter_id)
+                except Exception:
+                    pass
+            self._equalizer_filter = MPVEqualizerFilter(band_amps=band_amps, preamp=preamp)
+            self._equalizer_filter_id = instance.apply_filter(self._equalizer_filter)
 
         if persist:
             prefs.prefs["equalizer_enabled"] = True
@@ -115,11 +114,14 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
             prefs.save()
 
     def disable_equalizer(self, persist: bool = True) -> None:
-        def apply():
-            media_player = self._controler.get_media_player()
-            media_player.set_equalizer(None)
-            self._equalizer = None
-        handle_vlc_error(apply)
+        instance = self.primary_instance
+        if instance is not None and self._equalizer_filter_id is not None:
+            try:
+                instance.remove_filter(self._equalizer_filter_id)
+            except Exception:
+                pass
+        self._equalizer_filter_id = None
+        self._equalizer_filter = None
 
         if persist:
             prefs.prefs["equalizer_enabled"] = False
@@ -140,7 +142,7 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
         )
 
     def init(self, *args, **kw):
-        av_play.VLCVideoPlayer.init(self, *args, **kw)
+        super().init(*args, **kw)
         self._preload_stop_event.clear()
         if self._preload_thread is None or not self._preload_thread.is_alive():
             self._preload_thread = threading.Thread(
@@ -160,7 +162,7 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
         if self._extract_worker and self._extract_worker.isRunning():
             self._extract_worker.quit()
             self._extract_worker.wait(2000)
-        av_play.VLCVideoPlayer.release(self)
+        super().release()
 
     def load_playlist(
         self,
@@ -186,8 +188,8 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
                 f"Failed to resolve playlist entry at index {target_index}"
             )
 
-        av_play.VLCVideoPlayer.load_playlist(
-            self, playlist, auto_play=auto_play, start_index=target_index
+        super().load_playlist(
+            playlist, auto_play=auto_play, start_index=target_index
         )
 
         self._schedule_preload_ahead(target_index)
@@ -275,7 +277,7 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
             self.refresh(idx)
 
     def set_playlist_shuffle_mode(self, mode: av_play.AVPlaylistShuffleMode):
-        av_play.VLCVideoPlayer.set_playlist_shuffle_mode(self, mode)
+        super().set_playlist_shuffle_mode(mode)
         if self._current_playlist is not None and len(self._current_playlist) > 0:
             self._schedule_preload_ahead(self._current_playlist_index)
 
@@ -291,7 +293,7 @@ class LazyPlaylistPlayer(av_play.VLCVideoPlayer):
                 if streaming:
                     self._current_playlist.entries[idx].location = streaming
 
-        av_play.VLCVideoPlayer._play_playlist_track(self)
+        super()._play_playlist_track()
         self._schedule_preload_ahead(self._current_playlist_index)
 
     def _ensure_resolved_blocking(self, index: int) -> bool:
