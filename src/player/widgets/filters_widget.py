@@ -1,5 +1,5 @@
 from typing import Optional
-import utilities.vlc_bootstrap
+import utilities.mpv_bootstrap
 import av_play
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QDoubleSpinBox, QSpinBox
@@ -9,9 +9,9 @@ from gui_controls.player_key_event_filter import KeyEventFilter
 
 
 class FiltersWidget(QWidget):
-	def __init__(self, parent: Optional[QWidget] = None, player: Optional[av_play.VLCVideoPlayer] = None):
+	def __init__(self, parent: Optional[QWidget] = None, player: Optional[av_play.VideoPlayer] = None):
 		super().__init__(parent)
-		self.player: Optional[av_play.VLCVideoPlayer] = player
+		self.player: Optional[av_play.VideoPlayer] = player
 		self._building = False
 		self._key_event_filter = KeyEventFilter(self)
 		self.setup_ui()
@@ -85,7 +85,7 @@ class FiltersWidget(QWidget):
 		self.hue_spin.valueChanged.connect(lambda v: self._on_value_changed("hue", float(v)))
 		self.saturation_spin.valueChanged.connect(lambda v: self._on_value_changed("saturation", float(v)))
 
-	def set_player(self, player: av_play.VLCVideoPlayer):
+	def set_player(self, player: av_play.VideoPlayer):
 		self.player = player
 		self.reset_filters()
 
