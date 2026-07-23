@@ -5,8 +5,8 @@ from typing import Optional, Callable
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel
 from PySide6.QtCore import Qt as qt, Slot, QSize
-import utilities.vlc_bootstrap
-from av_play import AVMediaInstance, VLCVideoPlayer, AVPlaybackState
+import utilities.mpv_bootstrap
+from av_play import AVMediaInstance, VideoPlayer, AVPlaybackState
 from utilities.formats import image_extensions
 
 from app_config import prefs
@@ -26,7 +26,7 @@ class ExplorerView(QListWidget):
         prefs.save()
 
 
-    def __init__(self, explorer:Explorer, player:VLCVideoPlayer, **kw):
+    def __init__(self, explorer:Explorer, player:VideoPlayer, **kw):
         self._callbacks = kw
         self._just_launched = True
         self._current_media:Optional[str] = None
