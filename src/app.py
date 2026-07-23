@@ -10,10 +10,20 @@ from app_info import APP_NAME, APP_VERSION, APP_PUBLISHER, APP_WEBSITE, setup_en
 
 def main():
     cli_args = sys.argv
+    # Parsed as a plain argv flag (not an env var) so it works the same way
+    # from a compiled/frozen binary as from `python app.py --debug` -- no
+    # environment setup needed to get a richer crash dump when one's
+    # actually being chased down. Stripped out before cli_args is used
+    # elsewhere (initialize_app_guard/create_main_window treat argv[1] as a
+    # file path to open).
+    debug_mode = "--debug" in cli_args
+    if debug_mode:
+        cli_args = [a for a in cli_args if a != "--debug"]
+        os.environ["PLAYFORM_DEBUG"] = "1"
 
     setup_env()
     setup_mpv_binaries()
-    install_crash_handler(os.path.join(get_logs_dir(), "crashes"))
+    install_crash_handler(get_logs_dir())
     install_translation()
 
     app = QApplication(sys.argv)

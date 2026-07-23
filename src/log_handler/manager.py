@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 import logging
 import logging.handlers
@@ -95,7 +96,15 @@ class LoggingSetup:
             # session's actual crash offsets. Restricting to the faulting
             # thread only removes that risk; it was the dump crashing, not
             # (necessarily) whatever originally triggered it.
-            faulthandler.enable(file=self.fault_file, all_threads=False)
+            #
+            # `--debug` (app.py) sets PLAYFORM_DEBUG=1 to opt back into the
+            # full all-threads dump for a deliberate debugging session,
+            # accepting that risk in exchange for the cross-thread view
+            # that's actually useful when hunting a new bug. Works the same
+            # from a compiled binary since it's a real argv flag, not
+            # something that requires a dev environment.
+            debug_mode = os.environ.get("PLAYFORM_DEBUG") == "1"
+            faulthandler.enable(file=self.fault_file, all_threads=debug_mode)
             self.fault_file.write(f"\n{'='*50}\n")
             self.fault_file.write(f"Application started - {datetime.now().isoformat()}\n")
             self.fault_file.write(f"{'='*50}\n")
