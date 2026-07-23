@@ -3,14 +3,14 @@ import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer
 from utilities.i18n import install_translation
-from utilities.functions import setup_vlc_binaries
+from utilities.functions import setup_mpv_binaries
 from app_info import APP_NAME, APP_VERSION, APP_PUBLISHER, APP_WEBSITE, setup_env
 
 def main():
     cli_args = sys.argv
 
     setup_env()
-    setup_vlc_binaries()
+    setup_mpv_binaries()
     install_translation()
 
     app = QApplication(sys.argv)
@@ -54,8 +54,6 @@ def main():
         
         splash.update_message(_("Starting application..."))
         splash.finish(window)
-        import os,vlc
-        #print(os.environ.get("PYTHON_VLC_MODULE_PATH"), os.environ.get("VLC_PLUGIN_PATH"), vlc.plugin_path, vlc.dll)
         window.show()
         if len(cli_args) > 1 and app_instance:
             app_instance.focus_window("PlayForm")
