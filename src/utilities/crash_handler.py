@@ -19,9 +19,24 @@ from ctypes import wintypes
 _IS_WINDOWS = sys.platform == "win32"
 
 if _IS_WINDOWS:
-    kernel32 = ctypes.windll.kernel32
-    dbghelp = ctypes.windll.dbghelp
-    psapi = ctypes.windll.psapi
+    # ctypes.windll.X (no declared argtypes/restype) silently mis-marshals
+    # some of the psapi calls below -- EnumProcessModules always came back
+    # empty despite succeeding. WinDLL(..., use_last_error=True) + explicit
+    # argtypes is what actually works.
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    dbghelp = ctypes.WinDLL("dbghelp", use_last_error=True)
+    psapi = ctypes.WinDLL("psapi", use_last_error=True)
+
+    psapi.EnumProcessModules.restype = wintypes.BOOL
+    psapi.EnumProcessModules.argtypes = [
+        wintypes.HANDLE, ctypes.POINTER(wintypes.HMODULE), wintypes.DWORD, ctypes.POINTER(wintypes.DWORD)
+    ]
+    psapi.GetModuleFileNameExW.restype = wintypes.DWORD
+    psapi.GetModuleFileNameExW.argtypes = [
+        wintypes.HANDLE, wintypes.HMODULE, wintypes.LPWSTR, wintypes.DWORD
+    ]
+    psapi.GetModuleInformation.restype = wintypes.BOOL
+    # argtypes for GetModuleInformation set after MODULEINFO is defined below.
 
     class EXCEPTION_RECORD(ctypes.Structure):
         pass
@@ -55,6 +70,10 @@ if _IS_WINDOWS:
             ("EntryPoint", ctypes.c_void_p),
         ]
 
+    psapi.GetModuleInformation.argtypes = [
+        wintypes.HANDLE, wintypes.HMODULE, ctypes.POINTER(MODULEINFO), wintypes.DWORD
+    ]
+
     LPTOP_LEVEL_EXCEPTION_FILTER = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)
 
     MiniDumpNormal = 0x00000000
@@ -68,15 +87,15 @@ if _IS_WINDOWS:
         needed = wintypes.DWORD(0)
         buf_count = 1024
         while True:
-            arr = (ctypes.c_void_p * buf_count)()
+            arr = (wintypes.HMODULE * buf_count)()
             size = ctypes.sizeof(arr)
             if not psapi.EnumProcessModules(h_process, arr, size, ctypes.byref(needed)):
                 return []
             if needed.value <= size:
                 break
-            buf_count = needed.value // ctypes.sizeof(ctypes.c_void_p) + 16
+            buf_count = needed.value // ctypes.sizeof(wintypes.HMODULE) + 16
 
-        count = needed.value // ctypes.sizeof(ctypes.c_void_p)
+        count = needed.value // ctypes.sizeof(wintypes.HMODULE)
         modules = []
         for i in range(count):
             h_mod = arr[i]
