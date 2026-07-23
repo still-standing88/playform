@@ -3,7 +3,7 @@ import datetime as dt
 import time
 import logging
 from typing import Optional, Dict
-import utilities.vlc_bootstrap
+import utilities.mpv_bootstrap
 import av_play
 
 from PySide6.QtWidgets import (QWidget, QLayout, QVBoxLayout, QHBoxLayout, QSplitter,
@@ -24,7 +24,7 @@ from .widgets.filters_widget import FiltersWidget
 from .widgets.chapters_widget import ChaptersWidget
 from .widgets.equalizer_widget import EqualizerWidget
 from .core.lazy_playlist_player import LazyPlaylistPlayer
-from .core.player_init import init_vlc_player
+from .core.player_init import init_mpv_player
 from .core.player_shortcuts import PlayerShortcuts
 from .core.timeline_sync import TimelineSyncController
 from .core.track_metadata_loader import TrackMetadataLoader
@@ -49,6 +49,7 @@ class PlayerWidget(QWidget):
     mediaAvailable = Signal(bool)
     repeatModeChanged = Signal(int)
     currentTrackIndexChanged = Signal(int)
+    _trackEndedFromMonitor = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -132,9 +133,15 @@ class PlayerWidget(QWidget):
         self.main_layout.addWidget(self.main_splitter)
 
     def _init_player(self):
-        init_vlc_player(self)
+        init_mpv_player(self)
 
     def connect_signals(self):
+        # The AVPlayer playlist monitor invokes the track-end callback from its
+        # own background thread; routing it through a Qt signal instead of
+        # calling _update_current_track directly marshals the widget updates
+        # onto the GUI thread via Qt's queued cross-thread delivery.
+        self._trackEndedFromMonitor.connect(self._update_current_track)
+
         self.player_controls.playPauseClicked.connect(self._on_play_pause_clicked)
         self.player_controls.muteUnmuteClicked.connect(self._on_mute_unmute_clicked)
         self.player_controls.forwardClicked.connect(self._on_forward_clicked)
@@ -619,13 +626,16 @@ class PlayerWidget(QWidget):
             )
         )
         try:
+            # stop_playlist() must run first -- it stops the AVPlayer monitor
+            # thread. Releasing primary_instance before that let the monitor
+            # keep polling/loading against an instance mid-teardown.
+            self.player.stop_playlist()
             if self.player.primary_instance is not None:
                 try:
                     self.player.primary_instance.release()
                     self.player._primary_instance = None
                 except Exception as e:
                     pass
-            self.player.stop_playlist()
             self._loading = True
             self.player.load_playlist(playlist, auto_play=True, start_index = start_index)
             #self.player._play_playlist_track()
@@ -715,11 +725,10 @@ class PlayerWidget(QWidget):
             self._info_dialogs.cleanup()
 
             self.player_controls.save_last_position()
-            if self.player.primary_instance is not None:
-                try:
-                    self.player.primary_instance.release()
-                except Exception:
-                    pass
+            # player.release() stops the AVPlayer monitor thread before
+            # releasing primary_instance and tearing down MPV -- releasing
+            # primary_instance separately first raced the still-running
+            # monitor against a half-torn-down instance.
             self.player.release()
         except Exception:
             pass
