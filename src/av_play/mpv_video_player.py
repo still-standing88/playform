@@ -2,6 +2,7 @@ import locale
 import mpv
 import os
 import queue
+import sys
 import threading
 import time
 from concurrent.futures import Future, TimeoutError as FutureTimeoutError
@@ -56,6 +57,25 @@ class _MPVWorker(threading.Thread):
         self._stopped = threading.Event()
 
     def run(self) -> None:
+        # This thread is the sole owner of the mpv.MPV instance, including
+        # its WASAPI audio output and device-enumeration calls -- both
+        # COM-based on Windows. A plain threading.Thread never initializes
+        # a COM apartment for itself; touching COM-dependent Windows APIs
+        # from an uninitialized thread produces RPC_E_WRONG_THREAD /
+        # RPC_E_CANTCALLOUT_ININPUTSYNCCALL-class failures, which is a
+        # documented prior issue in this codebase (see the COM-apartment/
+        # WASAPI investigation scripts under scripts/, and
+        # app_db/base_database.py's queue worker doing the same
+        # CoInitialize/CoUninitialize dance for the same reason).
+        win_com = None
+        if sys.platform == "win32":
+            try:
+                import pythoncom
+                pythoncom.CoInitialize()
+                win_com = pythoncom
+            except Exception:
+                win_com = None
+
         try:
             # Qt's QApplication construction can silently change the process-
             # wide LC_NUMERIC locale away from "C". libmpv's internal number
@@ -74,6 +94,11 @@ class _MPVWorker(threading.Thread):
             self._init_error = e
             self._ready.set()
             self._stopped.set()
+            if win_com is not None:
+                try:
+                    win_com.CoUninitialize()
+                except Exception:
+                    pass
             return
         self._ready.set()
 
@@ -100,6 +125,11 @@ class _MPVWorker(threading.Thread):
             pass
         self._mpv = None
         self._stopped.set()
+        if win_com is not None:
+            try:
+                win_com.CoUninitialize()
+            except Exception:
+                pass
 
     def _drain_rejecting(self, error: AVError) -> None:
         while True:
