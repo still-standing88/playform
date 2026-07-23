@@ -333,41 +333,53 @@ class MPVMediaInterface(AVMediaInterface):
                     mpv_instance.command("loadfile", instance_path)
                 self.__end_reached = False
             mpv_instance.pause = False
+            self.__stopped = False
 
-        self.__stopped = False
         self._submit(resume, wait=False)
 
     def pause(self, id: int):
         self._check_instance(id)
+        gen = self.__generation
 
         def pause_play():
+            if gen != self.__generation:
+                return
             self._mpv().pause = True
         self._submit(pause_play, wait=False)
 
     def mute(self, id: int):
         self._check_instance(id)
+        gen = self.__generation
 
         def toggle_mute():
+            if gen != self.__generation:
+                return
             mpv_instance = self._mpv()
             mpv_instance.mute = not mpv_instance.mute
         self._submit(toggle_mute, wait=False)
 
     def unmute(self, id: int):
         self._check_instance(id)
+        gen = self.__generation
 
         def unmute_audio():
+            if gen != self.__generation:
+                return
             self._mpv().mute = False
         self._submit(unmute_audio, wait=False)
 
     def stop(self, id: int):
         self._check_instance(id)
+        gen = self.__generation
 
         def halt():
+            if gen != self.__generation:
+                return
             self._mpv().stop()
+            self.__stopped = True
+            self.__end_reached = False
 
         self._submit(halt, wait=False)
-        self.__stopped = True
-        self.__end_reached = False
 
     def set_volume(self, id: int, offset: float):
         self._check_instance(id)
@@ -393,9 +405,12 @@ class MPVMediaInterface(AVMediaInterface):
 
     def set_loop(self, id: int, loop: bool):
         self._check_instance(id)
+        gen = self.__generation
         loop_value = "inf" if loop else "no"
 
         def set_loop_mode():
+            if gen != self.__generation:
+                return
             self._mpv().loop = loop_value
         self._submit(set_loop_mode, wait=False)
 
