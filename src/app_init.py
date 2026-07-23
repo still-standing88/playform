@@ -49,7 +49,6 @@ def setup_environment():
     app_info.setup_env()
 
     from utilities.functions import get_parent_dir
-    os.environ["USE_VLC"] = "1"
 
     bin_dir = os.path.join(get_parent_dir(), "bin")
     if os.path.isdir(bin_dir):
