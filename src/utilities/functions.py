@@ -199,8 +199,8 @@ def get_logs_dir() -> str:
     fallback.mkdir(parents=True, exist_ok=True)
     return str(fallback)
 
-def get_vlclog_file() -> str:
-    return str(Path(get_logs_dir()) / "vlc-log.txt")
+def get_mpvlog_file() -> str:
+    return str(Path(get_logs_dir()) / "mpv-log.txt")
 
 def set_restart_flag(flag:bool):
     os.environ["APP_RESTART"] = "1" if flag else "0"
@@ -220,7 +220,7 @@ def initialize_com():
         import pythoncom
         pythoncom.CoInitialize()
 
-def is_valid_vlc_args(text: str) -> bool:
+def is_valid_mpv_options(text: str) -> bool:
     try:
         _ = shlex.split(text, posix=True)
         return True
@@ -229,8 +229,16 @@ def is_valid_vlc_args(text: str) -> bool:
     except:
         return False
 
-def parse_vlc_args(text: str) -> list[str]:
-    return shlex.split(text, posix=True)
+def parse_mpv_options(text: str) -> dict:
+    options: dict[str, str | bool] = {}
+    for token in shlex.split(text, posix=True):
+        token = token.lstrip("-")
+        if not token:
+            continue
+        key, sep, value = token.partition("=")
+        key = key.replace("-", "_")
+        options[key] = value if sep else True
+    return options
 
 def is_youtube_url(url: str) -> bool:
     if not url:
@@ -258,26 +266,24 @@ def open_file_location(path: str):
         sp.Popen(["xdg-open", os.path.dirname(path)])
 
 
-def setup_vlc_macos():
+def _mpv_lib_filename() -> str:
+    if sys.platform == "darwin":
+        return "libmpv.dylib"
+    return "libmpv-2.dll"
+
+
+def setup_mpv_macos():
     bundle_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    lib_path = os.path.join(bundle_dir, "lib", "libvlc.dylib")
-    plugins_path = os.path.join(bundle_dir, "plugins")
-    os.environ["VLC_LIB_PATH"] = os.path.join(bundle_dir, "lib")
-    os.environ["VLC_PLUGIN_PATH"] = plugins_path
-    return lib_path, plugins_path
+    lib_path = os.path.join(bundle_dir, "lib", _mpv_lib_filename())
+    os.environ["MPV_LIB_PATH"] = os.path.join(bundle_dir, "lib")
+    return lib_path
 
 
-def setup_vlc_windows():
+def setup_mpv_windows():
     lib_dir = os.path.join(get_parent_dir(), "lib")
-    libvlc_path = os.path.join(lib_dir, "libvlc.dll")
-    plugins_dir = os.path.join(lib_dir, "plugins")
+    libmpv_path = os.path.join(lib_dir, _mpv_lib_filename())
 
-    os.environ["VLC_LIB_PATH"] = lib_dir
-    os.environ["VLC_PLUGIN_PATH"] = plugins_dir if os.path.isdir(plugins_dir) else lib_dir
-    os.environ.pop("PYTHON_VLC_MODULE_PATH", None)
-
-    if os.path.exists(libvlc_path):
-        os.environ["PYTHON_VLC_LIB_PATH"] = libvlc_path
+    os.environ["MPV_LIB_PATH"] = lib_dir
 
     if os.path.isdir(lib_dir):
         current_path = os.environ.get("PATH", "")
@@ -298,7 +304,7 @@ def setup_vlc_windows():
             except Exception:
                 pass
 
-    return libvlc_path, lib_dir
+    return libmpv_path, lib_dir
 
 
 def _get_linux_package_manager() -> str | None:
@@ -321,41 +327,42 @@ def _get_linux_package_manager() -> str | None:
     return None
 
 
-def _check_vlc_installed_linux() -> bool:
+def _check_mpv_installed_linux() -> bool:
     import shutil as _shutil
-    if _shutil.which("vlc"):
+    if _shutil.which("mpv"):
         return True
     lib_candidates = [
-        "/usr/lib/libvlc.so",
-        "/usr/lib/x86_64-linux-gnu/libvlc.so.5",
-        "/usr/lib64/libvlc.so.5",
-        "/usr/lib/aarch64-linux-gnu/libvlc.so.5",
+        "/usr/lib/libmpv.so",
+        "/usr/lib/libmpv.so.2",
+        "/usr/lib/x86_64-linux-gnu/libmpv.so.2",
+        "/usr/lib64/libmpv.so.2",
+        "/usr/lib/aarch64-linux-gnu/libmpv.so.2",
     ]
     return any(os.path.exists(p) for p in lib_candidates)
 
 
-def ensure_vlc_linux():
-    if _check_vlc_installed_linux():
+def ensure_mpv_linux():
+    if _check_mpv_installed_linux():
         return
     pm = _get_linux_package_manager()
     if pm is None:
-        print("Warning: Could not detect package manager. Please install VLC manually.")
+        print("Warning: Could not detect package manager. Please install libmpv manually.")
         return
-    print("VLC libraries not found. Installing VLC...")
+    print("libmpv not found. Installing mpv...")
     if pm == "apt":
-        packages = ["vlc", "libvlc-dev", "libvlccore-dev"]
+        packages = ["libmpv2", "libmpv-dev"]
         install_cmd = ["apt-get", "install", "-y"] + packages
     elif pm == "dnf":
-        packages = ["vlc", "vlc-devel"]
+        packages = ["mpv-libs", "mpv-libs-devel"]
         install_cmd = ["dnf", "install", "-y"] + packages
     elif pm == "pacman":
-        packages = ["vlc"]
+        packages = ["mpv"]
         install_cmd = ["pacman", "-S", "--noconfirm"] + packages
     elif pm == "zypper":
-        packages = ["vlc", "libvlc5"]
+        packages = ["libmpv2", "mpv-devel"]
         install_cmd = ["zypper", "install", "-y"] + packages
     else:
-        print("Warning: Unsupported package manager. Please install VLC manually.")
+        print("Warning: Unsupported package manager. Please install libmpv manually.")
         return
     try:
         if os.getuid() != 0:
@@ -364,17 +371,17 @@ def ensure_vlc_linux():
         else:
             result = sp.run(install_cmd)
         if result.returncode == 0:
-            print("VLC installed successfully.")
+            print("libmpv installed successfully.")
         else:
-            print("VLC installation failed. Please install it manually.")
+            print("libmpv installation failed. Please install it manually.")
     except Exception as e:
-        print(f"Failed to install VLC: {e}")
+        print(f"Failed to install libmpv: {e}")
 
 
-def setup_vlc_binaries():
+def setup_mpv_binaries():
     if sys.platform == "win32":
-        setup_vlc_windows()
+        setup_mpv_windows()
     elif sys.platform == "darwin":
-        setup_vlc_macos()
+        setup_mpv_macos()
     elif sys.platform.startswith("linux"):
-        ensure_vlc_linux()
+        ensure_mpv_linux()
