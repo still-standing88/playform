@@ -68,8 +68,8 @@ class PreferencesDialog(QDialog):
         from utilities.functions import set_restart_flag
         restart_requested = False
         old_theme = prefs.prefs.get("color_theme", "system")
-        old_vlc_logging = prefs.prefs.get("vlc_logging", False)
-        old_vlc_args = prefs.prefs.get("vlc_args", "")
+        old_mpv_logging = prefs.prefs.get("mpv_logging", False)
+        old_mpv_extra_options = prefs.prefs.get("mpv_extra_options", "")
         old_debug_level = prefs.prefs.get("debug_level", 2)
         old_language = prefs.prefs.get("language", "en")
         
@@ -82,8 +82,8 @@ class PreferencesDialog(QDialog):
         prefs.save()
         
         new_theme = prefs.prefs.get("color_theme", "system")
-        new_vlc_logging = prefs.prefs.get("vlc_logging", False)
-        new_vlc_args = prefs.prefs.get("vlc_args", "")
+        new_mpv_logging = prefs.prefs.get("mpv_logging", False)
+        new_mpv_extra_options = prefs.prefs.get("mpv_extra_options", "")
         new_debug_level = prefs.prefs.get("debug_level", 2)
         new_language = prefs.prefs.get("language", "en")
 
@@ -94,8 +94,8 @@ class PreferencesDialog(QDialog):
         needs_restart = (
             prefs.prefs.get("should_restart", False) or
             old_language != new_language or
-            old_vlc_logging != new_vlc_logging or 
-            old_vlc_args != new_vlc_args or
+            old_mpv_logging != new_mpv_logging or
+            old_mpv_extra_options != new_mpv_extra_options or
             old_debug_level != new_debug_level
         )
         prefs.prefs["should_restart"] = prefs.prefs.get("should_restart", False) or language_changed or (old_language != new_language)
@@ -136,7 +136,7 @@ class PreferencesDialog(QDialog):
             app.closeAllWindows()
         
     def accept(self):
-        if not self.advanced_panel.validate_vlc_args():
+        if not self.advanced_panel.validate_mpv_options():
             return
             
         restart_requested = self.save_preferences()
