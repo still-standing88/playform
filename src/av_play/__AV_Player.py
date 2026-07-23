@@ -214,9 +214,20 @@ class AVPlayer(ABC):
             self._monitor_thread.start()
 
     def _stop_monitor(self):
+        # Must never block: this is reachable directly from GUI event
+        # handlers (PlayerWidget.load_file -> stop_playlist -> here) on the
+        # Qt main thread. A synchronous join() here freezes the entire
+        # event loop -- including window-message pumping -- for up to its
+        # timeout on every file open, while GPU-rendered video may be
+        # actively live. That's exactly the kind of main-thread stall that
+        # trips driver-level TDR/access-violation behavior, independent of
+        # anything else in this codebase. The monitor is a daemon thread
+        # that notices _monitor_running=False and exits on its own within
+        # one poll iteration; any command it issues in that brief window
+        # is safely rejected/no-op'd by the interface layer (generation
+        # fencing, _check_initialized) rather than reaching a torn-down
+        # backend.
         self._monitor_running = False
-        if self._monitor_thread and self._monitor_thread.is_alive():
-            self._monitor_thread.join(timeout=1.0)
 
     def _monitor_playback(self):
         while self._monitor_running and self._auto_play_enabled:
