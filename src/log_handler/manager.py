@@ -84,7 +84,18 @@ class LoggingSetup:
     def setup_fault_handler(self):
         try:
             self.fault_file = open(self.fault_log_file, 'a', encoding='utf-8', errors='replace')
-            faulthandler.enable(file=self.fault_file, all_threads=True)
+            # all_threads=True walks every thread's Python frame stack from
+            # inside the fatal-error handler itself, without the normal GIL
+            # protections a running thread would have. With this many
+            # background threads (mpv event threads, worker threads, the
+            # keyboard hook thread, DB/TTS/chapter-probe threads...), that
+            # walk can hit a frame mid-mutation and crash *inside*
+            # faulthandler's own Py_DumpTraceback/PyCode_Addr2Line --
+            # confirmed via Microsoft's public symbols against this
+            # session's actual crash offsets. Restricting to the faulting
+            # thread only removes that risk; it was the dump crashing, not
+            # (necessarily) whatever originally triggered it.
+            faulthandler.enable(file=self.fault_file, all_threads=False)
             self.fault_file.write(f"\n{'='*50}\n")
             self.fault_file.write(f"Application started - {datetime.now().isoformat()}\n")
             self.fault_file.write(f"{'='*50}\n")
