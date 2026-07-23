@@ -27,7 +27,7 @@ from .dialogs.prefs_dialog import PreferencesDialog
 from utilities.util_gui import menuItem
 from utilities.speech import speech_manager
 from utilities import signal_manager
-import utilities.vlc_bootstrap
+import utilities.mpv_bootstrap
 from av_play import Playlist, PlaylistEntry
 from gui_controls.key_event_filter import ShortcutManager
 from app_constance.file_filter import file_filter

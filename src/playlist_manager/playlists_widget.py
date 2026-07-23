@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, Signal, Slot
 from .playlist_view import PlaylistView
 from .playlist_create_dialog import PlaylistCreateDialog
 from .playlist_edit_dialog import PlaylistEditDialog
-import utilities.vlc_bootstrap
+import utilities.mpv_bootstrap
 from av_play import Playlist, PlaylistManager
 import os
 import json
