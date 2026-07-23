@@ -1,42 +1,42 @@
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout, QCheckBox, 
-                               QSpinBox, QTextEdit, QLineEdit, QPushButton, 
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout, QCheckBox,
+                               QSpinBox, QTextEdit, QLineEdit, QPushButton,
                                QHBoxLayout, QFileDialog, QMessageBox, QGroupBox)
-from utilities.functions import is_valid_vlc_args
+from utilities.functions import is_valid_mpv_options
 
 class AdvancedPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setup_ui()
-        
+
     def setup_ui(self):
         layout = QVBoxLayout(self)
-        
-        vlc_group = QGroupBox(_("VLC Settings"))
-        vlc_group.setObjectName("vlcGroupBox")
-        vlc_layout = QFormLayout(vlc_group)
-        
-        self.vlc_logging_check = QCheckBox(_("Enable VLC Logging"))
-        self.vlc_logging_check.toggled.connect(self.toggle_vlc_logging_options)
-        vlc_layout.addRow(_("VLC Logging:"), self.vlc_logging_check)
-        
+
+        mpv_group = QGroupBox(_("MPV Settings"))
+        mpv_group.setObjectName("mpvGroupBox")
+        mpv_layout = QFormLayout(mpv_group)
+
+        self.mpv_logging_check = QCheckBox(_("Enable MPV Logging"))
+        self.mpv_logging_check.toggled.connect(self.toggle_mpv_logging_options)
+        mpv_layout.addRow(_("MPV Logging:"), self.mpv_logging_check)
+
         self.debug_level_spin = QSpinBox()
         self.debug_level_spin.setRange(0, 2)
-        vlc_layout.addRow(_("Debug Level:"), self.debug_level_spin)
-        self.debug_level_row = vlc_layout.rowCount() - 1
-        
-        self.vlc_args_edit = QTextEdit()
-        self.vlc_args_edit.setMaximumHeight(100)
-        self.vlc_args_edit.setTabChangesFocus(True)
-        
-        original_focus_out = self.vlc_args_edit.focusOutEvent
+        mpv_layout.addRow(_("Debug Level:"), self.debug_level_spin)
+        self.debug_level_row = mpv_layout.rowCount() - 1
+
+        self.mpv_options_edit = QTextEdit()
+        self.mpv_options_edit.setMaximumHeight(100)
+        self.mpv_options_edit.setTabChangesFocus(True)
+
+        original_focus_out = self.mpv_options_edit.focusOutEvent
         def custom_focus_out(e):
-            self.validate_vlc_args()
+            self.validate_mpv_options()
             original_focus_out(e)
-        self.vlc_args_edit.focusOutEvent = custom_focus_out
-        
-        vlc_layout.addRow(_("VLC Arguments:"), self.vlc_args_edit)
-        
-        layout.addWidget(vlc_group)
+        self.mpv_options_edit.focusOutEvent = custom_focus_out
+
+        mpv_layout.addRow(_("Extra MPV Options:"), self.mpv_options_edit)
+
+        layout.addWidget(mpv_group)
         
         ytdlp_group = QGroupBox(_("yt-dlp Settings"))
         self.ytdlp_layout = QFormLayout(ytdlp_group)
@@ -85,13 +85,13 @@ class AdvancedPanel(QWidget):
         layout.addWidget(ytdlp_group)
         layout.addStretch()
         
-    def toggle_vlc_logging_options(self, checked):
-        vlc_group = self.findChild(QGroupBox, "vlcGroupBox")
-        if vlc_group:
-            vlc_layout = vlc_group.findChild(QFormLayout)
-            if vlc_layout:
-                label_item = vlc_layout.itemAt(self.debug_level_row, QFormLayout.ItemRole.LabelRole)
-                field_item = vlc_layout.itemAt(self.debug_level_row, QFormLayout.ItemRole.FieldRole)
+    def toggle_mpv_logging_options(self, checked):
+        mpv_group = self.findChild(QGroupBox, "mpvGroupBox")
+        if mpv_group:
+            mpv_layout = mpv_group.findChild(QFormLayout)
+            if mpv_layout:
+                label_item = mpv_layout.itemAt(self.debug_level_row, QFormLayout.ItemRole.LabelRole)
+                field_item = mpv_layout.itemAt(self.debug_level_row, QFormLayout.ItemRole.FieldRole)
                 if label_item and label_item.widget():
                     label_item.widget().setVisible(checked)
                 if field_item and field_item.widget():
@@ -105,12 +105,12 @@ class AdvancedPanel(QWidget):
         if field_item and field_item.widget():
             field_item.widget().setVisible(checked)
         
-    def validate_vlc_args(self):
-        text = self.vlc_args_edit.toPlainText().strip()
-        if text and not is_valid_vlc_args(text):
-            QMessageBox.warning(self, _("Invalid VLC Arguments"), 
-                              _("The VLC arguments are not valid. Please check the syntax."))
-            self.vlc_args_edit.setFocus()
+    def validate_mpv_options(self):
+        text = self.mpv_options_edit.toPlainText().strip()
+        if text and not is_valid_mpv_options(text):
+            QMessageBox.warning(self, _("Invalid MPV Options"),
+                              _("The MPV options are not valid. Please check the syntax."))
+            self.mpv_options_edit.setFocus()
             return False
         return True
         
@@ -131,22 +131,22 @@ class AdvancedPanel(QWidget):
             self.ffmpeg_path_edit.setText(dir_path)
         
     def load_settings(self, prefs):
-        self.vlc_logging_check.setChecked(prefs["vlc_logging"])
+        self.mpv_logging_check.setChecked(prefs["mpv_logging"])
         self.debug_level_spin.setValue(prefs["debug_level"])
-        self.vlc_args_edit.setPlainText(prefs["vlc_args"])
+        self.mpv_options_edit.setPlainText(prefs["mpv_extra_options"])
         self.youtube_cookies_edit.setText(prefs["youtube_cookies"])
         self.ytdlp_path_edit.setText(prefs["yt-dlp_path"])
         self.ffmpeg_path_edit.setText(prefs["ffmpeg_path"])
         self.ytdlp_logging_check.setChecked(prefs["yt-dlp_logging"])
         self.ytdlp_verbose_check.setChecked(prefs["yt-dlp_verbose_output"])
-        
-        self.toggle_vlc_logging_options(prefs["vlc_logging"])
+
+        self.toggle_mpv_logging_options(prefs["mpv_logging"])
         self.toggle_ytdlp_logging_options(prefs["yt-dlp_logging"])
-            
+
     def save_settings(self, prefs):
-        prefs["vlc_logging"] = self.vlc_logging_check.isChecked()
+        prefs["mpv_logging"] = self.mpv_logging_check.isChecked()
         prefs["debug_level"] = self.debug_level_spin.value()
-        prefs["vlc_args"] = self.vlc_args_edit.toPlainText().strip()
+        prefs["mpv_extra_options"] = self.mpv_options_edit.toPlainText().strip()
         prefs["youtube_cookies"] = self.youtube_cookies_edit.text()
         prefs["yt-dlp_path"] = self.ytdlp_path_edit.text()
         prefs["ffmpeg_path"] = self.ffmpeg_path_edit.text()
