@@ -236,7 +236,13 @@ class MPVMediaInterface(AVMediaInterface):
     def free(self):
         worker, self.__worker = self.__worker, None
         if worker is not None:
-            worker.shutdown()
+            # worker.shutdown() blocks (joins the worker thread) so terminate()
+            # is guaranteed to finish before returning. free() is reachable
+            # from GUI event handlers on the Qt main thread (MPVVideoPlayer.
+            # release() -> here); run the wait on a throwaway thread instead
+            # of blocking the caller. self.__worker is already cleared above,
+            # so nothing depends on this having finished by any particular time.
+            threading.Thread(target=worker.shutdown, daemon=True, name="MPVWorkerShutdown").start()
         self.__current_id = None
         self.__applied_filters.clear()
         self.__stopped = False
