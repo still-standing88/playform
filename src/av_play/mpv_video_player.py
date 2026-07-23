@@ -195,7 +195,12 @@ class MPVMediaInterface(AVMediaInterface):
         if window is not None:
             config['wid'] = str(int(window))
         config.setdefault('ytdl', True)
-        config.setdefault('input_default_bindings', True)
+        # mpv's own default keybindings (arrow-key seek, space to pause, etc.)
+        # would otherwise fire independently on the embedded window's native
+        # input, racing/duplicating the app's own Qt-level shortcuts for the
+        # same keys. The app is the sole source of truth for playback control.
+        config.setdefault('input_default_bindings', False)
+        config.setdefault('input_vo_keyboard', False)
 
         worker = _MPVWorker(config)
         worker.start()
