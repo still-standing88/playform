@@ -1,5 +1,4 @@
 import os
-import sys
 from PySide6.QtWidgets import (
     QWidget, QFrame, QVBoxLayout, QHBoxLayout, QTreeView, QPushButton,
     QTextEdit, QListWidget, QCheckBox, QSpinBox, QLabel,
@@ -9,11 +8,10 @@ from PySide6.QtCore import Qt as qt, QTimer, Slot
 from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap, QAction, QActionGroup, QShortcut, QKeySequence
 
 from typing import Optional, Callable, Dict
-import utilities.vlc_bootstrap
-from av_play import VLCVideoPlayer, AVMediaInstance, AVPlaybackState
+import utilities.mpv_bootstrap
+from av_play import VideoPlayer, AVMediaInstance, AVPlaybackState
 from utilities.formats import formats, image_extensions
 from app_config import prefs, key_config
-from app_constance.vlc_args import log_args
 from app_constance.styles import COLORS
 from app_db import UserFiles
 from gui_controls.player_key_event_filter import KeyEventFilter
@@ -21,7 +19,7 @@ from .explorer import Explorer
 from .explorer_view import ExplorerView
 from .library_view import LibraryView
 from .play_bar import PlayerBar
-from utilities.functions import get_vlclog_file, get_debug_level, initialize_com
+from utilities.functions import get_mpvlog_file, get_debug_level, initialize_com, parse_mpv_options
 
 
 extensions = list(map(lambda ext: f".{ext}", formats["audio"] + formats["video"])) + list(image_extensions)
@@ -46,45 +44,29 @@ class ExplorerWidget(QWidget):
     
     def __init__(self, user_db:UserFiles, **kw):
         self._user_db = user_db
-        self._player:VLCVideoPlayer = VLCVideoPlayer()
+        self._player:VideoPlayer = VideoPlayer()
         self._instance:Optional[AVMediaInstance] = None
         self._explorer = Explorer(extensions, sort_mode=prefs.prefs.get("explorer_sort_mode", "name_asc"))
         self._shortcuts: Dict[str, QShortcut] = {}
 
         super().__init__(kw.get("parent", None))
         self.setWindowTitle(_("Explorer"))
-        
+
         self._callbacks = {**kw,
         "path_change_callback": self.update_path,
         "library_callback": lambda path: self.add_to_library(path),
         "image_preview_callback": self._on_image_preview,
         }
-        vlc_args = list(log_args)
-        if prefs.prefs.get("vlc_logging", True):
-            vlc_args.extend([
-                "--file-logging",
-                "--logmode", "text",
-                "--logfile", get_vlclog_file(),
-                "--verbose", str(int(get_debug_level()))
-            ])
+        config: dict = {}
+        if prefs.prefs.get("mpv_logging", True):
+            level_map = {0: "error", 1: "info", 2: "debug"}
+            config["log_file"] = get_mpvlog_file()
+            config["msg_level"] = f"all={level_map.get(get_debug_level(), 'info')}"
 
-        device_name = prefs.prefs.get("device_name", "")
-        device_id = None
-        if device_name and sys.platform.startswith("win"):
+        extra_options = prefs.prefs.get("mpv_extra_options", "")
+        if extra_options:
             try:
-                import vlc as _vlc
-                tmp = _vlc.Instance(["--intf", "dummy"])
-                head = tmp.audio_output_device_list_get("mmdevice")
-                if head:
-                    cur = head
-                    while cur:
-                        cur = cur.contents
-                        if cur.description.decode('utf-8', errors='ignore') == device_name:
-                            device_id = cur.device.decode('utf-8', errors='ignore')
-                            break
-                        cur = cur.next
-                    _vlc.libvlc_audio_output_device_list_release(head)
-                tmp.release()
+                config.update(parse_mpv_options(extra_options))
             except Exception:
                 pass
 
@@ -94,7 +76,7 @@ class ExplorerWidget(QWidget):
         self._install_key_event_filter()
         self.set_shortcuts()
 
-        self._player.init(vlc_args=vlc_args, device_id=device_id)
+        self._player.init(config=config)
         self._player.set_window(self.video_widget.winId())
         
         device_name = prefs.prefs.get("device_name", "")
