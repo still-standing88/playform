@@ -210,6 +210,14 @@ class ExplorerWidget(QWidget):
         self.vid_palette.setColor(QPalette.ColorRole.Window, COLORS['black'])
         self.video_widget.setPalette(self.vid_palette)
         self.video_widget.setAutoFillBackground(True)
+        # Same native-window attributes as the main player's VideoDisplayWidget.
+        # Without WA_DontCreateNativeAncestors, winId() below forces every
+        # ancestor up the widget tree to also get a real native window instead
+        # of Qt's lightweight "alien widget" rendering -- a real source of
+        # GPU/compositing instability once MPV's wid-embedded video is hosted
+        # here alongside the main player's own native window hierarchy.
+        self.video_widget.setAttribute(qt.WidgetAttribute.WA_DontCreateNativeAncestors)
+        self.video_widget.setAttribute(qt.WidgetAttribute.WA_NativeWindow)
 
         preview_layout.addWidget(self.video_widget)
         
