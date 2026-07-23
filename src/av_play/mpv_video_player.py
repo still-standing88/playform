@@ -1,3 +1,4 @@
+import locale
 import mpv
 import os
 import queue
@@ -56,6 +57,18 @@ class _MPVWorker(threading.Thread):
 
     def run(self) -> None:
         try:
+            # Qt's QApplication construction can silently change the process-
+            # wide LC_NUMERIC locale away from "C". libmpv's internal number
+            # parsing depends on "C" numeric formatting; python-mpv's own
+            # README calls this out as required before constructing the first
+            # mpv.MPV(). Re-asserted here (not just once at process startup)
+            # so it holds even if something re-changes the locale between
+            # player instances -- setlocale() is process-wide, so this is a
+            # cheap, safe no-op when it's already "C".
+            try:
+                locale.setlocale(locale.LC_NUMERIC, "C")
+            except locale.Error:
+                pass
             self._mpv = mpv.MPV(**self._config)
         except Exception as e:
             self._init_error = e
@@ -201,6 +214,13 @@ class MPVMediaInterface(AVMediaInterface):
         # same keys. The app is the sole source of truth for playback control.
         config.setdefault('input_default_bindings', False)
         config.setdefault('input_vo_keyboard', False)
+        # mpv defaults to vo=gpu-next (libplacebo), a shader-graph renderer
+        # with runtime HLSL compilation -- far more moving parts than the
+        # classic vo=gpu, and the source of a real access-violation crash
+        # (null-pointer read) seen during real playback. Pin to the older,
+        # far more battle-tested renderer; callers can still override via
+        # config explicitly if they want gpu-next back.
+        config.setdefault('vo', 'gpu')
 
         worker = _MPVWorker(config)
         worker.start()
