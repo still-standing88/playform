@@ -1,9 +1,11 @@
+import os
 import sys
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer
 from utilities.i18n import install_translation
-from utilities.functions import setup_mpv_binaries
+from utilities.functions import setup_mpv_binaries, get_logs_dir
+from utilities.crash_handler import install_crash_handler
 from app_info import APP_NAME, APP_VERSION, APP_PUBLISHER, APP_WEBSITE, setup_env
 
 def main():
@@ -11,6 +13,7 @@ def main():
 
     setup_env()
     setup_mpv_binaries()
+    install_crash_handler(os.path.join(get_logs_dir(), "crashes"))
     install_translation()
 
     app = QApplication(sys.argv)
