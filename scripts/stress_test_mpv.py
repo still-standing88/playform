@@ -19,9 +19,8 @@ import time
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "src")
 sys.path.insert(0, SRC_DIR)
-sys.path.insert(0, SCRIPT_DIR)
 
-import mpv_crash_handler  # noqa: E402
+from utilities import crash_handler as mpv_crash_handler  # noqa: E402
 
 AUDIO_EXTS = (".mp3", ".flac", ".m4a", ".wav", ".ogg", ".wma", ".aac")
 VIDEO_EXTS = (".mp4", ".mkv", ".avi", ".mov", ".webm", ".wmv", ".flv")
