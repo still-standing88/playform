@@ -152,16 +152,22 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
         self._apply_saved_equalizer()
 
     def release(self):
+        # release() is reachable from GUI event handlers on the Qt main
+        # thread (closeEvent, player re-init). Signal both workers to stop
+        # but don't join/wait here -- up to 1s for the preload thread and up
+        # to 2s for the (possibly network-bound) extraction thread would
+        # freeze the whole event loop. _preload_thread is a daemon thread,
+        # so leaving it to exit on its own is safe; _extract_worker may log
+        # a benign "QThread destroyed while running" warning if it's still
+        # finishing when GC'd, which is an acceptable tradeoff against
+        # blocking the GUI thread.
         self._preload_stop_event.set()
         try:
             self._preload_queue.put_nowait(-1)
         except Exception:
             pass
-        if self._preload_thread and self._preload_thread.is_alive():
-            self._preload_thread.join(timeout=1.0)
         if self._extract_worker and self._extract_worker.isRunning():
             self._extract_worker.quit()
-            self._extract_worker.wait(2000)
         super().release()
 
     def load_playlist(
