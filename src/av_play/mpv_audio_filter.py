@@ -102,30 +102,52 @@ class MPVEchoFilter(MPVAudioFilter):
         super().__init__("Echo", parameters, backend_info)
 
 class MPVReverbFilter(MPVAudioFilter):
+    """Simulates reverb with a bank of closely-spaced aecho taps with
+    decreasing decay. The obvious ffmpeg building block for reverb, afir,
+    is a 2-input convolution filter (dry signal + a separate impulse-
+    response stream) -- used single-input as originally written here, mpv
+    refused to initialize it at all ("lavfi: exactly 2 pads required"),
+    which killed the whole audio filter chain (not just this effect), so
+    any other filter checked alongside Reverb appeared broken too."""
+
+    _TAP_DELAYS_MS = [29, 37, 53, 67, 83, 101]
+
     def __init__(self):
         mpv_param_map = {
-            "dry": ("dry", float, (0.0, 1.0, 0.1, 1.0)),
-            "wet": ("wet", float, (0.0, 1.0, 0.1, 0.3)),
-            "length": ("length", int, (1, 100, 1, 1)),
-            "irnorm": ("irnorm", float, (-1.0, 2.0, 0.1, 1.0)),
-            "irgain": ("irgain", float, (0.0, 1.0, 0.1, 1.0))
+            "in_gain": ("in_gain", float, (0.0, 1.0, 0.05, 0.8)),
+            "out_gain": ("out_gain", float, (0.0, 1.0, 0.05, 0.6)),
+            "decay": ("decay", float, (0.0, 0.95, 0.05, 0.4)),
+            "room_size": ("room_size", float, (0.2, 5.0, 0.1, 1.0)),
         }
-        
+
         parameters = {
-            "dry": 1.0,
-            "wet": 0.3,
-            "length": 1,
-            "irnorm": 1.0,
-            "irgain": 1.0
+            "in_gain": 0.8,
+            "out_gain": 0.6,
+            "decay": 0.4,
+            "room_size": 1.0,
         }
-        
+
         backend_info = {
-            "mpv_filter_name": "afir",
+            "mpv_filter_name": "aecho",
             "mpv_param_map": mpv_param_map,
             "effect_syntax": "lavfi"
         }
-        
+
         super().__init__("Reverb", parameters, backend_info)
+
+    def construct(self) -> str:
+        params = self.get_parameters()
+        in_gain = params.get("in_gain", 0.8)
+        out_gain = params.get("out_gain", 0.6)
+        decay = params.get("decay", 0.4)
+        room_size = params.get("room_size", 1.0)
+
+        delays = [max(1, round(ms * room_size)) for ms in self._TAP_DELAYS_MS]
+        decays = [round(decay * (0.9 ** i), 4) for i in range(len(self._TAP_DELAYS_MS))]
+
+        delays_str = "|".join(str(d) for d in delays)
+        decays_str = "|".join(str(d) for d in decays)
+        return f"lavfi=[aecho=in_gain={in_gain}:out_gain={out_gain}:delays={delays_str}:decays={decays_str}]"
 
 class MPVLowPassFilter(MPVAudioFilter):
     def __init__(self):
