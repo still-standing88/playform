@@ -50,88 +50,21 @@
 <hr>
 <h1 id="1-software-overview">1. Software Overview</h1>
 <h2 id="11-introduction">1.1 Introduction</h2>
-<p><strong>PlayForm</strong> is a free, modern media player for Windows, designed to be straightforward to use while offering a wide range of features for everyday listening and viewing. Whether you want to play a song from your music folder, catch up on a podcast, watch a video file, or tune into an internet radio station, PlayForm brings it all together in one application.</p>
-<p>PlayForm is built around accessibility and ease of use. The interface is organized into dockable panels — Recents &amp; Favorites (always visible), a Player, a File Explorer, Playlists, Podcasts, and Internet Radio — each of which can be shown, hidden, or rearranged to suit the way you work. Everything is keyboard-accessible, and most actions are available through the menu bar, toolbar buttons, or configurable keyboard shortcuts. A Debug Console panel is also available for troubleshooting via <strong>Tools &gt; Debug &gt; Show Console Dock</strong>.</p>
-<p>PlayForm is published by <strong>Joybytes</strong>, authored by <strong>Still Standing</strong>, and is licensed under the <strong>GPL-3.0</strong> open-source license. The application's source code and updates are available on <a href="https://github.com/still-standing88/playform">GitHub</a>.</p>
+<p>PlayForm is a cross-platform media player that lets you play audio and video files, stream online content from YouTube and other websites, listen to internet radio, and follow podcasts — all from a single application.</p>
 <hr>
 <h2 id="12-features">1.2. Features</h2>
-<p>PlayForm includes the following capabilities:</p>
-<p><strong>Playback</strong><br>
-- Play local audio and video files from your computer.<br>
-- Open individual files, entire folders, or type in a web address (URL) to stream media directly.<br>
-- Full playback controls: play, pause, stop, rewind, fast-forward, previous track, and next track.<br>
-- Adjustable playback speed: 1×, 1.5×, 2×, 2.5×, and 3×.<br>
-- Volume control with mute toggle.<br>
-- Seek bar (Segment Timeline) for jumping to any point in the current file.<br>
-- Three-state repeat mode: Off, Repeat One (current track), and Repeat All (entire playlist).<br>
-- Shuffle playback order with on/off toggle.<br>
-- Jump to the beginning (<code>Home</code>) or end (<code>End</code>) of a track with a single key press.</p>
-<p><strong>Video</strong><br>
-- Dedicated video display area with full-screen support (<code>F11</code>, exit with <code>Esc</code>).<br>
-- Adjustable aspect ratio: 16:9, 4:3, 1:1, 16:10, 5:4, 21:9, 32:9, 2.35:1, 2.39:1.<br>
-- Video scale options from 0.25× to 5×.<br>
-- Take snapshots (screenshots) from video in JPG, PNG, or TIFF format (<code>Ctrl+S</code>).<br>
-- Automatic subtitle loading — if a subtitle file with the same name as your video is in the same folder, PlayForm loads it automatically. Language selection is configurable.</p>
-<p><strong>Subtitles</strong><br>
-- Subtitles are displayed in a collapsible list panel below the video, with the current line auto-highlighted during playback.<br>
-- Supported external subtitle formats: SRT, VTT, SMI, SAMI, SCC, DFXP, TTML, SUB, ASS.<br>
-- Optionally, subtitles can be spoken aloud via text-to-speech (configurable in Preferences).</p>
-<p><strong>Bookmarks &amp; Repeat Loops</strong><br>
-- Add bookmarks at any playback position and jump back to them anytime.<br>
-- Up to 10 numbered bookmarks per file are accessible via quick-jump keys (they jump to the 1st through 10th bookmark, sorted by position).<br>
-- View and manage all bookmarks via the Bookmarks dialog.<br>
-- Set one or more A-B repeat loops (start and end points), causing a section to play on repeat. Multiple non-overlapping loops per file are supported.<br>
-- Bookmarks and loop segments are saved per-file and restored between sessions.<br>
-- See <a href="#31-shortcuts">Section 3.1</a> for the full list of bookmark and repeat loop keyboard shortcuts.</p>
-<p><strong>Playlists</strong><br>
-- Create, name, and manage multiple playlists.<br>
-- Add files and folders to any playlist.<br>
-- Import and export playlists in JSON, M3U, M3U8, PLS, and XSPF formats.<br>
-- Playlists are automatically saved and restored each time you open the app.</p>
-<p><strong>File Explorer</strong><br>
-- Built-in file browser panel with tree-view navigation, path bar, and image preview support.<br>
-- Filter items by media type and search for files by name (<code>F3</code>).<br>
-- Double-click or press <code>Space</code> to play any file directly from the explorer.<br>
-- Includes its own audio preview player (separate from the main player) for quick in-panel listening.</p>
-<p><strong>Recents &amp; Favorites</strong><br>
-- Automatically tracks recently played files so you can quickly return to them.<br>
-- Mark any file as a favorite for fast access from the dedicated panel.</p>
-<p><strong>Internet Radio</strong><br>
-- Browse and search thousands of live internet radio stations, powered by the RadioBrowser community directory.<br>
-- Filter stations by country, language, or tag (genre).<br>
-- Search results are locally cached for faster repeated access.<br>
-- Save favorite stations for quick access.</p>
-<p><strong>Podcasts</strong><br>
-- Subscribe to podcast RSS or Atom feeds by adding their URL.<br>
-- Browse and search episodes within each feed, sorted chronologically.<br>
-- Feeds are refreshed with ETag/conditional GET support for efficiency.<br>
-- Play any episode directly from within the app.</p>
-<p><strong>Online Media / YouTube</strong><br>
-- Paste any YouTube URL (or other yt-dlp-supported stream URL) into <strong>File &gt; Open URL</strong> (<code>Ctrl+U</code>) to play it without downloading first.<br>
-- Direct media URLs (ending in <code>.mp4</code>, <code>.mp3</code>, <code>.m3u8</code>, etc.) are played directly via VLC without involving yt-dlp.<br>
-- YouTube playlist URLs are resolved lazily — tracks are fetched in the background as needed.<br>
-- Uses <code>yt-dlp</code> under the hood, with optional Deno runtime integration and YouTube cookie file support.</p>
-<p><strong>Downloading</strong><br>
-- Built-in Download Center (accessed via <strong>Tools &gt; Download Manager</strong>) handles HTTP downloads with pause, resume, cancel, and automatic retry (up to 3 attempts).<br>
-- External utilities (FFmpeg and yt-dlp) can be downloaded and installed from within the app via a dedicated utility download dialog.</p>
-<p><strong>Tools</strong><br>
-- <strong>Batch Converter</strong> — Convert multiple media files to different audio/video formats at once using FFmpeg.<br>
-- <strong>Extractor</strong> — Extract audio from video files.<br>
-- <strong>Tag Editor</strong> — View and edit metadata (title, artist, album, genre, etc.) on your audio files.<br>
-- <strong>Thumbnail Generator</strong> — Generate thumbnail images from video files.<br>
-- <strong>Subtitle Converter</strong> — Convert subtitle files between formats (supports SRT, ASS, SSA, MicroDVD, JSON, MPL2, TMP, VTT, and more).<br>
-- <strong>Subtitle Editor</strong> — Edit subtitle content and timing with time shifting, framerate transformation, and text operations.<br>
-- <strong>Logs Viewer</strong> — Inspect application logs from within the app (<strong>Tools &gt; Debug &gt; View Logs</strong>).</p>
-<p><strong>Interface &amp; Accessibility</strong><br>
-- Fully keyboard-navigable interface with configurable shortcuts across four categories: Global, Main Interface, Explorer, and Player. Shortcuts are suppressed automatically in text input fields, list views, and sliders to avoid conflicts.<br>
-- System tray icon for quick access (show/hide toggle and exit).<br>
-- Customizable toolbar — add, remove, and reorder toolbar buttons from <strong>Options &gt; Customize Toolbar</strong>.<br>
-- Dockable panels that remember their position between sessions. Panels can be toggled and focused via keyboard shortcuts (see <a href="#214-docking-panels">Section 2.1.4</a> and <a href="#31-shortcuts">Section 3.1</a>).<br>
-- TTS (text-to-speech) for accessibility feedback and subtitle reading via SAPI5 on Windows, configurable in Preferences.<br>
-- Color theme support (system, light, and custom themes) managed in Preferences.</p>
+<ul>
+<li><strong>Play any media format</strong> — PlayForm supports every audio and video format that mpv can handle. See <a href="#13-supported-media-formats">Section 1.3</a> for a list of the most common formats.</li>
+<li><strong>Play media from any source</strong> — Open local files, folders, or paste URLs to stream from YouTube and hundreds of other websites via yt-dlp.</li>
+<li><strong>Subtitle integration</strong> — Subtitles are automatically loaded if a matching file is found next to your video. Supports SRT, VTT, ASS, and more. Subtitles can also be read aloud via text-to-speech.</li>
+<li><strong>Bookmarks and repeat loops</strong> — Mark any position in a track and jump back to it instantly. Set A-B repeat loops to play a section on repeat, with support for multiple loops per file.</li>
+<li><strong>Built-in media explorer with preview</strong> — Browse your folders with a full file browser right inside the app. Preview audio and video files on the fly without needing to open them in the main player.</li>
+<li><strong>Media extraction and conversion tools</strong> — Convert between audio and video formats, extract audio from videos, generate thumbnails, and more — all powered by FFmpeg.</li>
+<li><strong>Tag and subtitle editing</strong> — Edit metadata tags on your audio files (title, artist, album, genre, etc.) and modify subtitle content and timing with built-in editors.</li>
+</ul>
 <hr>
 <h2 id="13-supported-media-formats">1.3. Supported Media Formats</h2>
-<p>PlayForm can open a wide range of audio and video file types. The list below covers the most common formats; PlayForm's underlying media engine (VLC) supports many additional formats beyond those shown here.</p>
+<p>PlayForm can open a wide range of audio and video file types. The list below covers the most common formats; PlayForm's underlying media engine supports many additional formats beyond those shown here.</p>
 <p><strong>Audio Formats</strong></p>
 <table>
 <thead>
@@ -143,87 +76,87 @@
 <tbody>
 <tr>
 <td>MPEG Audio</td>
-<td><code>.mp1</code>, <code>.mp2</code>, <code>.mp3</code></td>
+<td>.mp1, .mp2, .mp3</td>
 </tr>
 <tr>
 <td>FLAC (Lossless)</td>
-<td><code>.flac</code></td>
+<td>.flac</td>
 </tr>
 <tr>
 <td>WAV</td>
-<td><code>.wav</code></td>
+<td>.wav</td>
 </tr>
 <tr>
 <td>Ogg Vorbis</td>
-<td><code>.ogg</code></td>
+<td>.ogg</td>
 </tr>
 <tr>
 <td>AAC</td>
-<td><code>.aac</code></td>
+<td>.aac</td>
 </tr>
 <tr>
 <td>AC-3 / E-AC-3</td>
-<td><code>.ac3</code>, <code>.eac3</code></td>
+<td>.ac3, .eac3</td>
 </tr>
 <tr>
 <td>DTS</td>
-<td><code>.dts</code></td>
+<td>.dts</td>
 </tr>
 <tr>
 <td>MPEG-4 Audio</td>
-<td><code>.m4a</code></td>
+<td>.m4a</td>
 </tr>
 <tr>
 <td>Windows Media Audio</td>
-<td><code>.wma</code></td>
+<td>.wma</td>
 </tr>
 <tr>
 <td>Opus</td>
-<td><code>.opus</code></td>
+<td>.opus</td>
 </tr>
 <tr>
 <td>AIFF</td>
-<td><code>.aiff</code>, <code>.aif</code></td>
+<td>.aiff, .aif</td>
 </tr>
 <tr>
 <td>WavPack</td>
-<td><code>.wv</code></td>
+<td>.wv</td>
 </tr>
 <tr>
 <td>Monkey's Audio</td>
-<td><code>.ape</code></td>
+<td>.ape</td>
 </tr>
 <tr>
 <td>True Audio</td>
-<td><code>.tta</code></td>
+<td>.tta</td>
 </tr>
 <tr>
 <td>Matroska Audio</td>
-<td><code>.mka</code></td>
+<td>.mka</td>
 </tr>
 <tr>
 <td>Musepack</td>
-<td><code>.mpc</code></td>
+<td>.mpc</td>
 </tr>
 <tr>
 <td>RealAudio</td>
-<td><code>.ra</code></td>
+<td>.ra</td>
 </tr>
 <tr>
 <td>AMR</td>
-<td><code>.amr</code></td>
+<td>.amr</td>
 </tr>
 <tr>
 <td>Core Audio Format</td>
-<td><code>.caf</code></td>
+<td>.caf</td>
 </tr>
 <tr>
 <td>Module/Tracker</td>
-<td><code>.s3m</code>, <code>.xm</code>, <code>.mod</code>, <code>.it</code></td>
+<td>.s3m, .xm, .mod, .it</td>
 </tr>
 <tr>
 <td>Speex</td>
-<td><code>.spx</code></td>
+<td>.spx</td>
 </tr>
 </tbody>
 </table>
@@ -238,68 +171,68 @@
 <tbody>
 <tr>
 <td>MPEG-4</td>
-<td><code>.mp4</code></td>
+<td>.mp4</td>
 </tr>
 <tr>
 <td>Matroska</td>
-<td><code>.mkv</code></td>
+<td>.mkv</td>
 </tr>
 <tr>
 <td>AVI</td>
-<td><code>.avi</code>, <code>.divx</code></td>
+<td>.avi, .divx</td>
 </tr>
 <tr>
 <td>QuickTime</td>
-<td><code>.mov</code></td>
+<td>.mov</td>
 </tr>
 <tr>
 <td>Windows Media Video</td>
-<td><code>.wmv</code>, <code>.asf</code></td>
+<td>.wmv, .asf</td>
 </tr>
 <tr>
 <td>Flash Video</td>
-<td><code>.flv</code>, <code>.f4v</code></td>
+<td>.flv, .f4v</td>
 </tr>
 <tr>
 <td>RealMedia</td>
-<td><code>.rm</code>, <code>.rmvb</code></td>
+<td>.rm, .rmvb</td>
 </tr>
 <tr>
 <td>WebM</td>
-<td><code>.webm</code></td>
+<td>.webm</td>
 </tr>
 <tr>
 <td>MPEG-4 Video</td>
-<td><code>.m4v</code></td>
+<td>.m4v</td>
 </tr>
 <tr>
 <td>MPEG</td>
-<td><code>.mpeg</code>, <code>.mpg</code>, <code>.m2v</code></td>
+<td>.mpeg, .mpg, .m2v</td>
 </tr>
 <tr>
 <td>MPEG Transport Stream</td>
-<td><code>.ts</code>, <code>.m2ts</code>, <code>.mts</code></td>
+<td>.ts, .m2ts, .mts</td>
 </tr>
 <tr>
 <td>3GPP</td>
-<td><code>.3gp</code></td>
+<td>.3gp</td>
 </tr>
 <tr>
 <td>Ogg Video</td>
-<td><code>.ogv</code></td>
+<td>.ogv</td>
 </tr>
 <tr>
 <td>DVD Video Object</td>
-<td><code>.vob</code></td>
+<td>.vob</td>
 </tr>
 <tr>
 <td>Digital Video</td>
-<td><code>.dv</code></td>
+<td>.dv</td>
 </tr>
 </tbody>
 </table>
 <blockquote>
-<p><strong>Tip:</strong> When opening files through <strong>File &gt; Open File</strong>, the file browser automatically filters to show only supported media files. You can switch the filter to "All Files (*.*)" if you need to open something not listed above.</p>
+<p><strong>Tip:</strong> When opening files through <strong>File &gt; Open File</strong>, the file browser automatically filters to show only supported media files. You can switch the filter to "All Files (<em>.</em>)" if you need to open something not listed above.</p>
 </blockquote>
 <hr>
 <h2 id="14-online-media-playback">1.4. Online Media Playback</h2>
@@ -307,23 +240,20 @@
 <h3 id="playing-a-url">Playing a URL</h3>
 <p>To play an internet stream or an online video:</p>
 <ol>
-<li>Go to <strong>File &gt; Open URL</strong> (or press <code>Ctrl+U</code>).</li>
+<li>Go to <strong>File &gt; Open URL</strong> (or press Ctrl+U).</li>
 <li>In the dialog that appears, type or paste the web address of the media you want to play.</li>
-<li>Click <strong>Open</strong> (or press <code>Enter</code>).</li>
+<li>Click <strong>Open</strong> (or press Enter).</li>
 </ol>
 <p>PlayForm accepts:<br>
-- <strong>Direct media URLs</strong> — links that point directly to an audio or video file (e.g., <code>.mp3</code>, <code>.m3u8</code>, <code>.mp4</code> hosted online). These are played directly via VLC without any intermediate processing.<br>
-- <strong>YouTube URLs</strong> — paste a YouTube video or playlist link and PlayForm will resolve and play it using yt-dlp. No separate download is required.<br>
+- <strong>Direct media URLs</strong> — links that point directly to an audio or video file (e.g., .mp3, .m3u8, .mp4 hosted online). These are played directly.<br>
+- <strong>YouTube URLs</strong> — paste a YouTube video or playlist link and PlayForm will resolve and play it. No separate download is required.<br>
 - <strong>Other streaming URLs</strong> — most URLs supported by yt-dlp work, including many video-sharing platforms.</p>
-<blockquote>
-<p><strong>Note:</strong> Playing YouTube and other online content requires an active internet connection. The first time you use this feature, PlayForm may prompt you to download <code>yt-dlp</code> if it is not already present.</p>
-</blockquote>
 <h3 id="internet-radio">Internet Radio</h3>
-<p>The <strong>Radio</strong> panel (toggle with <code>Ctrl+3</code>) connects to the RadioBrowser public directory, which lists thousands of free, live internet radio stations from around the world. You can search by station name, or filter by country, language, or genre tag. Double-click any station to start listening. Favorites are saved locally. See <a href="./documentation.md">Section 2.6.2</a> for a full walkthrough.</p>
+<p>The <strong>Radio</strong> panel connects to the <a href="https://www.radio-browser.info/">Radio Browser</a> community directory, which lists thousands of free, live internet radio stations from around the world. You can search by station name, or filter by country, language, or genre tag. Double-click any station to start listening. See <a href="./documentation.md">Section 2.6.2</a> for a full walkthrough.</p>
 <h3 id="podcasts">Podcasts</h3>
-<p>The <strong>Podcasts</strong> panel (toggle with <code>Ctrl+2</code>) allows you to follow podcast shows by adding their RSS or Atom feed URL. Episodes are listed in chronological order and can be played directly within PlayForm. Feeds are refreshed efficiently using conditional HTTP requests. See <a href="./documentation.md">Section 2.6.1</a> for a full walkthrough.</p>
+<p>The <strong>Podcasts</strong> panel (toggle with Ctrl+2) allows you to follow podcast shows by adding their RSS or Atom feed URL. Episodes are listed in chronological order and can be played directly within PlayForm. See <a href="./documentation.md">Section 2.6.1</a> for a full walkthrough.</p>
 <hr>
-<h1 id="2-a-tour-in-the-programs-user-interface">2. A Tour In the Program's User Interface</h1>
+<h1 id="2-a-tour-of-the-programs-user-interface">2. A Tour of the Program's User Interface</h1>
 <hr>
 <h2 id="21-main-ui">2.1. Main UI</h2>
 <p>When you first launch PlayForm, the main window displays the <strong>Recents &amp; Favorites</strong> panel docked on the left and the <strong>Player</strong> panel docked across the bottom. All other panels — Explorer, Playlists, Radio Browser, and Podcasts — start hidden and can be toggled on when needed via the <strong>View</strong> menu or keyboard shortcuts.</p>
@@ -336,64 +266,40 @@
 <thead>
 <tr>
 <th>Menu Item</th>
-<th>Shortcut</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Open File…</strong></td>
-<td><code>Ctrl+O</code></td>
-<td>Opens a system file dialog filtered to supported media files.</td>
-</tr>
-<tr>
-<td><strong>Open Folder…</strong></td>
-<td><code>Ctrl+Shift+O</code></td>
-<td>Opens a folder and loads all playable media files within it.</td>
-</tr>
-<tr>
-<td><strong>Open Playlist…</strong></td>
-<td>—</td>
-<td>Opens a saved playlist file (<code>.json</code>, <code>.m3u</code>, <code>.m3u8</code>, <code>.pls</code>, <code>.xspf</code>).</td>
-</tr>
-<tr>
-<td><strong>Open URL…</strong></td>
-<td><code>Ctrl+U</code></td>
-<td>Opens a dialog to paste a media URL for streaming.</td>
+<td><strong>Open ▶</strong></td>
+<td>Submenu containing Open File, Open Folder, Open Playlist, and Open URL.</td>
 </tr>
 <tr>
 <td><em>separator</em></td>
 <td></td>
-<td></td>
 </tr>
 <tr>
 <td><strong>Close Media</strong></td>
-<td><code>Ctrl+W</code></td>
 <td>Stops and unloads the currently playing media.</td>
 </tr>
 <tr>
 <td><em>separator</em></td>
 <td></td>
-<td></td>
 </tr>
 <tr>
-<td><strong>Recent Files</strong> ▶</td>
-<td>—</td>
+<td><strong>Recent Files ▶</strong></td>
 <td>A submenu listing up to 10 recently played files. Hovering over an entry shows its full path as a tooltip. Selecting one plays it immediately. Shows "No recent files" (disabled) when the list is empty.</td>
 </tr>
 <tr>
 <td><em>separator</em></td>
 <td></td>
-<td></td>
 </tr>
 <tr>
 <td><strong>Minimize to Taskbar</strong></td>
-<td><code>Alt+H</code></td>
 <td>Hides the main window to the system tray.</td>
 </tr>
 <tr>
 <td><strong>Exit</strong></td>
-<td><code>Alt+X</code></td>
 <td>Closes the application entirely.</td>
 </tr>
 </tbody>
@@ -403,69 +309,56 @@
 <thead>
 <tr>
 <th>Menu Item</th>
-<th>Shortcut</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>Play/Pause</strong></td>
-<td><code>Space</code></td>
 <td>Toggles between playing and pausing the current track.</td>
 </tr>
 <tr>
 <td><strong>Stop</strong></td>
-<td><code>Ctrl+Space</code></td>
 <td>Stops playback completely.</td>
 </tr>
 <tr>
 <td><em>separator</em></td>
 <td></td>
-<td></td>
 </tr>
 <tr>
 <td><strong>Mute/Unmute</strong></td>
-<td><code>M</code></td>
 <td>Toggles audio mute on or off.</td>
 </tr>
 <tr>
 <td><em>separator</em></td>
 <td></td>
-<td></td>
 </tr>
 <tr>
 <td><strong>Forward</strong></td>
-<td><code>Right</code></td>
 <td>Seeks forward by the amount configured in Preferences (default 5 seconds).</td>
 </tr>
 <tr>
 <td><strong>Backward</strong></td>
-<td><code>Left</code></td>
 <td>Seeks backward by the configured offset amount.</td>
 </tr>
 <tr>
 <td><em>separator</em></td>
 <td></td>
-<td></td>
 </tr>
 <tr>
 <td><strong>Previous</strong></td>
-<td><code>Page Up</code></td>
 <td>Jumps to the previous track in the playlist.</td>
 </tr>
 <tr>
 <td><strong>Next</strong></td>
-<td><code>Page Down</code></td>
 <td>Jumps to the next track in the playlist.</td>
 </tr>
 <tr>
 <td><em>separator</em></td>
 <td></td>
-<td></td>
 </tr>
 <tr>
 <td><strong>Toggle Repeat</strong></td>
-<td><code>Ctrl+R</code></td>
 <td>Cycles the repeat mode through three states. The menu label updates to show the current state: <strong>Toggle Repeat: Off</strong>, <strong>Toggle Repeat: All</strong>, or <strong>Toggle Repeat: One</strong>.</td>
 </tr>
 </tbody>
@@ -476,52 +369,36 @@
 <thead>
 <tr>
 <th>Menu Item</th>
-<th>Shortcut</th>
-<th>Default</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>Show Recents/Favorites</strong></td>
-<td><code>Ctrl+4</code></td>
-<td>✓ (on)</td>
 <td>Shows or hides the Recents &amp; Favorites dock panel.</td>
 </tr>
 <tr>
 <td><strong>Show Explorer</strong></td>
-<td><code>Ctrl+E</code></td>
-<td>(off)</td>
 <td>Shows or hides the File Explorer dock panel.</td>
 </tr>
 <tr>
 <td><strong>Minimize Player</strong></td>
-<td><code>Ctrl+H</code></td>
-<td>(off)</td>
 <td>When checked, the Player panel is hidden.</td>
 </tr>
 <tr>
 <td><strong>Show Playlists</strong></td>
-<td><code>Ctrl+L</code></td>
-<td>(off)</td>
 <td>Shows or hides the Playlists dock panel.</td>
 </tr>
 <tr>
 <td><em>separator</em></td>
 <td></td>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td><strong>Show Radio Browser</strong></td>
-<td><code>Ctrl+3</code></td>
-<td>(off)</td>
 <td>Shows or hides the Radio Browser dock panel.</td>
 </tr>
 <tr>
 <td><strong>Show Podcasts</strong></td>
-<td><code>Ctrl+2</code></td>
-<td>(off)</td>
 <td>Shows or hides the Podcasts dock panel.</td>
 </tr>
 </tbody>
@@ -560,11 +437,11 @@
 <td>Opens or restores the Download Manager dialog.</td>
 </tr>
 <tr>
-<td><strong>Subtitle Tools</strong> ▶</td>
+<td><strong>Subtitle Tools ▶</strong></td>
 <td>Submenu with two entries: <strong>Subtitle Converter</strong> and <strong>Subtitle Editor</strong>.</td>
 </tr>
 <tr>
-<td><strong>Debug</strong> ▶</td>
+<td><strong>Debug ▶</strong></td>
 <td>Submenu with two entries: <strong>View Logs…</strong> (opens the log viewer dialog) and <strong>Show Console Dock</strong> (toggles a developer console panel for troubleshooting).</td>
 </tr>
 </tbody>
@@ -574,213 +451,70 @@
 <thead>
 <tr>
 <th>Menu Item</th>
-<th>Shortcut</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>Manage Preferences</strong></td>
-<td><code>Ctrl+P</code></td>
 <td>Opens the Preferences dialog.</td>
 </tr>
 <tr>
-<td><strong>Customize Toolbar…</strong></td>
-<td>—</td>
-<td>Opens the Toolbar Customization dialog (see below).</td>
-</tr>
-<tr>
 <td><strong>Manage Hotkeys</strong></td>
-<td><code>F4</code></td>
 <td>Opens the Hotkeys configuration dialog where all keyboard shortcuts can be remapped.</td>
 </tr>
 <tr>
+<td><strong>Customize Toolbar…</strong></td>
+<td>Opens the Toolbar Customization dialog (see below).</td>
+</tr>
+<tr>
+<td><strong>About PlayForm…</strong></td>
+<td>Opens the About dialog with version and license information.</td>
+</tr>
+<tr>
 <td><em>separator</em></td>
-<td></td>
 <td></td>
 </tr>
 <tr>
 <td><strong>Check for Updates…</strong></td>
-<td>—</td>
 <td>Checks for a newer version of PlayForm.</td>
 </tr>
 <tr>
 <td><strong>Get/Update Utilities…</strong></td>
-<td>—</td>
 <td>Opens the utility download dialog (for downloading or updating FFmpeg and yt-dlp).</td>
-</tr>
-<tr>
-<td><strong>Documentation</strong></td>
-<td><code>F1</code></td>
-<td>Opens this documentation.</td>
-</tr>
-<tr>
-<td><em>separator</em></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td><strong>About PlayForm…</strong></td>
-<td>—</td>
-<td>Opens the About dialog with version and license information.</td>
 </tr>
 </tbody>
 </table>
 <hr>
-<h3 id="212-tool-bar">2.1.2. Tool Bar</h3>
-<p>The toolbar sits directly below the menubar and provides quick, icon-based access to the most common actions. By default, the toolbar contains the following buttons (in order):</p>
-<table>
-<thead>
-<tr>
-<th>Button</th>
-<th>Icon</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Open File</strong></td>
-<td>(action icon)</td>
-<td>Opens the file dialog.</td>
-</tr>
-<tr>
-<td><strong>Open Folder</strong></td>
-<td>Explorer icon</td>
-<td>Opens the folder dialog.</td>
-</tr>
-<tr>
-<td><strong>Open Playlist</strong></td>
-<td>(action icon)</td>
-<td>Opens a saved playlist.</td>
-</tr>
-<tr>
-<td><strong>Open URL</strong></td>
-<td>(action icon)</td>
-<td>Opens the URL dialog.</td>
-</tr>
-<tr>
-<td><em>separator</em></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td><strong>Play/Pause</strong></td>
-<td>Play/Pause icon</td>
-<td>Toggles playback. Icon switches between play and pause.</td>
-</tr>
-<tr>
-<td><strong>Stop</strong></td>
-<td>Stop icon</td>
-<td>Stops playback.</td>
-</tr>
-<tr>
-<td><strong>Mute</strong></td>
-<td>Volume icon</td>
-<td>Toggles mute on or off.</td>
-</tr>
-<tr>
-<td><em>separator</em></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td><strong>Previous</strong></td>
-<td>Previous icon</td>
-<td>Previous track.</td>
-</tr>
-<tr>
-<td><strong>Next</strong></td>
-<td>Next icon</td>
-<td>Next track.</td>
-</tr>
-<tr>
-<td><em>separator</em></td>
-<td></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>The toolbar can optionally include buttons for each of the six tools (Batch Converter, Extractor, Tag Editor, Thumbnail Generator, Subtitle Converter, and Subtitle Editor). These are user-configurable via the Toolbar Customization dialog.</p>
+<h3 id="212-toolbar">2.1.2. Toolbar</h3>
+<p>The toolbar sits directly below the menubar and provides quick, icon-based access to the most common actions. By default, the toolbar contains buttons for Open File, Open Folder, Open Playlist, Open URL, Play/Pause, Stop, Mute, Previous, and Next.</p>
+<p>The toolbar can optionally include buttons for any of the six built-in tools. These are user-configurable via the Toolbar Customization dialog.</p>
 <h4 id="toolbar-customization">Toolbar Customization</h4>
 <p>Right-clicking anywhere on the toolbar shows a context menu with the <strong>Customize Toolbar…</strong> entry. This opens a dialog with two side-by-side lists:</p>
 <ul>
 <li><strong>Available Tools</strong> (left) — Tools not currently on the toolbar.</li>
 <li><strong>Toolbar Tools</strong> (right) — Tools currently assigned to the toolbar, in their display order.</li>
 </ul>
-<p>Between the two lists, four buttons allow you to:</p>
-<table>
-<thead>
-<tr>
-<th>Button</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Add</strong></td>
-<td>Moves the selected tool(s) from Available to Toolbar.</td>
-</tr>
-<tr>
-<td><strong>Remove</strong></td>
-<td>Moves the selected tool(s) from Toolbar back to Available.</td>
-</tr>
-<tr>
-<td><strong>Move Up</strong></td>
-<td>Moves the selected toolbar tool one position up.</td>
-</tr>
-<tr>
-<td><strong>Move Down</strong></td>
-<td>Moves the selected toolbar tool one position down.</td>
-</tr>
-</tbody>
-</table>
-<p>Both lists support multi-selection (Ctrl+Click or Shift+Click), allowing you to add, remove, or reorder multiple tools at once. The <strong>Reset to Default</strong> button clears all tools from the toolbar. Click <strong>OK</strong> to save your changes, or <strong>Cancel</strong> to discard them. The configuration is persisted between sessions.</p>
+<p>Between the two lists, four buttons allow you to add, remove, move up, and move down tools. Both lists support multi-selection (Ctrl+Click or Shift+Click). The <strong>Reset to Default</strong> button clears all tools from the toolbar. Click <strong>OK</strong> to save your changes, or <strong>Cancel</strong> to discard them. The configuration is kept between sessions.</p>
 <hr>
 <h3 id="213-status-bar">2.1.3. Status Bar</h3>
-<p>The status bar runs along the bottom of the main window and displays context-sensitive information through three widgets:</p>
-<table>
-<thead>
-<tr>
-<th>Position</th>
-<th>Widget</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Left</td>
-<td><strong>Status message</strong> (label)</td>
-<td>Displays the current application state, e.g. "Ready", "Playing", "Paused", "Stopped", "Loading: <em>filename</em>", "Screenshot saved: <em>path</em>", or "No media loaded".</td>
-</tr>
-<tr>
-<td>Right</td>
-<td><strong>Media info</strong> (label)</td>
-<td>Displays media-specific metadata (track title, artist, bitrate, etc.) when available.</td>
-</tr>
-<tr>
-<td>Right</td>
-<td><strong>Show Tool</strong> (button)</td>
-<td>Hidden by default. Appears when a tool window has been minimized; clicking it restores that tool.</td>
-</tr>
-<tr>
-<td>Right</td>
-<td><strong>Show Downloader</strong> (button)</td>
-<td>Hidden by default. Appears when the Download Manager has been minimized; clicking it restores the downloader dialog.</td>
-</tr>
-</tbody>
-</table>
-<p>A resize grip (small triangular handle) is also present at the far-right corner of the status bar.</p>
+<p>The status bar runs along the bottom of the main window and displays context-sensitive information:</p>
+<ul>
+<li><strong>Status message (left)</strong> — Displays the current application state, e.g. "Ready", "Playing", "Paused", "Stopped", "Loading: <em>filename</em>", or "No media loaded".</li>
+<li><strong>Media info (right)</strong> — Displays media-specific metadata (track title, artist, bitrate, etc.) when available.</li>
+<li><strong>Show Tool button (right)</strong> — Hidden by default. Appears when a tool window has been minimized; clicking it restores that tool.</li>
+<li><strong>Show Downloader button (right)</strong> — Hidden by default. Appears when the Download Manager has been minimized; clicking it restores the downloader dialog.</li>
+</ul>
 <hr>
 <h3 id="214-docking-panels">2.1.4. Docking Panels</h3>
-<p>PlayForm uses Qt's dockable panel system to let you arrange the workspace to your liking. Every panel is a <code>QDockWidget</code> — you can drag a panel by its title bar to undock it, move it to a different edge of the window, or stack it on top of another panel. Panels can also be resized by dragging their borders.</p>
-<p>All docks have the <code>DockWidgetMovable</code> feature enabled, meaning they can be repositioned freely. They cannot be closed via the title bar "X" button — panels are toggled on and off exclusively through the <strong>View</strong> menu or their keyboard shortcuts.</p>
+<p>PlayForm uses a dockable panel system that lets you arrange the workspace to your liking. You can drag a panel by its title bar to undock it, move it to a different edge of the window, or stack it on top of another panel. Panels can also be resized by dragging their borders.</p>
+<p>Panels cannot be closed — they can only be toggled on and off through the <strong>View</strong> menu or their keyboard shortcuts.</p>
 <h4 id="panel-reference">Panel Reference</h4>
 <table>
 <thead>
 <tr>
 <th>Panel</th>
 <th>Default Position</th>
-<th>Default Visible</th>
 <th>Toggle Shortcut</th>
 </tr>
 </thead>
@@ -788,43 +522,36 @@
 <tr>
 <td><strong>Recents &amp; Favorites</strong></td>
 <td>Left</td>
-<td>Yes</td>
-<td><code>Ctrl+4</code></td>
+<td>Ctrl+4</td>
 </tr>
 <tr>
 <td><strong>Explorer</strong></td>
 <td>Left</td>
-<td>No</td>
-<td><code>Ctrl+E</code></td>
+<td>Ctrl+E</td>
 </tr>
 <tr>
 <td><strong>Playlists</strong></td>
 <td>Right</td>
-<td>No</td>
-<td><code>Ctrl+L</code></td>
+<td>Ctrl+L</td>
 </tr>
 <tr>
 <td><strong>Player</strong></td>
 <td>Bottom</td>
-<td>Yes</td>
-<td><code>Ctrl+H</code> (minimize)</td>
+<td>Ctrl+H (minimize)</td>
 </tr>
 <tr>
 <td><strong>Radio Browser</strong></td>
 <td>Right</td>
-<td>No</td>
-<td><code>Ctrl+3</code></td>
+<td>Ctrl+3</td>
 </tr>
 <tr>
 <td><strong>Podcasts</strong></td>
 <td>Right</td>
-<td>No</td>
-<td><code>Ctrl+2</code></td>
+<td>Ctrl+2</td>
 </tr>
 <tr>
 <td><strong>Debug Console</strong></td>
 <td>Bottom</td>
-<td>No</td>
 <td>(Tools menu)</td>
 </tr>
 </tbody>
@@ -833,129 +560,40 @@
 <p><strong>Note:</strong> The Radio Browser and Podcasts panels are created only when you first toggle them on — they do not consume resources until needed.</p>
 </blockquote>
 <h4 id="player-panel-minimization">Player Panel Minimization</h4>
-<p>The Player panel behaves slightly differently from the others. The <strong>View &gt; Minimize Player</strong> menu item (<code>Ctrl+H</code>) collapses the player to show only the Play/Pause button and the minimize toggle. Pressing <code>Ctrl+H</code> again or clicking the toggle button restores the full player controls. This is useful when you want to listen to audio without the full player taking up screen space.</p>
+<p>The Player panel behaves slightly differently from the others. The <strong>View &gt; Minimize Player</strong> menu item (Ctrl+H) collapses the player to show only the Play/Pause button and the minimize toggle. Pressing Ctrl+H again or clicking the toggle button restores the full player controls. This is useful when you want to listen to audio without the full player taking up screen space.</p>
 <p>Keyboard shortcuts are available for toggling each panel's visibility and for moving keyboard focus directly to a panel. See <a href="#31-shortcuts">Section 3.1</a> for the complete shortcut reference.</p>
 <p>The dock layout (positions and visibility state) is saved automatically and restored the next time you open PlayForm.</p>
 <hr>
 <h2 id="22-player">2.2. Player</h2>
-<p>The Player panel is the heart of PlayForm. It is divided vertically into the following areas, from top to bottom:</p>
+<p>The Player panel is the heart of PlayForm. It is divided into these areas, from top to bottom:</p>
 <ol>
-<li><strong>Video Display</strong> — The area where video content is rendered. For audio-only files, this area remains black. A loading overlay ("Extracting URL…") appears while online media is being resolved.</li>
-<li><strong>Segment Timeline</strong> — A visual timeline bar that shows the current playback progress, loop segments (repeat regions as highlighted blocks), and bookmark markers (as vertical lines). You can click and drag on this bar to add or move loop segments and bookmarks directly.</li>
+<li><strong>Video Display</strong> — The area where video content is rendered. For audio-only files, this area remains black. A loading overlay appears while online media is being resolved.</li>
+<li><strong>Segment Timeline</strong> — A visual timeline bar that shows the current playback progress, loop segments (as highlighted blocks), and bookmark markers (as vertical lines). You can click and drag to add or move loop segments and bookmarks directly.</li>
 <li><strong>Player Controls</strong> — The main transport bar with all playback buttons, the seek slider, volume controls, and more.</li>
 <li><strong>Subtitles Panel</strong> — A collapsible list that displays subtitle text with the current line highlighted in yellow. It begins hidden and can be toggled via the <strong>Show Subtitles</strong> / <strong>Hide Subtitles</strong> button in its header.</li>
 <li><strong>Filters Panel</strong> — Audio and video filter controls (equalizer and adjustment options).</li>
 </ol>
 <h3 id="player-controls-transport-bar">Player Controls (Transport Bar)</h3>
 <p>The transport bar is organized into two rows:</p>
-<p><strong>Row 1 — Track Info:</strong> The current track's filename is displayed on the left. Right-clicking it opens a context menu with options to copy the file path, open the file location in Windows Explorer (for local files), or view YouTube video metadata (for YouTube URLs).</p>
+<p><strong>Row 1 — Track Info:</strong> The current track's filename is displayed on the left. Right-clicking it opens a context menu with options to copy the file path, open the file location in Windows Explorer (for local files), or view video metadata (for YouTube URLs).</p>
 <p><strong>Row 2 — Controls</strong> (left to right):</p>
-<table>
-<thead>
-<tr>
-<th>Control</th>
-<th>Size</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Previous</strong></td>
-<td>120×40</td>
-<td>Jumps to the previous track.</td>
-</tr>
-<tr>
-<td><strong>Rewind</strong></td>
-<td>110×40</td>
-<td>Seeks backward by the configured offset.</td>
-</tr>
-<tr>
-<td><strong>Play/Pause</strong></td>
-<td>100×50</td>
-<td>Toggles playback. Icon and label switch between play and pause.</td>
-</tr>
-<tr>
-<td><strong>Forward</strong></td>
-<td>110×40</td>
-<td>Seeks forward by the configured offset.</td>
-</tr>
-<tr>
-<td><strong>Next</strong></td>
-<td>100×40</td>
-<td>Jumps to the next track.</td>
-</tr>
-<tr>
-<td><strong>Repeat</strong></td>
-<td>90×40</td>
-<td>Cycles repeat mode: <strong>Off</strong> → <strong>Repeat: All</strong> → <strong>Repeat: One</strong> → <strong>Off</strong>.</td>
-</tr>
-<tr>
-<td><strong>Shuffle</strong></td>
-<td>110×40</td>
-<td>Toggles shuffle mode: <strong>Shuffle: Off</strong> ↔ <strong>Shuffle: On</strong>.</td>
-</tr>
-<tr>
-<td><strong>Bookmarks</strong></td>
-<td>130×40</td>
-<td>Opens the Bookmarks dialog for the current file.</td>
-</tr>
-<tr>
-<td><strong>Screenshot</strong></td>
-<td>130×40</td>
-<td>Takes a screenshot of the current video frame.</td>
-</tr>
-<tr>
-<td><em>separator</em></td>
-<td></td>
-<td>Vertical divider line.</td>
-</tr>
-<tr>
-<td><strong>Seek icon</strong></td>
-<td>—</td>
-<td>A seek icon label.</td>
-</tr>
-<tr>
-<td><strong>Seek slider</strong></td>
-<td>(stretch)</td>
-<td>Draggable slider showing playback position. Drag to seek to any point.</td>
-</tr>
-<tr>
-<td><em>separator</em></td>
-<td></td>
-<td>Vertical divider line.</td>
-</tr>
-<tr>
-<td><strong>Mute</strong></td>
-<td>35×35</td>
-<td>Toggles mute (icon shows muted/unmuted state).</td>
-</tr>
-<tr>
-<td><strong>Volume icon</strong></td>
-<td>—</td>
-<td>A volume icon label.</td>
-</tr>
-<tr>
-<td><strong>Volume slider</strong></td>
-<td>80px wide</td>
-<td>Horizontal slider from 0 to 200.</td>
-</tr>
-<tr>
-<td><strong>Time display</strong></td>
-<td>min 100px</td>
-<td>Shows current position and total length as <code>MM:SS / MM:SS</code>.</td>
-</tr>
-<tr>
-<td><strong>More (…)</strong></td>
-<td>35×35</td>
-<td>Opens a popup menu with additional options (see below).</td>
-</tr>
-<tr>
-<td><strong>Minimize</strong></td>
-<td>30×30</td>
-<td>Toggles the minimize-controls mode.</td>
-</tr>
-</tbody>
-</table>
+<ul>
+<li><strong>Previous</strong> — Jumps to the previous track.</li>
+<li><strong>Rewind</strong> — Seeks backward by the configured offset.</li>
+<li><strong>Play/Pause</strong> — Toggles playback. Icon and label switch between play and pause.</li>
+<li><strong>Forward</strong> — Seeks forward by the configured offset.</li>
+<li><strong>Next</strong> — Jumps to the next track.</li>
+<li><strong>Repeat</strong> — Cycles repeat mode: <strong>Off</strong> → <strong>Repeat: All</strong> → <strong>Repeat: One</strong> → <strong>Off</strong>.</li>
+<li><strong>Shuffle</strong> — Toggles shuffle mode: <strong>Shuffle: Off</strong> ↔ <strong>Shuffle: On</strong>.</li>
+<li><strong>Bookmarks</strong> — Opens the Bookmarks dialog for the current file.</li>
+<li><strong>Screenshot</strong> — Takes a screenshot of the current video frame.</li>
+<li><strong>Seek slider</strong> — Draggable slider showing playback position. Drag to seek to any point.</li>
+<li><strong>Mute button</strong> — Toggles mute (icon shows muted/unmuted state).</li>
+<li><strong>Volume slider</strong> — Horizontal slider from 0 to 200.</li>
+<li><strong>Time display</strong> — Shows current position and total length as MM:SS / MM:SS.</li>
+<li><strong>More (…)</strong> — Opens a popup menu with additional options (see below).</li>
+<li><strong>Minimize</strong> — Toggles the minimize-controls mode.</li>
+</ul>
 <h4 id="the-more-menu">The "More" (…) Menu</h4>
 <p>Clicking the <strong>…</strong> button opens a popup with the following submenus and actions:</p>
 <table>
@@ -968,7 +606,7 @@
 <tbody>
 <tr>
 <td><strong>Speed</strong> ▶</td>
-<td>1.0×, 1.5×, 2.0×, 2.5×, 3.0× (1.0× is default)</td>
+<td>0.25×, 0.50×, 0.75×, 1.0×, 1.25×, 1.5×, 1.75×, 2.0×, 2.5×, 3.0× (1.0× is default)</td>
 </tr>
 <tr>
 <td><strong>Aspect Ratio</strong> ▶</td>
@@ -985,24 +623,24 @@
 </tbody>
 </table>
 <h4 id="fullscreen">Fullscreen</h4>
-<p>Press <code>F11</code> or use the More menu to enter fullscreen. Press <code>Esc</code> to exit. In fullscreen mode, the video fills the entire screen.</p>
+<p>Press F11 or use the More menu to enter fullscreen. Press Esc to exit. In fullscreen mode, the video fills the entire screen.</p>
 <h4 id="screenshots">Screenshots</h4>
-<p>Click the <strong>Screenshot</strong> button or press <code>Ctrl+S</code> to capture the current video frame. Screenshots are saved to the <code>Screenshots/</code> folder inside the PlayForm data directory, with filenames like <code>screenshot-YY-DD-MM-HH-MM-SS-AMPM.png</code>. The image format (JPG, PNG, or TIFF) is configurable in Preferences (default: PNG).</p>
+<p>Click the <strong>Screenshot</strong> button or press Ctrl+S to capture the current video frame. Screenshots are saved to the <code>Screenshots/</code> folder inside the PlayForm data directory. The image format (JPG, PNG, or TIFF) is configurable in Preferences (default: PNG).</p>
 <h3 id="bookmarks-repeat-loops">Bookmarks &amp; Repeat Loops</h3>
-<p>The Player supports two powerful navigation features that help you mark and revisit positions in a track.</p>
+<p>The Player supports two navigation features that help you mark and revisit positions in a track.</p>
 <h4 id="bookmarks">Bookmarks</h4>
 <p>A bookmark is a saved position within a file. You can add as many bookmarks as you want per file. Add a bookmark at the current position, navigate between bookmarks, delete them, and jump to the 1st through 10th bookmark — all via keyboard shortcuts listed in <a href="#31-shortcuts">Section 3.1</a>. The Bookmarks dialog (also opened via shortcut) lists all bookmarks by timestamp. Right-click a bookmark to delete it individually, or choose to clear all bookmarks for the current file. Bookmarks are also displayed as vertical markers on the Segment Timeline.</p>
 <h4 id="a-b-repeat-loops">A-B Repeat Loops</h4>
-<p>An A-B repeat loop lets you define a section of a track to play on repeat. Multiple non-overlapping loops per file are supported. Set loop start and end points, clear loops, and navigate between loops using keyboard shortcuts listed in <a href="#31-shortcuts">Section 3.1</a>. When both a start and end point are set, playback automatically jumps back to the start when it reaches the end, creating a seamless repeat. Loops appear as highlighted segments on the Segment Timeline, where you can also create, resize, and remove them with the mouse.</p>
+<p>An A-B repeat loop lets you define a section of a track to play on repeat. Multiple non-overlapping loops per file are supported. Set loop start and end points, clear loops, and navigate between loops using keyboard shortcuts listed in <a href="#31-shortcuts">Section 3.1</a>. When both a start and end point are set, playback automatically jumps back to the start when it reaches the end. Loops appear as highlighted segments on the Segment Timeline, where you can also create, resize, and remove them with the mouse.</p>
 <p>Loop segments and bookmarks are saved per-file and restored automatically when you reopen that file in a future session.</p>
 <h3 id="subtitles">Subtitles</h3>
-<p>When a video file is loaded, PlayForm automatically searches the same folder for a subtitle file with a matching filename. Supported subtitle formats loaded during playback include: <code>.srt</code>, <code>.vtt</code>, <code>.smi</code>, <code>.sami</code>, <code>.scc</code>, <code>.dfxp</code>, <code>.ttml</code>, <code>.sub</code>, and <code>.ass</code>.</p>
+<p>When a video file is loaded, PlayForm automatically searches the same folder for a subtitle file with a matching filename. Supported subtitle formats loaded during playback include: .srt, .vtt, .smi, .sami, .scc, .dfxp, .ttml, .sub, and .ass.</p>
 <p>Subtitle text appears in the collapsible <strong>Subtitles</strong> panel below the player controls. The currently active subtitle line is highlighted in yellow. The panel can be shown or hidden with the toggle button in its header.</p>
 <p><strong>Subtitle language</strong> is configurable in Preferences. If text-to-speech is enabled (also in Preferences), PlayForm will read each subtitle aloud using the Windows SAPI5 engine.</p>
-<p>The Player has a comprehensive set of keyboard shortcuts covering playback control, seeking, volume, fullscreen, bookmarks, repeat loops, and screenshots. All shortcuts are configurable and can be remapped via <strong>Options &gt; Manage Hotkeys</strong> (<code>F4</code>). See <a href="#31-shortcuts">Section 3.1</a> for the complete Player shortcut reference.</p>
+<p>The Player has a comprehensive set of keyboard shortcuts covering playback control, seeking, volume, fullscreen, bookmarks, repeat loops, and screenshots. All shortcuts are configurable and can be remapped via <strong>Options &gt; Manage Hotkeys</strong> (F4). See <a href="#31-shortcuts">Section 3.1</a> for the complete Player shortcut reference.</p>
 <hr>
 <h2 id="23-explorer">2.3. Explorer</h2>
-<p>The Explorer panel is a full-featured file browser integrated into PlayForm. Toggle it with <code>Ctrl+E</code> or <strong>View &gt; Show Explorer</strong>.</p>
+<p>The Explorer panel is a full-featured file browser integrated into PlayForm. Toggle it with Ctrl+E or <strong>View &gt; Show Explorer</strong>.</p>
 <h3 id="layout">Layout</h3>
 <p>The Explorer panel is split into two main sections:</p>
 <p><strong>Left section — Library:</strong> A list of saved folder paths that serve as quick-access bookmarks to your media directories. Right-click a folder in the file view and choose <strong>Add to library</strong> to save it here.</p>
@@ -1017,26 +655,26 @@
 <tbody>
 <tr>
 <td><strong>Path bar</strong></td>
-<td>Displays the current directory path. You can type or paste a new path and press <code>Enter</code> to navigate there directly. The <strong>Parent Directory</strong> button moves up one folder level.</td>
+<td>Displays the current directory path. You can type or paste a new path and press Enter to navigate there directly. The <strong>Parent Directory</strong> button moves up one folder level.</td>
 </tr>
 <tr>
 <td><strong>Files list</strong></td>
-<td>Lists all folders first, then all supported media files. Double-click a folder to enter it; double-click a file to play it in the main player. Press <code>Space</code> to play/pause a selected file, and <code>Backspace</code> to navigate up one directory.</td>
+<td>Lists all folders first, then all supported media files. Double-click a folder to enter it; double-click a file to play it in the main player. Press Space to play/pause a selected file, and Backspace to navigate up one directory.</td>
 </tr>
 <tr>
 <td><strong>Image preview</strong></td>
-<td>When a file with an image extension (<code>.png</code>, <code>.jpg</code>, <code>.bmp</code>, etc.) is selected, a scaled preview is shown to the right. Hidden when a non-image file is selected.</td>
+<td>When a file with an image extension (.png, .jpg, .bmp, etc.) is selected, a scaled preview is shown to the right. Hidden when a non-image file is selected.</td>
 </tr>
 <tr>
 <td><strong>Media preview</strong></td>
-<td>A small preview player with a custom Player Bar that can play audio and video files directly within the Explorer panel without affecting the main player. This preview player uses its own independent VLC instance.</td>
+<td>A small preview player that can play audio and video files directly within the Explorer panel without affecting the main player.</td>
 </tr>
 </tbody>
 </table>
 <h3 id="navigation">Navigation</h3>
 <ul>
-<li><strong>Enter a folder:</strong> Double-click it in the file list, or type its path in the path bar and press <code>Enter</code>.</li>
-<li><strong>Go up one level:</strong> Press <code>Backspace</code> or click the <strong>Parent Directory</strong> button.</li>
+<li><strong>Enter a folder:</strong> Double-click it in the file list, or type its path in the path bar and press Enter.</li>
+<li><strong>Go up one level:</strong> Press Backspace or click the <strong>Parent Directory</strong> button.</li>
 <li><strong>Drive root:</strong> On Windows, navigating above a drive root (e.g., <code>C:\</code>) shows a list of all available drives.</li>
 <li><strong>Last path:</strong> The last browsed path is remembered and restored between sessions.</li>
 </ul>
@@ -1051,11 +689,11 @@
 - <strong>Navigate to folder</strong> — Enters the folder.<br>
 - <strong>Add to library</strong> — Saves the folder in the Library panel for quick access.<br>
 - <strong>Create playlist from folder</strong> — Creates a new playlist containing all media files from that folder.</p>
-<p><strong>Sort options:</strong> Files can be sorted by <strong>Name (A-Z / Z-A)</strong> or by <strong>Date (Newest first / Oldest first)</strong>.</p>
+<p><strong>Sort options:</strong> Files can be sorted by <strong>Name (A–Z / Z–A)</strong> or by <strong>Date (Newest first / Oldest first)</strong>.</p>
 <h3 id="file-info">File Info</h3>
-<p>When a file is selected, the Explorer displays its type extension, date modified, and size (e.g., "4.2 MB").</p>
+<p>When a file is selected, the Explorer displays its type extension, date modified, and size.</p>
 <h3 id="preview-player-bar">Preview Player Bar</h3>
-<p>The Player Bar at the bottom of the Explorer is a compact transport control for the in-panel preview player. It is 28 pixels tall with a dark background and a blue progress indicator at the bottom:</p>
+<p>The Player Bar at the bottom of the Explorer is a compact transport control for the in-panel preview player:</p>
 <ul>
 <li><strong>Click center area:</strong> Play/Pause toggle.</li>
 <li><strong>Click left of center:</strong> Seek backward.</li>
@@ -1065,7 +703,7 @@
 <p>An <strong>Auto Play</strong> checkbox (on by default) controls whether selecting a file automatically starts preview playback. A <strong>Volume</strong> spinbox (0–100%) controls the preview player's volume independently of the main player.</p>
 <hr>
 <h2 id="24-playlists">2.4. Playlists</h2>
-<p>The Playlists panel lets you create, manage, and switch between multiple playlists. Toggle it with <code>Ctrl+L</code> or <strong>View &gt; Show Playlists</strong>.</p>
+<p>The Playlists panel lets you create, manage, and switch between multiple playlists. Toggle it with Ctrl+L or <strong>View &gt; Show Playlists</strong>.</p>
 <h3 id="layout_1">Layout</h3>
 <p>The panel is split horizontally:<br>
 - <strong>Left side — Playlist list:</strong> Shows all your playlists by name. Double-click a playlist name to rename it.<br>
@@ -1089,7 +727,7 @@
 </tr>
 <tr>
 <td><strong>Import a playlist</strong></td>
-<td>Click the <strong>Import Playlist</strong> button and select a <code>.json</code>, <code>.m3u</code>, <code>.m3u8</code>, <code>.pls</code>, or <code>.xspf</code> file.</td>
+<td>Click the <strong>Import Playlist</strong> button and select a .json, .m3u, .m3u8, .pls, or .xspf file.</td>
 </tr>
 <tr>
 <td><strong>Delete a playlist</strong></td>
@@ -1124,16 +762,16 @@
 </table>
 <p><strong>Reordering tracks:</strong><br>
 - Drag and drop tracks within the list to change their order.<br>
-- Use <code>Shift+Up</code> and <code>Shift+Down</code> to move the selected track(s) up or down.</p>
+- Use Shift+Up and Shift+Down to move the selected track(s) up or down.</p>
 <p><strong>Sorting tracks:</strong> Right-click &gt; <strong>Sort By</strong> offers sorting by File Name, Title, Artist, or Album, each in ascending or descending order.</p>
-<p><strong>Playing a track:</strong> Double-click a track row or press <code>Enter</code> on a selected track to start playing the playlist from that position.</p>
+<p><strong>Playing a track:</strong> Double-click a track row or press Enter on a selected track to start playing the playlist from that position.</p>
 <h3 id="storage">Storage</h3>
-<p>Playlists are saved as JSON files in the <code>data/playlists/</code> directory. An index file (<code>data/playlists.json</code>) maps playlist names to their file paths. Playlists are automatically saved when you switch between them and when the application closes.</p>
+<p>Playlists are saved in the <code>data/playlists/</code> directory. An index file maps playlist names to their file paths. Playlists are automatically saved when you switch between them and when the application closes.</p>
 <hr>
 <h2 id="25-recents-and-favorites">2.5. Recents and Favorites</h2>
 <p>The Recents &amp; Favorites panel is docked on the left by default and provides quick access to your most frequently used media. It contains two tabs:</p>
 <h3 id="favorites-tab">Favorites Tab</h3>
-<p>Lists all files you have explicitly marked as favorites. Items are displayed by filename, and alternating row colors improve readability. Tooltip text is shown on hover: "Double-click or press Enter on a file to open it."</p>
+<p>Lists all files you have explicitly marked as favorites. Items are displayed by filename, and alternating row colors improve readability.</p>
 <p><strong>Adding favorites:</strong> From the Explorer, right-click a file and choose <strong>Add to favorites</strong>.</p>
 <p><strong>Managing favorites:</strong><br>
 - Right-click a favorite and choose <strong>Remove from Favorites</strong> to remove that single item.<br>
@@ -1144,12 +782,12 @@
 - Right-click anywhere in the Recents tab and choose <strong>Clear All Recent Files</strong> to empty the list (after confirmation).</p>
 <p>The same recent files (up to 10) also appear in the <strong>File &gt; Recent Files</strong> submenu in the menubar.</p>
 <h3 id="playing-from-the-panel">Playing from the Panel</h3>
-<p>Double-click or press <code>Enter</code> on any file in either tab to play it immediately in the main player. Both Favorites and Recents are stored in PlayForm's database and persist across application restarts.</p>
+<p>Double-click or press Enter on any file in either tab to play it immediately in the main player. Both Favorites and Recents are stored in PlayForm's database and persist across application restarts.</p>
 <hr>
 <h2 id="26-media-providers">2.6. Media Providers</h2>
 <p>PlayForm includes two built-in online media sources: Podcasts and Internet Radio.</p>
 <h3 id="261-podcasts">2.6.1. Podcasts</h3>
-<p>The Podcasts panel lets you subscribe to podcast RSS or Atom feeds and browse their episodes within PlayForm. Toggle it with <code>Ctrl+2</code> or <strong>View &gt; Show Podcasts</strong>.</p>
+<p>The Podcasts panel lets you subscribe to podcast RSS or Atom feeds and browse their episodes within PlayForm. Toggle it with Ctrl+2 or <strong>View &gt; Show Podcasts</strong>.</p>
 <h4 id="layout_2">Layout</h4>
 <table>
 <thead>
@@ -1173,7 +811,7 @@
 </tr>
 <tr>
 <td><strong>Summary panel</strong></td>
-<td>Displays the full summary/description of the selected episode in HTML-rendered text. External links are clickable.</td>
+<td>Displays the full summary/description of the selected episode. External links are clickable.</td>
 </tr>
 </tbody>
 </table>
@@ -1246,11 +884,9 @@
 </tbody>
 </table>
 <p>Keyboard shortcuts for navigating the entries tree (select, page, jump to first/last, play) are listed in <a href="#31-shortcuts">Section 3.1</a>.</p>
-<h4 id="feed-caching-and-updates">Feed Caching and Updates</h4>
-<p>Feeds are cached locally after the first fetch. On subsequent refreshes, PlayForm uses <strong>ETag</strong> and <strong>Last-Modified</strong> HTTP headers to perform conditional requests — if the feed has not changed, the cached data is reused, saving bandwidth and speeding up refresh. HTTP redirects (301, 302, 307, 308) are followed automatically.</p>
 <hr>
 <h3 id="262-radio">2.6.2. Radio</h3>
-<p>The Radio Browser panel connects to the <a href="https://www.radio-browser.info/">Radio Browser</a> community directory, which catalogs thousands of free internet radio stations worldwide. Toggle it with <code>Ctrl+3</code> or <strong>View &gt; Show Radio Browser</strong>.</p>
+<p>The Radio Browser panel connects to the <a href="https://www.radio-browser.info/">Radio Browser</a> community directory, which catalogs thousands of free internet radio stations worldwide. Toggle it with Ctrl+3 or <strong>View &gt; Show Radio Browser</strong>.</p>
 <h4 id="layout_3">Layout</h4>
 <table>
 <thead>
@@ -1270,7 +906,7 @@
 </tr>
 <tr>
 <td><strong>Status bar</strong> (bottom)</td>
-<td>Shows search progress and result counts ("Found 42 stations", "No results found", etc.).</td>
+<td>Shows search progress and result counts.</td>
 </tr>
 </tbody>
 </table>
@@ -1285,7 +921,7 @@
 <tbody>
 <tr>
 <td><strong>Station Name</strong></td>
-<td>Type a station name and press <code>Enter</code> or click <strong>Search</strong>. This performs a full-text name search across the Radio Browser directory.</td>
+<td>Type a station name and press Enter or click <strong>Search</strong>. This performs a full-text name search across the Radio Browser directory.</td>
 </tr>
 <tr>
 <td><strong>Filter By</strong> dropdown</td>
@@ -1293,11 +929,11 @@
 </tr>
 <tr>
 <td><strong>Value</strong> dropdown</td>
-<td>Once a filter dimension is selected, this combo is populated with available values fetched from the Radio Browser API. For <strong>Codec</strong>, you can type any codec name freely.</td>
+<td>Once a filter dimension is selected, this combo is populated with available values fetched from the Radio Browser API.</td>
 </tr>
 <tr>
 <td><strong>Sort By</strong> dropdown</td>
-<td>Determines the order of results: <strong>Name</strong>, <strong>Votes</strong>, <strong>Country</strong>, <strong>Language</strong>, <strong>Bitrate</strong>, or <strong>Click Count</strong>. Higher-voted and higher-bitrate stations appear first when sorting by Votes, Click Count, or Bitrate (reverse order).</td>
+<td>Determines the order of results: <strong>Name</strong>, <strong>Votes</strong>, <strong>Country</strong>, <strong>Language</strong>, <strong>Bitrate</strong>, or <strong>Click Count</strong>. Higher-voted and higher-bitrate stations appear first when sorting by Votes, Click Count, or Bitrate.</td>
 </tr>
 <tr>
 <td><strong>Apply Filters</strong> button</td>
@@ -1309,42 +945,12 @@
 </tr>
 <tr>
 <td><strong>Clear Cache</strong></td>
-<td>Clears all locally cached radio data (country/language/tag lists). Useful if the Radio Browser directory has changed.</td>
+<td>Clears all locally cached radio data. Useful if the Radio Browser directory has changed.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="results-table">Results Table</h4>
-<p>The results tree displays stations in five columns:</p>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Name</strong></td>
-<td>Station name.</td>
-</tr>
-<tr>
-<td><strong>Country</strong></td>
-<td>Country where the station is based.</td>
-</tr>
-<tr>
-<td><strong>Language(s)</strong></td>
-<td>Comma-separated list of broadcast languages.</td>
-</tr>
-<tr>
-<td><strong>Codec</strong></td>
-<td>Audio codec (e.g., MP3, AAC, Ogg).</td>
-</tr>
-<tr>
-<td><strong>Bitrate</strong></td>
-<td>Bitrate in kbps.</td>
-</tr>
-</tbody>
-</table>
+<p>The results tree displays stations in five columns: <strong>Name</strong>, <strong>Country</strong>, <strong>Language(s)</strong>, <strong>Codec</strong>, and <strong>Bitrate</strong>.</p>
 <p><strong>Right-click a station</strong> for these options:</p>
 <table>
 <thead>
@@ -1377,45 +983,12 @@
 </tbody>
 </table>
 <p><strong>Double-clicking</strong> a station row immediately plays it.</p>
-<p>All API calls (searches, filtering, favorites, and metadata loading) run on background threads, so the interface remains responsive during network operations. The status bar provides real-time feedback on what is happening (e.g., "Searching for 'jazz'…", "Loading languages…", "Found 128 stations").</p>
 <hr>
 <h1 id="3-customization-and-options">3. Customization and Options</h1>
 <h2 id="31-shortcuts">3.1. Shortcuts</h2>
-<p>PlayForm has <strong>72 configurable keyboard shortcuts</strong> organized into four categories: <strong>Global</strong>, <strong>Main Interface</strong>, <strong>Explorer</strong>, and <strong>Player</strong>. All shortcuts can be remapped via the Hotkeys dialog (<strong>Options &gt; Manage Hotkeys</strong>, <code>F4</code>).</p>
-<h3 id="how-shortcuts-work">How Shortcuts Work</h3>
-<p>Shortcuts are implemented as Qt application-level event filters. They are assigned one of three scope levels that determine when they fire:</p>
-<table>
-<thead>
-<tr>
-<th>Scope</th>
-<th>Behavior</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Global</strong></td>
-<td>Always fires regardless of which widget has focus.</td>
-</tr>
-<tr>
-<td><strong>Context-Aware</strong></td>
-<td>Fires only when the focused widget is "safe" — i.e., not a text input, list view, slider, or other widget where the key would conflict with normal typing or navigation.</td>
-</tr>
-<tr>
-<td><strong>Widget-Local</strong></td>
-<td>Fires only when a specific widget (e.g., the Player panel) has focus.</td>
-</tr>
-</tbody>
-</table>
-<p>Context-aware scope suppression automatically prevents shortcut conflicts with:</p>
-<ul>
-<li><strong>Text inputs</strong> (QLineEdit, QTextEdit, QComboBox): Space, Home, End, Left, Right, Backspace, Delete</li>
-<li><strong>List/tree/table widgets</strong>: Up, Down, Left, Right, Home, End, Page Up, Page Down</li>
-<li><strong>Sliders and spin boxes</strong>: Up, Down, Left, Right, Home, End, Page Up, Page Down, Plus, Minus</li>
-<li><strong>Buttons and checkboxes</strong>: Space, Enter</li>
-</ul>
-<p>Key combinations are normalized internally to <code>Ctrl+Alt+Shift+Win+Key</code> format. Acceptable modifier aliases include <code>Control</code> (→ <code>Ctrl</code>), and <code>Meta</code>/<code>Cmd</code>/<code>Super</code> (→ <code>Win</code>).</p>
+<p>PlayForm has <strong>72 configurable keyboard shortcuts</strong> organized into four categories: <strong>Global</strong>, <strong>Main Interface</strong>, <strong>Explorer</strong>, and <strong>Player</strong>. All shortcuts can be remapped via the Hotkeys dialog (<strong>Options &gt; Manage Hotkeys</strong>, F4).</p>
 <h3 id="managing-shortcuts">Managing Shortcuts</h3>
-<p>Open the Hotkeys dialog via <strong>Options &gt; Manage Hotkeys</strong> or press <code>F4</code>. The dialog shows a tree view with the four shortcut categories at the top level and individual actions underneath. Each row displays the action name and its current key binding.</p>
+<p>Open the Hotkeys dialog via <strong>Options &gt; Manage Hotkeys</strong> or press F4. The dialog shows a tree view with the four shortcut categories at the top level and individual actions underneath. Each row displays the action name and its current key binding.</p>
 <table>
 <thead>
 <tr>
@@ -1426,7 +999,7 @@
 <tbody>
 <tr>
 <td><strong>Change a shortcut</strong></td>
-<td>Single-click or double-click the Shortcut column for an action, then press the desired key combination. Press Enter or move focus to accept.</td>
+<td>Click the Shortcut column for an action, then press the desired key combination. Press Enter or move focus to accept.</td>
 </tr>
 <tr>
 <td><strong>Reset to Default</strong></td>
@@ -1446,11 +1019,11 @@
 </tr>
 </tbody>
 </table>
-<p>Shortcut settings are saved to <code>data/key_config.cfg</code>. If this file is corrupted or missing, PlayForm automatically restores the factory defaults.</p>
+<p>Shortcut settings are saved to <code>data/key_config.cfg</code>. If this file is missing or corrupted, PlayForm automatically restores the factory defaults.</p>
 <hr>
 <h3 id="default-shortcut-reference">Default Shortcut Reference</h3>
 <h4 id="global-shortcuts">Global Shortcuts</h4>
-<p>These shortcuts work regardless of which panel or widget has focus.</p>
+<p>These shortcuts work regardless of which panel has focus.</p>
 <table>
 <thead>
 <tr>
@@ -1461,32 +1034,32 @@
 <tbody>
 <tr>
 <td>Play/Pause</td>
-<td><code>Ctrl+Win+P</code></td>
+<td>Ctrl+Win+P</td>
 </tr>
 <tr>
 <td>Mute/Unmute</td>
-<td><code>Ctrl+Win+M</code></td>
+<td>Ctrl+Win+M</td>
 </tr>
 <tr>
 <td>Volume Down</td>
-<td><code>Ctrl+Win+F7</code></td>
+<td>Ctrl+Win+F7</td>
 </tr>
 <tr>
 <td>Volume Up</td>
-<td><code>Ctrl+Win+F8</code></td>
+<td>Ctrl+Win+F8</td>
 </tr>
 <tr>
 <td>Previous</td>
-<td><code>Ctrl+Win+F9</code></td>
+<td>Ctrl+Win+F9</td>
 </tr>
 <tr>
 <td>Next</td>
-<td><code>Ctrl+Win+F10</code></td>
+<td>Ctrl+Win+F10</td>
 </tr>
 </tbody>
 </table>
 <blockquote>
-<p><strong>Note:</strong> Global shortcuts currently work only when PlayForm has application focus (they are Qt-level, not OS-level system-wide hotkeys).</p>
+<p><strong>Note:</strong> Global shortcuts work when PlayForm has the application focus.</p>
 </blockquote>
 <h4 id="main-interface-shortcuts">Main Interface Shortcuts</h4>
 <p>These shortcuts control the main window, menus, and panel visibility.</p>
@@ -1500,91 +1073,91 @@
 <tbody>
 <tr>
 <td>Open file</td>
-<td><code>Ctrl+O</code></td>
+<td>Ctrl+O</td>
 </tr>
 <tr>
 <td>Open folder</td>
-<td><code>Ctrl+Shift+O</code></td>
+<td>Ctrl+Shift+O</td>
 </tr>
 <tr>
 <td>Open URL</td>
-<td><code>Ctrl+U</code></td>
+<td>Ctrl+U</td>
 </tr>
 <tr>
 <td>Close Currently playing Media</td>
-<td><code>Ctrl+W</code></td>
+<td>Ctrl+W</td>
 </tr>
 <tr>
 <td>Show/Hide explorer</td>
-<td><code>Ctrl+E</code></td>
+<td>Ctrl+E</td>
 </tr>
 <tr>
 <td>Show/Hide player controls</td>
-<td><code>Ctrl+H</code></td>
+<td>Ctrl+H</td>
 </tr>
 <tr>
 <td>Show/Hide playlists</td>
-<td><code>Ctrl+L</code></td>
+<td>Ctrl+L</td>
 </tr>
 <tr>
 <td>Toggle playlists</td>
-<td><code>Ctrl+1</code></td>
+<td>Ctrl+1</td>
 </tr>
 <tr>
 <td>Toggle podcasts</td>
-<td><code>Ctrl+2</code></td>
+<td>Ctrl+2</td>
 </tr>
 <tr>
 <td>Toggle radio</td>
-<td><code>Ctrl+3</code></td>
+<td>Ctrl+3</td>
 </tr>
 <tr>
 <td>Toggle recents/favorites</td>
-<td><code>Ctrl+4</code></td>
+<td>Ctrl+4</td>
 </tr>
 <tr>
 <td>Focus playlists</td>
-<td><code>Alt+1</code></td>
+<td>Alt+1</td>
 </tr>
 <tr>
 <td>Focus podcasts</td>
-<td><code>Alt+2</code></td>
+<td>Alt+2</td>
 </tr>
 <tr>
 <td>Focus radio</td>
-<td><code>Alt+3</code></td>
+<td>Alt+3</td>
 </tr>
 <tr>
 <td>Focus recents/favorites</td>
-<td><code>Alt+4</code></td>
+<td>Alt+4</td>
 </tr>
 <tr>
 <td>Hide window</td>
-<td><code>Alt+H</code></td>
+<td>Alt+H</td>
 </tr>
 <tr>
 <td>Exit</td>
-<td><code>Alt+X</code></td>
+<td>Alt+X</td>
 </tr>
 <tr>
 <td>Focus explorer</td>
-<td><code>Alt+E</code></td>
+<td>Alt+E</td>
 </tr>
 <tr>
 <td>Focus player</td>
-<td><code>Alt+P</code></td>
+<td>Alt+P</td>
 </tr>
 <tr>
 <td>Documentation</td>
-<td><code>F1</code></td>
+<td>F1</td>
 </tr>
 <tr>
 <td>Hotkeys dialog</td>
-<td><code>F4</code></td>
+<td>F4</td>
 </tr>
 <tr>
 <td>Preferences Dialog</td>
-<td><code>Ctrl+P</code></td>
+<td>Ctrl+P</td>
 </tr>
 </tbody>
 </table>
@@ -1600,23 +1173,23 @@
 <tbody>
 <tr>
 <td>Play/Pause</td>
-<td><code>Space</code></td>
+<td>Space</td>
 </tr>
 <tr>
 <td>Backward</td>
-<td><code>Left</code></td>
+<td>Left</td>
 </tr>
 <tr>
 <td>Forward</td>
-<td><code>Right</code></td>
+<td>Right</td>
 </tr>
 <tr>
 <td>Stop</td>
-<td><code>Ctrl+Space</code></td>
+<td>Ctrl+Space</td>
 </tr>
 <tr>
 <td>Search files/folders</td>
-<td><code>F3</code></td>
+<td>F3</td>
 </tr>
 </tbody>
 </table>
@@ -1632,154 +1205,154 @@
 <tbody>
 <tr>
 <td>Play/Pause</td>
-<td><code>Space</code></td>
+<td>Space</td>
 </tr>
 <tr>
 <td>Backward (seek)</td>
-<td><code>Left</code></td>
+<td>Left</td>
 </tr>
 <tr>
 <td>Forward (seek)</td>
-<td><code>Right</code></td>
+<td>Right</td>
 </tr>
 <tr>
 <td>Stop</td>
-<td><code>Ctrl+Space</code></td>
+<td>Ctrl+Space</td>
 </tr>
 <tr>
 <td>Mute/Unmute</td>
-<td><code>M</code></td>
+<td>M</td>
 </tr>
 <tr>
 <td>Previous track</td>
-<td><code>Page Up</code></td>
+<td>Page Up</td>
 </tr>
 <tr>
 <td>Next track</td>
-<td><code>Page Down</code></td>
+<td>Page Down</td>
 </tr>
 <tr>
 <td>Jump to beginning</td>
-<td><code>Home</code></td>
+<td>Home</td>
 </tr>
 <tr>
 <td>Jump to the end</td>
-<td><code>End</code></td>
+<td>End</td>
 </tr>
 <tr>
 <td>Toggle repeat mode</td>
-<td><code>Ctrl+R</code></td>
+<td>Ctrl+R</td>
 </tr>
 <tr>
 <td>Volume up</td>
-<td><code>Up</code></td>
+<td>Up</td>
 </tr>
 <tr>
 <td>Volume down</td>
-<td><code>Down</code></td>
+<td>Down</td>
 </tr>
 <tr>
 <td>Fullscreen</td>
-<td><code>F11</code></td>
+<td>F11</td>
 </tr>
 <tr>
 <td>Exit fullscreen</td>
-<td><code>Esc</code></td>
+<td>Esc</td>
 </tr>
 <tr>
 <td>Take snapshot</td>
-<td><code>Ctrl+S</code></td>
+<td>Ctrl+S</td>
 </tr>
 <tr>
 <td>Bookmarks list</td>
-<td><code>Ctrl+B</code></td>
+<td>Ctrl+B</td>
 </tr>
 <tr>
 <td>New mark at current position</td>
-<td><code>K</code></td>
+<td>K</td>
 </tr>
 <tr>
 <td>Repeat loop start</td>
-<td><code>[</code></td>
+<td>[</td>
 </tr>
 <tr>
 <td>Repeat loop end</td>
-<td><code>]</code></td>
+<td>]</td>
 </tr>
 <tr>
 <td>Clear repeat loop</td>
-<td><code>Backspace</code></td>
+<td>Backspace</td>
 </tr>
 <tr>
 <td>Previous repeat loop</td>
-<td><code>Ctrl+[</code></td>
+<td>Ctrl+[</td>
 </tr>
 <tr>
 <td>Next repeat loop</td>
-<td><code>Ctrl+]</code></td>
+<td>Ctrl+]</td>
 </tr>
 <tr>
 <td>Delete current bookmark</td>
-<td><code>Delete</code></td>
+<td>Delete</td>
 </tr>
 <tr>
 <td>Previous bookmark</td>
-<td><code>Ctrl+Left</code></td>
+<td>Ctrl+Left</td>
 </tr>
 <tr>
 <td>Next bookmark</td>
-<td><code>Ctrl+Right</code></td>
+<td>Ctrl+Right</td>
 </tr>
 <tr>
 <td>Mark 1 position</td>
-<td><code>Ctrl+1</code></td>
+<td>Ctrl+1</td>
 </tr>
 <tr>
 <td>Mark 2 position</td>
-<td><code>Ctrl+2</code></td>
+<td>Ctrl+2</td>
 </tr>
 <tr>
 <td>Mark 3 position</td>
-<td><code>Ctrl+3</code></td>
+<td>Ctrl+3</td>
 </tr>
 <tr>
 <td>Mark 4 position</td>
-<td><code>Ctrl+4</code></td>
+<td>Ctrl+4</td>
 </tr>
 <tr>
 <td>Mark 5 position</td>
-<td><code>Ctrl+5</code></td>
+<td>Ctrl+5</td>
 </tr>
 <tr>
 <td>Mark 6 position</td>
-<td><code>Ctrl+6</code></td>
+<td>Ctrl+6</td>
 </tr>
 <tr>
 <td>Mark 7 position</td>
-<td><code>Ctrl+7</code></td>
+<td>Ctrl+7</td>
 </tr>
 <tr>
 <td>Mark 8 position</td>
-<td><code>Ctrl+8</code></td>
+<td>Ctrl+8</td>
 </tr>
 <tr>
 <td>Mark 9 position</td>
-<td><code>Ctrl+9</code></td>
+<td>Ctrl+9</td>
 </tr>
 <tr>
 <td>Mark 10 position</td>
-<td><code>Ctrl+0</code></td>
+<td>Ctrl+0</td>
 </tr>
 <tr>
 <td>Close media</td>
-<td><code>Ctrl+W</code></td>
+<td>Ctrl+W</td>
 </tr>
 </tbody>
 </table>
 <hr>
 <h2 id="32-preferences">3.2. Preferences</h2>
-<p>The Preferences dialog (<strong>Options &gt; Manage Preferences</strong>, <code>Ctrl+P</code>) allows you to configure PlayForm's behavior. Settings are organized into four tabs: <strong>General</strong>, <strong>Media</strong>, <strong>Accessibility</strong>, and <strong>Advanced</strong>.</p>
-<p>Preferences are stored in <code>data/prefs.json</code>. If the file is missing or corrupted, PlayForm automatically restores the factory defaults. Changes to certain settings (language, VLC logging, VLC arguments, or debug level) require an application restart, which PlayForm will prompt you to perform.</p>
+<p>The Preferences dialog (<strong>Options &gt; Manage Preferences</strong>, Ctrl+P) allows you to configure PlayForm's behavior. Settings are organized into four tabs: <strong>General</strong>, <strong>Media</strong>, <strong>Accessibility</strong>, and <strong>Advanced</strong>.</p>
+<p>Preferences are stored in <code>data/prefs.json</code>. If the file is missing or corrupted, PlayForm automatically restores the factory defaults. Changes to certain settings (language, MPV logging, MPV arguments, or debug level) require an application restart, which PlayForm will prompt you to perform.</p>
 <h3 id="general-tab">General Tab</h3>
 <table>
 <thead>
@@ -1794,31 +1367,31 @@
 <tr>
 <td><strong>Language</strong></td>
 <td>EN, FR, AR, ES</td>
-<td><code>EN</code></td>
+<td>EN</td>
 <td>User interface language. Requires restart to apply.</td>
 </tr>
 <tr>
 <td><strong>Screenshot Format</strong></td>
 <td>JPG, PNG, TIFF</td>
-<td><code>PNG</code></td>
-<td>File format for screenshots taken with <code>Ctrl+S</code>.</td>
+<td>PNG</td>
+<td>File format for screenshots taken with Ctrl+S.</td>
 </tr>
 <tr>
 <td><strong>Color Theme</strong></td>
 <td>System, Light, Dark</td>
-<td><code>System</code></td>
+<td>System</td>
 <td>UI color scheme. Changes apply immediately without restart.</td>
 </tr>
 <tr>
 <td><strong>Auto Check for Updates</strong></td>
 <td>On / Off</td>
-<td><code>On</code></td>
+<td>On</td>
 <td>Automatically checks for newer versions of PlayForm at startup.</td>
 </tr>
 <tr>
 <td><strong>Save URLs</strong></td>
 <td>On / Off</td>
-<td><code>Off</code></td>
+<td>Off</td>
 <td>Saves entered URLs across sessions for quick re-access.</td>
 </tr>
 </tbody>
@@ -1837,19 +1410,19 @@
 <tr>
 <td><strong>Volume Offset</strong></td>
 <td>1–20</td>
-<td><code>5</code></td>
+<td>5</td>
 <td>Amount by which volume changes per step (via shortcuts or menu).</td>
 </tr>
 <tr>
 <td><strong>Seek Offset</strong></td>
 <td>1–60 seconds</td>
-<td><code>5</code></td>
+<td>5</td>
 <td>Amount by which forward/backward seeking jumps per step.</td>
 </tr>
 <tr>
 <td><strong>Audio Device</strong></td>
 <td>(list)</td>
-<td><code>0</code></td>
+<td>0</td>
 <td>Output audio device. Populated with all available devices on your system.</td>
 </tr>
 </tbody>
@@ -1868,37 +1441,37 @@
 <tr>
 <td><strong>Enable Speech Feedback</strong></td>
 <td>On / Off</td>
-<td><code>Off</code></td>
-<td>Master toggle for text-to-speech accessibility. When enabled, status bar messages and subtitle text are spoken aloud via SAPI5 on Windows.</td>
+<td>Off</td>
+<td>Master toggle for text-to-speech accessibility. When enabled, status bar messages and subtitle text are spoken aloud.</td>
 </tr>
 <tr>
 <td><strong>Interrupt Previous Speech</strong></td>
 <td>On / Off</td>
-<td><code>On</code></td>
+<td>On</td>
 <td>When enabled, a new utterance stops the currently playing one. When disabled, speech is queued.</td>
 </tr>
 <tr>
 <td><strong>Voice</strong></td>
 <td>(list)</td>
 <td>(system default)</td>
-<td>TTS voice selection (available on non-Windows platforms; Windows uses SAPI).</td>
+<td>TTS voice selection.</td>
 </tr>
 <tr>
 <td><strong>Volume</strong></td>
 <td>0.0–100.0</td>
-<td><code>80.0</code></td>
+<td>80.0</td>
 <td>Speech volume.</td>
 </tr>
 <tr>
 <td><strong>Rate</strong></td>
 <td>0.1–10.0</td>
-<td><code>1.0</code></td>
+<td>1.0</td>
 <td>Speech rate, where 1.0 is normal speed.</td>
 </tr>
 </tbody>
 </table>
 <h3 id="advanced-tab">Advanced Tab</h3>
-<p><strong>VLC Settings:</strong></p>
+<p><strong>MPV Settings:</strong></p>
 <table>
 <thead>
 <tr>
@@ -1910,22 +1483,22 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>Enable VLC Logging</strong></td>
+<td><strong>Enable MPV Logging</strong></td>
 <td>On / Off</td>
-<td><code>On</code></td>
-<td>Enables debug logging from the VLC/libmpv media engine.</td>
+<td>On</td>
+<td>Enables debug logging from the media engine.</td>
 </tr>
 <tr>
 <td><strong>Debug Level</strong></td>
 <td>0–2</td>
-<td><code>0</code></td>
-<td>VLC debug verbosity (0 = minimal, 2 = most verbose). Only shown when logging is enabled.</td>
+<td>0</td>
+<td>Debug verbosity (0 = minimal, 2 = most verbose). Only shown when logging is enabled.</td>
 </tr>
 <tr>
-<td><strong>VLC Arguments</strong></td>
+<td><strong>Extra MPV Options</strong></td>
 <td>(text)</td>
 <td><em>(empty)</em></td>
-<td>Custom command-line arguments passed to the VLC/libmpv backend. Validated on input.</td>
+<td>Custom options passed to the media backend.</td>
 </tr>
 </tbody>
 </table>
@@ -1958,7 +1531,7 @@
 </table>
 <hr>
 <h1 id="4-tools">4. Tools</h1>
-<p>PlayForm includes a suite of built-in tools accessible from the <strong>Tools</strong> menu. Tools open in a modal dialog window (800×600 default) that can be minimized to the status bar while a task runs. Only one tool can be open at a time — opening a different tool will prompt you to close the current one first.</p>
+<p>PlayForm includes a suite of built-in tools accessible from the <strong>Tools</strong> menu. Tools open in a modal dialog window that can be minimized to the status bar while a task runs. Only one tool can be open at a time — opening a different tool will prompt you to close the current one first.</p>
 <p>Most tools depend on FFmpeg. If FFmpeg is not found (minimum version 6 required), the tool will not open and a message will direct you to <strong>Options &gt; Get/Update Utilities</strong> to download it.</p>
 <hr>
 <h2 id="41-ffmpeg-tools">4.1. FFmpeg Tools</h2>
@@ -1980,7 +1553,7 @@
 </ul>
 </li>
 <li>Click <strong>Start Batch Conversion</strong> and choose an output directory.</li>
-<li>Progress is displayed per file ("<em>n</em> of <em>total</em>") with time and speed details. Errors on individual files are reported but do not stop the remaining conversions.</li>
+<li>Progress is displayed per file with time and speed details. Errors on individual files are reported but do not stop the remaining conversions.</li>
 </ol>
 <h3 id="412-media-extractor">4.1.2. Media Extractor</h3>
 <p><strong>Purpose:</strong> Extract audio tracks or image frames from video files.</p>
@@ -1997,7 +1570,7 @@
 - Choose an <strong>Extraction Mode</strong>:<br>
   - <strong>Extract All Frames</strong> — outputs every frame (<code>frame-0001.png</code>, <code>frame-0002.png</code>, …).<br>
   - <strong>Extract Range</strong> — extracts frames within a time range using a start time and duration.<br>
-  - <strong>Extract 1 Image Per Second</strong> — uses FFmpeg's <code>fps=1</code> filter.<br>
+  - <strong>Extract 1 Image Per Second</strong> — extracts one frame per second of video.<br>
 - Optionally set a <strong>Start Time</strong> and <strong>Duration</strong>.<br>
 - Click <strong>Extract Images</strong> and choose an output directory.</p>
 <h3 id="413-tag-editor">4.1.3. Tag Editor</h3>
@@ -2039,12 +1612,12 @@
 </tr>
 <tr>
 <td><strong>Automatic Thumbnail Filter</strong></td>
-<td>Uses FFmpeg's <code>thumbnail</code> filter to intelligently select the most representative frame of the video.</td>
+<td>Intelligently selects the most representative frame of the video.</td>
 <td><code>thumbnail_auto.png</code></td>
 </tr>
 <tr>
 <td><strong>Select from Scene Changes</strong></td>
-<td>Detects scene transitions and extracts frames from each. Configurable number of images (default 5) and scene change threshold (0.0–1.0, default 0.4).</td>
+<td>Detects scene transitions and extracts frames from each. Configurable number of images (default 5) and scene change threshold.</td>
 <td><code>scene-01.png</code>, <code>scene-02.png</code>, …</td>
 </tr>
 </tbody>
@@ -2062,14 +1635,9 @@
 <ol>
 <li>Click <strong>Add Files</strong> to load one or more subtitle files. File encodings are auto-detected.</li>
 <li>Set the <strong>Output Format</strong> from the dropdown.</li>
-<li>Optionally adjust <strong>Input Encoding</strong> and <strong>Output Encoding</strong> (default: <code>UTF-8</code>).</li>
-<li>Expand the <strong>Advanced Options</strong> section for format-specific settings:<ul>
-<li><strong>SRT:</strong> Keep unknown HTML tags (input), keep all HTML tags (input), keep SSA tags (output).</li>
-<li><strong>MicroDVD:</strong> Omit FPS declaration (output).</li>
-<li><strong>Clean:</strong> Remove miscellaneous events (applies to all formats).</li>
-</ul>
-</li>
-<li>Click <strong>Convert</strong> and choose an output directory. Files are processed using the <code>pysubs2</code> library.</li>
+<li>Optionally adjust <strong>Input Encoding</strong> and <strong>Output Encoding</strong> (default: UTF-8).</li>
+<li>Expand the <strong>Advanced Options</strong> section for format-specific settings (SRT tag handling, framerate options, cleanup).</li>
+<li>Click <strong>Convert</strong> and choose an output directory.</li>
 </ol>
 <h3 id="422-subtitle-editor">4.2.2. Subtitle Editor</h3>
 <p><strong>Purpose:</strong> Edit subtitle content and timing with live preview.</p>
@@ -2092,123 +1660,62 @@
 <h2 id="43-other-tools">4.3. Other Tools</h2>
 <h3 id="logs-viewer">Logs Viewer</h3>
 <p><strong>Access:</strong> <strong>Tools &gt; Debug &gt; View Logs</strong></p>
-<p>The Logs Viewer opens a dialog (900×600) showing all log files in the <code>logs/</code> directory. The left panel lists every log file; selecting one displays its contents in the right panel. This is useful for troubleshooting or reviewing application activity.</p>
+<p>The Logs Viewer opens a dialog showing all log files in the <code>logs/</code> directory. The left panel lists every log file; selecting one displays its contents in the right panel. Useful for troubleshooting or reviewing application activity.</p>
 <h3 id="debug-console-dock">Debug Console Dock</h3>
 <p><strong>Access:</strong> <strong>Tools &gt; Debug &gt; Show Console Dock</strong></p>
-<p>The Debug Console is a dockable panel that displays real-time application output, including redirected <code>stdout</code> and <code>stderr</code> streams and Python logging messages. It can be docked anywhere in the main window or floated as a separate window. Closing the console restores normal terminal output routing. This tool is intended for developers and advanced troubleshooting.</p>
+<p>The Debug Console is a dockable panel that displays real-time application output, including logging messages and system output. It can be docked anywhere in the main window or floated as a separate window. This tool is intended for developers and advanced troubleshooting.</p>
 <hr>
-<h1 id="5-download-center">5. Download Center</h1>
-<p>PlayForm includes a built-in Download Manager for downloading files over HTTP, and a separate Utility Download Center for acquiring external binaries (FFmpeg and yt-dlp).</p>
-<h2 id="download-manager">Download Manager</h2>
-<p><strong>Access:</strong> <strong>Tools &gt; Download Manager</strong></p>
-<p>The Download Manager dialog (860×560) handles general-purpose HTTP downloads.</p>
-<h3 id="adding-a-download">Adding a Download</h3>
-<p>Downloads are typically initiated by features within the app (e.g., a tool that requires downloading a resource). The Download Manager shows each download as a list item with:</p>
-<ul>
-<li><strong>Filename</strong> and current <strong>status</strong> (color-coded: queued, downloading, paused, completed, failed, cancelled).</li>
-<li><strong>Progress bar</strong> and <strong>size/speed</strong> information.</li>
-<li>The list refreshes every second during active downloads.</li>
-</ul>
-<p>Select a download to see detailed information in the right panel: filename, status, progress percentage, speed, and any error message. Toggle <strong>More Info</strong> to reveal the full URL, destination path, retry count, and error details.</p>
-<h3 id="managing-downloads">Managing Downloads</h3>
-<table>
-<thead>
-<tr>
-<th>Action</th>
-<th>How</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Cancel</strong></td>
-<td>Right-click a downloading item and choose <strong>Cancel Download</strong>.</td>
-</tr>
-<tr>
-<td><strong>Retry</strong></td>
-<td>Right-click a failed item and choose <strong>Retry Download</strong>.</td>
-</tr>
-<tr>
-<td><strong>Copy URL / Destination</strong></td>
-<td>Right-click an item and choose the copy option.</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Automatic retry:</strong> Failed downloads are automatically retried up to 3 times with a 2-second delay between attempts. Up to 5 HTTP redirects are followed automatically.</p>
-<p><strong>Closing the dialog:</strong> If downloads are in progress, a confirmation dialog warns you and offers to abort all downloads before closing.</p>
-<p>The Download Manager dialog can be minimized to the status bar — a <strong>Show Downloader</strong> button will appear there, letting you restore it later.</p>
-<h2 id="utility-download-center">Utility Download Center</h2>
-<p><strong>Access:</strong> <strong>Options &gt; Get/Update Utilities</strong></p>
-<p>The Utility Download Center is a specialized sub-system for downloading and installing the external binaries that PlayForm depends on:</p>
-<table>
-<thead>
-<tr>
-<th>Utility</th>
-<th>Purpose</th>
-<th>Source</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>yt-dlp</strong></td>
-<td>Resolves YouTube and other streaming URLs</td>
-<td>GitHub releases (<code>yt-dlp/yt-dlp</code>)</td>
-</tr>
-<tr>
-<td><strong>Deno</strong></td>
-<td>JavaScript runtime used by yt-dlp integration</td>
-<td>GitHub releases (<code>denoland/deno</code>)</td>
-</tr>
-<tr>
-<td><strong>FFmpeg</strong></td>
-<td>Audio/video encoding, decoding, and conversion (required by most tools)</td>
-<td>Platform-specific pre-built binaries</td>
-</tr>
-</tbody>
-</table>
-<p><strong>How to use:</strong></p>
-<ol>
-<li>Open <strong>Options &gt; Get/Update Utilities</strong>.</li>
-<li>Check the utilities you want to download or update.</li>
-<li>Click <strong>Download</strong>. The system fetches the latest version information from the respective sources, downloads the files, extracts archives as needed, and installs the binaries to PlayForm's <code>bin/</code> directory.</li>
-<li>Progress for each utility is shown during download and installation. On completion, the temporary files are cleaned up automatically.</li>
-</ol>
-<p>FFmpeg installation is platform-aware — it fetches the appropriate build for Windows (GyanD builds), Linux (johnvansickle static builds), or macOS (evermeet builds).</p>
-<hr>
-<h1 id="6-legal">6. Legal</h1>
-<h2 id="61-software-license">6.1. Software License</h2>
-<p><strong>PlayForm</strong> version 1.0.0 is copyright (c) 2024 Still Standing, published by Joybytes, and released under the <strong>GPL-3.0</strong> open-source license.</p>
+<h1 id="5-legal">5. Legal</h1>
+<h2 id="51-software-license">5.1. Software License</h2>
+<p><strong>PlayForm</strong> is copyright (c) 2024 Still Standing, published by Joybytes, and released under the <strong>GPL-3.0</strong> open-source license.</p>
 <p>The full license text is available at: <a href="https://www.gnu.org/licenses/gpl-3.0.html">https://www.gnu.org/licenses/gpl-3.0.html</a></p>
 <p>Source code and updates are available on GitHub: <a href="https://github.com/still-standing88/playform">https://github.com/still-standing88/playform</a></p>
 <p>For support inquiries, contact: support@joybytes.dev</p>
-<h2 id="62-third-party-components">6.2. Third-Party Components</h2>
+<h2 id="52-third-party-components">5.2. Third-Party Components</h2>
 <p>PlayForm builds upon and includes the following major third-party libraries and frameworks. Each is used under its respective open-source license.</p>
 <table>
 <thead>
 <tr>
-<th>Library</th>
-<th>Usage Context</th>
+<th>Component</th>
+<th>Usage</th>
+<th>Website</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>PySide6</strong> (Qt 6)</td>
-<td>Cross-platform GUI framework</td>
+<td><strong>mpv</strong></td>
+<td>Media playback engine — audio/video decoding, rendering, and streaming for all supported formats</td>
+<td><a href="https://mpv.io">mpv.io</a></td>
 </tr>
 <tr>
-<td>**VLC **</td>
-<td>Media playback engine providing audio/video decoding, rendering, and streaming for all supported formats.</td>
+<td><strong>Qt / PySide6</strong></td>
+<td>Cross-platform graphical user interface framework</td>
+<td><a href="https://www.qt.io">qt.io</a></td>
 </tr>
 <tr>
 <td><strong>FFmpeg</strong></td>
-<td>Audio/video transcoding, extraction, thumbnail generation, and format conversion used by the Batch Converter, Extractor, and Thumbnail Generator tools.</td>
+<td>Audio/video transcoding, extraction, thumbnail generation, and format conversion</td>
+<td><a href="https://ffmpeg.org">ffmpeg.org</a></td>
 </tr>
 <tr>
 <td><strong>Deno</strong></td>
-<td>JavaScript/TypeScript runtime used internally by yt-dlp for resolving streaming URLs.</td>
+<td>JavaScript runtime used internally by yt-dlp for resolving streaming URLs</td>
+<td><a href="https://deno.land">deno.land</a></td>
 </tr>
 <tr>
 <td><strong>yt-dlp</strong></td>
-<td>YouTube and streaming platform URL resolver for online media playback.</td>
+<td>YouTube and streaming platform URL resolver for online media playback</td>
+<td><a href="https://github.com/yt-dlp/yt-dlp">github.com/yt-dlp/yt-dlp</a></td>
+</tr>
+<tr>
+<td><strong>mutagen</strong></td>
+<td>Audio metadata reading and writing for the Tag Editor</td>
+<td><a href="https://github.com/quodlibet/mutagen">github.com/quodlibet/mutagen</a></td>
+</tr>
+<tr>
+<td><strong>pysubs2</strong></td>
+<td>Subtitle parsing, writing, and conversion library</td>
+<td><a href="https://github.com/tkarabela/pysubs2">github.com/tkarabela/pysubs2</a></td>
 </tr>
 </tbody>
 </table>

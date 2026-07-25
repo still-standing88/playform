@@ -12,7 +12,7 @@ PlayForm is a cross-platform media player that lets you play audio and video fil
 
 ## 1.2. Features
 
-- **Play any media format** — PlayForm supports every audio and video format that VLC can handle. See [Section 1.3](#13-supported-media-formats) for a list of the most common formats.
+- **Play any media format** — PlayForm supports every audio and video format that mpv can handle. See [Section 1.3](#13-supported-media-formats) for a list of the most common formats.
 - **Play media from any source** — Open local files, folders, or paste URLs to stream from YouTube and hundreds of other websites via yt-dlp.
 - **Subtitle integration** — Subtitles are automatically loaded if a matching file is found next to your video. Supports SRT, VTT, ASS, and more. Subtitles can also be read aloud via text-to-speech.
 - **Bookmarks and repeat loops** — Mark any position in a track and jump back to it instantly. Set A-B repeat loops to play a section on repeat, with support for multiple loops per file.
@@ -680,7 +680,7 @@ These shortcuts are active when the Player panel has focus.
 
 The Preferences dialog (**Options > Manage Preferences**, Ctrl+P) allows you to configure PlayForm's behavior. Settings are organized into four tabs: **General**, **Media**, **Accessibility**, and **Advanced**.
 
-Preferences are stored in `data/prefs.json`. If the file is missing or corrupted, PlayForm automatically restores the factory defaults. Changes to certain settings (language, VLC logging, VLC arguments, or debug level) require an application restart, which PlayForm will prompt you to perform.
+Preferences are stored in `data/prefs.json`. If the file is missing or corrupted, PlayForm automatically restores the factory defaults. Changes to certain settings (language, MPV logging, MPV arguments, or debug level) require an application restart, which PlayForm will prompt you to perform.
 
 ### General Tab
 
@@ -712,13 +712,13 @@ Preferences are stored in `data/prefs.json`. If the file is missing or corrupted
 
 ### Advanced Tab
 
-**VLC Settings:**
+**MPV Settings:**
 
 | Setting | Options | Default | Description |
 |---|---|---|---|
-| **Enable VLC Logging** | On / Off | On | Enables debug logging from the media engine. |
+| **Enable MPV Logging** | On / Off | On | Enables debug logging from the media engine. |
 | **Debug Level** | 0–2 | 0 | Debug verbosity (0 = minimal, 2 = most verbose). Only shown when logging is enabled. |
-| **VLC Arguments** | (text) | *(empty)* | Custom options passed to the media backend. |
+| **Extra MPV Options** | (text) | *(empty)* | Custom options passed to the media backend. |
 
 **yt-dlp Settings:**
 
@@ -893,7 +893,7 @@ PlayForm builds upon and includes the following major third-party libraries and 
 
 | Component | Usage | Website |
 |---|---|---|
-| **VLC** | Media playback engine — audio/video decoding, rendering, and streaming for all supported formats | [videolan.org](https://www.videolan.org) |
+| **mpv** | Media playback engine — audio/video decoding, rendering, and streaming for all supported formats | [mpv.io](https://mpv.io) |
 | **Qt / PySide6** | Cross-platform graphical user interface framework | [qt.io](https://www.qt.io) |
 | **FFmpeg** | Audio/video transcoding, extraction, thumbnail generation, and format conversion | [ffmpeg.org](https://ffmpeg.org) |
 | **Deno** | JavaScript runtime used internally by yt-dlp for resolving streaming URLs | [deno.land](https://deno.land) |
