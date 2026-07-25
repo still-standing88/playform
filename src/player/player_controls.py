@@ -55,6 +55,7 @@ class PlayerControls(QWidget):
     jumpToEndRequested = Signal()
     stopRequested = Signal()
     screenshotRequested = Signal()
+    reverseToggled = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -71,6 +72,8 @@ class PlayerControls(QWidget):
         self.is_repeat_on = False
         self.is_shuffle_on = False
         self.is_fullscreen = False
+        self.is_reverse_available = False
+        self.is_reverse_active = False
 
         self._current_file: Optional[str] = None
         self._source_url: Optional[str] = None
@@ -358,6 +361,23 @@ class PlayerControls(QWidget):
     def set_fullscreen_state(self, is_fullscreen):
         self.is_fullscreen = is_fullscreen
 
+    def _on_reverse_action_toggled(self, checked: bool):
+        self.is_reverse_active = checked
+        self.reverseToggled.emit(checked)
+
+    def set_reverse_available(self, available: bool):
+        self.is_reverse_available = available
+        if not available and self.is_reverse_active:
+            self.is_reverse_active = False
+            self.reverseToggled.emit(False)
+
+    def sync_reverse_state(self, active: bool):
+        """Reflects a reverse-playback change that happened without the
+        user clicking the menu item (e.g. the monitor thread auto-stopping
+        it after running off the start of the track), without re-emitting
+        reverseToggled and looping back into the player."""
+        self.is_reverse_active = active
+
     def set_play_pause_state(self, is_playing):
         if self.is_playing == is_playing: return
         self.is_playing = is_playing
@@ -450,7 +470,8 @@ class PlayerControls(QWidget):
     def set_controls_enabled(self, enabled):
         for widget in [self.play_pause_btn, self.previous_btn, self.backward_btn,
                       self.forward_btn, self.next_btn, self.repeat_btn, self.shuffle_btn,
-                      self.mute_btn, self.seek_slider, self.volume_slider]:
+                      self.mute_btn, self.seek_slider, self.volume_slider, self.goto_btn,
+                      self.bookmarks_btn, self.screenshot_btn]:
             widget.setEnabled(enabled)
 
     @Slot(int)
