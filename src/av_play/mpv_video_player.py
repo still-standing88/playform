@@ -713,6 +713,43 @@ class MPVVideoPlayer(AVPlayer):
         mpv_value = (value - 1.0) * 100.0
         self.__mpv_interface.run_on_mpv(lambda m, p=mpv_property, v=mpv_value: setattr(m, p, v), wait=False)
 
+    def get_video_track_id(self):
+        """mpv's vid property: an int track id, or a falsy value (False/
+        None/"no") when there is no video track -- i.e. audio-only media."""
+        return self.__mpv_interface.run_on_mpv(lambda m: m.vid, wait=True, timeout=0.5)
+
+    def is_audio_only(self) -> bool:
+        vid = self.get_video_track_id()
+        if vid is None:
+            return False
+        if isinstance(vid, bool):
+            return vid is False
+        if isinstance(vid, (int, float)):
+            return vid < 0
+        if isinstance(vid, str):
+            return vid.strip().lower() == "no"
+        return False
+
+    def set_reverse_playback(self, enabled: bool):
+        # play-direction is a real mpv property (0.39+) but the docs call
+        # it unreliable; verified empirically it's fine for local audio
+        # files with room left to play into, but running off the start of
+        # the file while reversed can leave mpv's position tracking stuck
+        # (idle_active/time_pos) even after switching back to "forward" --
+        # an explicit re-seek reliably un-sticks it, so always do one when
+        # turning reverse off.
+        self._reverse_playback_active = enabled
+        direction = "backward" if enabled else "forward"
+        self.__mpv_interface.run_on_mpv(lambda m, d=direction: setattr(m, 'play_direction', d), wait=False)
+        if not enabled:
+            def recover(m):
+                pos = m.time_pos
+                m.seek(pos if pos is not None else 0.0, reference="absolute")
+            self.__mpv_interface.run_on_mpv(recover, wait=False)
+
+    def get_reverse_playback(self) -> bool:
+        return self._reverse_playback_active
+
     def set_start_file_callback(self, callback):
         def register(m):
             @m.event_callback('file-loaded')
