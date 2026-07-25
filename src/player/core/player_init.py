@@ -33,6 +33,7 @@ def init_mpv_player(widget):
         widget.player.set_window(widget.video_display.winId())
         widget.player.set_auto_play(prefs.prefs["autoplay"])
         widget.player.set_track_end_callback(lambda index: widget._trackEndedFromMonitor.emit(index))
+        widget.player.set_reverse_stopped_callback(lambda: widget._reverseStoppedFromMonitor.emit())
         widget.filters_widget.set_player(widget.player)
         widget.equalizer_widget.set_player(widget.player)
         widget.audio_filters_widget.set_player(widget.player)
