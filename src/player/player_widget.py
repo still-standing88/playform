@@ -23,6 +23,7 @@ from .core.subtitles import SubtitleManager
 from .widgets.filters_widget import FiltersWidget
 from .widgets.chapters_widget import ChaptersWidget
 from .widgets.equalizer_widget import EqualizerWidget
+from .widgets.audio_filters_widget import AudioFiltersWidget
 from .core.lazy_playlist_player import LazyPlaylistPlayer
 from .core.player_init import init_mpv_player
 from .core.player_shortcuts import PlayerShortcuts
@@ -96,6 +97,7 @@ class PlayerWidget(QWidget):
         self.filters_widget = FiltersWidget(self)
         self.chapters_widget = ChaptersWidget(self)
         self.equalizer_widget = EqualizerWidget(self)
+        self.audio_filters_widget = AudioFiltersWidget(self)
         self.side_accordion = Accordion(self)
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
 
@@ -121,6 +123,7 @@ class PlayerWidget(QWidget):
         self.side_accordion.add_section(_("Subtitles"), self.subtitles_widget)
         self.side_accordion.add_section(_("Equalizer"), self.equalizer_widget)
         self.side_accordion.add_section(_("Video Filters"), self.filters_widget)
+        self.side_accordion.add_section(_("Audio Filters"), self.audio_filters_widget)
 
         left_layout.addWidget(self.side_accordion)
 
