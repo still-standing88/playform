@@ -58,6 +58,12 @@ class ExplorerWidget(QWidget):
         "image_preview_callback": self._on_image_preview,
         }
         config: dict = {}
+        # See player_init.py: mpv clamps set_volume() at its own default
+        # volume-max regardless of what's requested, independent of this
+        # spinbox's own range.
+        config["volume"] = prefs.prefs.get("explorer_volume", 120)
+        config["volume_max"] = 300
+
         if prefs.prefs.get("mpv_logging", True):
             level_map = {0: "error", 1: "info", 2: "debug"}
             config["log_file"] = get_mpvlog_file()
@@ -245,8 +251,8 @@ class ExplorerWidget(QWidget):
         volume_label = QLabel(_("Volume:"))
         controls_layout.addWidget(volume_label)
         self.volume_spinbox = QSpinBox()
-        self.volume_spinbox.setValue(100)
-        self.volume_spinbox.setRange(0, 100)
+        self.volume_spinbox.setRange(0, 300)
+        self.volume_spinbox.setValue(prefs.prefs.get("explorer_volume", 120))
         self.volume_spinbox.setSuffix("%")
         self.volume_spinbox.setAccessibleName(_("volume"))
         self.volume_spinbox.valueChanged.connect(self.volumeChange)
@@ -266,6 +272,8 @@ class ExplorerWidget(QWidget):
 
     @Slot(int)
     def volumeChange(self, value):
+        prefs.prefs["explorer_volume"] = value
+        prefs.save()
         if self._instance is not None:
             try:
                 self._instance.set_volume(value)
@@ -273,7 +281,7 @@ class ExplorerWidget(QWidget):
                 pass
         else:
              self._instance = self._player.primary_instance
-             if self._instance is not None: 
+             if self._instance is not None:
                  try:
                      self._instance.set_volume(value)
                  except:
