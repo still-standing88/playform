@@ -325,9 +325,18 @@ class MPVTempoScaleFilter(MPVAudioFilter):
         
         backend_info = {
             "mpv_filter_name": "scaletempo",
-            "mpv_param_map": mpv_param_map
+            "mpv_param_map": mpv_param_map,
+            # scaletempo is a native mpv audio filter, not an ffmpeg/lavfi
+            # one -- construct() defaults effect_syntax to "lavfi" when
+            # absent, which wrapped it as lavfi=[scaletempo=...]. mpv then
+            # tried to resolve "scaletempo" as an ffmpeg filter name inside
+            # that graph and failed ("No such filter: 'scaletempo'"),
+            # which failed the *entire* audio filter chain, not just this
+            # effect (verified empirically). Any non-lavfi/@rb value here
+            # makes construct() emit the plain native filter syntax instead.
+            "effect_syntax": "native",
         }
-        
+
         super().__init__("Tempo Scale", parameters, backend_info)
 
 class MPVLimiterFilter(MPVAudioFilter):
