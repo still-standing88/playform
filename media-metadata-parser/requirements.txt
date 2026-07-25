@@ -1,0 +1,3 @@
+mutagen>=1.47
+lxml>=6.0
+music-tag>=0.4.3
