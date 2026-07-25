@@ -238,12 +238,14 @@ class AVPlayer(ABC):
         self._monitor_running = False
 
     def _monitor_playback(self):
-        # After previous()/next()/jump_to_track()/_advance_track() issue a
-        # load, the backend briefly reports AV_STATE_NOTHING (no time_pos
-        # yet) before the new track actually starts playing. Without this
-        # grace window, that transient state looks identical to "playback
-        # stopped" below and triggers a second, spurious _advance_track()
-        # call on top of whatever navigation just happened.
+        # The backend reports AV_STATE_NOTHING both for "this file reached
+        # EOF" (the case we want to act on) and, transiently, for "a new
+        # file was just requested but mpv hasn't started it yet" (loadfile
+        # is fire-and-forget). Without this grace window, that transient
+        # loading state looks identical to "track ended" and triggers a
+        # second, spurious _advance_track() call on top of whatever
+        # navigation (previous()/next()/jump_to_track()/auto-advance) just
+        # happened.
         LOAD_GRACE_PERIOD = 3.0
         while self._monitor_running and self._auto_play_enabled:
             try:
@@ -253,14 +255,6 @@ class AVPlayer(ABC):
                     if state == AVPlaybackState.AV_STATE_PLAYING:
                         self._playlist_state = AVPlaylistState.PLAYING
                         self._track_loading = False
-                        position = self._primary_instance.get_position()
-                        length = self._primary_instance.get_length()
-
-                        if length > 0 and position >= length - 1:
-                            with self._advance_lock:
-                                if self._track_end_callback:
-                                    self._track_end_callback(self._current_playlist_index)
-                                self._advance_track()
 
                     elif state in [AVPlaybackState.AV_STATE_STOPPED, AVPlaybackState.AV_STATE_NOTHING]:
                         still_loading = (self._track_loading and
@@ -268,6 +262,14 @@ class AVPlayer(ABC):
                         if self._playlist_state == AVPlaylistState.PLAYING and not still_loading:
                             with self._advance_lock:
                                 self._advance_track()
+                                # Fire with the *new* current index (post-advance),
+                                # not the one that just ended -- and only if it's
+                                # still a valid track (advancing past the end of a
+                                # non-repeating playlist leaves no "now playing"
+                                # track to report).
+                                if (self._track_end_callback and self._current_playlist is not None
+                                        and 0 <= self._current_playlist_index < len(self._current_playlist)):
+                                    self._track_end_callback(self._current_playlist_index)
 
                 time.sleep(0.1)
 
