@@ -14,3 +14,8 @@ archive/
 
 *.pyc
 *.pem
+
+# Bundled third-party portable ExifTool distribution (dev-time cross-check
+# oracle for media-metadata-parser, never a runtime dependency) — thousands
+# of vendored Perl files, not something to track in this repo.
+media-metadata-parser/exiftool-13.59_64/
