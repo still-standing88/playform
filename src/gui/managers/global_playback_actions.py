@@ -1,4 +1,5 @@
 import av_play
+from app_config import prefs
 from utilities import signal_manager
 
 
@@ -94,7 +95,10 @@ class GlobalPlaybackActions:
             instance = mw.player_widget.player.primary_instance
             if instance and hasattr(instance, "get_volume") and hasattr(instance, "set_volume"):
                 current_volume = instance.get_volume()
-                instance.set_volume(max(0, current_volume - 5))
+                new_volume = max(0, current_volume - prefs.prefs["offset"]["volume"])
+                instance.set_volume(new_volume)
+                prefs.prefs["player_volume"] = new_volume
+                prefs.save()
 
     def volume_up(self):
         mw = self.main_window
@@ -102,7 +106,10 @@ class GlobalPlaybackActions:
             instance = mw.player_widget.player.primary_instance
             if instance and hasattr(instance, "get_volume") and hasattr(instance, "set_volume"):
                 current_volume = instance.get_volume()
-                instance.set_volume(min(100, current_volume + 5))
+                new_volume = min(300, current_volume + prefs.prefs["offset"]["volume"])
+                instance.set_volume(new_volume)
+                prefs.prefs["player_volume"] = new_volume
+                prefs.save()
 
     def toggle_repeat(self):
         mw = self.main_window
