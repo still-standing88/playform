@@ -18,14 +18,25 @@ class KeyEventFilter(QObject):
                     event.accept()
                     return True
 
+            # A horizontally-flowing QListWidget (e.g. ListTabCtrl's checkbox
+            # tab strip) navigates with Left/Right, not Up/Down -- the
+            # opposite of a normal top-to-bottom list.
+            if isinstance(watched, QListWidget) and watched.flow() == QListWidget.LeftToRight:
+                if key in (Qt.Key.Key_Left, Qt.Key.Key_Right):
+                    event.accept()
+                    return True
+
             if isinstance(watched, (QListWidget, QTreeWidget)):
                 if key in (Qt.Key.Key_Up, Qt.Key.Key_Down):
                     event.accept()
                     return True
 
             # QTreeWidget natively uses Left/Right to collapse/expand nodes;
-            # a flat QListWidget does nothing with them, so they're left free
-            # to reach widget-level shortcuts (e.g. Explorer's Forward/Backward).
+            # a flat, top-to-bottom QListWidget does nothing with them, so
+            # they're left free to reach widget-level shortcuts (e.g.
+            # Explorer's Forward/Backward). Horizontally-flowing QListWidgets
+            # are handled above instead, since for them Left/Right *are* the
+            # navigation keys.
             if isinstance(watched, QTreeWidget):
                 if key in (Qt.Key.Key_Left, Qt.Key.Key_Right):
                     event.accept()
@@ -36,7 +47,7 @@ class KeyEventFilter(QObject):
                     event.accept()
                     return True
 
-            if isinstance(watched, (QPushButton, QToolButton, QCheckBox)):
+            if isinstance(watched, (QPushButton, QToolButton, QCheckBox, QListWidget)):
                 if key in (Qt.Key.Key_Space, Qt.Key.Key_Enter, Qt.Key.Key_Return):
                     event.accept()
                     return True
