@@ -38,6 +38,13 @@ def build_more_options_menu(controls) -> QMenu:
     fullscreen_action.triggered.connect(controls._toggle_fullscreen)
     controls.fullscreenToggled.connect(fullscreen_action_state)
 
+    reverse_action = menu.addAction(_("Reverse Playback"))
+    reverse_action.setCheckable(True)
+    reverse_action.setEnabled(controls.is_reverse_available)
+    reverse_action.setChecked(controls.is_reverse_active)
+    reverse_action.setToolTip(_("Audio only -- disabled while the current media has a video track"))
+    reverse_action.triggered.connect(controls._on_reverse_action_toggled)
+
     return menu
 
 
