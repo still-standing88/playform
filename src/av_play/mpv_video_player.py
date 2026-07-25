@@ -479,27 +479,24 @@ class MPVMediaInterface(AVMediaInterface):
             mpv_instance = self._mpv()
             return {
                 'pause': mpv_instance.pause,
-                'time_pos': mpv_instance.time_pos,
-                'duration': mpv_instance.duration,
+                'eof_reached': bool(mpv_instance.eof_reached),
             }
 
         state_info = self._submit(get_state_info, wait=True, timeout=0.5)
         if state_info is None:
             return AVPlaybackState.AV_STATE_NOTHING
 
-        is_paused = state_info['pause']
-        time_pos = state_info['time_pos']
-        duration = state_info['duration']
-
-        if duration is not None and time_pos is not None:
-            if time_pos >= duration - 0.1:
-                self.__end_reached = True
-                return AVPlaybackState.AV_STATE_NOTHING
-        elif time_pos is None and duration is not None:
+        # eof-reached is mpv's own authoritative "this file finished playing"
+        # signal. The previous time_pos/duration proximity heuristic had two
+        # holes: while a new file is still loading, duration can populate
+        # before time_pos (misread as "ended"), and while *both* are still
+        # unset it fell through to reporting PLAYING (never detecting a
+        # genuine end at all, since length was then read back as 0).
+        if state_info['eof_reached']:
             self.__end_reached = True
             return AVPlaybackState.AV_STATE_NOTHING
 
-        return AVPlaybackState.AV_STATE_PAUSED if is_paused else AVPlaybackState.AV_STATE_PLAYING
+        return AVPlaybackState.AV_STATE_PAUSED if state_info['pause'] else AVPlaybackState.AV_STATE_PLAYING
 
     def get_mute_state(self, id: int) -> AVMuteState:
         self._check_instance(id)
