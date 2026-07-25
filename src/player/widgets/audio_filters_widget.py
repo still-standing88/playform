@@ -81,6 +81,7 @@ class AudioFiltersWidget(QWidget):
         self.list_tab = ListTabCtrl(self)
         layout.addWidget(self.list_tab)
         self.list_tab.tabLabels.itemChanged.connect(self._on_item_changed)
+        self._key_event_filter.install_on_widgets([self.list_tab.tabLabels])
 
     def set_player(self, player):
         self.player = player
