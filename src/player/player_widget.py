@@ -237,13 +237,13 @@ class PlayerWidget(QWidget):
     def _on_previous_clicked(self):
         if self.player:
             self.player.previous()
-            self.filters_widget.reset_filters()
+            self._update_current_track(self.player.get_current_track_index())
 
     @Slot()
     def _on_next_clicked(self):
         if self.player:
             self.player.next()
-            self.filters_widget.reset_filters()
+            self._update_current_track(self.player.get_current_track_index())
 
     @Slot()
     def _on_repeat_clicked(self):
