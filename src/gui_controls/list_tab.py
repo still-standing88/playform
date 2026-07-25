@@ -101,31 +101,23 @@ class ListTabCtrl(QWidget):
                 if hasattr(item, 'widget') and item.widget:
                     self.hideTabWidget(item.widget)
             self.tabActivated.emit()
-            
+
     def showTabWidget(self, widget):
-        self.clearTabLayout()
-        self.tabLayout.addWidget(widget)
+        # Each checked item shows its own panel alongside any other
+        # already-visible ones (a filter chain, not a single-page tab
+        # switcher) -- so this must not clear widgets already in the layout.
+        if self.tabLayout.indexOf(widget) == -1:
+            self.tabLayout.addWidget(widget)
         widget.show()
         self.current_widget = widget
-        
+
     def hideTabWidget(self, widget):
-        if widget == self.current_widget:
-            self.clearTabLayout()
+        self.tabLayout.removeWidget(widget)
+        widget.hide()
+        if widget is self.current_widget:
             self.current_widget = None
-            
-    def clearTabLayout(self):
-        while self.tabLayout.count():
-            child = self.tabLayout.takeAt(0)
-            if child.widget():
-                child.widget().hide()
-                
+
     def onTabChange(self, current, previous):
-        if current is not None and current.checkState() == Qt.Checked:
-            self.showTabWidget(current.widget)
-        elif current is None or current.checkState() == Qt.Unchecked:
-            if self.current_widget:
-                self.hideTabWidget(self.current_widget)
-                
         self.tabChanged.emit(current, previous)
         
     def currentTab(self):
