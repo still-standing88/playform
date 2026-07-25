@@ -1,4 +1,5 @@
 import locale
+import logging
 import mpv
 import os
 import queue
@@ -12,6 +13,8 @@ from .__AV_Instance import AVMediaInstance
 from .__AV_Interface import AVMediaInterface
 from .__AV_Player import AVPlayer
 from .mpv_audio_filter import MPVAudioFilter
+
+logger = logging.getLogger(__name__)
 
 
 def handle_mpv_error(call_func: Callable) -> Any:
@@ -114,6 +117,13 @@ class _MPVWorker(threading.Thread):
             except Exception as e:
                 if future is not None:
                     future.set_exception(e)
+                else:
+                    # Fire-and-forget (wait=False) jobs have nowhere to
+                    # report a failure to -- without this, a command mpv
+                    # rejects (e.g. an invalid af filter chain) fails
+                    # completely silently, with no error and no visible
+                    # effect other than "the feature just doesn't work".
+                    logger.warning("MPV command failed (fire-and-forget): %s", e)
             if self._mpv is not None and self._mpv.core_shutdown:
                 self._drain_rejecting(AVError(AVErrorInfo.INVALID_HANDLE, "MPV core has been shutdown"))
                 break
@@ -529,8 +539,13 @@ class MPVMediaInterface(AVMediaInterface):
         return loop_val == "inf" if loop_val is not None else False
 
     def _rebuild_filter_chain(self):
+        # Order by filter name (handle), not by dict-insertion/filter_id
+        # order -- otherwise unchecking and re-checking an effect moves it
+        # to the end of the chain, silently changing the audible result
+        # (and evaluation order matters for some filter combinations).
+        filter_objs = sorted(self.__applied_filters.values(), key=lambda f: f.handle)
         filter_strings = []
-        for filter_obj in self.__applied_filters.values():
+        for filter_obj in filter_objs:
             filter_string = filter_obj.construct()
             if filter_string:
                 filter_strings.append(filter_string)
