@@ -7,7 +7,22 @@ import threading
 from typing import List, Optional, Set
 
 import av_play
-from av_play.mpv_audio_filter import MPVEqualizerFilter
+from av_play.mpv_audio_filter import (
+    MPVEqualizerFilter,
+    MPVAudioFilter,
+    MPVEchoFilter,
+    MPVReverbFilter,
+    MPVLowPassFilter,
+    MPVHighPassFilter,
+    MPVBandPassFilter,
+    MPVCompressorFilter,
+    MPVLimiterFilter,
+    MPVGateFilter,
+    MPVFlangerFilter,
+    MPVChorusFilter,
+    MPVPitchShiftFilter,
+    MPVTempoScaleFilter,
+)
 from av_play.mpv_equalizer_presets import EQUALIZER_PRESETS
 from PySide6.QtCore import QObject, Signal, QThread
 
@@ -25,6 +40,25 @@ from ..util.utilities import ensure_ytdlp_available
 
 
 logger = logging.getLogger(__name__)
+
+# Keyed by each filter class's own AVFilter "handle" name, so the key
+# doubles as its stable (untranslated) display label. The Equalizer has
+# its own dedicated accordion section/UI already, so it's intentionally
+# not included here.
+AUDIO_FILTER_CLASSES = {
+    "Echo": MPVEchoFilter,
+    "Reverb": MPVReverbFilter,
+    "Low Pass": MPVLowPassFilter,
+    "High Pass": MPVHighPassFilter,
+    "Band Pass": MPVBandPassFilter,
+    "Compressor": MPVCompressorFilter,
+    "Limiter": MPVLimiterFilter,
+    "Gate": MPVGateFilter,
+    "Flanger": MPVFlangerFilter,
+    "Chorus": MPVChorusFilter,
+    "Pitch Shift": MPVPitchShiftFilter,
+    "Tempo Scale": MPVTempoScaleFilter,
+}
 
 
 class LazyPlaylistSignals(QObject):
@@ -80,6 +114,13 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
         self._equalizer_filter: Optional[MPVEqualizerFilter] = None
         self._equalizer_filter_id: Optional[int] = None
 
+        # In-memory only (not persisted to prefs): audio filters stay applied
+        # for as long as this player/session is alive, not across restarts.
+        # Objects are kept around even while disabled so re-enabling an
+        # effect restores whatever parameters were last set on it.
+        self._audio_filter_objects: dict[str, MPVAudioFilter] = {}
+        self._audio_filter_ids: dict[str, int] = {}
+
     def get_equalizer_presets(self) -> List[str]:
         return [name for name, _bands in EQUALIZER_PRESETS]
 
@@ -126,6 +167,54 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
         if persist:
             prefs.prefs["equalizer_enabled"] = False
             prefs.save()
+
+    def get_audio_filter_names(self) -> List[str]:
+        return list(AUDIO_FILTER_CLASSES.keys())
+
+    def _get_audio_filter_object(self, name: str) -> Optional[MPVAudioFilter]:
+        if name not in self._audio_filter_objects:
+            filter_cls = AUDIO_FILTER_CLASSES.get(name)
+            if filter_cls is None:
+                return None
+            self._audio_filter_objects[name] = filter_cls()
+        return self._audio_filter_objects[name]
+
+    def get_audio_filter_param_spec(self, name: str):
+        """Returns (params_by_mpv_name: dict[str, (type, (min, max, step, default))], current_values: dict) or None."""
+        filter_obj = self._get_audio_filter_object(name)
+        if filter_obj is None:
+            return None
+        return dict(filter_obj.info.get("mpv_param_map", {})), dict(filter_obj.get_parameters())
+
+    def is_audio_filter_enabled(self, name: str) -> bool:
+        return name in self._audio_filter_ids
+
+    def set_audio_filter_enabled(self, name: str, enabled: bool) -> None:
+        filter_obj = self._get_audio_filter_object(name)
+        if filter_obj is None:
+            return
+        instance = self.primary_instance
+        if enabled:
+            if name not in self._audio_filter_ids and instance is not None:
+                self._audio_filter_ids[name] = instance.apply_filter(filter_obj)
+        else:
+            filter_id = self._audio_filter_ids.pop(name, None)
+            if filter_id is not None and instance is not None:
+                try:
+                    instance.remove_filter(filter_id)
+                except Exception:
+                    pass
+
+    def set_audio_filter_parameter(self, name: str, param_name: str, value) -> None:
+        filter_obj = self._audio_filter_objects.get(name)
+        if filter_obj is None:
+            return
+        filter_id = self._audio_filter_ids.get(name)
+        instance = self.primary_instance
+        if filter_id is not None and instance is not None:
+            instance.set_parameter(filter_id, param_name, value)
+        else:
+            filter_obj.set_parameter(param_name, value)
 
     def _apply_saved_equalizer(self) -> None:
         if not prefs.prefs.get("equalizer_enabled"):
