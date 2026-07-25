@@ -91,33 +91,39 @@ class ListTabCtrl(QWidget):
         self.tabLayout.setContentsMargins(0, 0, 0, 0)
         
     def onState(self, item):
+        # The checkbox is purely an enabled/disabled flag (e.g. "is this
+        # audio effect applied") -- it does not affect which panel is
+        # visible. Panel visibility follows selection only, like a normal
+        # tab control; see onTabChange.
         if item is not None:
             if item.checkState() == Qt.CheckState.Checked:
                 item.setActivated(True)
-                if hasattr(item, 'widget') and item.widget:
-                    self.showTabWidget(item.widget)
             elif item.checkState() == Qt.CheckState.Unchecked:
                 item.setActivated(False)
-                if hasattr(item, 'widget') and item.widget:
-                    self.hideTabWidget(item.widget)
             self.tabActivated.emit()
 
     def showTabWidget(self, widget):
-        # Each checked item shows its own panel alongside any other
-        # already-visible ones (a filter chain, not a single-page tab
-        # switcher) -- so this must not clear widgets already in the layout.
-        if self.tabLayout.indexOf(widget) == -1:
-            self.tabLayout.addWidget(widget)
+        self.clearTabLayout()
+        self.tabLayout.addWidget(widget)
         widget.show()
         self.current_widget = widget
 
     def hideTabWidget(self, widget):
-        self.tabLayout.removeWidget(widget)
-        widget.hide()
         if widget is self.current_widget:
+            self.clearTabLayout()
             self.current_widget = None
 
+    def clearTabLayout(self):
+        while self.tabLayout.count():
+            child = self.tabLayout.takeAt(0)
+            if child.widget():
+                child.widget().hide()
+
     def onTabChange(self, current, previous):
+        if current is not None and getattr(current, 'widget', None):
+            self.showTabWidget(current.widget)
+        elif self.current_widget:
+            self.hideTabWidget(self.current_widget)
         self.tabChanged.emit(current, previous)
         
     def currentTab(self):
