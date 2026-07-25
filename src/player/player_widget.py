@@ -51,6 +51,7 @@ class PlayerWidget(QWidget):
     repeatModeChanged = Signal(int)
     currentTrackIndexChanged = Signal(int)
     _trackEndedFromMonitor = Signal(int)
+    _reverseStoppedFromMonitor = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -144,6 +145,7 @@ class PlayerWidget(QWidget):
         # calling _update_current_track directly marshals the widget updates
         # onto the GUI thread via Qt's queued cross-thread delivery.
         self._trackEndedFromMonitor.connect(self._update_current_track)
+        self._reverseStoppedFromMonitor.connect(self._on_reverse_stopped_from_monitor)
 
         self.player_controls.playPauseClicked.connect(self._on_play_pause_clicked)
         self.player_controls.muteUnmuteClicked.connect(self._on_mute_unmute_clicked)
@@ -178,6 +180,7 @@ class PlayerWidget(QWidget):
         self.player_controls.aspectRatioChanged.connect(self._on_aspect_ratio_changed)
         self.player_controls.scaleChanged.connect(self._on_scale_changed)
         self.player_controls.screenshotRequested.connect(self._on_screenshot)
+        self.player_controls.reverseToggled.connect(self._on_reverse_toggled)
         self.player.signals.extraction_started.connect(self._on_url_extraction_started)
         self.player.signals.extraction_complete.connect(self._on_url_extraction_complete)
         self.player.signals.extraction_failed.connect(self._on_url_extraction_failed)
@@ -407,6 +410,29 @@ class PlayerWidget(QWidget):
         except Exception:
             pass
 
+    def _on_reverse_toggled(self, enabled):
+        if self.player:
+            try:
+                self.player.set_reverse_playback(enabled)
+            except Exception:
+                pass
+
+    def _on_reverse_stopped_from_monitor(self):
+        # The monitor thread (AVPlayer._monitor_playback, background
+        # thread) noticed reverse playback ran off the start of the track
+        # and cleared its own bookkeeping flag, but it doesn't touch mpv
+        # directly (that's backend-specific and stays out of the
+        # backend-agnostic base class) -- set_reverse_playback(False) here
+        # actually flips play-direction back to forward and does the
+        # recovery re-seek. sync_reverse_state just updates the checkbox
+        # without re-emitting reverseToggled (which would loop back here).
+        if self.player:
+            try:
+                self.player.set_reverse_playback(False)
+            except Exception:
+                pass
+        self.player_controls.sync_reverse_state(False)
+
     def _on_screenshot(self):
         try:
             image_format = prefs.prefs.get("image_format", "png")
@@ -508,6 +534,10 @@ class PlayerWidget(QWidget):
             self.player_controls.set_play_pause_state(is_playing)
             self.player_controls.set_mute_state(is_muted)
             self.player_controls.set_volume(int(instance.get_volume()))
+            try:
+                self.player_controls.set_reverse_available(self.player.is_audio_only())
+            except Exception:
+                pass
             track_name = os.path.basename(instance.file_path)
             if self.player.current_playlist is not None:
                 try:
