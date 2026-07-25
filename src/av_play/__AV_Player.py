@@ -35,6 +35,8 @@ class AVPlayer(ABC):
         self._track_end_callback:Optional[Callable[[int], None]] = None
         self._track_loading = False
         self._track_load_started_at = 0.0
+        self._reverse_playback_active = False
+        self._reverse_stopped_callback:Optional[Callable[[], None]] = None
 
 
     @property
@@ -117,6 +119,12 @@ class AVPlayer(ABC):
 
     def set_track_end_callback(self, callback:Optional[Callable[[int], None]]):
         self._track_end_callback = callback
+
+    def set_reverse_stopped_callback(self, callback:Optional[Callable[[], None]]):
+        self._reverse_stopped_callback = callback
+
+    def is_reverse_playback_active(self) -> bool:
+        return self._reverse_playback_active
 
     def get_playlist_state(self) -> AVPlaylistState:
         return self._playlist_state
@@ -270,16 +278,31 @@ class AVPlayer(ABC):
                         still_loading = (self._track_loading and
                             (time.monotonic() - self._track_load_started_at) < LOAD_GRACE_PERIOD)
                         if self._playlist_state == AVPlaylistState.PLAYING and not still_loading:
-                            with self._advance_lock:
-                                self._advance_track()
-                                # Fire with the *new* current index (post-advance),
-                                # not the one that just ended -- and only if it's
-                                # still a valid track (advancing past the end of a
-                                # non-repeating playlist leaves no "now playing"
-                                # track to report).
-                                if (self._track_end_callback and self._current_playlist is not None
-                                        and 0 <= self._current_playlist_index < len(self._current_playlist)):
-                                    self._track_end_callback(self._current_playlist_index)
+                            if self._reverse_playback_active:
+                                # Idle here means playing backward ran off
+                                # the *start* of the track, not the end --
+                                # advancing the playlist forward would be
+                                # exactly the wrong direction. Stop
+                                # reversing and let the concrete player
+                                # (via the callback) put mpv back in a
+                                # normal, resumable forward state instead
+                                # of skipping to a different track.
+                                with self._advance_lock:
+                                    self._reverse_playback_active = False
+                                    self._playlist_state = AVPlaylistState.PAUSED
+                                    if self._reverse_stopped_callback:
+                                        self._reverse_stopped_callback()
+                            else:
+                                with self._advance_lock:
+                                    self._advance_track()
+                                    # Fire with the *new* current index (post-advance),
+                                    # not the one that just ended -- and only if it's
+                                    # still a valid track (advancing past the end of a
+                                    # non-repeating playlist leaves no "now playing"
+                                    # track to report).
+                                    if (self._track_end_callback and self._current_playlist is not None
+                                            and 0 <= self._current_playlist_index < len(self._current_playlist)):
+                                        self._track_end_callback(self._current_playlist_index)
 
                 time.sleep(0.1)
 
