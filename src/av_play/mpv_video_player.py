@@ -479,20 +479,26 @@ class MPVMediaInterface(AVMediaInterface):
             mpv_instance = self._mpv()
             return {
                 'pause': mpv_instance.pause,
-                'eof_reached': bool(mpv_instance.eof_reached),
+                'idle_active': bool(mpv_instance.idle_active),
             }
 
         state_info = self._submit(get_state_info, wait=True, timeout=0.5)
         if state_info is None:
             return AVPlaybackState.AV_STATE_NOTHING
 
-        # eof-reached is mpv's own authoritative "this file finished playing"
-        # signal. The previous time_pos/duration proximity heuristic had two
-        # holes: while a new file is still loading, duration can populate
-        # before time_pos (misread as "ended"), and while *both* are still
-        # unset it fell through to reporting PLAYING (never detecting a
-        # genuine end at all, since length was then read back as 0).
-        if state_info['eof_reached']:
+        # idle-active is mpv's "nothing is loaded/playing right now" signal.
+        # eof-reached was tried here first, but per mpv's own docs it's only
+        # meaningful with --keep-open (which this app doesn't set): without
+        # it, mpv fully unloads the file at EOF instead of holding on the
+        # last frame, and eof-reached never flips to true at all -- so that
+        # approach silently broke *all* end-of-track detection (verified
+        # empirically: idle_active/path/time_pos/duration all reset but
+        # eof_reached stayed False). idle_active, in contrast, both catches
+        # genuine EOF and correctly reports "not idle" the instant a new
+        # loadfile is issued -- before duration/time_pos are even known --
+        # so it has neither of the previous heuristic's false-positive
+        # windows either.
+        if state_info['idle_active']:
             self.__end_reached = True
             return AVPlaybackState.AV_STATE_NOTHING
 
