@@ -322,6 +322,8 @@ class PlayerWidget(QWidget):
         if instance:
             try:
                 instance.set_volume(float(volume))
+                prefs.prefs["player_volume"] = volume
+                prefs.save()
             except av_play.AVError as e:
                 msg = f"Volume error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, _("Volume Error"), msg)
@@ -332,8 +334,10 @@ class PlayerWidget(QWidget):
         if instance:
             try:
                 current_volume = instance.get_volume()
-                new_volume = min(200, current_volume + prefs.prefs["offset"]["volume"])
+                new_volume = min(300, current_volume + prefs.prefs["offset"]["volume"])
                 instance.set_volume(new_volume)
+                prefs.prefs["player_volume"] = new_volume
+                prefs.save()
             except av_play.AVError as e:
                 msg = f"Volume error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, _("Volume Error"), msg)
@@ -345,6 +349,8 @@ class PlayerWidget(QWidget):
                 current_volume = instance.get_volume()
                 new_volume = max(0, current_volume - prefs.prefs["offset"]["volume"])
                 instance.set_volume(new_volume)
+                prefs.prefs["player_volume"] = new_volume
+                prefs.save()
             except av_play.AVError as e:
                 msg = f"Volume error: {getattr(e, 'message', str(e))}"
                 QMessageBox.critical(self, _("Volume Error"), msg)
