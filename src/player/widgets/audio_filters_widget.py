@@ -106,10 +106,12 @@ class AudioFiltersWidget(QWidget):
                 if self.player.is_audio_filter_enabled(name):
                     tab = self.list_tab.getTab(len(self._names) - 1)
                     if tab is not None:
-                        # setActivated() checks the item, which synchronously
-                        # fires itemChanged -> ListTabCtrl.onState -> shows
-                        # the panel -- no need to also call showTabWidget here.
+                        # Only marks it enabled -- ListTabCtrl no longer ties
+                        # panel visibility to check state, so this doesn't
+                        # show anything by itself.
                         tab.setActivated(True)
+            if self._names:
+                self.list_tab.tabLabels.setCurrentRow(0)
         finally:
             self._building = False
 
