@@ -198,8 +198,11 @@ class PlayerWidget(QWidget):
                 instance.pause()
                 self.player_controls.save_last_position()
             else:
-                if state == av_play.AVPlaybackState.AV_STATE_STOPPED or av_play.AVPlaybackState.AV_STATE_PAUSED:
-                    instance.play()
+                # Any non-playing state (STOPPED, PAUSED, or NOTHING -- e.g.
+                # right after a track hit EOF and mpv went idle) should
+                # resume/restart playback; instance.play() already handles
+                # reloading the file when the backend is idle.
+                instance.play()
         except av_play.AVError as e:
             msg = f"Playback error: {getattr(e, 'message', str(e))}"
             QMessageBox.critical(self, _("Playback Error"), msg)
@@ -481,8 +484,6 @@ class PlayerWidget(QWidget):
 
             if state == av_play.AVPlaybackState.AV_STATE_NOTHING and self._last_known_state == av_play.AVPlaybackState.AV_STATE_PLAYING:
                 self._last_known_state = state
-                if not self._loading:
-                    pass #self.player.next()
                 self._track_loader.load_subtitles_for_current_track()
                 self.filters_widget.reset_filters()
                 self._update_current_file()
