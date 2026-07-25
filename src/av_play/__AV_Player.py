@@ -33,6 +33,8 @@ class AVPlayer(ABC):
         self._monitor_running = False
         self._shuffle_order:List[int] = []
         self._track_end_callback:Optional[Callable[[int], None]] = None
+        self._track_loading = False
+        self._track_load_started_at = 0.0
 
 
     @property
@@ -132,18 +134,23 @@ class AVPlayer(ABC):
         return self._current_playlist_index
 
     def previous(self):
-        if self._current_playlist is not None and len(self._current_playlist) > 0:
-            if self._playlist_shuffle_mode == AVPlaylistShuffleMode.SHUFFLE:
-                current_shuffle_pos = self._shuffle_order.index(self._current_playlist_index)
-                current_shuffle_pos = max(0, current_shuffle_pos - 1)
-                self._current_playlist_index = self._shuffle_order[current_shuffle_pos]
-            else:
-                self._current_playlist_index = max(0, self._current_playlist_index - 1)
-            self._play_playlist_track()
+        with self._advance_lock:
+            if self._current_playlist is not None and len(self._current_playlist) > 0:
+                if self._playlist_shuffle_mode == AVPlaylistShuffleMode.SHUFFLE:
+                    try:
+                        current_shuffle_pos = self._shuffle_order.index(self._current_playlist_index)
+                    except ValueError:
+                        current_shuffle_pos = 0
+                    current_shuffle_pos = max(0, current_shuffle_pos - 1)
+                    self._current_playlist_index = self._shuffle_order[current_shuffle_pos]
+                else:
+                    self._current_playlist_index = max(0, self._current_playlist_index - 1)
+                self._play_playlist_track()
 
     def next(self):
-        if self._current_playlist is not None and len(self._current_playlist) > 0:
-            self._advance_track()
+        with self._advance_lock:
+            if self._current_playlist is not None and len(self._current_playlist) > 0:
+                self._advance_track()
 
     def stop_playlist(self):
         if self._primary_instance:
@@ -164,11 +171,12 @@ class AVPlayer(ABC):
             self._start_monitor()
 
     def jump_to_track(self, index: int):
-        if self._current_playlist is not None and 0 <= index < len(self._current_playlist):
-            self._current_playlist_index = index
-            self._play_playlist_track()
-            return True
-        return False
+        with self._advance_lock:
+            if self._current_playlist is not None and 0 <= index < len(self._current_playlist):
+                self._current_playlist_index = index
+                self._play_playlist_track()
+                return True
+            return False
 
     def _generate_shuffle_order(self):
         if self._current_playlist:
@@ -230,29 +238,39 @@ class AVPlayer(ABC):
         self._monitor_running = False
 
     def _monitor_playback(self):
+        # After previous()/next()/jump_to_track()/_advance_track() issue a
+        # load, the backend briefly reports AV_STATE_NOTHING (no time_pos
+        # yet) before the new track actually starts playing. Without this
+        # grace window, that transient state looks identical to "playback
+        # stopped" below and triggers a second, spurious _advance_track()
+        # call on top of whatever navigation just happened.
+        LOAD_GRACE_PERIOD = 3.0
         while self._monitor_running and self._auto_play_enabled:
             try:
                 if self._primary_instance:
                     state = self._primary_instance.get_playback_state()
-                    
+
                     if state == AVPlaybackState.AV_STATE_PLAYING:
                         self._playlist_state = AVPlaylistState.PLAYING
+                        self._track_loading = False
                         position = self._primary_instance.get_position()
                         length = self._primary_instance.get_length()
-                        
+
                         if length > 0 and position >= length - 1:
                             with self._advance_lock:
                                 if self._track_end_callback:
                                     self._track_end_callback(self._current_playlist_index)
                                 self._advance_track()
-                    
+
                     elif state in [AVPlaybackState.AV_STATE_STOPPED, AVPlaybackState.AV_STATE_NOTHING]:
-                        if self._playlist_state == AVPlaylistState.PLAYING:
+                        still_loading = (self._track_loading and
+                            (time.monotonic() - self._track_load_started_at) < LOAD_GRACE_PERIOD)
+                        if self._playlist_state == AVPlaylistState.PLAYING and not still_loading:
                             with self._advance_lock:
                                 self._advance_track()
-                
+
                 time.sleep(0.1)
-            
+
             except Exception as e:
                 time.sleep(0.3)
 
@@ -262,6 +280,8 @@ class AVPlayer(ABC):
         
         if self._current_playlist and 0 <= self._current_playlist_index < len(self._current_playlist):
             instance_path = self._current_playlist.entries[self._current_playlist_index].location
+            self._track_loading = True
+            self._track_load_started_at = time.monotonic()
             if is_path(instance_path):
                 self._primary_instance.load_file(instance_path)
             else:
