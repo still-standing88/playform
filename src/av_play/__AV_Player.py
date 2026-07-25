@@ -205,13 +205,23 @@ class AVPlayer(ABC):
                 self._current_playlist_index = self._shuffle_order[0] if self._shuffle_order else 0
         else:
 
-            self._current_playlist_index += 1
-            if self._current_playlist_index >= len(self._current_playlist):
+            next_index = self._current_playlist_index + 1
+            if next_index >= len(self._current_playlist):
                 if self._playlist_repeat_mode == AVPlaylistRepeatMode.REPEAT_ALL:
                     self._current_playlist_index = 0
                 else:
+                    # Stay clamped on the last track instead of leaving the
+                    # index stranded past the end -- otherwise repeated
+                    # next() presses at the end of a non-repeating playlist
+                    # silently drift the index out of bounds (with no
+                    # audible change each time), and it then takes that many
+                    # previous() presses just to walk back into valid range,
+                    # landing on the wrong track.
+                    self._current_playlist_index = len(self._current_playlist) - 1
                     self._playlist_state = AVPlaylistState.FINISHED
                     return
+            else:
+                self._current_playlist_index = next_index
 
         self._play_playlist_track()
 
