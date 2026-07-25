@@ -10,6 +10,12 @@ def init_mpv_player(widget):
     Extracted out of PlayerWidget._init_player; widget is the owning
     PlayerWidget instance."""
     config: dict = {}
+    # mpv's own volume ceiling defaults far lower than the UI's; without
+    # raising it here, set_volume() calls above mpv's default volume-max
+    # get silently clamped back down regardless of what the slider shows.
+    config["volume"] = prefs.prefs.get("player_volume", 120)
+    config["volume_max"] = 300
+
     if prefs.prefs.get("mpv_logging", True):
         level_map = {0: "error", 1: "info", 2: "debug"}
         config["log_file"] = get_mpvlog_file()
