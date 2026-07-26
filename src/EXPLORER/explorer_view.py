@@ -106,7 +106,14 @@ class ExplorerView(QListWidget):
                 self._instance = self._player.create_file_instance(self._pending_media_path)
             else:
                 self._instance.load_file(self._pending_media_path)
-            self._instance.stop()
+            # pause(), not stop(): mpv auto-plays on load by default, and this
+            # runs immediately afterward with no delay to prevent that when
+            # autoplay is off. stop() is a command (mpv_command_node) and
+            # reliably fails ("Error running mpv command") when issued before
+            # mpv finishes opening the just-loaded file; pause() just writes
+            # the read/write "pause" property instead, which doesn't race
+            # (verified empirically).
+            self._instance.pause()
             if not self._just_launched and prefs.prefs["autoplay"]:
                 self._instance.play()
                 if self._player_bar:
