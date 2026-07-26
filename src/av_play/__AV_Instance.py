@@ -130,7 +130,14 @@ class AVMediaInstance:
 
         try:
             if self.get_playback_state() == AVPlaybackState.AV_STATE_PLAYING:
-                self.stop()
+                # pause(), not stop(): this can run soon after a load (e.g.
+                # closing media right after opening it), and stop() is a
+                # command that reliably fails ("Error running mpv command")
+                # if issued before mpv finishes opening the file -- pause()
+                # writes a property instead and doesn't race (verified
+                # empirically). The instance is about to be fully released
+                # below regardless, so silencing playback is all this needs.
+                self.pause()
         except:
             pass
         
