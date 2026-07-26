@@ -274,14 +274,28 @@ class MPVMediaInterface(AVMediaInterface):
         self.__end_reached = False
 
     def free(self):
-        worker, self.__worker = self.__worker, None
+        worker = self.__worker
         if worker is not None:
             # worker.shutdown() blocks (joins the worker thread) so terminate()
             # is guaranteed to finish before returning. free() is reachable
             # from GUI event handlers on the Qt main thread (MPVVideoPlayer.
             # release() -> here); run the wait on a throwaway thread instead
-            # of blocking the caller. self.__worker is already cleared above,
-            # so nothing depends on this having finished by any particular time.
+            # of blocking the caller.
+            #
+            # self.__worker is deliberately NOT cleared here (unlike before):
+            # release()/free() commonly follow right behind other
+            # fire-and-forget jobs (e.g. AVMediaInstance.release()'s own
+            # pause()) that are still sitting in the worker's queue, not yet
+            # executed. Those closures call self._mpv(), which reads
+            # self.__worker -- nulling it immediately on this (calling)
+            # thread raced the worker thread still draining that queue,
+            # so those in-flight jobs hit self._mpv()'s assertion and failed
+            # (verified empirically). shutdown() enqueues its sentinel
+            # behind any already-queued work, so everything queued before
+            # this call still runs against a valid worker/mpv instance;
+            # _MPVWorker.submit() already rejects new work once the worker
+            # actually stops (_stopped.is_set()), so nothing needs
+            # self.__worker itself to go None to be correctly protected.
             threading.Thread(target=worker.shutdown, daemon=True, name="MPVWorkerShutdown").start()
         self.__current_id = None
         self.__applied_filters.clear()
@@ -358,7 +372,13 @@ class MPVMediaInterface(AVMediaInterface):
             self._check_initialized()
 
             def halt():
-                self._mpv().stop()
+                # Property write instead of the stop command -- see
+                # set_position()'s comment. release() can run soon after a
+                # load (e.g. closing media right after opening it), and
+                # __stopped below already makes get_play_state() report
+                # stopped regardless of whether mpv itself finishes this in
+                # time, so silencing via "pause" is enough here.
+                self._mpv().pause = True
             self._submit(halt, wait=False)
             self.__current_id = None
             self.__applied_filters.clear()
@@ -446,7 +466,15 @@ class MPVMediaInterface(AVMediaInterface):
         def seek():
             if self.__seek_token is not token:
                 return
-            self._mpv().seek(offset, "absolute")
+            # time_pos is a read/write mpv property; setting it does an
+            # absolute/exact seek just like the seek command, but property
+            # writes don't go through mpv_command_node -- unlike .seek(),
+            # this doesn't fail with "Error running mpv command" when
+            # issued immediately after a load, before mpv has actually
+            # finished opening the file (verified empirically). Matters
+            # a lot here since callers like "resume last position" seek
+            # right after load_file()/play() with no delay.
+            self._mpv().time_pos = offset
         self._submit(seek, wait=False)
 
     def set_loop(self, id: int, loop: bool):
@@ -674,10 +702,12 @@ class MPVVideoPlayer(AVPlayer):
         self.__mpv_interface.run_on_mpv(lambda m: m._set_property("wid", str(int(window))), wait=False)
 
     def forward(self, offset):
-        self.__mpv_interface.run_on_mpv(lambda m: m.seek(+offset, reference='relative'), wait=False)
+        # See set_position()'s comment: time_pos writes are race-safe
+        # right after a load in a way .seek() commands aren't.
+        self.__mpv_interface.run_on_mpv(lambda m: setattr(m, 'time_pos', (m.time_pos or 0.0) + offset), wait=False)
 
     def backward(self, offset):
-        self.__mpv_interface.run_on_mpv(lambda m: m.seek(-offset, reference='relative'), wait=False)
+        self.__mpv_interface.run_on_mpv(lambda m: setattr(m, 'time_pos', max(0.0, (m.time_pos or 0.0) - offset)), wait=False)
 
     def set_volume_relative(self, direction, offset):
         def adjust(m):
@@ -744,7 +774,8 @@ class MPVVideoPlayer(AVPlayer):
         if not enabled:
             def recover(m):
                 pos = m.time_pos
-                m.seek(pos if pos is not None else 0.0, reference="absolute")
+                # Property write, not the seek command -- see set_position().
+                m.time_pos = pos if pos is not None else 0.0
             self.__mpv_interface.run_on_mpv(recover, wait=False)
 
     def get_reverse_playback(self) -> bool:
