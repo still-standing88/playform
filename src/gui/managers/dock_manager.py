@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QDockWidget
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from app_config import prefs
 from tools.debug_console_dock import DebugConsoleDock
 from media_providers.radio import RadioBrowserWidget
@@ -154,12 +154,14 @@ class DockManager:
             self.main_window.recents_favorites_dock.setVisible(checked)
             if checked and self.main_window.recents_and_favorites_widget:
                 self.main_window.recents_and_favorites_widget.setFocus()
+        self._schedule_clamp_to_screen()
 
     def toggle_explorer(self, checked):
         if self.main_window.explorer_dock:
             self.main_window.explorer_dock.setVisible(checked)
             if checked and self.main_window.explorer_widget:
                 self.main_window.explorer_widget.setFocus()
+        self._schedule_clamp_to_screen()
 
     def toggle_player_minimize(self, checked):
         if self.player_dock:
@@ -167,12 +169,14 @@ class DockManager:
             if not checked and self.main_window.player_widget:
                 self.main_window.player_widget.setFocus()
         self.update_focusable_widgets()
+        self._schedule_clamp_to_screen()
 
     def toggle_playlists(self, checked):
         if self.main_window.playlists_dock:
             self.main_window.playlists_dock.setVisible(checked)
             if checked and self.main_window.playlists_widget:
                 self.main_window.playlists_widget.setFocus()
+        self._schedule_clamp_to_screen()
 
     def toggle_radio(self, checked):
         if self.main_window.radio_dock is None and checked:
@@ -182,6 +186,7 @@ class DockManager:
             if checked and self.main_window.radio_widget:
                 self.main_window.radio_widget.setFocus()
             self.update_focusable_widgets()
+        self._schedule_clamp_to_screen()
 
     def toggle_podcast(self, checked):
         if self.main_window.podcast_dock is None and checked:
@@ -191,6 +196,7 @@ class DockManager:
             if checked and self.main_window.podcast_widget:
                 self.main_window.podcast_widget.setFocus()
             self.update_focusable_widgets()
+        self._schedule_clamp_to_screen()
 
     def _sync_float_action_for_dock(self, dock, action_attr):
         # Radio/Podcast docks are lazily created, and can come into existence
@@ -261,6 +267,7 @@ class DockManager:
             self.main_window.debug_console_dock.raise_()
         else:
             self.main_window.debug_console_dock.hide()
+        self._schedule_clamp_to_screen()
 
     def save_window_state(self):
         mw = self.main_window
@@ -270,10 +277,12 @@ class DockManager:
 
     def restore_window_state(self):
         mw = self.main_window
+        self.had_saved_geometry = False
         if 'window_geometry' in prefs.prefs and prefs.prefs['window_geometry']:
             try:
                 geometry = bytes.fromhex(prefs.prefs['window_geometry'])
                 mw.restoreGeometry(geometry)
+                self.had_saved_geometry = True
             except:
                 pass
 
@@ -293,6 +302,58 @@ class DockManager:
         # for the player dock specifically (no other dock had this override).
         if mw.minimize_player_action:
             mw.minimize_player_action.setChecked(not (self.player_dock.isVisible() if self.player_dock else True))
+
+        self._schedule_clamp_to_screen()
+
+    def _schedule_clamp_to_screen(self):
+        # Deferred because the layout hasn't actually recalculated the
+        # window's real size yet at the point a dock's visibility changes -
+        # running this synchronously would check stale geometry.
+        QTimer.singleShot(0, self.clamp_to_screen)
+
+    def clamp_to_screen(self):
+        # Growing dock/toolbar content can make QMainWindow taller (or
+        # wider) than the current screen's available area, since Qt's
+        # layout generally grows the window to satisfy combined minimum
+        # sizes rather than violate them - pushing the status bar (always
+        # at the window's own bottom edge, not the screen's) below what's
+        # actually visible. restoreGeometry() only clamps this once, at
+        # startup (see restore_window_state()) - this re-checks after
+        # anything that can grow the window mid-session, i.e. any dock
+        # being toggled visible.
+        mw = self.main_window
+        if mw.isMaximized() or mw.isFullScreen():
+            return
+
+        screen = mw.screen()
+        if screen is None:
+            return
+        available = screen.availableGeometry()
+
+        # resize()/move() operate on geometry() (the client rect), but
+        # availableGeometry() is the space the *frame* (title bar + borders)
+        # needs to fit in - clamping the client rect alone leaves the title
+        # bar's own height unaccounted for, silently letting the client
+        # area's bottom edge (and the status bar with it) still run past the
+        # screen. Verified live: clamping only geometry() left the frame
+        # ~30px (a title bar's worth) taller than available every time.
+        frame = mw.frameGeometry()
+        geo = mw.geometry()
+        frame_extra_w = frame.width() - geo.width()
+        frame_extra_h = frame.height() - geo.height()
+
+        new_width = min(geo.width(), available.width() - frame_extra_w)
+        new_height = min(geo.height(), available.height() - frame_extra_h)
+        if (new_width, new_height) != (geo.width(), geo.height()):
+            mw.resize(new_width, new_height)
+
+        frame = mw.frameGeometry()
+        x = min(frame.x(), available.right() - frame.width() + 1)
+        y = min(frame.y(), available.bottom() - frame.height() + 1)
+        x = max(x, available.left())
+        y = max(y, available.top())
+        if (x, y) != (frame.x(), frame.y()):
+            mw.move(x, y)
 
     def _all_docks(self):
         mw = self.main_window
