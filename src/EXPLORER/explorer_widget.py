@@ -2,7 +2,7 @@ import os
 from PySide6.QtWidgets import (
     QWidget, QFrame, QVBoxLayout, QHBoxLayout, QTreeView, QPushButton,
     QTextEdit, QListWidget, QCheckBox, QSpinBox, QLabel,
-    QSplitter, QGroupBox, QToolBar, QComboBox
+    QSplitter, QGroupBox, QToolBar, QComboBox, QScrollArea
 )
 from PySide6.QtCore import Qt as qt, QTimer, Slot
 from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap, QAction, QActionGroup, QShortcut, QKeySequence
@@ -259,6 +259,23 @@ class ExplorerWidget(QWidget):
         controls_layout.addWidget(self.volume_spinbox)
 
         main_layout.addWidget(media_group)
+
+        # main_splitter's combined content (Library plus Path/Search/Files/
+        # Media Preview, each in its own QGroupBox) has a large minimum
+        # height once every group box's own padding stacks on top of its
+        # content's minimum - wrap it in a scroll area so it can shrink and
+        # scroll instead of forcing that full sum onto the dock every time,
+        # the same fix already applied to the Player accordion. Title,
+        # toolbar, and the Media controls row stay outside it, always
+        # visible.
+        splitter_index = main_layout.indexOf(main_splitter)
+        main_layout.removeWidget(main_splitter)
+        splitter_scroll = QScrollArea(self)
+        splitter_scroll.setWidget(main_splitter)
+        splitter_scroll.setWidgetResizable(True)
+        splitter_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        splitter_scroll.setMinimumHeight(250)
+        main_layout.insertWidget(splitter_index, splitter_scroll, 1)
 
     def repeat_media(self):
         if prefs.prefs['repeat'] == True:
