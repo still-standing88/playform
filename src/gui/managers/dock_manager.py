@@ -21,8 +21,17 @@ class DockManager:
         top-level window once floated."""
         def on_top_level_changed(floating: bool):
             if floating:
+                # setWindowFlags() always hides the widget as a side effect,
+                # regardless of whether the flags actually changed - re-show
+                # it only if it was actually visible beforehand. Without this
+                # guard, a dock restored as floating-but-hidden (e.g. via
+                # QMainWindow.restoreState()) gets forced visible here, which
+                # is why floated panes could reappear on launch even though
+                # they were left hidden last session.
+                was_visible = dock.isVisible()
                 dock.setWindowFlags(dock.windowFlags() | Qt.WindowType.Window)
-                dock.show()
+                if was_visible:
+                    dock.show()
 
         dock.topLevelChanged.connect(on_top_level_changed)
 
