@@ -101,8 +101,9 @@ class ExplorerWidget(QWidget):
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
-        title_label = QLabel(_("Explorer"))
-        main_layout.addWidget(title_label)
+        # No separate title label here - the dock widget's own title bar
+        # already reads "Explorer" right above this, so a second one was
+        # just always-visible chrome duplicating it for free.
         main_splitter = QSplitter(qt.Orientation.Horizontal)
         main_layout.addWidget(main_splitter)
 
@@ -189,7 +190,9 @@ class ExplorerWidget(QWidget):
         self.add_to_database_action.triggered.connect(self._on_add_current_folder_to_database)
         self.toolbar.addAction(self.add_to_database_action)
 
-        main_layout.insertWidget(1, self.toolbar)
+        # Index 0, not 1 - main_splitter was added first (there's no title
+        # label above it anymore), so this needs to land before it.
+        main_layout.insertWidget(0, self.toolbar)
 
         self.image_preview_label = QLabel()
         self.image_preview_label.setAlignment(qt.AlignmentFlag.AlignCenter)
@@ -258,23 +261,32 @@ class ExplorerWidget(QWidget):
         self.volume_spinbox.valueChanged.connect(self.volumeChange)
         controls_layout.addWidget(self.volume_spinbox)
 
-        main_layout.addWidget(media_group)
-
         # main_splitter's combined content (Library plus Path/Search/Files/
         # Media Preview, each in its own QGroupBox) has a large minimum
         # height once every group box's own padding stacks on top of its
-        # content's minimum - wrap it in a scroll area so it can shrink and
-        # scroll instead of forcing that full sum onto the dock every time,
-        # the same fix already applied to the Player accordion. Title,
-        # toolbar, and the Media controls row stay outside it, always
-        # visible.
+        # content's minimum. Explorer normally docks alongside the Player
+        # dock, which has the exact same problem (already fixed) - both
+        # competing for one shared vertical budget means every pixel of
+        # always-visible chrome on either side directly steals from the
+        # other. media_group moves inside the scroll area with the
+        # splitter instead of staying pinned below it (it's a settings
+        # row, not primary navigation), leaving only the toolbar always
+        # visible - and the floor drops from an earlier, more generous
+        # 250px to 150px, the same reasoning as the Player accordion's
+        # floor: guarantee *something* is always reachable without
+        # scrolling, not the whole panel at once.
         splitter_index = main_layout.indexOf(main_splitter)
         main_layout.removeWidget(main_splitter)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
+        scroll_layout.setContentsMargins(0, 0, 0, 0)
+        scroll_layout.addWidget(main_splitter, 1)
+        scroll_layout.addWidget(media_group)
         splitter_scroll = QScrollArea(self)
-        splitter_scroll.setWidget(main_splitter)
+        splitter_scroll.setWidget(scroll_content)
         splitter_scroll.setWidgetResizable(True)
         splitter_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        splitter_scroll.setMinimumHeight(250)
+        splitter_scroll.setMinimumHeight(150)
         main_layout.insertWidget(splitter_index, splitter_scroll, 1)
 
     def repeat_media(self):
