@@ -206,6 +206,13 @@ class MainWindow(QMainWindow):
         self.status_bar.setObjectName("statusBar")
         self.status_bar.setSizeGripEnabled(True)
         self.status_bar.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        # Without an explicit floor, this has no protected minimum the way
+        # the accordion/video placeholder now do - when the window's true
+        # combined minimum height exceeds the screen (clamp_to_screen()
+        # still has to fit the window on-screen regardless), something has
+        # to be squeezed below its stated minimum, and this had the least
+        # protection of anything competing for that space.
+        self.status_bar.setMinimumHeight(24)
         self.setStatusBar(self.status_bar)
         
         self.status_label = QLabel(_("Ready"))
