@@ -38,7 +38,16 @@ class VideoDisplayWidget(QWidget):
         self.placeholder_label = QLabel(_("Video Display Area"), self)
         self.placeholder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.placeholder_label.setStyleSheet(VIDEO_PLACEHOLDER_STYLE)
-        self.placeholder_label.setMinimumSize(640, 360)
+        # This used to be 640x360 - a hardcoded floor with no documented
+        # reason, dating to before the accordion needed to share this same
+        # docked column. In a height-constrained dock, Qt satisfies this
+        # widget's minimum before giving the accordion (Expanding policy,
+        # shrinks first under pressure) anything at all, which is why the
+        # accordion could vanish entirely when docked despite working fine
+        # floated (full screen height, so the conflict never came up). A
+        # small floor still keeps the placeholder legible without starving
+        # everything below it.
+        self.placeholder_label.setMinimumSize(160, 90)
         self.placeholder_label.setAccessibleName(_("Video display area"))
         self.placeholder_label.setAccessibleDescription(_("Main video playback area"))
         
