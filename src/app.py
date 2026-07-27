@@ -67,7 +67,7 @@ def main():
         
         splash.update_message(_("Starting application..."))
         splash.finish(window)
-        window.show()
+        window.show_or_maximize()
         if len(cli_args) > 1 and app_instance:
             app_instance.focus_window("PlayForm")
         

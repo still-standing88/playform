@@ -696,6 +696,21 @@ class MainWindow(QMainWindow):
     def restore_window_state(self):
         self.dock_manager.restore_window_state()
 
+    def show_or_maximize(self):
+        # A totally fresh install has no saved window_geometry to restore,
+        # so it falls back to the hardcoded resize(1400, 900) from __init__ -
+        # which has no screen-fit clamping at all, unlike restoreGeometry()
+        # (see restore_window_state()/clamp_to_screen()), and could already
+        # exceed a smaller screen before any dock has even been toggled.
+        # Maximized is inherently bounded by the screen's work area, so it's
+        # a safer default specifically for this no-saved-state case - not a
+        # standing "always maximized" mode, the user can un-maximize freely
+        # afterward same as any other maximized window.
+        if getattr(self.dock_manager, 'had_saved_geometry', False):
+            self.show()
+        else:
+            self.showMaximized()
+
     def closeEvent(self, event):
         # QApplication.quit() (from close_application()) re-triggers this
         # very closeEvent() on its way out - without this guard, the
