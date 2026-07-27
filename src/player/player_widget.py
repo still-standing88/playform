@@ -126,9 +126,8 @@ class PlayerWidget(QWidget):
         self.side_accordion.add_section(_("Video Filters"), self.filters_widget)
         self.side_accordion.add_section(_("Audio Filters"), self.audio_filters_widget)
 
-        left_layout.addWidget(self.side_accordion)
-
         self.main_splitter.addWidget(left_widget)
+        self.main_splitter.addWidget(self.side_accordion)
 
         self.main_splitter.setSizes([800, 300])
         self.main_splitter.setStretchFactor(0, 1)
