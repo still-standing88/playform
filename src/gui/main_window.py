@@ -658,7 +658,15 @@ class MainWindow(QMainWindow):
         if not get_restart_flag() and self.has_active_tools():
             if not self.confirm_close_with_active_tools():
                 return
-        
+
+        # This is also the exit path for the tray "Exit" action, the File
+        # menu's Exit action, and the Exit hotkey - none of which go through
+        # closeEvent(), which was the only place saving dock_session.json.
+        # Any dock created lazily from that file (Radio, Podcast) would never
+        # get recreated on the next launch if the session was closed this
+        # way, since restoreState() can't restore a dock widget that was
+        # never added back in the first place.
+        self.dock_manager.save_dock_session()
         self.save_window_state()
         
         if self.tray:
