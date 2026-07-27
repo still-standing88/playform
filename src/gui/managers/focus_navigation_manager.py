@@ -62,7 +62,7 @@ class FocusNavigationManager:
             # activation, leaving QApplication.focusWidget() empty.
             QApplication.processEvents()
 
-        if widget is mw.toolbar or widget is getattr(mw, 'panels_toolbar', None):
+        if widget is mw.toolbar or widget in (getattr(mw, 'panels_toolbar', None), getattr(mw, 'panels_toolbar_2', None)):
             widget.setFocus()
             toolbar_actions = [action for action in widget.actions() if action.isVisible() and not action.isSeparator()]
             if toolbar_actions:
