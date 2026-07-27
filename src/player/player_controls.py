@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, Signal, QTimer, Slot
 from PySide6.QtGui import QIcon, QFont
 
 from gui_controls.toggle_button import ToggleButton
+from gui_controls.flow_layout import FlowLayout, FlowContainer
 from app_config import prefs
 from .dialogs.bookmarks_dialog import BookmarksDialog
 from .dialogs.goto_dialog import GoToDialog
@@ -115,69 +116,58 @@ class PlayerControls(QWidget):
         # Create media control buttons with icons
         self.previous_btn = QToolButton(self)
         self.previous_btn.setIcon(load_icon("previous.svg"))
-        self.previous_btn.setText(_("Previous"))
-        self.previous_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         self.backward_btn = QToolButton(self)
         self.backward_btn.setIcon(load_icon("rewind.svg"))
-        self.backward_btn.setText(_("Rewind"))
-        self.backward_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         self.play_pause_btn = QToolButton(self)
         self.play_pause_btn.setIcon(load_icon("play.svg"))
-        self.play_pause_btn.setText(_("Play"))
-        self.play_pause_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         self.forward_btn = QToolButton(self)
         self.forward_btn.setIcon(load_icon("forward.svg"))
-        self.forward_btn.setText(_("Forward"))
-        self.forward_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         self.next_btn = QToolButton(self)
         self.next_btn.setIcon(load_icon("next.svg"))
-        self.next_btn.setText(_("Next"))
-        self.next_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         self.repeat_btn = QToolButton(self)
         self.repeat_btn.setIcon(load_icon("repeat.svg"))
-        self.repeat_btn.setText(_("Off"))
-        self.repeat_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         self.shuffle_btn = QToolButton(self)
         self.shuffle_btn.setIcon(load_icon("shuffle.svg"))
-        self.shuffle_btn.setText(_("Shuffle"))
-        self.shuffle_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         self.bookmarks_btn = QToolButton(self)
         self.bookmarks_btn.setIcon(load_icon("bookmarks.svg"))
-        self.bookmarks_btn.setText(_("Bookmarks"))
-        self.bookmarks_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         self.goto_btn = QToolButton(self)
         self.goto_btn.setIcon(load_icon("seek.svg"))
-        self.goto_btn.setText(_("Go to"))
-        self.goto_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         self.screenshot_btn = QToolButton(self)
         self.screenshot_btn.setIcon(load_icon("screenshot.svg"))
-        self.screenshot_btn.setText(_("Screenshot"))
-        self.screenshot_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
+        # Icon-only at a predictable, uniform size, not the previous
+        # per-button icon+text at 90-130px wide each - those ten buttons
+        # alone summed to ~1110px, and the whole controls row to ~1660px,
+        # far more than a typical window's width, forcing horizontal
+        # clipping instead of ever wrapping. The state each button's text
+        # used to show (Play/Pause, Repeat: Off/All/One, Shuffle: On/Off)
+        # is already duplicated into its tooltip elsewhere in this file, so
+        # nothing discoverable is lost by dropping the inline label.
         button_specs = [
-            (self.previous_btn, 120, 40, _("Previous Track")),
-            (self.backward_btn, 110, 40, _("Backward")),
-            (self.play_pause_btn, 100, 50, _("Play/Pause")),
-            (self.forward_btn, 110, 40, _("Forward")),
-            (self.next_btn, 100, 40, _("Next Track")),
-            (self.repeat_btn, 90, 40, _("Repeat mode")),
-            (self.shuffle_btn, 110, 40, _("Shuffle")),
-            (self.bookmarks_btn, 130, 40, _("Bookmarks list")),
-            (self.goto_btn, 110, 40, _("Go to time")),
-            (self.screenshot_btn, 130, 40, _("Take screenshot")),
+            (self.previous_btn, _("Previous Track")),
+            (self.backward_btn, _("Backward")),
+            (self.play_pause_btn, _("Play/Pause")),
+            (self.forward_btn, _("Forward")),
+            (self.next_btn, _("Next Track")),
+            (self.repeat_btn, _("Repeat mode")),
+            (self.shuffle_btn, _("Shuffle")),
+            (self.bookmarks_btn, _("Bookmarks list")),
+            (self.goto_btn, _("Go to time")),
+            (self.screenshot_btn, _("Take screenshot")),
         ]
 
-        for btn, w, h, tooltip in button_specs:
-            btn.setFixedSize(w, h)
+        for btn, tooltip in button_specs:
+            btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+            btn.setFixedSize(36, 36)
             btn.setToolTip(tooltip)
 
         self.seek_slider = QSlider(Qt.Orientation.Horizontal, self)
@@ -244,41 +234,32 @@ class PlayerControls(QWidget):
         self.track_layout.addWidget(self.current_track_label)
         self.track_layout.addStretch()
 
-        self.controls_layout = QHBoxLayout()
-        self.controls_layout.setSpacing(15)
+        # The seek bar stays its own always-full-width row - unlike the
+        # buttons below, it needs to stay wide to be usable, not wrap.
+        self.seek_layout = QHBoxLayout()
+        self.seek_layout.setSpacing(5)
+        self.seek_layout.addWidget(self.seek_icon_label)
+        self.seek_layout.addWidget(self.seek_slider, 1)
 
-        self.transport_layout = QHBoxLayout()
-        self.transport_layout.setSpacing(5)
-        self.transport_layout.addWidget(self.previous_btn)
-        self.transport_layout.addWidget(self.backward_btn)
-        self.transport_layout.addWidget(self.play_pause_btn)
-        self.transport_layout.addWidget(self.forward_btn)
-        self.transport_layout.addWidget(self.next_btn)
-        self.transport_layout.addWidget(self.repeat_btn)
-        self.transport_layout.addWidget(self.shuffle_btn)
-        self.transport_layout.addWidget(self.bookmarks_btn)
-        self.transport_layout.addWidget(self.goto_btn)
-        self.transport_layout.addWidget(self.screenshot_btn)
-
-        self.volume_layout = QHBoxLayout()
-        self.volume_layout.setSpacing(5)
-        self.volume_layout.addWidget(self.mute_btn)
-        self.volume_layout.addWidget(self.volume_icon_label)
-        self.volume_layout.addWidget(self.volume_slider)
-
-        self.controls_layout.addLayout(self.transport_layout)
-        self.controls_layout.addWidget(self.separator1)
-        self.controls_layout.addWidget(self.seek_icon_label)
-        self.controls_layout.addWidget(self.seek_slider, 1)
-        self.controls_layout.addWidget(self.separator2)
-        self.controls_layout.addLayout(self.volume_layout)
-        self.controls_layout.addWidget(self.time_label)
-        self.controls_layout.addWidget(self.more_btn)
-        self.controls_layout.addWidget(self.toggle_controls_btn)
-
+        # Everything else used to be one fixed QHBoxLayout row needing
+        # ~1660px (ten 90-130px-wide buttons plus separators, volume, time
+        # label) - now a FlowLayout wraps it across as many rows as the
+        # actual window width needs, the same fix already applied to the
+        # Panels toolbar.
+        self.buttons_container = FlowContainer()
+        self.buttons_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.buttons_flow = FlowLayout(self.buttons_container, margin=0, h_spacing=8, v_spacing=6)
+        for widget in (self.previous_btn, self.backward_btn, self.play_pause_btn,
+                       self.forward_btn, self.next_btn, self.separator1,
+                       self.repeat_btn, self.shuffle_btn, self.bookmarks_btn,
+                       self.goto_btn, self.screenshot_btn, self.separator2,
+                       self.mute_btn, self.volume_icon_label, self.volume_slider,
+                       self.time_label, self.more_btn, self.toggle_controls_btn):
+            self.buttons_flow.addWidget(widget)
 
         self.main_layout.addLayout(self.track_layout)
-        self.main_layout.addLayout(self.controls_layout)
+        self.main_layout.addLayout(self.seek_layout)
+        self.main_layout.addWidget(self.buttons_container)
 
         self.expandable_widgets = [
             self.previous_btn, self.backward_btn, self.forward_btn,
@@ -332,12 +313,33 @@ class PlayerControls(QWidget):
         self.time_label.setStyleSheet(TIME_LABEL_STYLE)
         self.current_track_label.setStyleSheet(TRACK_LABEL_STYLE)
 
+    def _resync_buttons_container_height(self):
+        # Nested heightForWidth widgets inside a plain QVBoxLayout are a
+        # known Qt limitation - the outer layout doesn't reliably re-query
+        # a child's heightForWidth() when the available width changes or
+        # when a managed widget's visibility changes, the way single-level
+        # layouts do. Verified live: resizing this widget across several
+        # widths, and toggling Minimize Controls (hiding most of its
+        # children), left buttons_container's actual rendered height stuck
+        # at an early wrong value throughout - updateGeometry() alone
+        # (the normal way to ask a layout to re-check) never resolved it,
+        # even after pumping the event loop. Computing and applying the
+        # needed height directly sidesteps relying on that negotiation.
+        width = self.buttons_container.width()
+        if width > 0:
+            self.buttons_container.setFixedHeight(self.buttons_flow.heightForWidth(width))
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._resync_buttons_container_height()
+
     @Slot(bool)
     def toggle_controls(self, minimized):
         self.is_minimized = minimized
 
         for widget in self.expandable_widgets:
             widget.setVisible(not minimized)
+        self._resync_buttons_container_height()
 
         if minimized:
             self.toggle_controls_btn.setText(_("Maximize"))
