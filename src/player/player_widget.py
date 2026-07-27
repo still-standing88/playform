@@ -116,7 +116,7 @@ class PlayerWidget(QWidget):
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(5)
 
-        left_layout.addWidget(self.video_display, 1)
+        left_layout.addWidget(self.video_display, 2)
         left_layout.addWidget(self.timeline)
         left_layout.addWidget(self.player_controls)
         self.video_display.set_position_info(left_layout, 0)
@@ -138,7 +138,17 @@ class PlayerWidget(QWidget):
         accordion_scroll.setWidgetResizable(True)
         accordion_scroll.setFrameShape(QFrame.Shape.NoFrame)
         accordion_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        left_layout.addWidget(accordion_scroll)
+        # Without a stretch factor of its own, this got zero of any leftover
+        # space in a docked (height-constrained) player - video_display was
+        # the only widget with a nonzero stretch, so it alone absorbed every
+        # extra pixel while the accordion stayed pinned to its bare minimum,
+        # which in a small dock could squeeze it to nothing (not even its
+        # five collapsed section headers visible). Giving it a share of the
+        # stretch, plus a floor tall enough for all five headers, means it
+        # always shows something and grows with the window instead of only
+        # ever benefiting the video area.
+        accordion_scroll.setMinimumHeight(170)
+        left_layout.addWidget(accordion_scroll, 1)
 
         self.main_splitter.addWidget(left_widget)
 
