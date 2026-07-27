@@ -7,7 +7,8 @@ import utilities.mpv_bootstrap
 import av_play
 
 from PySide6.QtWidgets import (QWidget, QLayout, QVBoxLayout, QHBoxLayout, QSplitter,
-                               QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox)
+                               QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox,
+                               QScrollArea, QFrame)
 from PySide6.QtGui import QCloseEvent, QFont, QPalette, QColor, QShortcut
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, Slot
 
@@ -126,7 +127,18 @@ class PlayerWidget(QWidget):
         self.side_accordion.add_section(_("Video Filters"), self.filters_widget)
         self.side_accordion.add_section(_("Audio Filters"), self.audio_filters_widget)
 
-        left_layout.addWidget(self.side_accordion)
+        # The accordion has no bounded height of its own - with several
+        # sections' content stacked open, its total height can exceed the
+        # dock's available space, silently pushing whatever's open (e.g.
+        # Audio Filters, the last section) below the visible area with no
+        # way to reach it. A scroll area bounds it instead of letting it
+        # overflow the player container.
+        accordion_scroll = QScrollArea(left_widget)
+        accordion_scroll.setWidget(self.side_accordion)
+        accordion_scroll.setWidgetResizable(True)
+        accordion_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        accordion_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        left_layout.addWidget(accordion_scroll)
 
         self.main_splitter.addWidget(left_widget)
 
