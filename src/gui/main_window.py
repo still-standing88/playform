@@ -168,8 +168,15 @@ class MainWindow(QMainWindow):
         self.shortcuts.reset_shortcuts_callback()
 
     def setup_ui(self):
-        self.setCentralWidget(None)
-        
+        # QMainWindow's internal layout math for reserving the status bar's
+        # row gets unreliable with no central widget at all - docks (e.g. the
+        # bottom Player dock together with a side dock) can then visually
+        # overlap/cover the status bar. A zero-size placeholder anchors the
+        # layout without taking any space away from the dock areas.
+        placeholder = QWidget()
+        placeholder.setFixedSize(0, 0)
+        self.setCentralWidget(placeholder)
+
         self.recents_and_favorites_widget = RecentsAndFavoritesWidget(self.user_db)
         self.recents_and_favorites_widget.setObjectName("recentsAndFavoritesWidget")
         
