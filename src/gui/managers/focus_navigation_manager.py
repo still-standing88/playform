@@ -62,7 +62,17 @@ class FocusNavigationManager:
             # activation, leaving QApplication.focusWidget() empty.
             QApplication.processEvents()
 
-        if widget is mw.toolbar or widget in (getattr(mw, 'panels_toolbar', None), getattr(mw, 'panels_toolbar_2', None)):
+        if widget is getattr(mw, 'panels_toolbar', None):
+            # Its buttons live in a FlowLayout container (addWidget), not as
+            # individual toolbar actions, so widgetForAction() can't find
+            # them - go straight to the first one, tracked at build time.
+            widget.setFocus()
+            first = getattr(mw, 'panels_toolbar_first_widget', None)
+            if first is not None:
+                first.setFocus()
+            return
+
+        if widget is mw.toolbar:
             widget.setFocus()
             toolbar_actions = [action for action in widget.actions() if action.isVisible() and not action.isSeparator()]
             if toolbar_actions:
