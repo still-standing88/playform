@@ -47,8 +47,20 @@ class KeyEventFilter(QObject):
                     event.accept()
                     return True
 
-            if isinstance(watched, (QPushButton, QToolButton, QCheckBox, QListWidget)):
+            if isinstance(watched, (QPushButton, QToolButton, QCheckBox)):
                 if key in (Qt.Key.Key_Space, Qt.Key.Key_Enter, Qt.Key.Key_Return):
+                    event.accept()
+                    return True
+
+            # Space toggles a checkbox item (e.g. ListTabCtrl's tab strip) --
+            # but plain, non-checkable QListWidgets (Explorer's file list,
+            # chapters/subtitles lists) have no use for Space themselves, and
+            # widgets like Explorer bind Space to a QShortcut (Play/Pause)
+            # that must still see the ShortcutOverride to fire. Only steal it
+            # when there's actually a checkbox to toggle.
+            if isinstance(watched, QListWidget) and key == Qt.Key.Key_Space:
+                current = watched.currentItem()
+                if current is not None and bool(current.flags() & Qt.ItemFlag.ItemIsUserCheckable):
                     event.accept()
                     return True
 
