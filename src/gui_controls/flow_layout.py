@@ -55,10 +55,22 @@ class FlowLayout(QLayout):
     def minimumSize(self):
         size = QSize()
         for item in self._items:
+            if not self._item_is_visible(item):
+                continue
             size = size.expandedTo(item.minimumSize())
         margins = self.contentsMargins()
         size += QSize(margins.left() + margins.right(), margins.top() + margins.bottom())
         return size
+
+    @staticmethod
+    def _item_is_visible(item):
+        # A hidden widget must not consume flow space or a row of its own -
+        # standard QLayout subclasses (QHBoxLayout etc.) skip hidden items
+        # automatically; this one doesn't unless told to. Matters wherever
+        # widgets get hidden dynamically (e.g. a "minimize controls" toggle)
+        # rather than only ever being all-visible.
+        widget = item.widget()
+        return widget is None or widget.isVisible()
 
     def _do_layout(self, rect, test_only):
         left, top, right, bottom = self.getContentsMargins()
@@ -68,6 +80,8 @@ class FlowLayout(QLayout):
         line_height = 0
 
         for item in self._items:
+            if not self._item_is_visible(item):
+                continue
             hint = item.sizeHint()
             space_x = self.horizontalSpacing()
             space_y = self.verticalSpacing()
