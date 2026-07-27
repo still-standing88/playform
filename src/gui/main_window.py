@@ -709,14 +709,30 @@ class MainWindow(QMainWindow):
         # which has no screen-fit clamping at all, unlike restoreGeometry()
         # (see restore_window_state()/clamp_to_screen()), and could already
         # exceed a smaller screen before any dock has even been toggled.
-        # Maximized is inherently bounded by the screen's work area, so it's
-        # a safer default specifically for this no-saved-state case - not a
-        # standing "always maximized" mode, the user can un-maximize freely
-        # afterward same as any other maximized window.
         if getattr(self.dock_manager, 'had_saved_geometry', False):
             self.show()
-        else:
+            return
+
+        # Not self.showMaximized() - that's a documented Qt bug (QTBUG-38756):
+        # called from code rather than by the user clicking the maximize
+        # button, it can miscalculate available space relative to the
+        # taskbar, pushing bottom content like the status bar behind it even
+        # though the window otherwise looks maximized. Simulating the same
+        # full-screen appearance manually, the same frame-aware way
+        # clamp_to_screen() already does, sidesteps the bug entirely.
+        self.show()
+        QApplication.processEvents()
+        screen = self.screen()
+        if screen is None:
             self.showMaximized()
+            return
+        available = screen.availableGeometry()
+        frame = self.frameGeometry()
+        geo = self.geometry()
+        frame_extra_w = frame.width() - geo.width()
+        frame_extra_h = frame.height() - geo.height()
+        self.resize(available.width() - frame_extra_w, available.height() - frame_extra_h)
+        self.move(available.left(), available.top())
 
     def closeEvent(self, event):
         # QApplication.quit() (from close_application()) re-triggers this
