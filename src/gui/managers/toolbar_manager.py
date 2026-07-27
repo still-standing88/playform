@@ -8,19 +8,31 @@ class ToolbarManager:
     def __init__(self, main_window):
         self.main_window = main_window
 
-    def setup_panels_toolbar(self):
+    def _make_panels_row(self, name, object_name):
         mw = self.main_window
-        mw.panels_toolbar = QToolBar(_("Panels"))
-        mw.panels_toolbar.setObjectName("panelsToolbar")
-        mw.panels_toolbar.setFocusPolicy(Qt.FocusPolicy.TabFocus)
-        mw.panels_toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
+        toolbar = QToolBar(name)
+        toolbar.setObjectName(object_name)
+        toolbar.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         # Without its own row, this toolbar shares the cramped remainder of
-        # the main toolbar's row and Qt collapses almost everything into an
+        # another toolbar's row and Qt collapses almost everything into an
         # overflow chevron - the buttons report isVisible() False and are
         # unreachable by Tab (confirmed by testing: geometry read back as a
         # ~100x30 stub for every button past the first).
         mw.addToolBarBreak(Qt.ToolBarArea.TopToolBarArea)
-        mw.addToolBar(Qt.ToolBarArea.TopToolBarArea, mw.panels_toolbar)
+        mw.addToolBar(Qt.ToolBarArea.TopToolBarArea, toolbar)
+        return toolbar
+
+    def setup_panels_toolbar(self):
+        mw = self.main_window
+        # Seven pane groups (label + show/float button each) don't fit in one
+        # row at ordinary window widths - Qt's own overflow chevron for the
+        # rest isn't a fallback here, since the buttons it hides report
+        # isVisible() False and are unreachable by Tab (see _make_panels_row).
+        # Splitting across two fixed rows means neither one depends on
+        # window width to stay fully reachable.
+        mw.panels_toolbar = self._make_panels_row(_("Panels"), "panelsToolbar")
+        mw.panels_toolbar_2 = self._make_panels_row(_("Panels (more)"), "panelsToolbar2")
 
         # Default Tab order follows widget-creation order across the WHOLE
         # window, not containment - without explicitly chaining these
@@ -29,19 +41,24 @@ class ToolbarManager:
         # it jumped straight into the Explorer search box after one hop).
         self._last_tab_widget = None
 
-        self._add_pane_group(_("Player"), mw.minimize_player_action, "player_dock", "float_player_action",
-                              show_button_text=_("Minimize"))
-        self._add_pane_group(_("Recents/Favorites"), mw.show_recents_favorites_action,
+        self._add_pane_group(mw.panels_toolbar, _("Player"), mw.minimize_player_action, "player_dock",
+                              "float_player_action", show_button_text=_("Minimize"))
+        self._add_pane_group(mw.panels_toolbar, _("Recents/Favorites"), mw.show_recents_favorites_action,
                               "recents_favorites_dock", "float_recents_favorites_action")
-        self._add_pane_group(_("Explorer"), mw.show_explorer_action, "explorer_dock", "float_explorer_action")
-        self._add_pane_group(_("Playlists"), mw.show_playlists_action, "playlists_dock", "float_playlists_action")
-        self._add_pane_group(_("Radio"), mw.show_radio_action, "radio_dock", "float_radio_action",
-                              ensure_dock=mw.dock_manager._create_radio_dock)
-        self._add_pane_group(_("Podcasts"), mw.show_podcast_action, "podcast_dock", "float_podcast_action",
-                              ensure_dock=mw.dock_manager._create_podcast_dock)
-        self._add_pane_group(_("Console"), mw.show_console_dock_action, "debug_console_dock", "float_console_action")
+        self._add_pane_group(mw.panels_toolbar, _("Explorer"), mw.show_explorer_action, "explorer_dock",
+                              "float_explorer_action")
+        self._add_pane_group(mw.panels_toolbar, _("Playlists"), mw.show_playlists_action, "playlists_dock",
+                              "float_playlists_action")
+
+        self._add_pane_group(mw.panels_toolbar_2, _("Radio"), mw.show_radio_action, "radio_dock",
+                              "float_radio_action", ensure_dock=mw.dock_manager._create_radio_dock)
+        self._add_pane_group(mw.panels_toolbar_2, _("Podcasts"), mw.show_podcast_action, "podcast_dock",
+                              "float_podcast_action", ensure_dock=mw.dock_manager._create_podcast_dock)
+        self._add_pane_group(mw.panels_toolbar_2, _("Console"), mw.show_console_dock_action, "debug_console_dock",
+                              "float_console_action")
 
         self._apply_focus_policy(mw.panels_toolbar)
+        self._apply_focus_policy(mw.panels_toolbar_2)
 
     @staticmethod
     def _apply_focus_policy(toolbar):
@@ -55,23 +72,26 @@ class ToolbarManager:
 
     def ensure_panels_toolbar_break(self):
         # QMainWindow.restoreState() (called from restore_window_state, right
-        # before this runs) can silently drop the break added in
-        # setup_panels_toolbar() if it's restoring a layout saved before this
-        # toolbar existed - re-assert it unconditionally afterward so an
-        # upgrading user with an old saved window_state doesn't end up with
-        # this toolbar squeezed into an overflow chevron.
+        # before this runs) can silently drop breaks added in
+        # setup_panels_toolbar() if it's restoring a layout saved before
+        # these toolbars existed (or before there were two of them) -
+        # re-assert both unconditionally afterward so an upgrading user with
+        # an old saved window_state doesn't end up with either one squeezed
+        # into an overflow chevron, or the two sharing a row.
         mw = self.main_window
         if not mw.toolBarBreak(mw.panels_toolbar):
             mw.insertToolBarBreak(mw.panels_toolbar)
+        if not mw.toolBarBreak(mw.panels_toolbar_2):
+            mw.insertToolBarBreak(mw.panels_toolbar_2)
 
-    def _add_pane_group(self, label_text, show_action, dock_attr, float_action_attr, ensure_dock=None,
+    def _add_pane_group(self, toolbar, label_text, show_action, dock_attr, float_action_attr, ensure_dock=None,
                          show_button_text=None):
         """Add a labeled [show/hide][float] button pair for one pane to the
-        Panels toolbar. dock_attr is looked up on main_window lazily (via
-        getattr each time) so this works for docks not yet created, like
-        Radio/Podcasts - ensure_dock creates the dock on first float."""
+        given Panels toolbar row. dock_attr is looked up on main_window
+        lazily (via getattr each time) so this works for docks not yet
+        created, like Radio/Podcasts - ensure_dock creates the dock on first
+        float."""
         mw = self.main_window
-        toolbar = mw.panels_toolbar
 
         if toolbar.actions():
             toolbar.addSeparator()
