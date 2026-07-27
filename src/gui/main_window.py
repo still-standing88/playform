@@ -655,9 +655,22 @@ class MainWindow(QMainWindow):
         return reply == QMessageBox.StandardButton.Yes
 
     def close_application(self):
+        # QApplication.quit() below triggers closeEvent() on every visible
+        # top-level window, including this one - and closeEvent(), when the
+        # tray is no longer available (we just cleaned it up), falls through
+        # to calling close_application() again. That second pass used to
+        # re-save dock state after quit() had already un-floated/hidden any
+        # floating docks via their own closeEvent(), silently clobbering the
+        # correct save from this call with the torn-down state. Guard against
+        # running this more than once per real quit.
+        if getattr(self, '_quitting', False):
+            return
+
         if not get_restart_flag() and self.has_active_tools():
             if not self.confirm_close_with_active_tools():
                 return
+
+        self._quitting = True
 
         # This is also the exit path for the tray "Exit" action, the File
         # menu's Exit action, and the Exit hotkey - none of which go through
@@ -668,7 +681,7 @@ class MainWindow(QMainWindow):
         # never added back in the first place.
         self.dock_manager.save_dock_session()
         self.save_window_state()
-        
+
         if self.tray:
             self.tray.cleanup()
         
@@ -684,6 +697,15 @@ class MainWindow(QMainWindow):
         self.dock_manager.restore_window_state()
 
     def closeEvent(self, event):
+        # QApplication.quit() (from close_application()) re-triggers this
+        # very closeEvent() on its way out - without this guard, the
+        # save_dock_session() call below would run a second time here, after
+        # quit() has already un-floated/hidden floating docks via their own
+        # closeEvent(), overwriting the correct save from close_application()
+        # with that torn-down state.
+        if getattr(self, '_quitting', False):
+            event.accept()
+            return
 
         is_restarting = get_restart_flag()
 
