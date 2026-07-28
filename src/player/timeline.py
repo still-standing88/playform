@@ -16,9 +16,22 @@ class SegmentTimelineWidget(QWidget):
     markerRemoved = Signal(int)
     markerSelected = Signal(int)
 
+    # Recomputed fresh on every clamp_to_screen() pass (see DockManager) -
+    # never mutated cumulatively, so a bigger screen restores the full
+    # default instead of leaving this permanently shrunk from whatever the
+    # smallest screen ever seen last demanded. Floor kept well above 0
+    # (unlike the purely decorative/scrollable floors elsewhere) since this
+    # is a clickable segment/marker editing area, not just a visual strip -
+    # shrinking it too far would make it hard to actually click on.
+    IDEAL_HEIGHT_FLOOR = 40
+    MIN_HEIGHT_FLOOR = 16
+
+    def set_height_floor(self, px: int):
+        self.setMinimumHeight(max(self.MIN_HEIGHT_FLOOR, px))
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumHeight(40)
+        self.setMinimumHeight(self.IDEAL_HEIGHT_FLOOR)
         self.setMouseTracking(True)
 
 
