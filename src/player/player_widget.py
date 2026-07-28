@@ -133,11 +133,11 @@ class PlayerWidget(QWidget):
         # Audio Filters, the last section) below the visible area with no
         # way to reach it. A scroll area bounds it instead of letting it
         # overflow the player container.
-        accordion_scroll = QScrollArea(left_widget)
-        accordion_scroll.setWidget(self.side_accordion)
-        accordion_scroll.setWidgetResizable(True)
-        accordion_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        accordion_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.accordion_scroll = QScrollArea(left_widget)
+        self.accordion_scroll.setWidget(self.side_accordion)
+        self.accordion_scroll.setWidgetResizable(True)
+        self.accordion_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.accordion_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         # Without a stretch factor of its own, this got zero of any leftover
         # space in a docked (height-constrained) player - video_display was
         # the only widget with a nonzero stretch, so it alone absorbed every
@@ -147,8 +147,8 @@ class PlayerWidget(QWidget):
         # stretch, plus a floor tall enough for all five headers, means it
         # always shows something and grows with the window instead of only
         # ever benefiting the video area.
-        accordion_scroll.setMinimumHeight(170)
-        left_layout.addWidget(accordion_scroll, 1)
+        self.accordion_scroll.setMinimumHeight(self.IDEAL_ACCORDION_FLOOR)
+        left_layout.addWidget(self.accordion_scroll, 1)
 
         self.main_splitter.addWidget(left_widget)
 
@@ -729,8 +729,15 @@ class PlayerWidget(QWidget):
     def sizeHint(self):
         return QSize(1200, 800)
 
-    def minimumSizeHint(self):
-        return QSize(800, 600)
+    # Recomputed fresh on every clamp_to_screen() pass (see DockManager) -
+    # never mutated cumulatively, so plugging into a bigger screen restores
+    # the full, comfortable floor rather than leaving it permanently shrunk
+    # from whatever the smallest screen ever seen last demanded.
+    IDEAL_ACCORDION_FLOOR = 170
+    MIN_ACCORDION_FLOOR = 0
+
+    def set_accordion_floor(self, px: int):
+        self.accordion_scroll.setMinimumHeight(max(self.MIN_ACCORDION_FLOOR, px))
 
     @Slot()
     def _on_url_extraction_started(self):
