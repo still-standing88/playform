@@ -322,13 +322,28 @@ class DockManager:
         # anything that can grow the window mid-session, i.e. any dock
         # being toggled visible.
         mw = self.main_window
-        if mw.isMaximized() or mw.isFullScreen():
+        if mw.isFullScreen():
             return
 
         screen = mw.screen()
         if screen is None:
             return
         available = screen.availableGeometry()
+
+        if mw.isMaximized():
+            # restoreGeometry()/restoreState() can restore a maximized flag
+            # saved from a previous session on a different (larger) screen -
+            # Qt then reports isMaximized()=True without reconciling the
+            # frame against *this* screen's availableGeometry, so the frame
+            # still hangs off the current screen's edges (verified live via
+            # statusbar_debug.log: frame height 831 while available height
+            # was ~720-728, pushing the status bar off the bottom entirely).
+            # Only trust the maximized state if it actually fits; otherwise
+            # drop out of it and refit manually below, the same way
+            # show_or_maximize() already avoids trusting showMaximized().
+            if available.contains(mw.frameGeometry()):
+                return
+            mw.showNormal()
 
         # resize()/move() operate on geometry() (the client rect), but
         # availableGeometry() is the space the *frame* (title bar + borders)
