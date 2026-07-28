@@ -47,7 +47,7 @@ class VideoDisplayWidget(QWidget):
         # floated (full screen height, so the conflict never came up). A
         # small floor still keeps the placeholder legible without starving
         # everything below it.
-        self.placeholder_label.setMinimumSize(160, 90)
+        self.placeholder_label.setMinimumSize(160, self.IDEAL_HEIGHT_FLOOR)
         self.placeholder_label.setAccessibleName(_("Video display area"))
         self.placeholder_label.setAccessibleDescription(_("Main video playback area"))
         
@@ -58,6 +58,16 @@ class VideoDisplayWidget(QWidget):
         
         layout.addWidget(self.placeholder_label)
         layout.addWidget(self.loading_label)
+
+    # Recomputed fresh on every clamp_to_screen() pass (see DockManager) -
+    # never mutated cumulatively, so a bigger screen restores the full,
+    # legible default instead of leaving this permanently shrunk from
+    # whatever the smallest screen ever seen last demanded.
+    IDEAL_HEIGHT_FLOOR = 90
+    MIN_HEIGHT_FLOOR = 0
+
+    def set_height_floor(self, px: int):
+        self.placeholder_label.setMinimumHeight(max(self.MIN_HEIGHT_FLOOR, px))
 
     def set_position_info(self, layout:Optional[LayoutType], position:int):
         self._original_parent= self.parentWidget()
