@@ -282,12 +282,22 @@ class ExplorerWidget(QWidget):
         scroll_layout.setContentsMargins(0, 0, 0, 0)
         scroll_layout.addWidget(main_splitter, 1)
         scroll_layout.addWidget(media_group)
-        splitter_scroll = QScrollArea(self)
-        splitter_scroll.setWidget(scroll_content)
-        splitter_scroll.setWidgetResizable(True)
-        splitter_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        splitter_scroll.setMinimumHeight(150)
-        main_layout.insertWidget(splitter_index, splitter_scroll, 1)
+        self.splitter_scroll = QScrollArea(self)
+        self.splitter_scroll.setWidget(scroll_content)
+        self.splitter_scroll.setWidgetResizable(True)
+        self.splitter_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.splitter_scroll.setMinimumHeight(self.IDEAL_CONTENT_FLOOR)
+        main_layout.insertWidget(splitter_index, self.splitter_scroll, 1)
+
+    # Recomputed fresh on every clamp_to_screen() pass (see DockManager) -
+    # never mutated cumulatively, so plugging into a bigger screen restores
+    # the full, comfortable floor rather than leaving it permanently shrunk
+    # from whatever the smallest screen ever seen last demanded.
+    IDEAL_CONTENT_FLOOR = 150
+    MIN_CONTENT_FLOOR = 0
+
+    def set_content_floor(self, px: int):
+        self.splitter_scroll.setMinimumHeight(max(self.MIN_CONTENT_FLOOR, px))
 
     def repeat_media(self):
         if prefs.prefs['repeat'] == True:
