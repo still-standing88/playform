@@ -328,8 +328,16 @@ class DockManager:
     # The window's own ideal, comfortable minimum - not necessarily what
     # any given screen can actually offer. Recomputed against the current
     # screen on every clamp_to_screen() pass rather than set once, so a
-    # bigger monitor always gets the full 1200x800 back.
-    IDEAL_MIN_WIDTH = 1200
+    # bigger monitor always gets the full width/height back.
+    #
+    # 1350, not 1200: the panels toolbar's FlowLayout wraps into a 3rd row
+    # somewhere between 1220-1320px wide (verified live) - a 3rd row eats
+    # ~45px of extra chrome height that the status-bar-fit shrink chain
+    # below doesn't budget for, so a too-narrow window starves the status
+    # bar the same way a too-short one used to. Keeping width above the
+    # 2-row threshold avoids that entirely instead of trying to claw the
+    # extra height back from dock content floors after the fact.
+    IDEAL_MIN_WIDTH = 1350
     IDEAL_MIN_HEIGHT = 800
 
     def _resync_min_height(self, mw, available):
