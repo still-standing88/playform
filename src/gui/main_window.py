@@ -126,6 +126,14 @@ class MainWindow(QMainWindow):
 
         self.user_db.connect_to_database()
         self.setWindowTitle("PlayForm")
+        # A flat 1200x800 floor is bigger than plenty of real screens (e.g.
+        # 1366x768 laptops, ~720px tall after the taskbar), and Qt then
+        # refuses to ever shrink the window below it - this is what was
+        # pushing the status bar off the bottom of the screen. This initial
+        # value is just a reasonable pre-layout guess; restore_window_state()
+        # (called at the end of __init__) schedules clamp_to_screen(), which
+        # owns the real, frame-aware, screen-relative version of this floor
+        # and corrects it within one event loop tick regardless.
         self.setMinimumSize(1200, 800)
         self.resize(1400, 900)
         
@@ -699,6 +707,19 @@ class MainWindow(QMainWindow):
         
     def save_window_state(self):
         self.dock_manager.save_window_state()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # restore_dock_session()'s dock.setVisible(True) calls happen inside
+        # __init__, before this top-level window has ever been shown - a
+        # child widget's isVisible() reflects the whole ancestor chain, so
+        # it still reports False right after setVisible(True) until the
+        # window itself is actually shown. clamp_to_screen()'s first pass
+        # (scheduled from restore_window_state(), also called from
+        # __init__) runs before that, so it undercounts which docks are
+        # really visible and nothing re-checks once they are. Re-running it
+        # here, once the window is genuinely on-screen, closes that gap.
+        self.dock_manager._schedule_clamp_to_screen()
 
     def restore_window_state(self):
         self.dock_manager.restore_window_state()
