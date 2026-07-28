@@ -133,28 +133,37 @@ class PlayerWidget(QWidget):
         # Audio Filters, the last section) below the visible area with no
         # way to reach it. A scroll area bounds it instead of letting it
         # overflow the player container.
-        self.accordion_scroll = QScrollArea(left_widget)
+        self.accordion_scroll = QScrollArea(self)
         self.accordion_scroll.setWidget(self.side_accordion)
         self.accordion_scroll.setWidgetResizable(True)
         self.accordion_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.accordion_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # Without a stretch factor of its own, this got zero of any leftover
-        # space in a docked (height-constrained) player - video_display was
-        # the only widget with a nonzero stretch, so it alone absorbed every
-        # extra pixel while the accordion stayed pinned to its bare minimum,
-        # which in a small dock could squeeze it to nothing (not even its
-        # five collapsed section headers visible). Giving it a share of the
-        # stretch, plus a floor tall enough for all five headers, means it
-        # always shows something and grows with the window instead of only
-        # ever benefiting the video area.
+        # A floor on its own height still matters even as a side pane -
+        # main_splitter gives every pane the full row height, but that row
+        # height is itself bounded below by the tallest pane's minimum, so
+        # this still competes for vertical space if it's ever the biggest
+        # minimum in the row (same reasoning as before, just no longer
+        # needing to *also* stack on top of the video/timeline/controls
+        # column, which was the actual source of the combined-minimum
+        # overflow this floor was originally added to guard against).
         self.accordion_scroll.setMinimumHeight(self.IDEAL_ACCORDION_FLOOR)
-        left_layout.addWidget(self.accordion_scroll, 1)
 
         self.main_splitter.addWidget(left_widget)
+        self.main_splitter.addWidget(self.accordion_scroll)
 
+        # side_accordion used to be stacked below video/timeline/controls
+        # in left_layout instead of here - main_splitter (already set up
+        # for exactly this, right down to sizes/stretch factors for two
+        # panes) just never got a second widget added to it. Putting the
+        # accordion here instead means it competes with video for *width*,
+        # which this app generally has more of to spare than height, rather
+        # than adding its own height on top of everything else in the
+        # column below it - the actual reason the combined minimum height
+        # could exceed a small screen in the first place.
         self.main_splitter.setSizes([800, 300])
         self.main_splitter.setStretchFactor(0, 1)
         self.main_splitter.setStretchFactor(1, 0)
+        self.main_splitter.setCollapsible(1, True)
 
         self.main_layout.addWidget(self.main_splitter)
 
@@ -169,6 +178,7 @@ class PlayerWidget(QWidget):
         self._trackEndedFromMonitor.connect(self._update_current_track)
         self._reverseStoppedFromMonitor.connect(self._on_reverse_stopped_from_monitor)
 
+        self.player_controls.accordionPanelToggled.connect(self._on_accordion_panel_toggled)
         self.player_controls.playPauseClicked.connect(self._on_play_pause_clicked)
         self.player_controls.muteUnmuteClicked.connect(self._on_mute_unmute_clicked)
         self.player_controls.forwardClicked.connect(self._on_forward_clicked)
@@ -211,6 +221,10 @@ class PlayerWidget(QWidget):
 
     def apply_styles(self):
         self.setStyleSheet(PLAYER_WIDGET_STYLE)
+
+    @Slot(bool)
+    def _on_accordion_panel_toggled(self, hidden):
+        self.accordion_scroll.setVisible(not hidden)
 
     @Slot()
     def _on_play_pause_clicked(self):
