@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 
 from app_config import prefs
 from gui_controls.player_key_event_filter import KeyEventFilter
+from gui_controls.flow_layout import FlowLayout, FlowContainer
 
 
 class EqualizerWidget(QWidget):
@@ -42,8 +43,15 @@ class EqualizerWidget(QWidget):
         preamp_row.addWidget(self.preamp_spin, 1)
         layout.addLayout(preamp_row)
 
-        self.bands_layout = QHBoxLayout()
-        layout.addLayout(self.bands_layout)
+        # A single un-wrapping QHBoxLayout forced every band's width to sum
+        # into the widget's minimum (measured at 1274px for a typical band
+        # count) - the same "N items in one fixed row" problem already fixed
+        # for the Panels toolbar and the transport controls, via the same
+        # FlowLayout, so it wraps onto as many rows as the available width
+        # (now a narrow accordion side panel) actually allows.
+        self.bands_container = FlowContainer(self)
+        self.bands_flow = FlowLayout(self.bands_container, margin=0, h_spacing=8, v_spacing=6)
+        layout.addWidget(self.bands_container)
 
     @staticmethod
     def _make_band_spin() -> QDoubleSpinBox:
@@ -82,32 +90,26 @@ class EqualizerWidget(QWidget):
         self._key_event_filter.install_on_widgets(self._band_spins)
         self._load_saved_state()
 
-    @staticmethod
-    def _clear_layout(layout):
-        while layout.count():
-            item = layout.takeAt(0)
+    def _build_band_spins(self, frequencies: List[float]):
+        while self.bands_flow.count():
+            item = self.bands_flow.takeAt(0)
             widget = item.widget()
             if widget:
                 widget.deleteLater()
-                continue
-            child_layout = item.layout()
-            if child_layout:
-                EqualizerWidget._clear_layout(child_layout)
-
-    def _build_band_spins(self, frequencies: List[float]):
-        self._clear_layout(self.bands_layout)
         self._band_spins = []
         prev_widget = self.preamp_spin
         for freq in frequencies:
-            column = QVBoxLayout()
-            label = QLabel(self._format_freq(freq), self)
+            band_widget = QWidget(self.bands_container)
+            column = QVBoxLayout(band_widget)
+            column.setContentsMargins(0, 0, 0, 0)
+            label = QLabel(self._format_freq(freq), band_widget)
             label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
             spin = self._make_band_spin()
             spin.setAccessibleName(_("{freq} band gain").format(freq=self._format_freq_full(freq)))
             spin.valueChanged.connect(self._on_value_changed)
             column.addWidget(label)
             column.addWidget(spin)
-            self.bands_layout.addLayout(column)
+            self.bands_flow.addWidget(band_widget)
             self._band_spins.append(spin)
             # Band spinboxes are (re)built after the whole accordion is already
             # constructed, so Qt's default tab order would otherwise append them
