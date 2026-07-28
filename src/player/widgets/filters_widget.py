@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QDouble
 from PySide6.QtCore import Qt
 
 from gui_controls.player_key_event_filter import KeyEventFilter
+from gui_controls.flow_layout import FlowLayout, FlowContainer
 
 
 class FiltersWidget(QWidget):
@@ -30,38 +31,46 @@ class FiltersWidget(QWidget):
 		controls_layout.setContentsMargins(0, 0, 0, 0)
 		controls_layout.setSpacing(6)
 
-		row1 = QHBoxLayout()
-		row2 = QHBoxLayout()
+		# Two fixed rows of 2-3 label+spinbox pairs each, all with equal
+		# stretch, forced this widget's minimum width to 682px - the same
+		# "several items in one un-wrapping row" problem already fixed for
+		# the Panels toolbar and the transport controls, via the same
+		# FlowLayout, so the pairs wrap onto as many rows as the available
+		# width (now a narrow accordion side panel) actually allows.
+		self.filters_container = FlowContainer(self)
+		self.filters_flow = FlowLayout(self.filters_container, margin=0, h_spacing=12, v_spacing=6)
 
 		self.brightness_spin = QDoubleSpinBox(self)
 		self._setup_dspin(self.brightness_spin, 0.0, 2.0, 0.1, 1.0, _("Brightness"))
-		row1.addWidget(QLabel(_("Brightness"), self))
-		row1.addWidget(self.brightness_spin, 1)
+		self.filters_flow.addWidget(self._make_filter_row(_("Brightness"), self.brightness_spin))
 
 		self.contrast_spin = QDoubleSpinBox(self)
 		self._setup_dspin(self.contrast_spin, 0.0, 2.0, 0.1, 1.0, _("Contrast"))
-		row1.addWidget(QLabel(_("Contrast"), self))
-		row1.addWidget(self.contrast_spin, 1)
+		self.filters_flow.addWidget(self._make_filter_row(_("Contrast"), self.contrast_spin))
 
 		self.gamma_spin = QDoubleSpinBox(self)
 		self._setup_dspin(self.gamma_spin, 0.1, 10.0, 0.1, 1.0, _("Gamma"))
-		row2.addWidget(QLabel(_("Gamma"), self))
-		row2.addWidget(self.gamma_spin, 1)
+		self.filters_flow.addWidget(self._make_filter_row(_("Gamma"), self.gamma_spin))
 
 		self.hue_spin = QSpinBox(self)
 		self._setup_ispin(self.hue_spin, -180, 180, 0, _("Hue"))
-		row2.addWidget(QLabel(_("Hue"), self))
-		row2.addWidget(self.hue_spin, 1)
+		self.filters_flow.addWidget(self._make_filter_row(_("Hue"), self.hue_spin))
 
 		self.saturation_spin = QDoubleSpinBox(self)
 		self._setup_dspin(self.saturation_spin, 0.0, 3.0, 0.1, 1.0, _("Saturation"))
-		row2.addWidget(QLabel(_("Saturation"), self))
-		row2.addWidget(self.saturation_spin, 1)
+		self.filters_flow.addWidget(self._make_filter_row(_("Saturation"), self.saturation_spin))
 
-		controls_layout.addLayout(row1)
-		controls_layout.addLayout(row2)
+		controls_layout.addWidget(self.filters_container)
 
 		layout.addWidget(self.controls_container)
+
+	def _make_filter_row(self, label_text: str, spin: QDoubleSpinBox | QSpinBox) -> QWidget:
+		row_widget = QWidget(self.filters_container)
+		row_layout = QHBoxLayout(row_widget)
+		row_layout.setContentsMargins(0, 0, 0, 0)
+		row_layout.addWidget(QLabel(label_text, row_widget))
+		row_layout.addWidget(spin)
+		return row_widget
 
 	def _setup_dspin(self, spin: QDoubleSpinBox, minimum: float, maximum: float, step: float, value: float, name: str):
 		spin.setRange(minimum, maximum)
