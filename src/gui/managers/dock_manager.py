@@ -77,6 +77,17 @@ class DockManager:
         self.main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.playlists_dock)
         self.main_window.playlists_dock = self.playlists_dock
 
+        # Recents/Favorites, Explorer, Playlists (and Radio/Podcasts, tabified
+        # onto the same group when they're lazily created below) are all
+        # "browse one source at a time" panels - stacking them instead of
+        # tabifying meant every one of them simultaneously visible added its
+        # own minimum height to the window's total, which is what pushed the
+        # combined minimum past the screen's available height in the first
+        # place. Tabifying means only the active one's content actually
+        # claims space; the rest wait behind a tab.
+        self.main_window.tabifyDockWidget(self.recents_favorites_dock, self.explorer_dock)
+        self.main_window.tabifyDockWidget(self.recents_favorites_dock, self.playlists_dock)
+
         self.player_dock = FloatableDockWidget(_("Player"), self.main_window)
         self.player_dock.setObjectName("playerDock")
         self.player_dock.setWidget(self.main_window.player_widget)
@@ -96,6 +107,7 @@ class DockManager:
         self.debug_console_dock.setObjectName("debugConsoleDock")
         self._make_float_a_real_window(self.debug_console_dock)
         self.main_window.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.debug_console_dock)
+        self.main_window.tabifyDockWidget(self.player_dock, self.debug_console_dock)
         self.debug_console_dock.hide()
         if hasattr(self.debug_console_dock, 'visibilityChanged'):
             self.debug_console_dock.visibilityChanged.connect(self.main_window.menu_manager.update_console_menu)
@@ -240,6 +252,7 @@ class DockManager:
             self._sync_float_action_for_dock(self.main_window.radio_dock, "float_radio_action")
             self.main_window.radio_dock.visibilityChanged.connect(self.main_window.menu_manager.update_radio_menu)
             self.main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.main_window.radio_dock)
+            self.main_window.tabifyDockWidget(self.recents_favorites_dock, self.main_window.radio_dock)
 
     def _create_podcast_dock(self):
         if self.main_window.podcast_dock is None:
@@ -254,6 +267,7 @@ class DockManager:
             self._sync_float_action_for_dock(self.main_window.podcast_dock, "float_podcast_action")
             self.main_window.podcast_dock.visibilityChanged.connect(self.main_window.menu_manager.update_podcast_menu)
             self.main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.main_window.podcast_dock)
+            self.main_window.tabifyDockWidget(self.recents_favorites_dock, self.main_window.podcast_dock)
 
     def toggle_console_dock(self, checked):
         if not hasattr(self.main_window, 'debug_console_dock') or self.main_window.debug_console_dock is None:
@@ -311,6 +325,153 @@ class DockManager:
         # running this synchronously would check stale geometry.
         QTimer.singleShot(0, self.clamp_to_screen)
 
+    # The window's own ideal, comfortable minimum - not necessarily what
+    # any given screen can actually offer. Recomputed against the current
+    # screen on every clamp_to_screen() pass rather than set once, so a
+    # bigger monitor always gets the full 1200x800 back.
+    IDEAL_MIN_WIDTH = 1200
+    IDEAL_MIN_HEIGHT = 800
+
+    def _resync_min_height(self, mw, available):
+        # setMinimumSize() is a hard floor Qt enforces on every subsequent
+        # resize() call, including the ones this method issues below - a
+        # stale, too-tall explicit minimum silently overrides any resize()
+        # asking for something shorter, no error, no signal, the window
+        # just snaps back. This is what made clamp_to_screen()'s own
+        # resize() calls look like no-ops in statusbar_debug.log: the main
+        # window's minimumSize was still (1200, 800) while available height
+        # was ~720. Keeping the explicit minimum itself in sync with the
+        # current screen, not just the window's actual size, is what
+        # actually lets it shrink.
+        frame = mw.frameGeometry()
+        geo = mw.geometry()
+        frame_extra_w = frame.width() - geo.width()
+        frame_extra_h = frame.height() - geo.height()
+        # A small deliberate safety margin on the window's own target height,
+        # not just a knife-edge fit against availableGeometry() - verified
+        # live that even when the status bar's Qt-reported geometry showed
+        # a mathematically exact fit (status_bar.y() + its height ==
+        # mw.height(), to the pixel), it still rendered visibly clipped in
+        # real screenshots. Windows 10/11 frameGeometry()/availableGeometry()
+        # measurements can be a few pixels off from what's actually
+        # composited (DWM's invisible resize border being the likely
+        # culprit) - leaving the window itself a bit shorter than the
+        # theoretical maximum absorbs that discrepancy instead of chasing
+        # dock content floors that turned out not to be the real constraint.
+        SCREEN_FIT_SAFETY_MARGIN = 16
+        target_min_w = max(0, min(self.IDEAL_MIN_WIDTH, available.width() - frame_extra_w))
+        target_min_h = max(0, min(self.IDEAL_MIN_HEIGHT, available.height() - frame_extra_h - SCREEN_FIT_SAFETY_MARGIN))
+        mw.setMinimumSize(target_min_w, target_min_h)
+
+        # Dock content floors (Explorer's, Player's accordion, the video
+        # placeholder) are reset to their own ideal size first, then only
+        # shrunk as far as this specific screen's remaining budget actually
+        # demands - never mutated cumulatively, so unplugging from a small
+        # screen restores the comfortable defaults instead of leaving them
+        # permanently shrunk from whatever the smallest screen ever seen
+        # last demanded. Doing this reset *before* the resize below matters:
+        # resetting it after was what let Qt's own layout silently grow the
+        # window straight back past a just-applied smaller size.
+        player = getattr(mw, 'player_widget', None)
+        if player is not None and hasattr(player, 'set_accordion_floor'):
+            player.set_accordion_floor(player.IDEAL_ACCORDION_FLOOR)
+        explorer = getattr(mw, 'explorer_widget', None)
+        if explorer is not None and hasattr(explorer, 'set_content_floor'):
+            explorer.set_content_floor(explorer.IDEAL_CONTENT_FLOOR)
+        video_display = getattr(player, 'video_display', None) if player is not None else None
+        if video_display is not None and hasattr(video_display, 'set_height_floor'):
+            video_display.set_height_floor(video_display.IDEAL_HEIGHT_FLOOR)
+
+        # A transient ceiling, not a permanent one - Qt's QMainWindowLayout
+        # can silently grow the window past this resize() to satisfy its own
+        # computed content minimum (verified live: minimumSize() stayed at
+        # the requested value while the window's actual height grew past it
+        # anyway, and resizeDocks() below can trigger the same growth).
+        # Held through the whole resync chain (cleared in
+        # _resync_status_bar_step once it actually terminates) rather than
+        # cleared immediately, so this never becomes a standing restriction
+        # that would stop the user resizing the window taller later (e.g.
+        # after moving to a bigger monitor).
+        mw.setMaximumHeight(target_min_h)
+        mw.resize(target_min_w, target_min_h)
+
+        QTimer.singleShot(0, lambda: self._resync_status_bar_step(mw, 0))
+
+    def _resync_status_bar_step(self, mw, iteration):
+        # mw.minimumSizeHint() proved unreliable as the signal to shrink
+        # against - the panels toolbar's own minimumSizeHint() undercounts
+        # its real two-row wrapped height (a known FlowLayout quirk already
+        # hit elsewhere in this codebase). Measuring the status bar's own
+        # actual on-screen position is ground truth instead of a
+        # prediction. And a tight processEvents() loop within one call
+        # doesn't work either - verified live that status_bar.y() stays
+        # frozen at a stale, pre-shrink value no matter how many times
+        # processEvents() is pumped inside the same call stack, but a
+        # genuinely separate later invocation sees the correctly settled
+        # position. Something in Qt's dock/toolbar layout defers the actual
+        # recompute past what synchronous pumping can force (a reentrancy
+        # guard, most likely) - chaining through QTimer.singleShot instead
+        # gives it a real separate event-loop turn each step, which does
+        # let it settle.
+        status_bar = getattr(mw, 'status_bar', None)
+        if status_bar is None or iteration >= 10:
+            mw.setMaximumHeight(16777215)
+            return
+        STATUS_BAR_TARGET_H = 24
+        visible_h = min(status_bar.height(), max(0, mw.height() - status_bar.y()))
+        shortfall = STATUS_BAR_TARGET_H - visible_h
+        if shortfall <= 0:
+            mw.setMaximumHeight(16777215)
+            return
+
+        player = getattr(mw, 'player_widget', None)
+        explorer = getattr(mw, 'explorer_widget', None)
+        video_display = getattr(player, 'video_display', None) if player is not None else None
+        cut_any = False
+        if player is not None and hasattr(player, 'set_accordion_floor'):
+            current = player.accordion_scroll.minimumHeight()
+            reducible = current - player.MIN_ACCORDION_FLOOR
+            if reducible > 0:
+                cut = min(shortfall, reducible)
+                player.set_accordion_floor(current - cut)
+                cut_any = True
+        if explorer is not None and hasattr(explorer, 'set_content_floor'):
+            current = explorer.splitter_scroll.minimumHeight()
+            reducible = current - explorer.MIN_CONTENT_FLOOR
+            if reducible > 0:
+                cut = min(shortfall, reducible)
+                explorer.set_content_floor(current - cut)
+                cut_any = True
+        if video_display is not None and hasattr(video_display, 'set_height_floor'):
+            current = video_display.placeholder_label.minimumHeight()
+            reducible = current - video_display.MIN_HEIGHT_FLOOR
+            if reducible > 0:
+                cut = min(shortfall, reducible)
+                video_display.set_height_floor(current - cut)
+                cut_any = True
+
+        # Lowering a dock's minimum doesn't by itself make the splitter
+        # between docks give back the freed space - Qt's internal
+        # dock-area splitter only redistributes on an active resize
+        # trigger or an explicit request, not just because a minimum
+        # changed somewhere underneath it. Explicitly asking each visible
+        # dock to shrink to (as close to) nothing forces Qt to actively
+        # recompute the split against the new, smaller minimums instead
+        # of leaving it at whatever the splitter last happened to be.
+        shrink_docks = []
+        shrink_sizes = []
+        for dock in (getattr(mw, 'explorer_dock', None), self.player_dock, getattr(mw, 'recents_favorites_dock', None)):
+            if dock is not None and dock.isVisible() and not dock.isFloating():
+                shrink_docks.append(dock)
+                shrink_sizes.append(1)
+        if shrink_docks:
+            mw.resizeDocks(shrink_docks, shrink_sizes, Qt.Orientation.Vertical)
+
+        if not cut_any:
+            mw.setMaximumHeight(16777215)
+            return
+        QTimer.singleShot(0, lambda: self._resync_status_bar_step(mw, iteration + 1))
+
     def clamp_to_screen(self):
         # Growing dock/toolbar content can make QMainWindow taller (or
         # wider) than the current screen's available area, since Qt's
@@ -330,6 +491,8 @@ class DockManager:
             return
         available = screen.availableGeometry()
 
+        self._resync_min_height(mw, available)
+
         if mw.isMaximized():
             # restoreGeometry()/restoreState() can restore a maximized flag
             # saved from a previous session on a different (larger) screen -
@@ -345,23 +508,15 @@ class DockManager:
                 return
             mw.showNormal()
 
-        # resize()/move() operate on geometry() (the client rect), but
-        # availableGeometry() is the space the *frame* (title bar + borders)
-        # needs to fit in - clamping the client rect alone leaves the title
-        # bar's own height unaccounted for, silently letting the client
-        # area's bottom edge (and the status bar with it) still run past the
-        # screen. Verified live: clamping only geometry() left the frame
-        # ~30px (a title bar's worth) taller than available every time.
-        frame = mw.frameGeometry()
-        geo = mw.geometry()
-        frame_extra_w = frame.width() - geo.width()
-        frame_extra_h = frame.height() - geo.height()
-
-        new_width = min(geo.width(), available.width() - frame_extra_w)
-        new_height = min(geo.height(), available.height() - frame_extra_h)
-        if (new_width, new_height) != (geo.width(), geo.height()):
-            mw.resize(new_width, new_height)
-
+        # _resync_min_height() above already resized the window to fit (with
+        # its own safety margin against the frame-measurement discrepancy
+        # documented there) - recomputing and re-applying a *different*,
+        # unmargined size here used to silently undo that: this ran
+        # synchronously right after _resync_min_height() returned, before
+        # the deferred status-bar-fit check ever got a chance to run,
+        # putting the window right back to the too-tall size on every
+        # single call. Only positioning (below) is still this function's
+        # job now.
         frame = mw.frameGeometry()
         x = min(frame.x(), available.right() - frame.width() + 1)
         y = min(frame.y(), available.bottom() - frame.height() + 1)
