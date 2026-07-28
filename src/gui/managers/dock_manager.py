@@ -381,6 +381,9 @@ class DockManager:
         video_display = getattr(player, 'video_display', None) if player is not None else None
         if video_display is not None and hasattr(video_display, 'set_height_floor'):
             video_display.set_height_floor(video_display.IDEAL_HEIGHT_FLOOR)
+        timeline = getattr(player, 'timeline', None) if player is not None else None
+        if timeline is not None and hasattr(timeline, 'set_height_floor'):
+            timeline.set_height_floor(timeline.IDEAL_HEIGHT_FLOOR)
 
         # A transient ceiling, not a permanent one - Qt's QMainWindowLayout
         # can silently grow the window past this resize() to satisfy its own
@@ -448,6 +451,14 @@ class DockManager:
             if reducible > 0:
                 cut = min(shortfall, reducible)
                 video_display.set_height_floor(current - cut)
+                cut_any = True
+        timeline = getattr(player, 'timeline', None) if player is not None else None
+        if timeline is not None and hasattr(timeline, 'set_height_floor'):
+            current = timeline.minimumHeight()
+            reducible = current - timeline.MIN_HEIGHT_FLOOR
+            if reducible > 0:
+                cut = min(shortfall, reducible)
+                timeline.set_height_floor(current - cut)
                 cut_any = True
 
         # Lowering a dock's minimum doesn't by itself make the splitter
