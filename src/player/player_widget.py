@@ -22,6 +22,7 @@ from gui_controls.toggle_button import ToggleButton
 from gui_controls.accordion import Accordion
 from .core.subtitles import SubtitleManager
 from .widgets.filters_widget import FiltersWidget
+from .widgets.video_effects_widget import VideoEffectsWidget
 from .widgets.chapters_widget import ChaptersWidget
 from .widgets.equalizer_widget import EqualizerWidget
 from .widgets.audio_filters_widget import AudioFiltersWidget
@@ -98,6 +99,7 @@ class PlayerWidget(QWidget):
 
         self.subtitles_widget = SubtitlesWidget(self)
         self.filters_widget = FiltersWidget(self)
+        self.video_effects_widget = VideoEffectsWidget(self)
         self.chapters_widget = ChaptersWidget(self)
         self.equalizer_widget = EqualizerWidget(self)
         self.audio_filters_widget = AudioFiltersWidget(self)
@@ -132,7 +134,8 @@ class PlayerWidget(QWidget):
         self.side_accordion.add_section(_("Chapters"), self.chapters_widget)
         self.side_accordion.add_section(_("Subtitles"), self.subtitles_widget)
         self.side_accordion.add_section(_("Equalizer"), self.equalizer_widget)
-        self.side_accordion.add_section(_("Video Filters"), self.filters_widget)
+        self.side_accordion.add_section(_("Color Adjustments"), self.filters_widget)
+        self.side_accordion.add_section(_("Video Effects"), self.video_effects_widget)
         self.side_accordion.add_section(_("Audio Filters"), self.audio_filters_widget)
 
         # The accordion has no bounded height of its own - with several
@@ -234,6 +237,9 @@ class PlayerWidget(QWidget):
         self.timeline.markerSelected.connect(self._timeline_sync.on_marker_selected)
         self.player_controls.aspectRatioChanged.connect(self._on_aspect_ratio_changed)
         self.player_controls.scaleChanged.connect(self._on_scale_changed)
+        self.player_controls.rotateChanged.connect(self._on_rotate_changed)
+        self.player_controls.flipHorizontalToggled.connect(self._on_flip_horizontal_toggled)
+        self.player_controls.flipVerticalToggled.connect(self._on_flip_vertical_toggled)
         self.player_controls.screenshotRequested.connect(self._on_screenshot)
         self.player_controls.reverseToggled.connect(self._on_reverse_toggled)
         self.player.signals.extraction_started.connect(self._on_url_extraction_started)
@@ -467,6 +473,18 @@ class PlayerWidget(QWidget):
     def _on_scale_changed(self, scale: float):
         self.player.set_scale(scale)
 
+    @Slot(int)
+    def _on_rotate_changed(self, degrees: int):
+        self.player.set_video_rotate(degrees)
+
+    @Slot(bool)
+    def _on_flip_horizontal_toggled(self, enabled: bool):
+        self.player.set_flip_horizontal(enabled)
+
+    @Slot(bool)
+    def _on_flip_vertical_toggled(self, enabled: bool):
+        self.player.set_flip_vertical(enabled)
+
     @Slot(bool)
     def _on_fullscreen_toggled(self, enabled):
         self.video_display.set_fullscreen(enabled)
@@ -556,6 +574,7 @@ class PlayerWidget(QWidget):
                     self.player_controls.set_current_track(track_name)
                     self._track_loader.load_subtitles_for_current_track()
                     self.filters_widget.reset_filters()
+                    self.video_effects_widget.reset_effects()
                     self.currentTrackIndexChanged.emit(index)
             except av_play.AVError:
                 pass
@@ -583,6 +602,7 @@ class PlayerWidget(QWidget):
                 self._last_known_state = state
                 self._track_loader.load_subtitles_for_current_track()
                 self.filters_widget.reset_filters()
+                self.video_effects_widget.reset_effects()
                 self._update_current_file()
                 return
 
@@ -600,7 +620,9 @@ class PlayerWidget(QWidget):
             self.player_controls.set_mute_state(is_muted)
             self.player_controls.set_volume(int(instance.get_volume()))
             try:
-                self.player_controls.set_reverse_available(self.player.is_audio_only())
+                audio_only = self.player.is_audio_only()
+                self.player_controls.set_reverse_available(audio_only)
+                self.player_controls.set_video_available(not audio_only)
             except Exception:
                 pass
             track_name = os.path.basename(instance.file_path)
@@ -674,6 +696,7 @@ class PlayerWidget(QWidget):
         self.player_controls.set_controls_enabled(False)
         self.subtitles_widget.clear_subtitles()
         self.filters_widget.reset_filters()
+        self.video_effects_widget.reset_effects()
         self.chapters_widget.clear_chapters()
 
     def load_file(self, file_path: str):
