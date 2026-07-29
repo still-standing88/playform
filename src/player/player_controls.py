@@ -505,7 +505,16 @@ class PlayerControls(QWidget):
 
 
     def set_current_file(self, file_path: str):
-        if self._current_file:
+        # load_file()/load_playlist() both call this once directly (with the
+        # requested path) and again moments later via _update_current_file()
+        # (with the now-loaded instance's file_path, normally the same
+        # file) -- guarding on "was a file already open" instead of "is this
+        # actually a different file" made the second call see its own
+        # first call as a file switch and immediately save_last_position()
+        # for the file that was just opened, using whatever the seek slider
+        # still showed (0, since nothing had played yet) -- clobbering its
+        # real saved resume position on disk before mpv had even loaded it.
+        if self._current_file and self._current_file != file_path:
             self.save_last_position()
 
         self._current_file = file_path
