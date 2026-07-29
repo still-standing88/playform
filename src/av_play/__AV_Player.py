@@ -255,39 +255,15 @@ class AVPlayer(ABC):
         # backend.
         self._monitor_running = False
 
-    def _on_track_naturally_ended(self):
-        # Driven by the backend's native end-of-file event (reason == EOF),
-        # not by polling -- see MPVVideoPlayer._handle_mpv_end_file. That
-        # event is authoritative and unambiguous, so none of the "is this a
-        # transient loading state or a real end" guesswork the polling
-        # monitor needs applies here.
-        if not self._auto_play_enabled:
-            return
-        with self._advance_lock:
-            if self._playlist_state != AVPlaylistState.PLAYING:
-                return
-            self._advance_track()
-            # Fire with the *new* current index (post-advance), not the one
-            # that just ended -- and only if it's still a valid track
-            # (advancing past the end of a non-repeating playlist leaves no
-            # "now playing" track to report).
-            if (self._track_end_callback and self._current_playlist is not None
-                    and 0 <= self._current_playlist_index < len(self._current_playlist)):
-                self._track_end_callback(self._current_playlist_index)
-
     def _monitor_playback(self):
-        # This loop's only remaining job is detecting reverse playback
-        # running off the *start* of a track -- there's no native backend
-        # event for that, so it's still inferred from idle_active polling.
-        # Forward auto-advance on natural end-of-track is handled by
-        # _on_track_naturally_ended(), driven by the backend's real
-        # end-of-file event instead of by polling this same ambiguous state.
-        #
         # The backend reports AV_STATE_NOTHING both for "this file reached
-        # EOF" and, transiently, for "a new file was just requested but mpv
-        # hasn't started it yet" (loadfile is fire-and-forget). Without this
-        # grace window, that transient loading state would look identical to
-        # "reversed playback ran off the start".
+        # EOF" (the case we want to act on) and, transiently, for "a new
+        # file was just requested but mpv hasn't started it yet" (loadfile
+        # is fire-and-forget). Without this grace window, that transient
+        # loading state looks identical to "track ended" and triggers a
+        # second, spurious _advance_track() call on top of whatever
+        # navigation (previous()/next()/jump_to_track()/auto-advance) just
+        # happened.
         LOAD_GRACE_PERIOD = 3.0
         while self._monitor_running and self._auto_play_enabled:
             try:
@@ -301,20 +277,32 @@ class AVPlayer(ABC):
                     elif state in [AVPlaybackState.AV_STATE_STOPPED, AVPlaybackState.AV_STATE_NOTHING]:
                         still_loading = (self._track_loading and
                             (time.monotonic() - self._track_load_started_at) < LOAD_GRACE_PERIOD)
-                        if (self._playlist_state == AVPlaylistState.PLAYING and not still_loading
-                                and self._reverse_playback_active):
-                            # Idle here means playing backward ran off the
-                            # *start* of the track, not the end -- advancing
-                            # the playlist forward would be exactly the wrong
-                            # direction. Stop reversing and let the concrete
-                            # player (via the callback) put mpv back in a
-                            # normal, resumable forward state instead of
-                            # skipping to a different track.
-                            with self._advance_lock:
-                                self._reverse_playback_active = False
-                                self._playlist_state = AVPlaylistState.PAUSED
-                                if self._reverse_stopped_callback:
-                                    self._reverse_stopped_callback()
+                        if self._playlist_state == AVPlaylistState.PLAYING and not still_loading:
+                            if self._reverse_playback_active:
+                                # Idle here means playing backward ran off
+                                # the *start* of the track, not the end --
+                                # advancing the playlist forward would be
+                                # exactly the wrong direction. Stop
+                                # reversing and let the concrete player
+                                # (via the callback) put mpv back in a
+                                # normal, resumable forward state instead
+                                # of skipping to a different track.
+                                with self._advance_lock:
+                                    self._reverse_playback_active = False
+                                    self._playlist_state = AVPlaylistState.PAUSED
+                                    if self._reverse_stopped_callback:
+                                        self._reverse_stopped_callback()
+                            else:
+                                with self._advance_lock:
+                                    self._advance_track()
+                                    # Fire with the *new* current index (post-advance),
+                                    # not the one that just ended -- and only if it's
+                                    # still a valid track (advancing past the end of a
+                                    # non-repeating playlist leaves no "now playing"
+                                    # track to report).
+                                    if (self._track_end_callback and self._current_playlist is not None
+                                            and 0 <= self._current_playlist_index < len(self._current_playlist)):
+                                        self._track_end_callback(self._current_playlist_index)
 
                 time.sleep(0.1)
 

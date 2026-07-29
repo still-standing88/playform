@@ -678,19 +678,6 @@ class MPVVideoPlayer(AVPlayer):
 
     def init(self, *args, **kw):
         self._controler.init(*args, **kw)
-        self.set_end_file_callback(self._handle_mpv_end_file)
-
-    def _handle_mpv_end_file(self, event):
-        # end-file is libmpv's own, authoritative signal for why a file
-        # stopped -- unlike polling idle_active, its `reason` distinguishes
-        # a real end-of-file from a manual stop/track-change/error, so only
-        # EOF should ever trigger playlist auto-advance here.
-        try:
-            reason = event.data.reason
-        except Exception:
-            return
-        if reason == mpv.MpvEventEndFile.EOF:
-            self._on_track_naturally_ended()
 
     def release(self):
         super().release()
