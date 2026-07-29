@@ -743,6 +743,36 @@ class MPVVideoPlayer(AVPlayer):
         mpv_value = (value - 1.0) * 100.0
         self.__mpv_interface.run_on_mpv(lambda m, p=mpv_property, v=mpv_value: setattr(m, p, v), wait=False)
 
+    def set_video_rotate(self, degrees: int):
+        self.__mpv_interface.run_on_mpv(lambda m, d=degrees: setattr(m, 'video_rotate', d), wait=False)
+
+    def set_deinterlace(self, enabled: bool):
+        self.__mpv_interface.run_on_mpv(lambda m, e=enabled: setattr(m, 'deinterlace', e), wait=False)
+
+    def set_deband(self, enabled: bool):
+        self.__mpv_interface.run_on_mpv(lambda m, e=enabled: setattr(m, 'deband', e), wait=False)
+
+    def set_flip_horizontal(self, enabled: bool):
+        self._flip_horizontal = enabled
+        self._apply_video_flip()
+
+    def set_flip_vertical(self, enabled: bool):
+        self._flip_vertical = enabled
+        self._apply_video_flip()
+
+    def _apply_video_flip(self):
+        # mpv has no direct hflip/vflip property (unlike video-rotate) --
+        # both axes only exist as ffmpeg filters reachable through the lavfi
+        # vf wrapper, so the two toggles have to be combined into one vf
+        # string rather than set independently.
+        filters = []
+        if getattr(self, '_flip_horizontal', False):
+            filters.append('hflip')
+        if getattr(self, '_flip_vertical', False):
+            filters.append('vflip')
+        vf = f"lavfi=[{','.join(filters)}]" if filters else ""
+        self.__mpv_interface.run_on_mpv(lambda m, v=vf: setattr(m, 'vf', v), wait=False)
+
     def get_video_track_id(self):
         """mpv's vid property: an int track id, or a falsy value (False/
         None/"no") when there is no video track -- i.e. audio-only media."""
