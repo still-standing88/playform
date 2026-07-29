@@ -99,19 +99,19 @@ class PlaybackStateManager:
         self._save_consolidated()
 
     def load_bookmarks(self) -> None:
-        pass
+        self.load_all()
 
     def save_repeat_loops(self) -> None:
         self._save_consolidated()
 
     def load_repeat_loops(self) -> None:
-        pass
+        self.load_all()
 
     def save_last_positions(self) -> None:
         self._save_consolidated()
 
     def load_last_positions(self) -> None:
-        pass
+        self.load_all()
 
     def get_bookmarks(self, file_path: Optional[str]) -> List[float]:
         if not file_path:
