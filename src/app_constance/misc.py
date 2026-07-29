@@ -45,6 +45,8 @@ video_resolutions = {
 
 video_speeds = [0.25, 0.50, 0.75, 1.0,1.25, 1.5,1.75,2.0,2.5,3.0]
 
+video_rotations = [0, 90, 180, 270]
+
 video_aspect_ratios = [
     "16:9",
     "4:3",
