@@ -104,6 +104,13 @@ class PlayerWidget(QWidget):
         self.side_accordion = Accordion(self)
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
 
+        # Placed directly above the accordion it hides, rather than in the
+        # far-away playback controls row - the button and the panel it
+        # affects should be visually next to each other.
+        self.toggle_accordion_btn = ToggleButton(_("Hide Side Panel"), self)
+        self.toggle_accordion_btn.setFixedHeight(30)
+        self.toggle_accordion_btn.setToolTip(_("Hide/Show Side Panel"))
+
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_path_context_menu)
@@ -149,8 +156,22 @@ class PlayerWidget(QWidget):
         # overflow this floor was originally added to guard against).
         self.accordion_scroll.setMinimumHeight(self.IDEAL_ACCORDION_FLOOR)
 
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(4)
+
+        accordion_header_layout = QHBoxLayout()
+        accordion_header_layout.setContentsMargins(0, 0, 0, 0)
+        accordion_header_layout.addStretch()
+        accordion_header_layout.addWidget(self.toggle_accordion_btn)
+
+        right_layout.addLayout(accordion_header_layout, 0)
+        right_layout.setAlignment(accordion_header_layout, Qt.AlignmentFlag.AlignTop)
+        right_layout.addWidget(self.accordion_scroll, 1)
+
         self.main_splitter.addWidget(left_widget)
-        self.main_splitter.addWidget(self.accordion_scroll)
+        self.main_splitter.addWidget(right_widget)
 
         # side_accordion used to be stacked below video/timeline/controls
         # in left_layout instead of here - main_splitter (already set up
@@ -180,7 +201,7 @@ class PlayerWidget(QWidget):
         self._reverseStoppedFromMonitor.connect(self._on_reverse_stopped_from_monitor)
         self._fileLoadedFromMpv.connect(self.seek_to_last)
 
-        self.player_controls.accordionPanelToggled.connect(self._on_accordion_panel_toggled)
+        self.toggle_accordion_btn.actuated.connect(self._on_accordion_panel_toggled)
         self.player_controls.playPauseClicked.connect(self._on_play_pause_clicked)
         self.player_controls.muteUnmuteClicked.connect(self._on_mute_unmute_clicked)
         self.player_controls.forwardClicked.connect(self._on_forward_clicked)
@@ -227,6 +248,12 @@ class PlayerWidget(QWidget):
     @Slot(bool)
     def _on_accordion_panel_toggled(self, hidden):
         self.accordion_scroll.setVisible(not hidden)
+        if hidden:
+            self.toggle_accordion_btn.setText(_("Show Side Panel"))
+            self.toggle_accordion_btn.setToolTip(_("Show Side Panel"))
+        else:
+            self.toggle_accordion_btn.setText(_("Hide Side Panel"))
+            self.toggle_accordion_btn.setToolTip(_("Hide Side Panel"))
 
     @Slot()
     def _on_play_pause_clicked(self):
