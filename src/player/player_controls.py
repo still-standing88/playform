@@ -50,8 +50,6 @@ class PlayerControls(QWidget):
     volumeUpRequested = Signal()
     volumeDownRequested = Signal()
 
-    controlsToggled = Signal(bool)
-    accordionPanelToggled = Signal(bool)
     timeUpdateRequested = Signal()
     jumpToBeginningRequested = Signal()
     jumpToEndRequested = Signal()
@@ -111,16 +109,8 @@ class PlayerControls(QWidget):
 
     def setup_ui(self):
         self.toggle_controls_btn = ToggleButton(_("Minimize"), self)
-        self.toggle_controls_btn.setFixedSize(30, 30)
+        self.toggle_controls_btn.setFixedHeight(30)
         self.toggle_controls_btn.setToolTip(_("Minimize/Maximize Controls"))
-
-        # Gives the side accordion (Chapters/Subtitles/Equalizer/Filters)
-        # back to the video area when the user doesn't need it open -
-        # same "reclaim space on demand" purpose as toggle_controls_btn
-        # above, just for the splitter pane instead of this button row.
-        self.toggle_accordion_btn = ToggleButton(_("Hide Panel"), self)
-        self.toggle_accordion_btn.setFixedSize(30, 30)
-        self.toggle_accordion_btn.setToolTip(_("Hide/Show Side Panel"))
 
         # Create media control buttons with icons
         self.previous_btn = QToolButton(self)
@@ -258,13 +248,13 @@ class PlayerControls(QWidget):
         self.buttons_container = FlowContainer()
         self.buttons_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.buttons_flow = FlowLayout(self.buttons_container, margin=0, h_spacing=8, v_spacing=6)
-        for widget in (self.previous_btn, self.backward_btn, self.play_pause_btn,
+        for widget in (self.toggle_controls_btn,
+                       self.previous_btn, self.backward_btn, self.play_pause_btn,
                        self.forward_btn, self.next_btn, self.separator1,
                        self.repeat_btn, self.shuffle_btn, self.bookmarks_btn,
                        self.goto_btn, self.screenshot_btn, self.separator2,
                        self.mute_btn, self.volume_icon_label, self.volume_slider,
-                       self.time_label, self.more_btn, self.toggle_controls_btn,
-                       self.toggle_accordion_btn):
+                       self.time_label, self.more_btn):
             self.buttons_flow.addWidget(widget)
 
         self.main_layout.addLayout(self.track_layout)
@@ -304,7 +294,6 @@ class PlayerControls(QWidget):
         self.more_btn.clicked.connect(self.show_more_menu)
 
         self.toggle_controls_btn.actuated.connect(self.toggle_controls)
-        self.toggle_accordion_btn.actuated.connect(self.toggle_accordion_panel)
 
     def apply_styles(self):
         self.setStyleSheet(PLAYER_CONTROLS_STYLE)
@@ -358,19 +347,6 @@ class PlayerControls(QWidget):
         else:
             self.toggle_controls_btn.setText(_("Minimize"))
             self.toggle_controls_btn.setToolTip(_("Minimize Controls"))
-
-    @Slot(bool)
-    def toggle_accordion_panel(self, hidden):
-        self.accordionPanelToggled.emit(hidden)
-
-        if hidden:
-            self.toggle_accordion_btn.setText(_("Show Panel"))
-            self.toggle_accordion_btn.setToolTip(_("Show Side Panel"))
-        else:
-            self.toggle_accordion_btn.setText(_("Hide Panel"))
-            self.toggle_accordion_btn.setToolTip(_("Hide Side Panel"))
-
-        self.controlsToggled.emit(not minimized)
 
     @Slot()
     def show_more_menu(self):
