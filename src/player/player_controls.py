@@ -647,8 +647,7 @@ class PlayerControls(QWidget):
         self._state.last_positions = self._last_positions
         last_pos = self._state.get_last_position(self._current_file)
         self._last_positions = self._state.last_positions
-        if last_pos is not None:
-            self.last_position = int(last_pos)
+        self.last_position = int(last_pos) if last_pos is not None else None
 
     @Slot()
     def volume_up(self):

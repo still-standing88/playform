@@ -53,6 +53,7 @@ class PlayerWidget(QWidget):
     currentTrackIndexChanged = Signal(int)
     _trackEndedFromMonitor = Signal(int)
     _reverseStoppedFromMonitor = Signal()
+    _fileLoadedFromMpv = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -177,6 +178,7 @@ class PlayerWidget(QWidget):
         # onto the GUI thread via Qt's queued cross-thread delivery.
         self._trackEndedFromMonitor.connect(self._update_current_track)
         self._reverseStoppedFromMonitor.connect(self._on_reverse_stopped_from_monitor)
+        self._fileLoadedFromMpv.connect(self.seek_to_last)
 
         self.player_controls.accordionPanelToggled.connect(self._on_accordion_panel_toggled)
         self.player_controls.playPauseClicked.connect(self._on_play_pause_clicked)
@@ -618,27 +620,21 @@ class PlayerWidget(QWidget):
             self.player_controls.set_current_file(instance.file_path)
             self._update_media_player_data()
 
-    def seek_to_last_pos(self, event:object):
-        self.seek_to_last()
-        #QTimer.singleShot(1, self.seek_to_last)
-
     def seek_to_last(self):
+        # Connected to _fileLoadedFromMpv, emitted from mpv's own
+        # 'file-loaded' event (see player_init.py) -- not called right after
+        # issuing load_playlist()/load_file() anymore. loadfile is
+        # fire-and-forget, so seeking immediately after requesting it races
+        # mpv actually opening the file; file-loaded is mpv's own signal
+        # that the file is ready to seek in.
         instance = self.player.primary_instance
         if not instance:
             return
 
         try:
             self.player_controls.load_last_position()
-            #self.loading = False
             if self.player_controls.last_position and self.player_controls.last_position > 0:
-                #length = instance.get_length()
-                #if length > 0 and self.player_controls.last_position <= length:
-
-                #self.player_controls.seek_slider.blockSignals(True)
-                #self.is_seeking = True
                 instance.set_position(self.player_controls.last_position)
-                #self.player_controls.seek_slider.blockSignals(False)
-                #self.is_seeking = False
         except av_play.AVError:
             pass
 
@@ -677,8 +673,6 @@ class PlayerWidget(QWidget):
 
             self.load_playlist(playlist, start_index=start_index)
             self.player_controls.set_current_track(os.path.basename(file_path))
-            self.player_controls.load_last_position()
-            self.seek_to_last()
             self._update_media_player_data()
         except Exception:
             self._reset_ui_to_default()
