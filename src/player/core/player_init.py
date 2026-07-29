@@ -34,6 +34,13 @@ def init_mpv_player(widget):
         widget.player.set_auto_play(prefs.prefs["autoplay"])
         widget.player.set_track_end_callback(lambda index: widget._trackEndedFromMonitor.emit(index))
         widget.player.set_reverse_stopped_callback(lambda: widget._reverseStoppedFromMonitor.emit())
+        # loadfile is fire-and-forget (see mpv_video_player.py's set_position
+        # comment) -- seeking to a saved position right after issuing it, with
+        # no delay, races mpv actually opening the file and can get silently
+        # dropped. file-loaded is mpv's own signal that the file is truly
+        # ready to seek in, so resume-last-position is driven off that event
+        # instead of off load_file()'s call site.
+        widget.player.set_start_file_callback(lambda event: widget._fileLoadedFromMpv.emit())
         widget.filters_widget.set_player(widget.player)
         widget.equalizer_widget.set_player(widget.player)
         widget.audio_filters_widget.set_player(widget.player)
