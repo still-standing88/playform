@@ -1,7 +1,7 @@
 from PySide6.QtGui import QActionGroup
 from PySide6.QtWidgets import QMenu
 
-from app_constance.misc import video_aspect_ratios, video_scales, video_speeds
+from app_constance.misc import video_aspect_ratios, video_scales, video_speeds, video_rotations
 
 
 def build_more_options_menu(controls) -> QMenu:
@@ -25,11 +25,38 @@ def build_more_options_menu(controls) -> QMenu:
     for ratio in video_aspect_ratios:
         a = aspect_menu.addAction(ratio)
         a.triggered.connect(lambda r=ratio: controls.aspectRatioChanged.emit(r))
+    aspect_menu.setEnabled(controls.is_video_available)
 
     scale_menu = menu.addMenu(_("Scale"))
     for s in video_scales:
         a = scale_menu.addAction(s)
         a.triggered.connect(lambda v=s: controls.scaleChanged.emit(float(v)))
+    scale_menu.setEnabled(controls.is_video_available)
+
+    rotate_menu = menu.addMenu(_("Rotate"))
+    rotate_group = QActionGroup(rotate_menu)
+    rotate_group.setExclusive(True)
+    for degrees in video_rotations:
+        rotate_text = _("0° (Normal)") if degrees == 0 else f"{degrees}°"
+        action = rotate_menu.addAction(rotate_text)
+        action.setCheckable(True)
+        if degrees == controls.video_rotate:
+            action.setChecked(True)
+        action.triggered.connect(_make_rotate_handler(controls, degrees))
+        rotate_group.addAction(action)
+    rotate_menu.setEnabled(controls.is_video_available)
+
+    flip_horizontal_action = menu.addAction(_("Flip Horizontal"))
+    flip_horizontal_action.setCheckable(True)
+    flip_horizontal_action.setChecked(controls.is_flip_horizontal)
+    flip_horizontal_action.setEnabled(controls.is_video_available)
+    flip_horizontal_action.triggered.connect(controls._on_flip_horizontal_action_toggled)
+
+    flip_vertical_action = menu.addAction(_("Flip Vertical"))
+    flip_vertical_action.setCheckable(True)
+    flip_vertical_action.setChecked(controls.is_flip_vertical)
+    flip_vertical_action.setEnabled(controls.is_video_available)
+    flip_vertical_action.triggered.connect(controls._on_flip_vertical_action_toggled)
 
     fullscreen_action = menu.addAction(_("Fullscreen"))
     fullscreen_action_state = lambda: fullscreen_action.setChecked(controls.is_fullscreen)
@@ -50,3 +77,7 @@ def build_more_options_menu(controls) -> QMenu:
 
 def _make_speed_handler(controls, speed):
     return lambda: controls.speedChanged.emit(speed)
+
+
+def _make_rotate_handler(controls, degrees):
+    return lambda: controls._on_rotate_action_triggered(degrees)
