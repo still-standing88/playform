@@ -42,6 +42,7 @@ def init_mpv_player(widget):
         # instead of off load_file()'s call site.
         widget.player.set_start_file_callback(lambda event: widget._fileLoadedFromMpv.emit())
         widget.filters_widget.set_player(widget.player)
+        widget.video_effects_widget.set_player(widget.player)
         widget.equalizer_widget.set_player(widget.player)
         widget.audio_filters_widget.set_player(widget.player)
 
