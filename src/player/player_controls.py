@@ -34,6 +34,9 @@ class PlayerControls(QWidget):
     speedChanged = Signal(float)
     aspectRatioChanged = Signal(str)
     scaleChanged = Signal(float)
+    rotateChanged = Signal(int)
+    flipHorizontalToggled = Signal(bool)
+    flipVerticalToggled = Signal(bool)
     playPauseClicked = Signal()
     muteUnmuteClicked = Signal()
     forwardClicked = Signal()
@@ -74,6 +77,10 @@ class PlayerControls(QWidget):
         self.is_fullscreen = False
         self.is_reverse_available = False
         self.is_reverse_active = False
+        self.is_video_available = False
+        self.video_rotate = 0
+        self.is_flip_horizontal = False
+        self.is_flip_vertical = False
 
         self._current_file: Optional[str] = None
         self._source_url: Optional[str] = None
@@ -377,6 +384,35 @@ class PlayerControls(QWidget):
         it after running off the start of the track), without re-emitting
         reverseToggled and looping back into the player."""
         self.is_reverse_active = active
+
+    def set_video_available(self, available: bool):
+        self.is_video_available = available
+        # Only ever force-resets on the True->False edge (switching to an
+        # audio-only track) -- this is called every poll tick while a video
+        # track keeps playing, so resetting on the True branch too would
+        # stomp the user's rotate/flip choice on the very next tick.
+        if not available:
+            if self.video_rotate != 0:
+                self.video_rotate = 0
+                self.rotateChanged.emit(0)
+            if self.is_flip_horizontal:
+                self.is_flip_horizontal = False
+                self.flipHorizontalToggled.emit(False)
+            if self.is_flip_vertical:
+                self.is_flip_vertical = False
+                self.flipVerticalToggled.emit(False)
+
+    def _on_rotate_action_triggered(self, degrees: int):
+        self.video_rotate = degrees
+        self.rotateChanged.emit(degrees)
+
+    def _on_flip_horizontal_action_toggled(self, checked: bool):
+        self.is_flip_horizontal = checked
+        self.flipHorizontalToggled.emit(checked)
+
+    def _on_flip_vertical_action_toggled(self, checked: bool):
+        self.is_flip_vertical = checked
+        self.flipVerticalToggled.emit(checked)
 
     def set_play_pause_state(self, is_playing):
         if self.is_playing == is_playing: return
