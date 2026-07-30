@@ -189,6 +189,7 @@ class MPVMediaInterface(AVMediaInterface):
         self.__applied_filters: Dict[int, MPVAudioFilter] = {}
         self.__stopped = False
         self.__end_reached = False
+        self.__fresh_load_pending = False
         self.__generation = 0
         self.__seek_token: object | None = None
         self.__volume_token: object | None = None
@@ -301,6 +302,7 @@ class MPVMediaInterface(AVMediaInterface):
         self.__applied_filters.clear()
         self.__stopped = False
         self.__end_reached = False
+        self.__fresh_load_pending = False
 
     def _check_initialized(self):
         if self.__worker is None:
@@ -324,6 +326,7 @@ class MPVMediaInterface(AVMediaInterface):
         self.__instances[id] = path
         self.__stopped = False
         self.__end_reached = False
+        self.__fresh_load_pending = True
 
         def do_load():
             if gen != self.__generation:
@@ -344,6 +347,7 @@ class MPVMediaInterface(AVMediaInterface):
         self.__instances[id] = url
         self.__stopped = False
         self.__end_reached = False
+        self.__fresh_load_pending = True
 
         def do_load():
             if gen != self.__generation:
@@ -389,12 +393,22 @@ class MPVMediaInterface(AVMediaInterface):
         self._check_instance(id)
         gen = self.__generation
         instance_path = self.__instances.get(id)
+        # If load_file()/load_url() just issued its own loadfile for this
+        # exact generation, that load is already in flight -- reissuing
+        # loadfile here races mpv's own open (interrupting it mid-open,
+        # confirmed via traced mpv events: a spurious extra end-file per
+        # transition). Only consumed once, for this specific play() call; a
+        # bare play() not preceded by a fresh load (e.g. un-pausing after
+        # mpv genuinely went idle) still falls through to the
+        # reload-if-idle check below, unchanged.
+        skip_reload = self.__fresh_load_pending
+        self.__fresh_load_pending = False
 
         def resume():
             if gen != self.__generation:
                 return
             mpv_instance = self._mpv()
-            if self.__end_reached or mpv_instance.time_pos is None:
+            if not skip_reload and (self.__end_reached or mpv_instance.time_pos is None):
                 if instance_path:
                     mpv_instance.command("loadfile", instance_path)
                 self.__end_reached = False

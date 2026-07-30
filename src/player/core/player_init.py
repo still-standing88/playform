@@ -31,13 +31,28 @@ def _install_playback_trace(widget):
     # independent listeners (python-mpv appends rather than replaces) --
     # this doesn't disturb the app's own existing file-loaded listener
     # (resume-last-position) registered further down in init_mpv_player.
+    def _instance_info():
+        instance = widget.player.primary_instance
+        path = getattr(instance, "file_path", None) if instance else None
+        pos = length = None
+        if instance:
+            try:
+                pos = instance.get_position()
+                length = instance.get_length()
+            except av_play.AVError:
+                pass
+        return path, pos, length
+
     def on_end_file(event):
         reason = event.data.reason
+        path, pos, length = _instance_info()
         _trace(f"RAW end-file reason={reason} ({_TRACE_REASON_NAMES.get(reason, '?')})  "
-               f"index={widget.player.get_current_track_index()}")
+               f"index={widget.player.get_current_track_index()}  pos={pos}  length={length}  path={path!r}")
 
     def on_file_loaded(event):
-        _trace(f"RAW file-loaded  index={widget.player.get_current_track_index()}")
+        path, pos, length = _instance_info()
+        _trace(f"RAW file-loaded  index={widget.player.get_current_track_index()}  "
+               f"pos={pos}  length={length}  path={path!r}")
 
     try:
         widget.player.set_end_file_callback(on_end_file)
