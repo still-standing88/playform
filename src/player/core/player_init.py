@@ -1,64 +1,7 @@
-import os
-import threading
-import time
-
 import av_play
 
 from app_config import prefs
-from utilities.functions import get_debug_level, get_logs_dir, get_mpvlog_file, parse_mpv_options
-
-
-_TRACE_REASON_NAMES = {0: "EOF", 1: "RESTARTED", 2: "ABORTED/STOP", 3: "QUIT", 4: "ERROR", 5: "REDIRECT"}
-_trace_start = time.monotonic()
-_trace_lock = threading.Lock()
-
-
-def _trace(msg):
-    # TEMPORARY diagnostic instrumentation for the playlist auto-advance
-    # skip investigation -- pure logging, no behavior change. Safe to
-    # delete once that investigation is closed.
-    line = f"[{time.monotonic() - _trace_start:9.3f}s] {msg} (thread={threading.current_thread().name})\n"
-    try:
-        with _trace_lock:
-            with open(os.path.join(get_logs_dir(), "playback-trace.log"), "a", encoding="utf-8") as f:
-                f.write(line)
-    except OSError:
-        pass
-
-
-def _install_playback_trace(widget):
-    # set_end_file_callback/set_start_file_callback register additional,
-    # independent listeners (python-mpv appends rather than replaces) --
-    # this doesn't disturb the app's own existing file-loaded listener
-    # (resume-last-position) registered further down in init_mpv_player.
-    def _instance_info():
-        instance = widget.player.primary_instance
-        path = getattr(instance, "file_path", None) if instance else None
-        pos = length = None
-        if instance:
-            try:
-                pos = instance.get_position()
-                length = instance.get_length()
-            except av_play.AVError:
-                pass
-        return path, pos, length
-
-    def on_end_file(event):
-        reason = event.data.reason
-        path, pos, length = _instance_info()
-        _trace(f"RAW end-file reason={reason} ({_TRACE_REASON_NAMES.get(reason, '?')})  "
-               f"index={widget.player.get_current_track_index()}  pos={pos}  length={length}  path={path!r}")
-
-    def on_file_loaded(event):
-        path, pos, length = _instance_info()
-        _trace(f"RAW file-loaded  index={widget.player.get_current_track_index()}  "
-               f"pos={pos}  length={length}  path={path!r}")
-
-    try:
-        widget.player.set_end_file_callback(on_end_file)
-        widget.player.set_start_file_callback(on_file_loaded)
-    except av_play.AVError:
-        pass
+from utilities.functions import get_debug_level, get_mpvlog_file, parse_mpv_options
 
 
 def init_mpv_player(widget):
@@ -87,23 +30,10 @@ def init_mpv_player(widget):
 
     try:
         widget.player.init(config=config)
-        _install_playback_trace(widget)
         widget.player.set_window(widget.video_display.winId())
         widget.player.set_auto_play(prefs.prefs["autoplay"])
-
-        def _on_track_ended_from_monitor(index):
-            _trace(f"APP monitor advanced -> index={index}  "
-                   f"repeat={widget.player.get_playlist_repeat_mode()}  "
-                   f"shuffle={widget.player.get_playlist_shuffle_mode()}")
-            widget._trackEndedFromMonitor.emit(index)
-
-        widget.player.set_track_end_callback(_on_track_ended_from_monitor)
-
-        def _on_reverse_stopped_from_monitor():
-            _trace("APP reverse-stopped")
-            widget._reverseStoppedFromMonitor.emit()
-
-        widget.player.set_reverse_stopped_callback(_on_reverse_stopped_from_monitor)
+        widget.player.set_track_end_callback(lambda index: widget._trackEndedFromMonitor.emit(index))
+        widget.player.set_reverse_stopped_callback(lambda: widget._reverseStoppedFromMonitor.emit())
         # loadfile is fire-and-forget (see mpv_video_player.py's set_position
         # comment) -- seeking to a saved position right after issuing it, with
         # no delay, races mpv actually opening the file and can get silently

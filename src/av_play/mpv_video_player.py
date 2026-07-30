@@ -474,24 +474,6 @@ class MPVMediaInterface(AVMediaInterface):
 
     def set_position(self, id: int, offset: int):
         self._check_instance(id)
-        # TEMPORARY diagnostic instrumentation for the playlist skip
-        # investigation -- pure logging, no behavior change. Safe to delete
-        # once that investigation is closed. Every set_position() call site
-        # found by reading the code has been ruled out for a specific
-        # reproduced case (a seek to a track's own exact duration with no
-        # matching saved resume position or bookmark/loop data) -- logging
-        # the actual caller stack settles it definitively instead of
-        # continuing to guess.
-        try:
-            import os as _os
-            import threading as _threading
-            import traceback as _traceback
-            from utilities.functions import get_logs_dir as _get_logs_dir
-            stack = "".join(_traceback.format_stack()[-6:-1])
-            with open(_os.path.join(_get_logs_dir(), "playback-trace.log"), "a", encoding="utf-8") as _f:
-                _f.write(f"SET_POSITION offset={offset} id={id} thread={_threading.current_thread().name}\n{stack}\n")
-        except Exception:
-            pass
         token = object()
         self.__seek_token = token
 
