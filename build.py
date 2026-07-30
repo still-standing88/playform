@@ -7,7 +7,7 @@ from invoke_config import *
 
 
 APP_NAME        = "PlayForm"
-APP_VERSION     = "1.0.2"
+APP_VERSION     = "1.1.0"
 APP_PUBLISHER   = "JoyBytes"
 APP_DESCRIPTION = "PlayForm Media Player"
 APP_COPYRIGHT   = f"Copyright (c) 2026 {APP_PUBLISHER}"
@@ -54,6 +54,7 @@ def _base_args(output_dir, debug_build=False) -> list[str]:
         "--include-package-data=qdarkstyle",
         "--nofollow-import-to=ffmpeg_binary",
         "--nofollow-import-to=assets_rc",
+        "--nofollow-import-to=pygments",
         "--nofollow-import-to=sqlalchemy.ext",
         "--nofollow-import-to=sqlalchemy.dialects.mssql",
         "--nofollow-import-to=sqlalchemy.dialects.mysql",
@@ -143,20 +144,9 @@ def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, com
     print(f"Entry point : {ENTRY_POINT}")
     print(f"Output dir  : {output_dir}")
 
-    if debug_build:
-        import shutil as _su
-        build_dir = output_dir / "app.build"
-        if build_dir.exists():
-            _su.rmtree(str(build_dir))
-            print(f"Cleaned previous build dir: {build_dir}")
-        dist_dir = output_dir / "app.dist"
-        if dist_dir.exists():
-            _su.rmtree(str(dist_dir))
-            print(f"Cleaned previous dist dir: {dist_dir}")
-
     args = _base_args(output_dir, debug_build=debug_build)
     if debug_build:
-        args += ["--show-scons", "--verbose-output", "--show-modules", "--show-progress"]
+        args += ["--show-scons", "--verbose", "--show-modules", "--show-progress"]
     args += _translation_data_args()
 
     args += [
@@ -257,7 +247,7 @@ def compile_updater(c, target_platform=None, debug_build=False):
 
     args = _updater_base_args(output_dir, debug_build=debug_build)
     if debug_build:
-        args += ["--show-scons", "--verbose-output", "--show-modules", "--show-progress"]
+        args += ["--show-scons", "--verbose", "--show-modules", "--show-progress"]
 
     if plat == "windows":
         args += _updater_windows_args()

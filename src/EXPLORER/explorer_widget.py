@@ -249,6 +249,11 @@ class ExplorerWidget(QWidget):
         self.autoplay_cb.stateChanged.connect(self.autoplayState)
         self.autoplay_cb.setChecked(prefs.prefs["autoplay"])
         controls_layout.addWidget(self.autoplay_cb)
+
+        self.loop_cb = QCheckBox(_("Loop"))
+        self.loop_cb.stateChanged.connect(self.loopState)
+        self.loop_cb.setChecked(prefs.prefs.get("explorer_loop", False))
+        controls_layout.addWidget(self.loop_cb)
         controls_layout.addStretch()
 
         volume_label = QLabel(_("Volume:"))
@@ -334,6 +339,13 @@ class ExplorerWidget(QWidget):
                 prefs.prefs['autoplay'] = False
         prefs.save()
 
+    @Slot(int)
+    def loopState(self, state):
+        enabled = state == 2
+        prefs.prefs['explorer_loop'] = enabled
+        prefs.save()
+        self.explorer_view.set_loop_enabled(enabled)
+
     def update_path(self):
         self.path_edit.setText(self._explorer.current_path)
 
@@ -409,16 +421,22 @@ class ExplorerWidget(QWidget):
         self.image_preview_label.hide()
 
     def _install_key_event_filter(self):
-        # Installed across the whole panel (not just the file list), per
-        # request - prevents the QShortcuts below from stealing keys meant
-        # for a focused input (arrow keys on the volume spinbox, etc.).
+        # Installed across the rest of the panel - prevents the QShortcuts
+        # below from stealing keys meant for a focused input (arrow keys on
+        # the volume spinbox, etc.). explorer_view is deliberately excluded:
+        # it's a plain QListWidget with no checkable items, so the filter's
+        # Space handling never had anything to toggle there, and installing
+        # it anyway still intercepted the ShortcutOverride event and stopped
+        # Space from ever reaching the Play/Pause QShortcut above. Leaving
+        # explorer_view unfiltered lets Qt's own shortcut resolution see
+        # Space directly.
         self._key_event_filter.install_on_widgets([
-            self.explorer_view,
             self.library_view,
             self.path_edit,
             self.search_edit,
             self.search_edit.lineEdit(),
             self.autoplay_cb,
+            self.loop_cb,
             self.volume_spinbox,
             self.parent_btn,
         ])

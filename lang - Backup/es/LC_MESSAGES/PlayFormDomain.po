@@ -1,0 +1,3429 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-22 17:22+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: es\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\app.py:50
+msgid "Starting application..."
+msgstr "Iniciando la aplicación..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\app_init.py:50
+msgid "Loading configuration..."
+msgstr "Cargando configuración..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\app_init.py:55
+msgid "Loading database..."
+msgstr "Cargando base de datos..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\app_init.py:58
+msgid "Initializing locale..."
+msgstr "Inicializando configuración regional..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader.py:229
+msgid "Unknown error"
+msgstr "Error desconocido"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader.py:258
+msgid "Too many redirects"
+msgstr "Demasiadas redirecciones"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader.py:305
+msgid " (Max retries reached)"
+msgstr "(Se alcanzó el máximo de reintentos)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:13
+msgid "Queued"
+msgstr "En cola"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:14
+msgid "Downloading"
+msgstr "Descargando"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:15
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:546
+msgid "Paused"
+msgstr "En pausa"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:16
+msgid "Completed"
+msgstr "Terminado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:17
+msgid "Failed"
+msgstr "Fallido"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:18
+msgid "Cancelled"
+msgstr "Cancelado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:41
+msgid "0 B / 0 B"
+msgstr "0 B / 0 B"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:42
+msgid "0 B/s"
+msgstr "0 B/s"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:114
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\downloader_dialog.py:20
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\downloader_dialog.py:37
+msgid "Download Manager"
+msgstr "Administrador de descargas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:126
+msgid "Downloads:"
+msgstr "Descargas:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:131
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\downloader_dialog.py:42
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:93
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:312
+msgid "Minimize"
+msgstr "Minimizar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:134
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\about_dialog.py:88
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\downloader_dialog.py:48
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\tool_dialog.py:38
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\youtube_info_dialog.py:95
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:46
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\logs_viewer_dialog.py:75
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:67
+msgid "Close"
+msgstr "Cerrar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:145
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:234
+msgid "No download selected"
+msgstr "No se ha seleccionado ninguna descarga"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:152
+msgid "More Info"
+msgstr "Más información"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:169
+msgid "Download Info:"
+msgstr "Información de descarga:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:305
+msgid "Copy URL"
+msgstr "Copiar URL"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:308
+msgid "Copy Destination"
+msgstr "Copiar destino"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:315
+msgid "Cancel Download"
+msgstr "Cancelar descarga"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:320
+msgid "Retry Download"
+msgstr "Reintentar descarga"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:334
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\downloader_dialog.py:94
+msgid "Downloads in Progress"
+msgstr "Descargas en curso"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:336
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\downloader_dialog.py:96
+msgid "{count} download(s) are still in progress."
+msgstr "Todavía hay {count} descarga(s) en curso."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:338
+msgid "What would you like to do?"
+msgstr "¿Qué quieres hacer?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:340
+msgid "Abort Downloads"
+msgstr "Cancelar descargas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\downloader\downloader_widget.py:341
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\downloader_dialog.py:100
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\hotkeys_dialog.py:43
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:82
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\url_dialog.py:38
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:263
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:306
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:331
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:363
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_create_dialog.py:49
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_edit_dialog.py:37
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_selection_dialog.py:34
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:198
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:132
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:142
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:155
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:216
+msgid "size"
+msgstr "tamaño"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:240
+msgid "Sort by"
+msgstr "Ordenar por"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:241
+msgid "Name (A\\u2013Z)"
+msgstr "Nombre (A\\u2013Z)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:242
+msgid "Name (Z\\u2013A)"
+msgstr "Nombre (Z\\u2013A)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:243
+msgid "Newest first"
+msgstr "Lo nuevo primero"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:244
+msgid "Oldest first"
+msgstr "El más viejo primero"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:248
+msgid "navigate to folder"
+msgstr "ir a la carpeta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:250
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\url_dialog.py:33
+msgid "Open"
+msgstr "Abrir"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:252
+msgid "copy path"
+msgstr "copiar ruta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:255
+msgid "Add to library"
+msgstr "Agregar a la biblioteca"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:256
+msgid "Create playlist from folder"
+msgstr "Crear lista de reproducción a partir de esta carpeta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:258
+msgid "Add to playlist"
+msgstr "Agregar a la lista de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_view.py:259
+msgid "Add to favorites"
+msgstr "Añadir a favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_widget.py:50
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_widget.py:77
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\dock_manager.py:22
+msgid "Explorer"
+msgstr "Explorador"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_widget.py:82
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:28
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:53
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:69
+msgid "Library"
+msgstr "Biblioteca"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_widget.py:90
+msgid "Path"
+msgstr "Ruta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_widget.py:92
+msgid "Parent Directory"
+msgstr "Carpeta principal"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_widget.py:103
+msgid "Files"
+msgstr "Archivos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_widget.py:129
+msgid "Media Preview"
+msgstr "Vista previa multimedia"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_widget.py:153
+msgid "Auto Play"
+msgstr "Reproducción automática"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_widget.py:159
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\voice_settings_dialog.py:29
+msgid "Volume:"
+msgstr "Volumen:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\explorer_widget.py:165
+msgid "volume"
+msgstr "volumen"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_dialogs.py:26
+msgid "path"
+msgstr "ruta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_dialogs.py:30
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:48
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:59
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:70
+msgid "Browse"
+msgstr "Examinar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_dialogs.py:31
+msgid "confirm"
+msgstr "confirmar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_dialogs.py:32
+msgid "cancel"
+msgstr "Cancelar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_dialogs.py:71
+msgid "Add new path to library"
+msgstr "Agregar nueva ruta a la biblioteca"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_dialogs.py:77
+msgid "Add existing path"
+msgstr "Agregar ruta existente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:24
+msgid "Folder"
+msgstr "Carpeta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:35
+msgid "Path in Library"
+msgstr "Camino en la biblioteca"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:35
+msgid "This path already exists in the library."
+msgstr "Esta ruta ya existe en la biblioteca."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:84
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:89
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:98
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:450
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:501
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:60
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:108
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:39
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:48
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:66
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:79
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:37
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:60
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:73
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:317
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:322
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:310
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:233
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:88
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:182
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:202
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:155
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:177
+msgid "Error"
+msgstr "Error"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:84
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:98
+msgid "Path not found."
+msgstr "Ruta no encontrada."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:89
+msgid "Path already exists."
+msgstr "El camino ya existe."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:131
+msgid "Add new"
+msgstr "Agregar nuevo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:134
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:44
+msgid "Remove"
+msgstr "Quitar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\EXPLORER\library_view.py:135
+msgid "Clear library"
+msgstr "Borrar biblioteca"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\about_dialog.py:59
+msgid "Publisher"
+msgstr "Editor"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\about_dialog.py:60
+msgid "License"
+msgstr "Licencia"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\about_dialog.py:61
+msgid "Copyright"
+msgstr "Derechos de autor"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\downloader_dialog.py:44
+msgid "Hide to status bar"
+msgstr "Ocultar en la barra de estado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\downloader_dialog.py:98
+msgid "Close anyway and abort all downloads?"
+msgstr "¿Cerrar de todos modos y cancelar todas las descargas?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\downloader_dialog.py:99
+msgid "Abort & Close"
+msgstr "Cancelar y cerrar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\hotkeys_dialog.py:15
+msgid "Hotkeys Configuration"
+msgstr "Configuración de atajos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\hotkeys_dialog.py:26
+msgid "Action"
+msgstr "Acción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\hotkeys_dialog.py:26
+msgid "Shortcut"
+msgstr "Atajo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\hotkeys_dialog.py:39
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\hotkeys_dialog.py:142
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:74
+msgid "Reset to Default"
+msgstr "Restablecer los valores predeterminados"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\hotkeys_dialog.py:41
+msgid "Apply"
+msgstr "Aplicar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\hotkeys_dialog.py:45
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:78
+msgid "OK"
+msgstr "DE ACUERDO"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\hotkeys_dialog.py:100
+msgid ""
+"Shortcut editor. Press the desired key combination; press Enter or change "
+"focus to accept."
+msgstr ""
+"Editor de accesos directos. Presione la combinación de teclas deseada; "
+"presione Enter o cambie el enfoque para aceptar."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\hotkeys_dialog.py:143
+msgid "Are you sure you want to reset all hotkeys to default?"
+msgstr ""
+"¿Está seguro de que desea restablecer todas las teclas de acceso rápido a "
+"sus valores predeterminados?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\tool_dialog.py:32
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\system_tray.py:29
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\system_tray.py:68
+msgid "Hide"
+msgstr "Ocultar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\tool_dialog.py:76
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\tool_dialog.py:86
+msgid "Tool Active"
+msgstr "Herramienta activa"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:12
+msgid "Customize Toolbar"
+msgstr "Personalizar barra de herramientas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:25
+msgid "Select tools to display on the toolbar:"
+msgstr "Seleccione herramientas para mostrar en la barra de herramientas:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:31
+msgid "Available Tools:"
+msgstr "Herramientas disponibles:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:40
+msgid "Add"
+msgstr "Agregar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:50
+msgid "Move Up"
+msgstr "Subir"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:54
+msgid "Move Down"
+msgstr "Mover hacia abajo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\toolbar_customize_dialog.py:62
+msgid "Toolbar Tools:"
+msgstr "Herramientas de la barra de herramientas:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\url_dialog.py:14
+msgid "Open URL"
+msgstr "Abrir URL"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\url_dialog.py:23
+msgid "Enter or select a media URL:"
+msgstr "Ingrese o seleccione una URL de medios:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\url_dialog.py:75
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:215
+msgid "No URL"
+msgstr "No hay URL"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\url_dialog.py:75
+msgid "Please enter a URL."
+msgstr "Por favor ingrese una URL."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\url_dialog.py:79
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:256
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:360
+msgid "Invalid URL"
+msgstr "URL no válida"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\youtube_info_dialog.py:40
+msgid "YouTube Video Information"
+msgstr "Información de vídeos de YouTube"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\youtube_info_dialog.py:58
+msgid "Fetching video information..."
+msgstr "Obteniendo información del vídeo..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\dialogs\youtube_info_dialog.py:72
+msgid "Video Information:"
+msgstr "Información del vídeo:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:327
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:111
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:139
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:120
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:225
+msgid "Ready"
+msgstr "Listo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:335
+msgid "Show Tool"
+msgstr "Mostrar herramienta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:341
+msgid "Show Downloader"
+msgstr "Mostrar gestor de descargas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:366
+msgid "Open Media File"
+msgstr "Abrir archivo multimedia"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:373
+msgid "Open Folder"
+msgstr "Abrir carpeta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:389
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:23
+msgid "No Media Found"
+msgstr "No se encontraron medios"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:433
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:44
+msgid "No Playlists"
+msgstr "Sin listas de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:434
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:45
+msgid "No playlists exist. Would you like to create a new playlist?"
+msgstr "No hay listas de reproducción. ¿Quieres crear una nueva?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:450
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:60
+msgid "Selected path is not a directory"
+msgstr "La ruta seleccionada no es un directorio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:459
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:69
+msgid "No Media Files"
+msgstr "No hay archivos multimedia"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:459
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:69
+msgid "No supported media files found in the selected folder"
+msgstr ""
+"No se encontraron archivos multimedia compatibles en la carpeta seleccionada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:478
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:87
+msgid ""
+"Created and loaded playlist '{playlist_name}' with {track_count} tracks"
+msgstr ""
+"Lista de reproducción creada y cargada '{playlist_name}' con {track_count} "
+"pistas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:494
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:102
+msgid "Added '{filename}' to playlist '{playlist_name}'"
+msgstr "Se agregó '{filename}' a la lista de reproducción '{playlist_name}'."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:502
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:108
+msgid "Playlist '{playlist_name}' not found"
+msgstr "Lista de reproducción '{playlist_name}' no encontrada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:524
+msgid "Created new playlist '{name}'"
+msgstr "Creó una nueva lista de reproducción '{name}'"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:549
+msgid "Playing"
+msgstr "Reproduciendo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:551
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:560
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:568
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:195
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:729
+msgid "No media loaded"
+msgstr "No se ha cargado ningún medio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:558
+msgid "Stopped"
+msgstr "Detenido"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:566
+msgid "Mute toggled"
+msgstr "Silencio activado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:589
+msgid "Previous track"
+msgstr "Pista anterior"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:592
+msgid "Next track"
+msgstr "Pista siguiente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:611
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\tool_window_manager.py:20
+msgid "Batch Converter"
+msgstr "Convertidor por lotes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:616
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\tool_window_manager.py:25
+msgid "Media Extractor"
+msgstr "Extractor multimedia"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:619
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\tool_window_manager.py:28
+msgid "Tag Editor"
+msgstr "Editor de etiquetas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:624
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\tool_window_manager.py:33
+msgid "Thumbnail Generator"
+msgstr "Generador de miniaturas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:627
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\tool_window_manager.py:36
+msgid "Subtitle Converter"
+msgstr "Conversor de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:630
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\tool_window_manager.py:39
+msgid "Subtitle Editor"
+msgstr "Editor de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:640
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\tool_window_manager.py:48
+msgid "Tool Already Open"
+msgstr "La herramienta ya está abierta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:641
+msgid ""
+"'{title}' is already open. Please close it before opening another tool."
+msgstr "'{title}' ya está abierto. Ciérrela antes de abrir otra herramienta."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:661
+msgid "Opened {title}"
+msgstr "Se abrió {title}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:666
+msgid "Show {title}"
+msgstr "Mostrar {title}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:669
+msgid "{title} hidden"
+msgstr "{title} oculto"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:679
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\tool_window_manager.py:79
+msgid "Tool closed"
+msgstr "Herramienta cerrada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:687
+msgid "Showing {title}"
+msgstr "Mostrando {title}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:696
+msgid "Toggle Repeat: On"
+msgstr "Repetición: activada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:698
+msgid "Toggle Repeat: Off"
+msgstr "Repetición: desactivada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:703
+msgid "Repeat: {state}"
+msgstr "Repetir: {state}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:704
+msgid "On"
+msgstr "En"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:704
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:125
+msgid "Off"
+msgstr "Apagado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:776
+msgid "Preferences saved"
+msgstr "Preferencias guardadas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:781
+msgid "Hotkeys updated"
+msgstr "Atajos actualizados"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:808
+msgid "Documentation Not Found"
+msgstr "No se encontró la documentación"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:809
+msgid ""
+"The documentation could not be found at:\n"
+"{path}\n"
+"\n"
+"Please visit the project website for help."
+msgstr ""
+"No se encontró la documentación en:\n"
+"{path}\n"
+"\n"
+"Visita el sitio web del proyecto para obtener ayuda."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:844
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:854
+msgid "Download Manager opened"
+msgstr "Administrador de descargas abierto"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:859
+msgid "Download Manager minimized"
+msgstr "Administrador de descargas minimizado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:865
+msgid "Download Manager closed"
+msgstr "Administrador de descargas cerrado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:872
+msgid "Download Manager restored"
+msgstr "Administrador de descargas restaurado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:912
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\tool_window_manager.py:109
+msgid "Active Tools"
+msgstr "Herramientas activas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\main_window.py:913
+msgid ""
+"The following tools are currently active:\n"
+"{tools}\n"
+"\n"
+"Closing the application will stop these processes. Do you want to continue?"
+msgstr ""
+"Las siguientes herramientas están activas:\n"
+"{tools}\n"
+"\n"
+"Si cierras la aplicación, estos procesos se detendrán. ¿Quieres continuar?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\dock_manager.py:13
+msgid "Recents & Favorites"
+msgstr "Recientes y favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\dock_manager.py:32
+msgid "Player"
+msgstr "Reproductor"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\dock_manager.py:41
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlists_widget.py:33
+msgid "Playlists"
+msgstr "Listas de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\dock_manager.py:52
+msgid "debugConsoleDock"
+msgstr "depuraciónConsolaDock"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\dock_manager.py:156
+msgid "Radio Browser"
+msgstr "Radio Browser"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\dock_manager.py:168
+msgid "Podcasts"
+msgstr "Podcasts"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:16
+msgid "&File"
+msgstr "Archivo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:20
+msgid "&Media"
+msgstr "Medios"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:24
+msgid "&View"
+msgstr "Ver"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:28
+msgid "&Tools"
+msgstr "Herramientas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:32
+msgid "&Options"
+msgstr "Opciones"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:39
+msgid "&Open File..."
+msgstr "Abrir archivo..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:43
+msgid "Open &Folder..."
+msgstr "Abrir &carpeta..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:47
+msgid "Open &URL..."
+msgstr "Abrir &URL..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:53
+msgid "&Close Media"
+msgstr "Cerrar medio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:60
+msgid "&Recent Files"
+msgstr "Archivos recientes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:66
+msgid "&Minimize to Taskbar"
+msgstr "Minimizar a la barra de tareas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:70
+msgid "&Exit"
+msgstr "Salir"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:75
+msgid "&Play/Pause"
+msgstr "Reproducir/Pausar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:79
+msgid "&Stop"
+msgstr "Detener"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:85
+msgid "&Mute/Unmute"
+msgstr "Silenciar/Activar sonido"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:91
+msgid "&Forward"
+msgstr "Avanzar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:95
+msgid "&Backward"
+msgstr "Retroceder"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:101
+msgid "&Previous"
+msgstr "Anterior"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:105
+msgid "&Next"
+msgstr "Siguiente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:111
+msgid "Toggle &Repeat: Off"
+msgstr "Alternar y repetir: desactivado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:116
+msgid "Show &Recents/Favorites"
+msgstr "Mostrar &Recientes/Favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:122
+msgid "Show &Explorer"
+msgstr "Mostrar y Explorador"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:128
+msgid "&Minimize Player"
+msgstr "Minimizar reproductor"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:133
+msgid "Show &Playlists"
+msgstr "Mostrar y listas de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:141
+msgid "Show &Radio Browser"
+msgstr "Explorador de programas y radio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:147
+msgid "Show &Podcasts"
+msgstr "Programas y podcasts"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:154
+msgid "&Batch Converter"
+msgstr "Conversor por lotes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:158
+msgid "&Media Extractor"
+msgstr "Extractor multimedia"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:162
+msgid "&Tag Editor"
+msgstr "Editor de etiquetas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:166
+msgid "&Thumbnail Generator"
+msgstr "Generador de miniaturas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:172
+msgid "&Download Manager"
+msgstr "Administrador de descargas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:176
+msgid "&Subtitle Tools"
+msgstr "Herramientas de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:177
+msgid "Subtitle &Converter"
+msgstr "Subtítulo y convertidor"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:181
+msgid "Subtitle &Editor"
+msgstr "Subtítulos y editor"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:185
+msgid "&Debug"
+msgstr "Depuración"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:186
+msgid "&View Logsâ¦"
+msgstr "&Ver registros..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:190
+msgid "Show &Console Dock"
+msgstr "Muelle para mostrar y consola"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:197
+msgid "&Manage Preferences"
+msgstr "Gestionar preferencias"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:201
+msgid "&Manage Hotkeys"
+msgstr "Gestionar atajos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:207
+msgid "&Check for Updates..."
+msgstr "Buscar actualizaciones..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:211
+msgid "Get/Update &Utilities..."
+msgstr "Obtener/Actualizar &Utilidades..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:215
+msgid "&Documentation"
+msgstr "Documentación"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:224
+msgid "&About PlayForm..."
+msgstr "Acerca de PlayForm..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\menu_manager.py:233
+msgid "No recent files"
+msgstr "No hay archivos recientes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:25
+msgid ""
+"No supported media files were found in the selected folder:\n"
+"{folder_path}\n"
+"\n"
+"Supported formats include audio and video files."
+msgstr ""
+"No se encontraron archivos multimedia compatibles en la carpeta seleccionada:\n"
+"{folder_path}\n"
+"\n"
+"Los formatos admitidos incluyen archivos de audio y video."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\playlist_handler.py:73
+msgid "Playlist from {folder_name}"
+msgstr "Lista de reproducción de {folder_name}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\toolbar_manager.py:12
+msgid "Main Toolbar"
+msgstr "Barra de herramientas principal"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\managers\toolbar_manager.py:38
+msgid "Customize Toolbar..."
+msgstr "Personalizar barra de herramientas..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\__init__.py:20
+msgid "Preferences"
+msgstr "Preferencias"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\__init__.py:33
+msgid "General"
+msgstr "General"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\__init__.py:36
+msgid "Media"
+msgstr "Medios"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\__init__.py:39
+msgid "Accessibility"
+msgstr "Accesibilidad"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\__init__.py:42
+msgid "Advanced"
+msgstr "Avanzado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\__init__.py:90
+msgid "Restart Required"
+msgstr "Se requiere reinicio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\__init__.py:92
+msgid ""
+"Some options you modified require an application restart to take effect.\n"
+"\n"
+"Would you like to restart now?"
+msgstr ""
+"Algunas opciones que has modificado requieren reiniciar la aplicación para aplicarse.\n"
+"\n"
+"¿Quieres reiniciarla ahora?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\accessibility_panel.py:16
+msgid "Speech Settings"
+msgstr "Ajustes de voz"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\accessibility_panel.py:19
+msgid "Enable speech accessibility feedback"
+msgstr "Activar retroalimentación de voz de accesibilidad"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\accessibility_panel.py:40
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\voice_settings_dialog.py:10
+msgid "Voice Settings"
+msgstr "Ajustes de voz"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\accessibility_panel.py:46
+msgid "Interrupt previous speech"
+msgstr "Interrumpir discurso anterior"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:14
+msgid "VLC Settings"
+msgstr "Configuración de VLC"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:17
+msgid "Enable VLC Logging"
+msgstr "Habilitar el registro de VLC"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:19
+msgid "VLC Logging:"
+msgstr "Registro de VLC:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:23
+msgid "Debug Level:"
+msgstr "Nivel de depuración:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:36
+msgid "VLC Arguments:"
+msgstr "Argumentos de VLC:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:40
+msgid "yt-dlp Settings"
+msgstr "Configuración de YouTube"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:52
+msgid "Cookies File:"
+msgstr "Archivo de cookies:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:63
+msgid "yt-dlp Path:"
+msgstr "Ruta yt-dlp:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:74
+msgid "FFmpeg Path:"
+msgstr "Ruta FFmpeg:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:76
+msgid "Enable yt-dlp Logging"
+msgstr "Habilitar el registro de yt-dlp"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:78
+msgid "yt-dlp Logging:"
+msgstr "yt-dlp Registro:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:80
+msgid "Enable Verbose Output"
+msgstr "Habilitar salida detallada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:81
+msgid "Verbose Output:"
+msgstr "Salida detallada:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:110
+msgid "Invalid VLC Arguments"
+msgstr "Argumentos de VLC no válidos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:111
+msgid "The VLC arguments are not valid. Please check the syntax."
+msgstr "Los argumentos de VLC no son válidos. Por favor revise la sintaxis."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:117
+msgid "Select Cookies File"
+msgstr "Seleccionar archivo de cookies"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:123
+msgid "Select yt-dlp Directory"
+msgstr "Seleccione el directorio yt-dlp"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\advanced_panel.py:128
+msgid "Select FFmpeg Directory"
+msgstr "Seleccione el directorio FFmpeg"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\general_panel.py:14
+msgid "Language:"
+msgstr "Idioma:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\general_panel.py:18
+msgid "Screenshot Format:"
+msgstr "Formato de captura de pantalla:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\general_panel.py:22
+msgid "Theme:"
+msgstr "Tema:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\general_panel.py:24
+msgid "Auto check for updates"
+msgstr "Buscar actualizaciones automáticamente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\general_panel.py:25
+msgid "Auto Updates:"
+msgstr "Actualizaciones automáticas:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\general_panel.py:27
+msgid "Save URLs"
+msgstr "Guardar URL"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\general_panel.py:28
+msgid "Save URLs:"
+msgstr "Guardar URL:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\media_panel.py:14
+msgid "Volume Offset:"
+msgstr "Compensación de volumen:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\media_panel.py:18
+msgid "Seek Offset:"
+msgstr "Buscar compensación:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\media_panel.py:22
+msgid "Audio Device:"
+msgstr "Dispositivo de audio:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\voice_settings_dialog.py:23
+msgid "Voice:"
+msgstr "Voz:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\voice_settings_dialog.py:35
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:321
+msgid "Speed"
+msgstr "Velocidad"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\voice_settings_dialog.py:36
+msgid "Rate:"
+msgstr "Tasa:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\prefs_panels\voice_settings_dialog.py:60
+msgid "Voice changed to {voice_name}"
+msgstr "La voz cambió a {voice_name}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:16
+msgid "Favorites list"
+msgstr "Lista de favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:17
+msgid "List of favorite media files"
+msgstr "Lista de archivos multimedia favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:25
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:23
+msgid "Double-click or press Enter on a file to open it"
+msgstr "Haga doble clic o presione Entrar en un archivo para abrirlo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:39
+msgid "Error loading favorites: {error}"
+msgstr "Error al cargar favoritos: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:48
+msgid "Failed to add favorite: {error}"
+msgstr "No se pudo agregar favorito: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:66
+msgid "Failed to remove favorite: {error}"
+msgstr "No se pudo eliminar el favorito: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:70
+msgid "Clear Favorites"
+msgstr "Borrar favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:71
+msgid "Are you sure you want to clear all favorites?"
+msgstr "¿Está seguro de que desea borrar todos los favoritos?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:79
+msgid "Failed to clear favorites: {error}"
+msgstr "No se pudieron borrar favoritos: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:84
+msgid "Clear All Favorites"
+msgstr "Borrar todos los favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\favorites.py:90
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:119
+msgid "Remove from Favorites"
+msgstr "Quitar de favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:17
+msgid "Recent files list"
+msgstr "Lista de archivos recientes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:18
+msgid "List of recently opened media files"
+msgstr "Lista de archivos multimedia abiertos recientemente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:37
+msgid "Error loading recents: {error}"
+msgstr "Error al cargar recientes: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:60
+msgid "Failed to add recent file: {error}"
+msgstr "No se pudo agregar el archivo reciente: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:64
+msgid "Clear Recent Files"
+msgstr "Borrar archivos recientes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:65
+msgid "Are you sure you want to clear all recent files?"
+msgstr "¿Está seguro de que desea borrar todos los archivos recientes?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:73
+msgid "Failed to clear recent files: {error}"
+msgstr "No se pudieron borrar los archivos recientes: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents.py:78
+msgid "Clear All Recent Files"
+msgstr "Borrar todos los archivos recientes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents_and_favorites.py:25
+msgid "Favorites"
+msgstr "Favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\gui\recents_favorites\recents_and_favorites.py:29
+msgid "Recents"
+msgstr "Recientes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:16
+msgid "Full Entry Details"
+msgstr "Detalles completos de la entrada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:42
+msgid "Copy to Clipboard"
+msgstr "Copiar al portapapeles"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:55
+msgid ""
+"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry "
+"Data</h2>"
+msgstr ""
+"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Datos de entrada "
+"completos</h2>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:92
+msgid "<em style='color: #999;'>None</em>"
+msgstr "<em style='color: #999;'>Ninguno</em>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:111
+msgid "<em style='color: #999;'>Empty</em>"
+msgstr "<em style='color: #999;'>Vacío</em>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:115
+msgid "<em>... and {count} more</em>"
+msgstr "<em>... y {count} más</em>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:126
+msgid "FULL ENTRY DATA"
+msgstr "DATOS DE ENTRADA COMPLETOS"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:162
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:619
+msgid "Copied"
+msgstr "Copiado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:163
+msgid "Entry data copied to clipboard"
+msgstr "Datos de entrada copiados al portapapeles"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:168
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:58
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:117
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:139
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:192
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:193
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:197
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:55
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:276
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:157
+msgid "None"
+msgstr "Ninguno"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:183
+msgid "Empty"
+msgstr "Vacío"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\entry_detail_dialog.py:186
+msgid "... and {count} more"
+msgstr "... y {count} más"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:48
+msgid "Search:"
+msgstr "Buscar:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:50
+msgid "Type and press Enter to search entries..."
+msgstr "Escriba y presione Entrar para buscar entradas..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:52
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:49
+msgid "Search"
+msgstr "Buscar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:54
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:58
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:72
+msgid "Clear"
+msgstr "Claro"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:68
+msgid "<b>Feeds</b>"
+msgstr "<b>Feeds</b>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:76
+msgid "Feed List"
+msgstr "Lista de feeds"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:77
+msgid "List of RSS feeds. Right-click for options."
+msgstr "Lista de canales RSS. Haga clic derecho para ver las opciones."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:85
+msgid "<b>Entries</b>"
+msgstr "<b>Entradas</b>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:90
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:226
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:26
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:68
+msgid "Title"
+msgstr "Título"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:90
+msgid "Published"
+msgstr "Publicado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:90
+msgid "Link"
+msgstr "Enlace"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:96
+msgid "Entry Tree"
+msgstr "Árbol de entrada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:97
+msgid ""
+"Tree of feed entries with title, date, and link. Right-click for options."
+msgstr ""
+"Árbol de entradas del feed con título, fecha y enlace. Haga clic derecho "
+"para ver las opciones."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:103
+msgid "<b>Summary/Description</b>"
+msgstr "<b>Resumen/Descripción</b>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:115
+msgid "Entry Detail Text"
+msgstr "Texto de detalle de entrada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:116
+msgid "Summary and description of selected entry"
+msgstr "Resumen y descripción de la entrada seleccionada."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:154
+msgid "Invalid feed format"
+msgstr "Formato de feed no válido"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:155
+msgid "Failed to parse feed"
+msgstr "No se pudo analizar el feed"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:162
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:251
+msgid "Add Feed"
+msgstr "Agregar feed"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:170
+msgid "Refresh Feed"
+msgstr "Actualizar feed"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:174
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:354
+msgid "Update Feed URL"
+msgstr "Actualizar URL del feed"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:178
+msgid "Remove Feed"
+msgstr "Eliminar feed"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:185
+msgid "Refresh All Feeds"
+msgstr "Actualizar todos los feeds"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:189
+msgid "Clear All Feeds"
+msgstr "Eliminar todos los feeds"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:202
+msgid "Sort By"
+msgstr "Ordenar por"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:204
+msgid "Title (Ascending A-Z)"
+msgstr "Título (Ascendente a Z)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:208
+msgid "Title (Descending Z-A)"
+msgstr "Título (Z-A descendente)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:214
+msgid "Date (Newest First)"
+msgstr "Fecha (más reciente primero)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:218
+msgid "Date (Oldest First)"
+msgstr "Fecha (más antigua primero)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:224
+msgid "Copy"
+msgstr "Copiar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:230
+msgid "Page Link"
+msgstr "Enlace a la página"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:234
+msgid "Direct Media Link"
+msgstr "Enlace directo del medio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:240
+msgid "View Full Entry Dump"
+msgstr "Ver volcado de entrada completo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:244
+msgid "Open Link in Browser"
+msgstr "Abrir enlace en el navegador"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:251
+msgid "Enter feed URL:"
+msgstr "Introduzca la URL del feed:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:256
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:360
+msgid "Please enter a valid HTTP/HTTPS URL"
+msgstr "Por favor ingrese una URL HTTP/HTTPS válida"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:260
+msgid "Duplicate"
+msgstr "Duplicado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:260
+msgid "Feed already exists"
+msgstr "El feed ya existe"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:263
+msgid "Validating feed..."
+msgstr "Validando feed..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:273
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:373
+msgid "Invalid Feed"
+msgstr "Feed no válido"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:274
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:374
+msgid ""
+"Feed validation failed:\n"
+"{error}"
+msgstr ""
+"Error de validación del feed:\n"
+"{error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:280
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:314
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:380
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:237
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:227
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:179
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:349
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:177
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:195
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:197
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:171
+msgid "Success"
+msgstr "Correcto"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:280
+msgid "Feed added successfully"
+msgstr "Feed agregado exitosamente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:291
+msgid "Confirm Removal"
+msgstr "Confirmar eliminación"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:292
+msgid ""
+"Remove feed:\n"
+"{url}?"
+msgstr ""
+"¿Quitar feed:\n"
+"{url}?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:306
+msgid "Refreshing feed..."
+msgstr "Pienso refrescante..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:314
+msgid "Feed refreshed successfully"
+msgstr "Feed actualizado correctamente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:317
+msgid "Failed to refresh feed"
+msgstr "No se pudo actualizar el feed"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:323
+msgid ""
+"Refresh failed:\n"
+"{error}"
+msgstr ""
+"Error al actualizar:\n"
+"{error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:331
+msgid "Refreshing feeds..."
+msgstr "Alimentos refrescantes..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:338
+msgid ""
+"Refreshing:\n"
+"{url}..."
+msgstr ""
+"Actualizando:\n"
+"{url}..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:354
+msgid "Enter new URL:"
+msgstr "Ingrese una nueva URL:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:363
+msgid "Validating new feed URL..."
+msgstr "Validando nueva URL del feed..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:380
+msgid "Feed URL updated successfully"
+msgstr "URL del feed actualizada correctamente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:386
+msgid "Confirm Clear All"
+msgstr "Confirmar Borrar todo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:387
+msgid "Delete all feeds and cache?"
+msgstr "¿Eliminar todos los feeds y el caché?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:448
+msgid "No entries found for this feed."
+msgstr "No se encontraron entradas para este feed."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:507
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:60
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:61
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:63
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:64
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:88
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:89
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:271
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:273
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:278
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:279
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:281
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:286
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:290
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:292
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:293
+msgid "N/A"
+msgstr "N / A"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:513
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:797
+msgid "Untitled"
+msgstr "Intitulado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:523
+msgid "Entry: {title}, Published: {published}, Link: {link}"
+msgstr "Entrada: {title}, Publicado: {published}, Enlace: {link}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:537
+msgid "No entries match your search."
+msgstr "Ninguna entrada coincide con su búsqueda."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:593
+msgid "<p><em>No summary or description available.</em></p>"
+msgstr "<p><em>No hay resumen ni descripción disponible.</em></p>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:620
+msgid ""
+"Direct media link copied to clipboard:\n"
+"{media_url}"
+msgstr ""
+"Enlace multimedia directo copiado al portapapeles:\n"
+"{media_url}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:625
+msgid "Not Found"
+msgstr "Extraviado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:625
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:636
+msgid "No direct media link found for this entry."
+msgstr "No se encontró ningún enlace de medios directo para esta entrada."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\podcasts\feed_widget.py:636
+msgid "No Media"
+msgstr "Sin medios"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:35
+msgid "Search and Filter"
+msgstr "Buscar y filtrar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:40
+msgid "Station Name:"
+msgstr "Nombre de la emisora:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:42
+msgid "Enter station name..."
+msgstr "Escribe el nombre de la emisora..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:43
+msgid "Station name search"
+msgstr "Búsqueda de nombre de estación"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:44
+msgid "Type a station name and press Enter to search"
+msgstr "Escribe el nombre de una emisora y pulsa Intro para buscar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:50
+msgid "Search button"
+msgstr "Botón de búsqueda"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:51
+msgid "Click to search by station name"
+msgstr "Haga clic para buscar por nombre de estación"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:56
+msgid "Filter By:"
+msgstr "Filtrar por:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:58
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:76
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:153
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:182
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:22
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:88
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:127
+msgid "Country"
+msgstr "País"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:58
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:76
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:154
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:184
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:89
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:128
+msgid "Language"
+msgstr "Idioma"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:58
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:186
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:90
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:129
+msgid "Tag"
+msgstr "Etiqueta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:58
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:123
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:22
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:91
+msgid "Codec"
+msgstr "Códec"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:59
+msgid "Filter type"
+msgstr "Tipo de filtro"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:60
+msgid "Select how to filter stations"
+msgstr "Seleccione cómo filtrar estaciones"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:65
+msgid "Value:"
+msgstr "Valor:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:69
+msgid "Filter value"
+msgstr "Valor del filtro"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:70
+msgid "Select or type a filter value"
+msgstr "Seleccione o escriba un valor de filtro"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:74
+msgid "Sort By:"
+msgstr "Ordenar por:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:76
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:153
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:22
+msgid "Name"
+msgstr "Nombre"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:76
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:153
+msgid "Votes"
+msgstr "Votos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:76
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:154
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:22
+msgid "Bitrate"
+msgstr "tasa de bits"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:76
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:154
+msgid "Click Count"
+msgstr "Haga clic en Contar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:77
+msgid "Sort order"
+msgstr "orden de clasificación"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:78
+msgid "Select how to sort results"
+msgstr "Seleccione cómo ordenar los resultados"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:82
+msgid "Apply Filters"
+msgstr "Aplicar filtros"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:83
+msgid "Apply filters button"
+msgstr "Botón Aplicar filtros"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:84
+msgid "Click to apply selected filters"
+msgstr "Haga clic para aplicar los filtros seleccionados"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:93
+msgid "Show Favorites"
+msgstr "Mostrar favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:94
+msgid "Show favorites button"
+msgstr "Mostrar botón de favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:95
+msgid "Click to view favorite stations"
+msgstr "Haga clic para ver estaciones favoritas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:100
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:298
+msgid "Clear Cache"
+msgstr "Borrar caché"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:101
+msgid "Clear cache button"
+msgstr "Botón borrar caché"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_filter_widget.py:102
+msgid "Click to clear cached data"
+msgstr "Haga clic para borrar los datos almacenados en caché"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:22
+msgid "Language(s)"
+msgstr "Idioma(s)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:34
+msgid "Radio stations list"
+msgstr "Lista de estaciones de radio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:35
+msgid "List of radio stations. Right-click or double-click for options."
+msgstr ""
+"Lista de estaciones de radio. Haga clic derecho o haga doble clic para ver "
+"las opciones."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:57
+msgid ""
+"Station: {name}. Country: {country}. Language: {language}. Tags: {tags}. "
+"Codec: {codec}. Bitrate: {bitrate}."
+msgstr ""
+"Estación: {name}. País: {country}. Idioma: {language}. Etiquetas: {tags}. "
+"Códec: {codec}. Velocidad de bits: {bitrate}."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:79
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:87
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:205
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:285
+msgid "Unknown"
+msgstr "Desconocido"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:86
+msgid "Favorite Station: {name}. Country: {country}. Language: {language}."
+msgstr "Estación favorita: {name}. País: {country}. Idioma: {language}."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:109
+msgid "Play Station"
+msgstr "Reproducir emisora"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:112
+msgid "Register Click"
+msgstr "Registrarse Haga clic"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:122
+msgid "Add to Favorites"
+msgstr "Añadir a favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:127
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:295
+msgid "Station Information"
+msgstr "Información de la emisora"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_tree_widget.py:130
+msgid "Copy Stream URL"
+msgstr "Copiar URL del flujo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:42
+msgid "Results"
+msgstr "Resultados"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:54
+msgid "Ready - Enter search term or select filters"
+msgstr "Listo: escribe un término de búsqueda o selecciona filtros"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:74
+msgid "Searching for '{search_name}'..."
+msgstr "Buscando “{search_name}”..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:95
+msgid "Filtering by {filter_type}: {filter_value}..."
+msgstr "Filtrando por {filter_type}: {filter_value}..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:114
+msgid "Loading favorites..."
+msgstr "Cargando favoritos..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:136
+msgid "Loading {filter_type}..."
+msgstr "Cargando {filter_type}..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:152
+msgid "Loaded {count} countries"
+msgstr "Se cargaron {count} países"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:162
+msgid "Loaded {count} languages"
+msgstr "Se cargaron {count} idiomas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:172
+msgid "Loaded top {count} tags"
+msgstr "Se cargaron las {count} etiquetas principales"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:184
+msgid "No results found"
+msgstr "No se encontraron resultados"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:191
+msgid "Found {count} stations"
+msgstr "Se encontraron {count} emisoras"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:199
+msgid "Showing {count} favorite stations"
+msgstr "Mostrando {count} emisoras favoritas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:211
+msgid "Playing: {name}"
+msgstr "Reproduciendo: {name}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:216
+msgid "No stream URL found for {name}"
+msgstr "No se encontró ninguna URL de transmisión para {name}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:221
+msgid "Click already in progress"
+msgstr "Haga clic ya en progreso"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:226
+msgid "Click registered successfully"
+msgstr "Haga clic registrado con éxito"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:230
+msgid "Click failed: {error}"
+msgstr "Error al hacer clic: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:260
+msgid "Added '{name}' to favorites"
+msgstr "Se agregó '{name}' a favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:265
+msgid "Removed station from favorites"
+msgstr "La emisora se quitó de favoritos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:270
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:285
+msgid "<b>Name:</b> {name}"
+msgstr "<b>Nombre:</b> {name}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:271
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:286
+msgid "<b>Country:</b> {country}"
+msgstr "<b>País:</b> {country}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:272
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:287
+msgid "<b>Language:</b> {language}"
+msgstr "<b>Idioma:</b> {language}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:275
+msgid "<b>Tags:</b> {tags}"
+msgstr "<b>Etiquetas:</b> {tags}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:278
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:292
+msgid "<b>Codec:</b> {codec}"
+msgstr "<b>Códec:</b> {codec}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:279
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:293
+msgid "<b>Bitrate:</b> {bitrate} kbps"
+msgstr "<b>Bitrate:</b> {bitrate} kbps"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:280
+msgid "<b>Votes:</b> {votes}"
+msgstr "<b>Votos:</b> {votes}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:281
+msgid "<b>Homepage:</b> {homepage}"
+msgstr "<b>Página de inicio:</b> {homepage}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:298
+msgid "Clear all cached data?"
+msgstr "¿Borrar todos los datos almacenados en caché?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:305
+msgid "Cache cleared successfully"
+msgstr "La caché se borró correctamente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:311
+msgid ""
+"An error occurred:\n"
+"{error}"
+msgstr ""
+"Se produjo un error:\n"
+"{error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\media_providers\radio\radio_widget.py:313
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:184
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:354
+msgid "Error occurred"
+msgstr "Se produjo un error"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\bookmarks_dialog.py:13
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:135
+msgid "Bookmarks"
+msgstr "Marcadores"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\bookmarks_dialog.py:24
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:818
+msgid "Mark {index}: {minutes:02d}:{seconds:02d}"
+msgstr "Marcar {index}: {minutes:02d}:{seconds:02d}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\bookmarks_dialog.py:46
+msgid "Delete selected"
+msgstr "Eliminar seleccionado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\bookmarks_dialog.py:47
+msgid "Clear all"
+msgstr "Borrar todo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:23
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:114
+msgid "Show Filters"
+msgstr "Mostrar filtros"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:34
+msgid "Filters"
+msgstr "Filtros"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:40
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:116
+msgid "Hide Filters"
+msgstr "Ocultar filtros"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:55
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:56
+msgid "Brightness"
+msgstr "Brillo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:60
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:61
+msgid "Contrast"
+msgstr "Contraste"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:65
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:66
+msgid "Gamma"
+msgstr "Gama"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:70
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:71
+msgid "Hue"
+msgstr "Matiz"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:75
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\filters_widget.py:76
+msgid "Saturation"
+msgstr "Saturación"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:95
+msgid "Minimize/Maximize Controls"
+msgstr "Minimizar/Maximizar controles"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:100
+msgid "Previous"
+msgstr "Anterior"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:105
+msgid "Rewind"
+msgstr "Retroceder"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:110
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:374
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:375
+msgid "Play"
+msgstr "Reproducir"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:115
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:147
+msgid "Forward"
+msgstr "Avanzar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:120
+msgid "Next"
+msgstr "Siguiente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:130
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:150
+msgid "Shuffle"
+msgstr "Aleatorio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:140
+msgid "Screenshot"
+msgstr "Captura de pantalla"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:144
+msgid "Previous Track"
+msgstr "Pista anterior"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:145
+msgid "Backward"
+msgstr "Retroceder"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:146
+msgid "Play/Pause"
+msgstr "Reproducir/Pausar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:148
+msgid "Next Track"
+msgstr "Pista siguiente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:149
+msgid "Repeat mode"
+msgstr "Modo de repetición"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:151
+msgid "Bookmarks list"
+msgstr "Lista de marcadores"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:152
+msgid "Take screenshot"
+msgstr "Tomar captura de pantalla"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:164
+msgid "Seek"
+msgstr "Buscar posición"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:170
+msgid "Mute/Unmute"
+msgstr "Silenciar/Activar sonido"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:174
+msgid "More Options"
+msgstr "Más opciones"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:177
+msgid "Volume"
+msgstr "Volumen"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:309
+msgid "Maximize"
+msgstr "Maximizar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:310
+msgid "Maximize Controls"
+msgstr "Maximizar controles"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:313
+msgid "Minimize Controls"
+msgstr "Minimizar controles"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:334
+msgid "Aspect Ratio"
+msgstr "Relación de aspecto"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:339
+msgid "Scale"
+msgstr "Escala"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:344
+msgid "Fullscreen"
+msgstr "Pantalla completa"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:370
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:371
+msgid "Pause"
+msgstr "Pausa"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:382
+msgid "Unmute"
+msgstr "Activar sonido"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:385
+msgid "Mute"
+msgstr "Silenciar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:400
+msgid "Repeat: Off"
+msgstr "Repetir: Desactivado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:401
+msgid "Repeat off"
+msgstr "Repetición desactivada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:404
+msgid "Repeat: All"
+msgstr "Repetir: Todos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:405
+msgid "Repeat all"
+msgstr "Repetir todo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:408
+msgid "Repeat: One"
+msgstr "Repetir: uno"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:409
+msgid "Repeat one"
+msgstr "Repetir una"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:423
+msgid "Shuffle: On"
+msgstr "Ponerse rápidamente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:424
+msgid "Shuffle on"
+msgstr "Aleatorio activado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:426
+msgid "Shuffle: Off"
+msgstr "Irse arrastrando los pies"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:427
+msgid "Shuffle off"
+msgstr "Aleatorio desactivado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:861
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:471
+msgid "Copy Path"
+msgstr "Copiar ruta"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:868
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:478
+msgid "Open in Explorer"
+msgstr "Abrir en el explorador"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_controls.py:875
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:483
+msgid "Show YouTube Info"
+msgstr "Mostrar información de YouTube"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:71
+msgid "Segment Timeline Widget"
+msgstr "Widget de línea de tiempo de segmento"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:206
+msgid "Playback Error"
+msgstr "Error de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:221
+msgid "Mute Error"
+msgstr "Error de silencio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:339
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:382
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:393
+msgid "Seek Error"
+msgstr "Error de búsqueda"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:349
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:361
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:372
+msgid "Volume Error"
+msgstr "Error de volumen"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:404
+msgid "Stop Error"
+msgstr "Error al detener"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:433
+msgid "Screenshot saved: {filename}"
+msgstr "Captura de pantalla guardada: {filename}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:438
+msgid "Failed to take screenshot"
+msgstr "No se pudo tomar la captura de pantalla"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:740
+msgid "Loading: {filename}"
+msgstr "Cargando: {filename}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:771
+msgid "Loading URL: {url}"
+msgstr "URL de carga: {url}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:796
+msgid "Loading playlist: {title}"
+msgstr "Cargando lista de reproducción: {title}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:868
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\video_display_widget.py:45
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\video_display_widget.py:87
+msgid "Extracting URL..."
+msgstr "Extrayendo URL..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:880
+msgid "Extracted Playlist"
+msgstr "Lista de reproducción extraída"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:882
+msgid "Track {index}"
+msgstr "Seguimiento {index}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:887
+msgid "Extracted URL"
+msgstr "URL extraída"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:888
+msgid "Streaming URL"
+msgstr "URL de transmisión"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:902
+msgid "URL Extraction Failed"
+msgstr "No se pudo extraer la URL"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\player_widget.py:903
+msgid ""
+"Failed to extract URL:\n"
+"{error}"
+msgstr ""
+"No se pudo extraer la URL:\n"
+"{error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\subtitles_widget.py:23
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\subtitles_widget.py:64
+msgid "Show subtitles"
+msgstr "Mostrar subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\subtitles_widget.py:33
+msgid "Subtitles"
+msgstr "Subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\subtitles_widget.py:35
+msgid "Subtitles section"
+msgstr "Sección de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\subtitles_widget.py:40
+msgid "Hide Subtitles"
+msgstr "Ocultar subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\subtitles_widget.py:47
+msgid "Subtitles display"
+msgstr "Visualización de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\subtitles_widget.py:48
+msgid "Current video subtitles"
+msgstr "Subtítulos de vídeo actuales"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\subtitles_widget.py:66
+msgid "Hide subtitles"
+msgstr "Ocultar subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\video_display_widget.py:20
+msgid "Video Display"
+msgstr "Visualización de vídeo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\video_display_widget.py:21
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\video_display_widget.py:38
+msgid "Video Display Area"
+msgstr "Área de visualización de vídeo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\video_display_widget.py:42
+msgid "Video display area"
+msgstr "Área de visualización de vídeo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\player\video_display_widget.py:43
+msgid "Main video playback area"
+msgstr "Área principal de reproducción de vídeo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_create_dialog.py:14
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlists_widget.py:36
+msgid "Create Playlist"
+msgstr "Crear lista de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_create_dialog.py:26
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_edit_dialog.py:26
+msgid "Name:"
+msgstr "Nombre:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_create_dialog.py:28
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_edit_dialog.py:28
+msgid "Enter playlist name"
+msgstr "Introduce el nombre de la lista de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_create_dialog.py:33
+msgid "Tracks:"
+msgstr "Pistas:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_create_dialog.py:40
+msgid "Browse & Add Tracks"
+msgstr "Explorar y agregar pistas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_create_dialog.py:53
+msgid "Create"
+msgstr "Crear"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_create_dialog.py:66
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:101
+msgid "Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)"
+msgstr ""
+"Archivos de audio (*.mp3 *.wav *.flac *.ogg *.m4a);;Todos los archivos (*)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_create_dialog.py:82
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_edit_dialog.py:59
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_selection_dialog.py:67
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:96
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlists_widget.py:129
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlists_widget.py:163
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:178
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:147
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:181
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:109
+msgid "Warning"
+msgstr "Advertencia"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_create_dialog.py:83
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_edit_dialog.py:60
+msgid "Please enter a playlist name"
+msgstr "Por favor ingresa un nombre de lista de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_edit_dialog.py:12
+msgid "Edit Playlist"
+msgstr "Editar lista de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_edit_dialog.py:41
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:130
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_selection_dialog.py:13
+msgid "Select Playlist"
+msgstr "Seleccionar lista de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_selection_dialog.py:24
+msgid "Select a playlist to add the file to:"
+msgstr "Seleccione una lista de reproducción para agregar el archivo:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_selection_dialog.py:38
+msgid "Select"
+msgstr "Seleccionar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_selection_dialog.py:50
+msgid "No playlists available. Create a playlist first."
+msgstr ""
+"No hay listas de reproducción disponibles. Primero crea una lista de "
+"reproducción."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_selection_dialog.py:68
+msgid "Please select a playlist"
+msgstr "Por favor selecciona una lista de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:25
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:67
+msgid "File Name"
+msgstr "Nombre del archivo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:27
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:69
+msgid "Artist"
+msgstr "Artista"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:28
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:70
+msgid "Album"
+msgstr "Álbum"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:39
+msgid "Add Tracks"
+msgstr "Agregar pistas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:43
+msgid "Delete"
+msgstr "Borrar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:49
+msgid "Clear Tracks"
+msgstr "Quitar pistas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:96
+msgid "No playlist selected"
+msgstr "Ninguna lista de reproducción seleccionada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:110
+msgid "Added {count} track(s) to playlist"
+msgstr "Se agregaron {count} pistas a la lista de reproducción."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:123
+msgid "Track removed from playlist"
+msgstr "La pista se quitó de la lista de reproducción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:130
+msgid "Clear all tracks?"
+msgstr "¿Borrar todas las pistas?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlist_view.py:135
+msgid "Playlist cleared"
+msgstr "Lista de reproducción borrada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlists_widget.py:130
+msgid "Playlist '{name}' already exists"
+msgstr "La lista de reproducción '{name}' ya existe"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlists_widget.py:138
+msgid "Playlist '{name}' created"
+msgstr "Lista de reproducción '{name}' creada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlists_widget.py:164
+msgid "Playlist '{new_name}' already exists"
+msgstr "La lista de reproducción '{new_name}' ya existe"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\playlist_manager\playlists_widget.py:182
+msgid "Playlist '{new_name}' updated"
+msgstr "Lista de reproducción '{new_name}' actualizada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\system_tray.py:35
+msgid "Exit"
+msgstr "Salida"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\system_tray.py:47
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\system_tray.py:62
+msgid "Show"
+msgstr "Mostrar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\system_tray.py:51
+msgid "Application was minimized to tray"
+msgstr "La aplicación se minimizó al área de notificación."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:63
+msgid "Time: {time}, Speed: {speed:.2f}x"
+msgstr "Hora: {time}, Velocidad: {speed:.2f}x"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:78
+msgid "Done"
+msgstr "Hecho"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:98
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:56
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:27
+msgid "Add Files"
+msgstr "Agregar archivos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:100
+msgid "Remove Selected"
+msgstr "Eliminar selección"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:108
+msgid "Start Batch Conversion"
+msgstr "Iniciar conversión por lotes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:116
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:66
+msgid "Conversion Options"
+msgstr "Opciones de conversión"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:120
+msgid "Conversion type (audio or video)"
+msgstr "Tipo de conversión (audio o vídeo)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:123
+msgid "Conversion Type:"
+msgstr "Tipo de conversión:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:127
+msgid "Target format"
+msgstr "Formato de destino"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:128
+msgid "Target Format:"
+msgstr "Formato de destino:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:132
+msgid "Audio sample rate"
+msgstr "Frecuencia de muestreo de audio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:136
+msgid "Sample Rate (Audio):"
+msgstr "Frecuencia de muestreo (audio):"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:140
+msgid "Target bitrate"
+msgstr "tasa de bits objetivo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:142
+msgid "Bitrate:"
+msgstr "Tasa de bits:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:166
+msgid "Select files to convert"
+msgstr "Seleccionar archivos para convertir"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:178
+msgid "No files to convert."
+msgstr "No hay archivos para convertir."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:181
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:150
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:147
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:307
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:112
+msgid "Select Output Directory"
+msgstr "Seleccionar directorio de salida"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:198
+msgid "Batch Converting..."
+msgstr "Convirtiendo por lotes..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:210
+msgid "Starting batch conversion of {count} files"
+msgstr "Iniciando la conversión por lotes de archivos {count}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:220
+msgid "Converting file {current} of {total}: {filename}"
+msgstr "Convirtiendo archivo {current} de {total}: {filename}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:237
+msgid "Batch conversion completed."
+msgstr "Conversión por lotes completada."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:239
+msgid "Batch conversion completed successfully"
+msgstr "La conversión por lotes se completó correctamente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:242
+msgid ""
+"Failed to convert {filename}:\n"
+"{message}"
+msgstr ""
+"No se pudo convertir {filename}:\n"
+"{message}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:246
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:185
+msgid "Conversion Error"
+msgstr "Error de conversión"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\batch_converter_ui.py:248
+msgid "Error converting {filename}"
+msgstr "Error al convertir {filename}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\debug_console_dock.py:23
+msgid "Debug Console"
+msgstr "Consola de depuración"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\debug_console_dock.py:31
+msgid "Console output. Tab key won't insert tabs inside editor."
+msgstr ""
+"Salida de consola. La tecla Tab no insertará pestañas dentro del editor."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\debug_console_dock.py:44
+msgid "Console Output"
+msgstr "Salida de la consola"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\debug_console_dock.py:45
+msgid "Read-only console output viewer"
+msgstr "Visor de salida de consola de solo lectura"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\debug_console_dock.py:62
+msgid "Debug console initialized."
+msgstr "Consola de depuración inicializada."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:49
+msgid "Video file for extraction"
+msgstr "Archivo de vídeo para extracción."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:51
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:45
+msgid "Browse Video"
+msgstr "Examinar video"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:54
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:48
+msgid "Video File:"
+msgstr "Archivo de vídeo:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:66
+msgid "Audio Extraction"
+msgstr "Extracción de audio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:70
+msgid "Audio output format"
+msgstr "Formato de salida de audio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:73
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:79
+msgid "Output Format:"
+msgstr "Formato de salida:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:78
+msgid "Audio extraction start time"
+msgstr "Hora de inicio de la extracción de audio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:80
+msgid "e.g., 00:01:30 or 90"
+msgstr "por ejemplo, 00:01:30 o 90"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:81
+msgid "Audio extraction end time or duration"
+msgstr "Hora o duración de finalización de la extracción de audio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:82
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:111
+msgid "Start Time (HH:MM:SS):"
+msgstr "Hora de inicio (HH:MM:SS):"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:84
+msgid "End Time or Duration (optional):"
+msgstr "Hora de finalización o duración (opcional):"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:88
+msgid "Extract Audio"
+msgstr "Extraer audio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:97
+msgid "Image Extraction"
+msgstr "Extracción de imágenes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:101
+msgid "Image extraction mode"
+msgstr "Modo de extracción de imágenes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:102
+msgid "Extract All Frames"
+msgstr "Extraer todos los fotogramas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:102
+msgid "Extract Range"
+msgstr "Extraer rango"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:102
+msgid "Extract 1 Image Per Second"
+msgstr "Extrae 1 imagen por segundo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:103
+msgid "Extraction Mode:"
+msgstr "Modo de extracción:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:108
+msgid "Image extraction start time"
+msgstr "Hora de inicio de la extracción de imágenes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:110
+msgid "Image extraction duration in seconds"
+msgstr "Duración de la extracción de imágenes en segundos."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:113
+msgid "Duration (seconds):"
+msgstr "Duración (segundos):"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:117
+msgid "Extract Images"
+msgstr "Extraer imágenes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:126
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:97
+msgid "Select Video File"
+msgstr "Seleccionar archivo de vídeo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:147
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:181
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:109
+msgid "Please select a valid input video file."
+msgstr "Seleccione un archivo de vídeo de entrada válido."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:175
+msgid "Extracting Audio..."
+msgstr "Extrayendo audio..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:176
+msgid "Starting audio extraction"
+msgstr "Iniciando la extracción de audio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:184
+msgid "Select Output Directory for Images"
+msgstr "Seleccionar directorio de salida para imágenes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:207
+msgid "Extracting Images..."
+msgstr "Extrayendo imágenes..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:208
+msgid "Starting image extraction"
+msgstr "Iniciando la extracción de imágenes"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:227
+msgid "Extraction completed successfully."
+msgstr "La extracción se completó con éxito."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:228
+msgid "Extraction completed successfully"
+msgstr "La extracción se completó correctamente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:233
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:177
+msgid "An error occurred: {message}"
+msgstr "Se produjo un error: {message}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\extractor_ui.py:234
+msgid "Extraction failed"
+msgstr "Error de extracción"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\logs_viewer_dialog.py:36
+msgid "Logs Viewer"
+msgstr "Visor de registros"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\logs_viewer_dialog.py:52
+msgid "Logs folder: {path}"
+msgstr "Carpeta de registros: {path}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\logs_viewer_dialog.py:56
+msgid "Logs Files List"
+msgstr "Lista de archivos de registros"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\logs_viewer_dialog.py:57
+msgid "List of log files in the application's logs folder"
+msgstr ""
+"Lista de archivos de registro en la carpeta de registros de la aplicación"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\logs_viewer_dialog.py:68
+msgid "Log File Viewer"
+msgstr "Visor de archivos de registro"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\logs_viewer_dialog.py:69
+msgid "Displays the contents of the selected log file"
+msgstr "Muestra el contenido del archivo de registro seleccionado."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\logs_viewer_dialog.py:98
+msgid "There aren't any log files yet."
+msgstr "Aún no hay archivos de registro."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\logs_viewer_dialog.py:99
+msgid "(no log files)"
+msgstr "(sin archivos de registro)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\logs_viewer_dialog.py:121
+msgid ""
+"Failed to read file: {path}\n"
+"Error: {error}"
+msgstr ""
+"No se pudo leer el archivo: {path}\n"
+"Error: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:30
+msgid "Starting conversion..."
+msgstr "Iniciando conversión..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:52
+msgid "Files for Conversion (Batch)"
+msgstr "Archivos para conversión (por lotes)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:78
+msgid "Remove miscellaneous events"
+msgstr "Eliminar eventos varios"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:80
+msgid "Input Encoding:"
+msgstr "Codificación de entrada:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:81
+msgid "Output Encoding:"
+msgstr "Codificación de salida:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:85
+msgid "Advanced Format Options"
+msgstr "Opciones de formato avanzadas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:89
+msgid "SRT"
+msgstr "TER"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:91
+msgid "Keep unknown HTML tags (input)"
+msgstr "Mantener etiquetas HTML desconocidas (entrada)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:92
+msgid "Keep all HTML tags (input)"
+msgstr "Mantener todas las etiquetas HTML (entrada)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:93
+msgid "Keep SSA tags (output)"
+msgstr "Mantener etiquetas SSA (salida)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:98
+msgid "MicroDVD"
+msgstr "MicroDVD"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:100
+msgid "Omit FPS declaration (output)"
+msgstr "Omitir declaración de FPS (salida)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:108
+msgid "Convert"
+msgstr "Convertir"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:123
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:209
+msgid ""
+"Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt "
+"*.vtt);;All Files (*)"
+msgstr ""
+"Archivos de subtítulos (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml "
+"*.txt *.vtt);;Todos los archivos (*)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:124
+msgid "Select Subtitle Files"
+msgstr "Seleccionar archivos de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:144
+msgid "Error: No files selected."
+msgstr "Error: No hay archivos seleccionados."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:162
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:334
+msgid "Processing..."
+msgstr "Tratamiento..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:172
+msgid "Converting {count} subtitle file(s)"
+msgstr "Convirtiendo {count} archivos de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:179
+msgid "Subtitle conversion completed successfully."
+msgstr "La conversión de subtítulos se completó con éxito."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:181
+msgid "Subtitle conversion completed"
+msgstr "Conversión de subtítulos completada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_converter_ui.py:187
+msgid "Subtitle conversion failed"
+msgstr "Falló la conversión de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:33
+msgid "Processing subtitle file..."
+msgstr "Procesando archivo de subtítulos..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:60
+msgid "Current File"
+msgstr "Archivo actual"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:63
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:222
+msgid "No file loaded."
+msgstr "Ningún archivo cargado."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:70
+msgid "Load File"
+msgstr "Cargar archivo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:89
+msgid "Input File Encoding:"
+msgstr "Codificación del archivo de entrada:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:94
+msgid "Timing Editor"
+msgstr "Editor de tiempos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:95
+msgid "Text Editor"
+msgstr "Editor de texto"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:103
+msgid "File Content Preview (Live)"
+msgstr "Vista previa del contenido del archivo (en vivo)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:107
+msgid "No."
+msgstr "No."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:107
+msgid "Start"
+msgstr "Iniciar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:107
+msgid "End"
+msgstr "Fin"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:107
+msgid "Text"
+msgstr "Texto"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:117
+msgid "Apply Changes"
+msgstr "Aplicar cambios"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:138
+msgid "e.g., 1.5s or -1m10s"
+msgstr "por ejemplo, 1,5s o -1m10s"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:139
+msgid "Shift Time:"
+msgstr "Hora del turno:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:140
+msgid "Enable Framerate Transformation"
+msgstr "Habilitar la transformación de velocidad de fotogramas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:148
+msgid "From FPS:"
+msgstr "De FPS:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:149
+msgid "To FPS:"
+msgstr "A FPS:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:155
+msgid "Text Operation"
+msgstr "Operación de texto"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:158
+msgid "Find and Replace"
+msgstr "Buscar y reemplazar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:159
+msgid "Add Prefix/Suffix"
+msgstr "Agregar prefijo/sufijo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:160
+msgid "Change Case"
+msgstr "Cambiar mayúsculas/minúsculas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:173
+msgid "Case Sensitive"
+msgstr "Distingue mayúsculas y minúsculas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:174
+msgid "Find:"
+msgstr "Encontrar:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:175
+msgid "Replace With:"
+msgstr "Reemplazar con:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:182
+msgid "Prefix:"
+msgstr "Prefijo:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:183
+msgid "Suffix:"
+msgstr "Sufijo:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:189
+msgid "Style:"
+msgstr "Estilo:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:210
+msgid "Select Subtitle File"
+msgstr "Seleccionar archivo de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:218
+msgid "File loaded successfully"
+msgstr "Archivo cargado exitosamente"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:255
+msgid "Loaded {count} subtitle events"
+msgstr "{count} eventos de subtítulos cargados"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:304
+msgid "No File"
+msgstr "Sin archivo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:304
+msgid "Please load a subtitle file first."
+msgstr "Primero cargue un archivo de subtítulos."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:343
+msgid "Processing subtitle file"
+msgstr "Procesando archivo de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:349
+msgid "Subtitle processing completed successfully."
+msgstr "El procesamiento de subtítulos se completó exitosamente."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:351
+msgid "Subtitle processing completed"
+msgstr "Procesamiento de subtítulos completado"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:355
+msgid "Processing Error"
+msgstr "Error de procesamiento"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\subtitle_editor_ui.py:357
+msgid "Subtitle processing failed"
+msgstr "Falló el procesamiento de subtítulos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:29
+msgid "Remove File"
+msgstr "Eliminar archivo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:35
+msgid "Save Current File"
+msgstr "Guardar archivo actual"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:38
+msgid "Save All Files"
+msgstr "Guardar todos los archivos"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:66
+msgid "Lyrics tag editor"
+msgstr "Editor de etiquetas de letras"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:67
+msgid "Lyrics:"
+msgstr "Lírica:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:79
+msgid "Select Audio Files"
+msgstr "Seleccionar archivos de audio"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:80
+msgid ""
+"Audio Files (*.mp3 *.flac *.m4a *.aac *.aiff *.dsf *.ogg *.opus *.wav *.wv)"
+msgstr ""
+"Archivos de audio (*.mp3 *.flac *.m4a *.aac *.aiff *.dsf *.ogg *.opus *.wav "
+"*.wv)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:88
+msgid "Could not load {file}: {error}"
+msgstr "No se pudo cargar {file}: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:92
+msgid "Loaded {count} file(s) for tag editing"
+msgstr "Archivo(s) {count} cargados para editar etiquetas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:172
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:189
+msgid "Info"
+msgstr "Información"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:172
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:189
+msgid "No changes to save."
+msgstr "No hay cambios para guardar."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:177
+msgid "Tags saved successfully."
+msgstr "Etiquetas guardadas exitosamente."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:179
+msgid "Tags saved for {filename}"
+msgstr "Etiquetas guardadas para {filename}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:182
+msgid "Failed to save tags: {error}"
+msgstr "No se pudieron guardar las etiquetas: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:183
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:203
+msgid "Failed to save tags"
+msgstr "No se pudieron guardar las etiquetas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:195
+msgid "1 file saved."
+msgstr "1 archivo guardado."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:197
+msgid "{count} files saved."
+msgstr "{count} archivos guardados."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:199
+msgid "Tags saved for {count} file(s)"
+msgstr "Etiquetas guardadas para {count} archivo(s)"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\tag_editor_ui.py:202
+msgid "An error occurred while saving all files: {error}"
+msgstr "Se produjo un error al guardar todos los archivos: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:43
+msgid "Video file input path"
+msgstr "Ruta de entrada del archivo de vídeo"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:54
+msgid "Thumbnail generation mode"
+msgstr "Modo de generación de miniaturas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:56
+msgid "Manual Frame Selection"
+msgstr "Selección manual de marco"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:57
+msgid "Automatic Thumbnail Filter"
+msgstr "Filtro automático de miniaturas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:58
+msgid "Select from Scene Changes"
+msgstr "Seleccionar entre cambios de escena"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:61
+msgid "Generation Mode:"
+msgstr "Modo de generación:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:67
+msgid "Timestamp (HH:MM:SS):"
+msgstr "Marca de tiempo (HH:MM:SS):"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:69
+msgid "Timestamp for manual frame selection"
+msgstr "Marca de tiempo para la selección manual de fotogramas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:76
+msgid "Number of Images to Generate:"
+msgstr "Número de imágenes a generar:"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:78
+msgid "Number of images to generate from scene changes"
+msgstr "Número de imágenes a generar a partir de cambios de escena."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:80
+msgid "Scene Change Threshold (0.0-1.0):"
+msgstr "Umbral de cambio de escena (0,0-1,0):"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:82
+msgid "Scene change detection threshold"
+msgstr "Umbral de detección de cambio de escena"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:86
+msgid "Generate Thumbnail(s)"
+msgstr "Generar miniaturas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:142
+msgid "Starting generation..."
+msgstr "Generación inicial..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:152
+msgid "Starting thumbnail generation"
+msgstr "Iniciando la generación de miniaturas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:155
+msgid "Failed to start process: {error}"
+msgstr "No se pudo iniciar el proceso: {error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:156
+msgid "Failed to start thumbnail generation"
+msgstr "No se pudo iniciar la generación de miniaturas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:171
+msgid "Thumbnail generation completed successfully."
+msgstr "La generación de miniaturas se completó correctamente."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:172
+msgid "Thumbnail generation completed"
+msgstr "Generación de miniaturas completada"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\tools\thumbnail_generator_ui.py:178
+msgid "Thumbnail generation failed"
+msgstr "Falló la generación de miniaturas"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:61
+msgid "Update Available - {title}"
+msgstr "Actualización disponible - {title}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:75
+msgid ""
+"<b>A new version of {app} is available!</b><br>Your version: "
+"<b>{current}</b> -> New version: <b>{new}</b>"
+msgstr ""
+"<b>¡Una nueva versión de {app} está disponible!</b><br>Tu versión: "
+"<b>{current}</b> -> Nueva versión: <b>{new}</b>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:86
+msgid "<b>Release notes:</b>"
+msgstr "<b>Notas de la versión:</b>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:90
+msgid "No release notes provided."
+msgstr "No se proporcionan notas de la versión."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:96
+msgid "<b>Release files ({count}):</b>"
+msgstr "<b>Archivos de lanzamiento ({count}):</b>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:110
+msgid "Download Later"
+msgstr "Descargar más tarde"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:115
+msgid "Download Now"
+msgstr "Descargar ahora"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:123
+msgid ""
+"Automatic download is not available in developer mode.\n"
+"Please download the update manually from the releases page."
+msgstr ""
+"La descarga automática no está disponible en el modo de desarrollador.\n"
+"Descargue la actualización manualmente desde la página de versiones."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:145
+msgid "Downloading Update"
+msgstr "Descargando actualización"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:151
+msgid "Downloading update files, please wait..."
+msgstr "Descargando archivos de actualización, espere..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:249
+msgid "HTTP {status}"
+msgstr "HTTP {status}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:254
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:274
+msgid "No Releases Found"
+msgstr "No se encontraron versiones"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:255
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:275
+msgid "No releases have been published for this application yet."
+msgstr "Aún no se han publicado lanzamientos para esta aplicación."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:265
+msgid "Update Check Failed"
+msgstr "Error en la comprobación de actualización"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:266
+msgid ""
+"Could not reach the update server:\n"
+"{error}"
+msgstr ""
+"No se pudo acceder al servidor de actualización:\n"
+"{error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:288
+msgid "No Update Available"
+msgstr "No hay actualizaciones disponibles"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:289
+msgid "{app} is up to date (version {version})."
+msgstr "{app} está actualizado (versión {version})."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:312
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:322
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:338
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:476
+msgid "Update Error"
+msgstr "Error de actualización"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:313
+msgid "No downloadable assets found in this release."
+msgstr "No se encontraron recursos descargables en esta versión."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:323
+msgid "No platform manifest found for '{platform}' in this release."
+msgstr ""
+"No se encontró ningún manifiesto de plataforma para '{platform}' en esta "
+"versión."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:339
+msgid "No zip archive found in this release."
+msgstr "No se encontró ningún archivo zip en esta versión."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:381
+msgid ""
+"Downloading update files...\n"
+"  - {manifest}\n"
+"  - {archive}"
+msgstr ""
+"Descargando archivos de actualización...\n"
+" - {manifest}\n"
+" - {archive}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:396
+msgid "Downloaded {finished} / {expected} files..."
+msgstr "Archivos {finished} / {expected} descargados..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:411
+msgid "Update Failed"
+msgstr "Actualización fallida"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:412
+msgid "One or more update files failed to download. Please try again later."
+msgstr ""
+"Uno o más archivos de actualización no se pudieron descargar. Inténtelo de "
+"nuevo más tarde."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:419
+msgid "Update Ready"
+msgstr "Actualización lista"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:421
+msgid ""
+"The update has been downloaded.\n"
+"\n"
+"{app_name} needs to restart to apply it. Restart now?"
+msgstr ""
+"La actualización se ha descargado.\n"
+"\n"
+"{app_name} debe reiniciarse para aplicarla. ¿Reiniciar ahora?"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:451
+msgid "Updater Not Found"
+msgstr "No se encontró el actualizador"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:453
+msgid ""
+"The updater binary was not found at:\n"
+"{path}\n"
+"\n"
+"Please update manually."
+msgstr ""
+"El binario del actualizador no se encontró en:\n"
+"{path}\n"
+"\n"
+"Actualice manualmente."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\update_checker.py:477
+msgid ""
+"Failed to launch the updater:\n"
+"{error}"
+msgstr ""
+"No se pudo iniciar el actualizador:\n"
+"{error}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:24
+msgid "Download Utilities"
+msgstr "Descargar utilidades"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:46
+msgid "<b>Select utilities to download:</b>"
+msgstr "<b>Seleccione utilidades para descargar:</b>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:52
+msgid "<b>Description:</b>"
+msgstr "<b>Descripción:</b>"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:72
+msgid "Download"
+msgstr "Descargar"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:131
+msgid "Fetching download links from GitHubâ¦"
+msgstr "Obteniendo enlaces de descarga de GitHub..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:143
+msgid "Link Fetch Errors"
+msgstr "Errores de recuperación de enlaces"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:144
+msgid ""
+"Could not resolve links for the following utilities:\n"
+"\n"
+msgstr ""
+"No se pudieron resolver los enlaces para las siguientes utilidades:\n"
+"\n"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:149
+msgid "No links could be resolved."
+msgstr "No se pudo resolver ningún enlace."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:168
+msgid "Downloading {count} file(s), please waitâ¦"
+msgstr "Descargando archivo(s) {count}, espere..."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:200
+msgid "Install Error"
+msgstr "Error de instalación"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:201
+msgid ""
+"Failed to install {label}:\n"
+"{msg}"
+msgstr ""
+"No se pudo instalar {label}:\n"
+"{msg}"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:206
+msgid "Download Error"
+msgstr "Error de descarga"
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:207
+msgid "Failed to download {label}."
+msgstr "No se pudo descargar {label}."
+
+#: C:\Users\earsv\OneDrive\Documents\PlayForm\src\util_download_center\download_dialog.py:217
+msgid ""
+"Done. All selected utilities have been processed.\n"
+"You may close this dialog."
+msgstr ""
+"Hecho. Se han procesado todas las utilidades seleccionadas.\n"
+"Puede cerrar este cuadro de diálogo."

@@ -202,6 +202,13 @@ def release(c, version=build.APP_VERSION, target_platform=None, app_name=build.A
 
     dist.manifest(c, folder=str(app_dist_dir), version=version)
 
+    # Checksums only need to live in the manifest - the loose .crc32/.sha256/.sha512
+    # side files were just scratch input for manifest_gen.py's scan_folder() and
+    # shouldn't ship in the release folder/bundle.
+    for pattern in ("*.crc32", "*.sha256", "*.sha512"):
+        for stale in app_dist_dir.glob(pattern):
+            stale.unlink()
+
 
 @task
 def bundle(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_VERSION):

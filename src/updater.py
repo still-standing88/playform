@@ -139,13 +139,16 @@ def find_signature_file(filename, temp_path, extract_path):
     return None
 
 
-def create_cleanup_script(old_file, new_updater):
+def create_cleanup_script(old_file):
+    # Only deletes the renamed-aside old updater binary once this process
+    # (which was holding it locked) has exited - the app itself is already
+    # launched and the temp dir already cleaned up by update() before this
+    # runs, so there's nothing left to relaunch here.
     if sys.platform == "win32":
         script_path = "cleanup_update.bat"
         script_content = f"""@echo off
 timeout /t 2 /nobreak >nul
 del /f /q "{old_file}" 2>nul
-start "" "{new_updater}"
 del "%~f0"
 """
     else:
@@ -153,7 +156,6 @@ del "%~f0"
         script_content = f"""#!/bin/sh
 sleep 2
 rm -f "{old_file}"
-"{new_updater}" &
 rm -f "$0"
 """
     
@@ -190,7 +192,7 @@ def replace_self_and_restart(logger, new_updater_path, current_updater_path):
         os.rename(old_updater, current_updater_path)
         return False
     
-    cleanup_script = create_cleanup_script(old_updater, current_updater_path)
+    cleanup_script = create_cleanup_script(old_updater)
     logger.info(f"Created cleanup script: {cleanup_script}")
     
     if sys.platform == "win32":
@@ -205,6 +207,10 @@ def replace_self_and_restart(logger, new_updater_path, current_updater_path):
 
 
 def delayed_replace(logger, new_updater, current_updater):
+    # Only moves the new updater binary into place once this process (which
+    # was holding current_updater locked) has exited - the app itself is
+    # already launched and the temp dir already cleaned up by update()
+    # before this runs, so there's nothing left to relaunch here.
     if sys.platform == "win32":
         helper_script = "delayed_replace.bat"
         script = f"""@echo off
@@ -213,7 +219,6 @@ timeout /t 1 /nobreak >nul
 del /f /q "{current_updater}" 2>nul
 if exist "{current_updater}" goto wait
 move /y "{new_updater}" "{current_updater}"
-start "" "{current_updater}"
 del "%~f0"
 """
     else:
@@ -224,7 +229,6 @@ while [ -f "{current_updater}" ]; do
     rm -f "{current_updater}" 2>/dev/null
 done
 mv "{new_updater}" "{current_updater}"
-"{current_updater}" &
 rm -f "$0"
 """
     
@@ -247,7 +251,28 @@ rm -f "$0"
     sys.exit(0)
 
 
-def update(temp_dir, zip_filename, install_dir=None):
+def launch_app(logger, launch_path):
+    if not launch_path:
+        return
+    try:
+        if sys.platform == "win32":
+            subprocess.Popen([str(launch_path)], creationflags=subprocess.CREATE_NO_WINDOW)
+        else:
+            subprocess.Popen([str(launch_path)])
+        logger.success(f"Launched: {launch_path}")
+    except Exception as e:
+        logger.error(f"Failed to launch {launch_path}: {e}")
+
+
+def cleanup_temp_dir(logger, temp_path):
+    try:
+        shutil.rmtree(temp_path, ignore_errors=True)
+        logger.info(f"Removed temporary directory: {temp_path}")
+    except Exception as e:
+        logger.warning(f"Failed to remove temp directory {temp_path}: {e}")
+
+
+def update(temp_dir, zip_filename, install_dir=None, launch_path=None):
     logger = Logger()
     
     logger.info("=" * 60)
@@ -435,10 +460,17 @@ def update(temp_dir, zip_filename, install_dir=None):
         logger.info(f"Scheduled {len(pending_del_files)} locked file(s) for cleanup on reboot")
 
     logger.success(f"Replaced {replaced_count} files")
-    
+
+    # PlayForm should always come back up after a successful update, whether
+    # or not the branch below also needs to self-replace the updater binary -
+    # do this and clean up the working directory before that branch's
+    # sys.exit(0), not after, or they'd never run.
+    launch_app(logger, launch_path)
+    cleanup_temp_dir(logger, temp_path)
+
     if updater_file:
         replace_self_and_restart(logger, updater_file, str(current_updater))
-    
+
     logger.success("Update completed successfully")
     logger.close()
     return True
@@ -451,10 +483,11 @@ def main():
     parser.add_argument('--temp', '-t', required=True, help='Temporary directory path containing zip and manifest')
     parser.add_argument('--zip', '-z', required=True, help='Zip filename (in temp directory)')
     parser.add_argument('--install-dir', '-i', help='Installation directory (default: script directory)')
-    
+    parser.add_argument('--launch', '-l', help='Path to the executable to launch after a successful update')
+
     args = parser.parse_args()
-    
-    success = update(args.temp, args.zip, args.install_dir)
+
+    success = update(args.temp, args.zip, args.install_dir, args.launch)
     sys.exit(0 if success else 1)
 
 

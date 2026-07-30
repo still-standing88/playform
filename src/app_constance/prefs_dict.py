@@ -11,6 +11,7 @@ prefs = {
 "offset": {"seek": 5,"volume":5},
 "player_volume": 120,
 "explorer_volume": 120,
+"explorer_loop": False,
 "mpv_logging": True,
 "debug_level": 0,
 "yt-dlp_logging": False,

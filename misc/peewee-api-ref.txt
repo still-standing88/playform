@@ -1,0 +1,4507 @@
+API Reference
+This document specifies Peewee’s APIs.
+On this page
+• 
+Database
+• 
+Model
+• 
+Fields
+• 
+Schema Manager
+• 
+Query-builder
+• 
+Queries
+• 
+Query-builder Internals
+• 
+Constants and Helpers
+• 
+Playhouse Reference
+Database
+class Database(database, thread_safe=True, field_types=None, operations=None, autoconnect=True, **kwargs)
+Parameters:
+• 
+database (str) – Database name or filename for SQLite (or None to defer initialization, in which case you must call Database.init(), specifying the database name).
+• 
+thread_safe (bool) – Whether to store connection state in a thread-local.
+• 
+field_types (dict) – A mapping of additional field types to support.
+• 
+operations (dict) – A mapping of additional operations to support.
+• 
+autoconnect (bool) – Automatically connect to database if attempting to execute a query on a closed database.
+• 
+kwargs – Arbitrary keyword arguments that will be passed to the database driver when a connection is created, for example password, host, etc.
+The Database is responsible for:
+• 
+Executing queries
+• 
+Managing connections
+• 
+Transactions
+• 
+Introspection
+The database can be instantiated with None as the database name if the database is not known until run-time. In this way you can create a database instance and then configure it elsewhere when the settings are known. This is called deferred initialization.
+Examples:
+# Sqlite database using WAL-mode and 64MB page-cache.
+db = SqliteDatabase('app.db', pragmas={
+    'journal_mode': 'wal',
+    'cache_size': -64000})
+
+# Postgresql database on remote host.
+db = PostgresqlDatabase(
+    'my_app',
+    user='postgres',
+    host='10.8.0.3',
+    password='secret')
+Deferred initialization example:
+db = PostgresqlDatabase(None)
+
+class BaseModel(Model):
+    class Meta:
+        database = db
+
+# Read database connection info from env, for example:
+db_name = os.environ['DATABASE']
+db_host = os.environ['PGHOST']
+
+# Initialize database.
+db.init(db_name, host=db_host, user='postgres')
+param = '?'
+String used as parameter placeholder in SQL queries.
+quote = '""'
+Type of quotation-mark(s) to use to denote entities such as tables or columns, specified as '<open quote><close quote>'.
+init(database, **kwargs)
+Parameters:
+• 
+database (str) – Database name or filename for SQLite.
+• 
+kwargs – Arbitrary keyword arguments that will be passed to the database driver when a connection is created, for example password, host, etc.
+Initialize a deferred database. See Initializing the Database for more info.
+connect(reuse_if_open=False)
+Parameters:
+reuse_if_open (bool) – Do not raise an exception if a connection is already opened.
+Returns:
+whether a new connection was opened.
+Return type:
+bool
+Raises:
+OperationalError if connection already open and reuse_if_open is not set to True.
+Open a connection to the database.
+db.connect()
+
+# Or:
+db.connect(reuse_if_open=True)
+close()
+Returns:
+Whether the connection was closed. If the database was already closed, this returns False.
+Return type:
+bool
+Close the connection to the database.
+if not db.is_closed():
+    db.close()
+is_closed()
+Returns:
+return True if database is closed, False if open.
+Return type:
+bool
+connection()
+Return the DB-API driver connection. If a connection is not open, one will be opened.
+db = SqliteDatabase(':memory:')
+
+# Get the sqlite3.Connection() instance.
+conn = db.connection()
+__enter__()
+__exit__(exc_type, exc_val, exc_tb)
+__call__()
+The database object can be used as a context manager or decorator.
+1. 
+Connection opens when context manager / decorated function is entered.
+2. 
+Peewee begins a transaction.
+3. 
+Control is passed to user for duration of block.
+4. 
+Peewee commits transaction if block exits cleanly, otherwise issues a rollback.
+5. 
+Peewee closes the connection.
+6. 
+Any unhandled exception is raised.
+with db:
+    User.create(username='charlie')
+    # Transaction is committed when the block exits normally,
+    # rolled back if an exception is raised.
+Decorator:
+@db
+def demo():
+    print('closed?', db.is_closed())
+
+demo()  # "closed? False"
+db.is_closed()  # True
+connection_context()
+Create a context-manager or decorator that will hold open a connection for the duration of the wrapped block.
+Example:
+with db.connection_context():
+    # Connection is open; no implicit transaction.
+    results = User.select()
+Decorator:
+@db.connection_context()
+def load_fixtures():
+    db.create_tables([User, Tweet])
+    import_data()
+cursor(named_cursor=None)
+Parameters:
+named_cursor – Reserved for internal use by Postgres extension.
+Return a DB-API cursor object on the current connection. If a connection is not open, one will be opened.
+execute_sql(sql, params=None)
+Parameters:
+• 
+sql (str) – SQL string to execute.
+• 
+params (tuple) – Parameters for query.
+Returns:
+cursor object.
+Execute a SQL query and return a cursor over the results.
+db = SqliteDatabase('my_app.db')
+db.connect()
+
+# Example of executing a simple query and ignoring the results.
+db.execute_sql("ATTACH DATABASE ':memory:' AS cache;")
+
+# Example of iterating over the results of a query using the cursor.
+cursor = db.execute_sql('SELECT * FROM users WHERE status = ?', (ACTIVE,))
+for row in cursor.fetchall():
+    # Do something with row, which is a tuple containing column data.
+    pass
+execute(query, **context_options)
+Parameters:
+• 
+query – A Query instance.
+• 
+context_options – Arbitrary options to pass to the SQL generator.
+Returns:
+cursor object.
+Execute a SQL query by compiling a Query instance and executing the resulting SQL.
+query = User.insert({'username': 'Huey'})
+db.execute(query)  # Equivalent to query.execute()
+last_insert_id(cursor, query_type=None)
+Parameters:
+cursor – cursor object.
+Returns:
+primary key of last-inserted row.
+rows_affected(cursor)
+Parameters:
+cursor – cursor object.
+Returns:
+number of rows modified by query.
+atomic(...)
+Create a context-manager or decorator which wraps a block of code in a transaction (or savepoint).
+Calls to atomic() can be nested.
+Database-specific parameters:
+PostgresqlDatabase and MySQLDatabase accept an isolation_level parameter. SqliteDatabase accepts a lock_type parameter. Refer to SQLite Transaction Locking Modes and Postgresql Isolation Notes for discussion.
+Parameters:
+• 
+isolation_level (str) – Isolation strategy: READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE
+• 
+lock_type (str) – Locking strategy: DEFERRED, IMMEDIATE, EXCLUSIVE.
+Example code:
+with db.atomic() as txn:
+    user = User.create(username='charlie')
+    with db.atomic():
+        tweet = Tweet.create(user=user, content='Hello')
+
+# Both rows are committed when block exits normally.
+As a decorator:
+@db.atomic()
+def create_user_with_tweet(username, content):
+    user = User.create(username=username)
+    Tweet.create(user=user, content=content)
+    return user
+Transactions (and save-points) can be committed or rolled-back within the wrapped block. If this occurs, a new transaction or savepoint is begun:
+Example:
+with db.atomic() as txn:
+    User.create(username='mickey')
+    txn.commit()  # Changes are saved and a new transaction begins.
+
+    User.create(username='huey')
+    txn.rollback()  # "huey" will not be saved.
+
+    User.create(username='zaizee')
+
+# Print the usernames of all users.
+print([u.username for u in User.select()])
+
+# Prints ["mickey", "zaizee"]
+If an unhandled exception occurs in the block, the block is rolled-back and the exception propagates.
+transaction(...)
+Create a context-manager or decorator that runs all queries in the wrapped block in a transaction.
+Database-specific parameters:
+PostgresqlDatabase and MySQLDatabase accept an isolation_level parameter. SqliteDatabase accepts a lock_type parameter. Refer to SQLite Transaction Locking Modes and Postgresql Isolation Notes for discussion.
+Parameters:
+• 
+isolation_level (str) – Isolation strategy: READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE
+• 
+lock_type (str) – Locking strategy: DEFERRED, IMMEDIATE, EXCLUSIVE.
+with db.transaction() as txn:
+    User.create(username='mickey')
+    txn.commit()         # Commit now; a new transaction begins.
+    User.create(username='huey')
+    txn.rollback()       # Roll back huey; a new transaction begins.
+    User.create(username='zaizee')
+# zaizee is committed when the block exits.
+Transactions can be committed or rolled-back within the wrapped block. If this occurs, a new transaction is begun.
+Warning:
+If you attempt to nest transactions with peewee using the transaction() context manager, only the outer-most transaction will be used.
+As this may lead to unpredictable behavior, it is recommended that you use atomic().
+savepoint()
+Create a context-manager or decorator that runs all queries in the wrapped block in a savepoint. Savepoints can be nested arbitrarily, but must occur within a transaction.
+with db.transaction() as txn:
+    with db.savepoint() as sp:
+        User.create(username='mickey')
+
+    with db.savepoint() as sp2:
+        User.create(username='zaizee')
+        sp2.rollback()  # "zaizee" is not saved.
+        User.create(username='huey')
+
+# mickey and huey were created.
+Savepoints can be committed or rolled-back within the wrapped block. If this occurs, a new savepoint is begun.
+manual_commit()
+Create a context-manager or decorator which disables Peewee’s transaction management for the wrapped block.
+Example:
+with db.manual_commit():
+    db.begin()  # Begin transaction explicitly.
+    try:
+        user.delete_instance(recursive=True)
+    except:
+        db.rollback()  # Rollback -- an error occurred.
+        raise
+    else:
+        try:
+            db.commit()  # Attempt to commit changes.
+        except:
+            db.rollback()  # Error committing, rollback.
+            raise
+The above code is equivalent to the following:
+with db.atomic():
+    user.delete_instance(recursive=True)
+session_start()
+Begin a new transaction (without using a context-manager or decorator). This method is useful if you intend to execute a sequence of operations inside a transaction, but using a decorator or context-manager would not be appropriate.
+It is strongly advised that you use the Database.atomic() method whenever possible for managing transactions/savepoints. The atomic method correctly manages nesting, uses the appropriate construction (e.g., transaction-vs-savepoint), and always cleans up after itself.
+The session_start() method should only be used if the sequence of operations does not easily lend itself to wrapping using either a context-manager or decorator.
+You must always call either session_commit() or session_rollback() after calling the session_start method.
+session_commit()
+Commit any changes made during a transaction begun with session_start().
+session_rollback()
+Roll back any changes made during a transaction begun with session_start().
+begin()
+Begin a transaction when using manual-commit mode.
+This method should only be used in conjunction with the manual_commit() context manager.
+commit()
+Manually commit the currently-active transaction.
+This method should only be used in conjunction with the manual_commit() context manager.
+rollback()
+Manually roll-back the currently-active transaction.
+This method should only be used in conjunction with the manual_commit() context manager.
+in_transaction()
+Returns:
+whether or not a transaction is currently open.
+Return type:
+bool
+with db.atomic() as tx:
+    assert db.in_transaction()
+
+assert not db.in_transaction()  # No longer in transaction.
+batch_commit(it, n)
+Parameters:
+• 
+it (iterable) – an iterable whose items will be yielded.
+• 
+n (int) – commit every n items.
+Returns:
+an equivalent iterable to the one provided, with the addition that groups of n items will be yielded in a transaction.
+Simplify batching large operations, such as inserts, updates, etc. Pass in an iterable and the number of items-per-batch, and the items will be returned by an equivalent iterator that wraps each batch in a transaction.
+Example:
+# Some list or iterable containing data to insert.
+row_data = [{'username': 'u1'}, {'username': 'u2'}, ...]
+
+# Insert all data, committing every 100 rows. If, for example,
+# there are 789 items in the list, then there will be a total of
+# 8 transactions (7x100 and 1x89).
+for row in db.batch_commit(row_data, 100):
+    user = User.create(**row)
+
+    # Now let's suppose we need to do something w/the user.
+    user.call_method()
+A more efficient option is to batch the data into a multi-value INSERT statement (for example, using Model.insert_many()). Use this approach instead wherever possible:
+with db.atomic():
+    for idx in range(0, len(row_data), 100):
+        # Insert 100 rows at a time.
+        rows = row_data[idx:idx + 100]
+        User.insert_many(rows).execute()
+table_exists(table, schema=None)
+Parameters:
+• 
+table (str) – Table name.
+• 
+schema (str) – Schema name (optional).
+Returns:
+bool indicating whether table exists.
+get_tables(schema=None)
+Parameters:
+schema (str) – Schema name (optional).
+Returns:
+a list of table names in the database.
+get_indexes(table, schema=None)
+Parameters:
+• 
+table (str) – Table name.
+• 
+schema (str) – Schema name (optional).
+Return a list of IndexMetadata tuples.
+Example:
+print(db.get_indexes('entry'))
+[IndexMetadata(
+     name='entry_public_list',
+     sql='CREATE INDEX "entry_public_list" ...',
+     columns=['timestamp'],
+     unique=False,
+     table='entry'),
+ IndexMetadata(
+     name='entry_slug',
+     sql='CREATE UNIQUE INDEX "entry_slug" ON "entry" ("slug")',
+     columns=['slug'],
+     unique=True,
+     table='entry')]
+get_columns(table, schema=None)
+Parameters:
+• 
+table (str) – Table name.
+• 
+schema (str) – Schema name (optional).
+Return a list of ColumnMetadata tuples.
+Example:
+print(db.get_columns('entry'))
+[ColumnMetadata(
+     name='id',
+     data_type='INTEGER',
+     null=False,
+     primary_key=True,
+     table='entry',
+     default=None),
+ ColumnMetadata(
+     name='title',
+     data_type='TEXT',
+     null=False,
+     primary_key=False,
+     table='entry',
+     default=None),
+ ...]
+get_primary_keys(table, schema=None)
+Parameters:
+• 
+table (str) – Table name.
+• 
+schema (str) – Schema name (optional).
+Return a list of column names that comprise the primary key.
+Example:
+print(db.get_primary_keys('entry'))
+['id']
+get_foreign_keys(table, schema=None)
+Parameters:
+• 
+table (str) – Table name.
+• 
+schema (str) – Schema name (optional).
+Return a list of ForeignKeyMetadata tuples for keys present on the table.
+Example:
+print(db.get_foreign_keys('entrytag'))
+[ForeignKeyMetadata(
+     column='entry_id',
+     dest_table='entry',
+     dest_column='id',
+     table='entrytag'),
+ ...]
+get_views(schema=None)
+Parameters:
+schema (str) – Schema name (optional).
+Return a list of ViewMetadata tuples for VIEWs present in the database.
+Example:
+print(db.get_views())
+[ViewMetadata(
+     name='entries_public',
+     sql='CREATE VIEW entries_public AS SELECT ... '),
+ ...]
+sequence_exists(seq)
+Parameters:
+seq (str) – Name of sequence.
+Returns:
+Whether sequence exists.
+Return type:
+bool
+if db.sequence_exists('user_id_seq'):
+    print('Sequence found.')
+create_tables(models, **options)
+Parameters:
+• 
+models (list) – A list of Model classes.
+• 
+options – Options to specify when calling Model.create_table().
+Create tables, indexes and associated constraints for the given list of models.
+Dependencies are resolved so that tables are created in the appropriate order.
+drop_tables(models, **options)
+Parameters:
+• 
+models (list) – A list of Model classes.
+• 
+kwargs – Options to specify when calling Model.drop_table().
+Drop tables, indexes and constraints for the given list of models.
+Dependencies are resolved so that tables are dropped in the appropriate order.
+bind(models, bind_refs=True, bind_backrefs=True)
+Parameters:
+• 
+models (list) – One or more Model classes to bind.
+• 
+bind_refs (bool) – Bind related models.
+• 
+bind_backrefs (bool) – Bind back-reference related models.
+Bind the given list of models, and specified relations, to the database.
+def setup_tests():
+    # Bind models to an in-memory SQLite database.
+    test_db = SqliteDatabase(':memory:')
+    test_db.bind([User, Tweet])
+bind_ctx(models, bind_refs=True, bind_backrefs=True)
+Parameters:
+• 
+models (list) – List of models to bind to the database.
+• 
+bind_refs (bool) – Bind models that are referenced using foreign-keys.
+• 
+bind_backrefs (bool) – Bind models that reference the given model with a foreign-key.
+Create a context-manager that binds (associates) the given models with the current database for the duration of the wrapped block.
+Example:
+MODELS = [User, Tweet, Favorite]
+
+# Bind the given models to the db for the duration of wrapped block.
+def use_test_database(fn):
+    @wraps(fn)
+    def inner(self):
+        with test_db.bind_ctx(MODELS):
+            test_db.create_tables(MODELS)
+            try:
+                fn(self)
+            finally:
+                test_db.drop_tables(MODELS)
+    return inner
+
+
+class TestSomething(TestCase):
+    @use_test_database
+    def test_something(self):
+        # ... models are bound to test database ...
+        pass
+extract_date(date_part, date_field)
+Parameters:
+• 
+date_part (str) – date part to extract, e.g. ‘year’.
+• 
+date_field (Node) – a SQL node containing a date/time, for example a DateTimeField.
+Returns:
+a SQL node representing a function call that will return the provided date part.
+Provides a compatible interface for extracting a portion of a datetime.
+Example:
+query = (Tweet.select()
+         .where(db.extract_date('year', Tweet.timestamp) == 2026))
+
+# If Tweet.timestamp is a DateField or DateTimeField we could
+# also write:
+query = Tweet.select().where(Tweet.timestamp.year == 2026)
+truncate_date(date_part, date_field)
+Parameters:
+• 
+date_part (str) – date part to truncate to, e.g. ‘day’.
+• 
+date_field (Node) – a SQL node containing a date/time, for example a DateTimeField.
+Returns:
+a SQL node representing a function call that will return the truncated date part.
+Provides a compatible interface for truncating a datetime to the given resolution.
+Example:
+# Report on how many tweets made in each month.
+query = (Tweet
+         .select(
+             db.truncate_date('month', Tweet.timestamp).alias('month'),
+             fn.COUNT(Tweet.id).alias('count'))
+         .group_by(db.truncate_date('month', Tweet.timestamp)))
+for row in query:
+    print(row.month, '->', row.count)
+random()
+Returns:
+a SQL node representing a function call that returns a random value.
+A compatible interface for calling the appropriate random number generation function provided by the database. For Postgres and Sqlite, this is equivalent to fn.random(), for MySQL fn.rand().
+class SqliteDatabase(database, pragmas=None, regexp_function=False, rank_functions=False, timeout=5, returning_clause=None, **kwargs)
+Parameters:
+• 
+pragmas – Either a dictionary or a list of 2-tuples containing pragma key and value to set every time a connection is opened.
+• 
+regexp_function (bool) – Make the REGEXP function available.
+• 
+rank_functions (bool) – Make the full-text search ranking functions available (recommended only if using FTS4).
+• 
+timeout – Set the busy-timeout on the SQLite driver (in seconds).
+• 
+returning_clause (bool) – Use RETURNING clause automatically for bulk INSERT queries (requires Sqlite 3.35 or newer).
+Sqlite database implementation. SqliteDatabase that provides some advanced features only offered by Sqlite.
+• 
+Register user-defined functions, aggregates, window functions, collations
+• 
+Load extension modules distributed as shared libraries
+• 
+Advanced transactions (specify lock type)
+• 
+For additional features see CySqliteDatabase.
+Example of initializing a database and configuring some PRAGMAs:
+db = SqliteDatabase('my_app.db', pragmas=(
+    ('cache_size', -16000),  # 16MB
+    ('journal_mode', 'wal'),  # Use write-ahead-log journal mode.
+))
+
+# Alternatively, pragmas can be specified using a dictionary.
+db = SqliteDatabase('my_app.db', pragmas={'journal_mode': 'wal'})
+pragma(key, value=SENTINEL, permanent=False)
+Parameters:
+• 
+key – Setting name.
+• 
+value – New value for the setting (optional).
+• 
+permanent – Apply this pragma whenever a connection is opened.
+Execute a PRAGMA query once on the active connection. If a value is not specified, then the current value will be returned.
+If permanent is specified, then the PRAGMA query will also be executed whenever a new connection is opened, ensuring it is always in-effect.
+cache_size
+Get or set the cache_size pragma for the current connection.
+foreign_keys
+Get or set the foreign_keys pragma for the current connection.
+journal_mode
+Get or set the journal_mode pragma.
+journal_size_limit
+Get or set the journal_size_limit pragma.
+mmap_size
+Get or set the mmap_size pragma for the current connection.
+page_size
+Get or set the page_size pragma.
+read_uncommitted
+Get or set the read_uncommitted pragma for the current connection.
+synchronous
+Get or set the synchronous pragma for the current connection.
+wal_autocheckpoint
+Get or set the wal_autocheckpoint pragma for the current connection.
+timeout
+Get or set the busy timeout (seconds).
+func(name=None, num_params=-1, deterministic=None)
+Parameters:
+• 
+name (str) – Name of the function (defaults to function name).
+• 
+num_params (int) – Number of parameters the function accepts, or -1 for any number.
+• 
+deterministic (bool) – Whether the function is deterministic for a given input (this is required to use the function in an index). Requires Sqlite 3.20 or newer, and sqlite3 driver support (added to stdlib in Python 3.8).
+Decorator to register a user-defined scalar function.
+Example:
+@db.func('title_case')
+def title_case(s):
+    return s.title() if s else ''
+
+Book.select(fn.title_case(Book.title))
+register_function(fn, name=None, num_params=-1, deterministic=None)
+Parameters:
+• 
+fn – The user-defined scalar function.
+• 
+name (str) – Name of function (defaults to function name)
+• 
+num_params (int) – Number of arguments the function accepts, or -1 for any number.
+• 
+deterministic (bool) – Whether the function is deterministic for a given input (this is required to use the function in an index). Requires Sqlite 3.20 or newer, and sqlite3 driver support (added to stdlib in Python 3.8).
+Register a user-defined scalar function. The function will be registered each time a new connection is opened. Additionally, if a connection is already open, the function will be registered with the open connection.
+aggregate(name=None, num_params=-1)
+Parameters:
+• 
+name (str) – Name of the aggregate (defaults to class name).
+• 
+num_params (int) – Number of parameters the aggregate accepts, or -1 for any number.
+Class decorator to register a user-defined aggregate function.
+Example:
+@db.aggregate('md5')
+class MD5(object):
+    def initialize(self):
+        self.md5 = hashlib.md5()
+
+    def step(self, value):
+        self.md5.update(value)
+
+    def finalize(self):
+        return self.md5.hexdigest()
+
+
+@db.aggregate()
+class Product(object):
+    '''Like SUM() except calculates cumulative product.'''
+    def __init__(self):
+        self.product = 1
+
+    def step(self, value):
+        self.product *= value
+
+    def finalize(self):
+        return self.product
+register_aggregate(klass, name=None, num_params=-1)
+Parameters:
+• 
+klass – Class implementing aggregate API.
+• 
+name (str) – Aggregate function name (defaults to name of class).
+• 
+num_params (int) – Number of parameters the aggregate accepts, or -1 for any number.
+Register a user-defined aggregate function.
+The function will be registered each time a new connection is opened. Additionally, if a connection is already open, the aggregate will be registered with the open connection.
+window_function(name=None, num_params=-1)
+Parameters:
+• 
+name (str) – Name of the window function (defaults to class name).
+• 
+num_params (int) – Number of parameters the function accepts, or -1 for any number.
+Class decorator to register a user-defined window function. Window functions must define the following methods:
+• 
+step(<params>) - receive values from a row and update state.
+• 
+inverse(<params>) - inverse of step() for the given values.
+• 
+value() - return the current value of the window function.
+• 
+finalize() - return the final value of the window function.
+Example:
+@db.window_function('my_sum')
+class MySum(object):
+    def __init__(self):
+        self._value = 0
+
+    def step(self, value):
+        self._value += value
+
+    def inverse(self, value):
+        self._value -= value
+
+    def value(self):
+        return self._value
+
+    def finalize(self):
+        return self._value
+register_window_function(klass, name=None, num_params=-1)
+Parameters:
+• 
+klass – Class implementing window function API.
+• 
+name (str) – Window function name (defaults to name of class).
+• 
+num_params (int) – Number of parameters the function accepts, or -1 for any number.
+Register a user-defined window function, requires SQLite >= 3.25.0.
+The window function will be registered each time a new connection is opened. Additionally, if a connection is already open, the window function will be registered with the open connection.
+collation(name=None)
+Parameters:
+name (str) – Name of collation (defaults to function name)
+Decorator to register a user-defined collation.
+Example:
+@db.collation('reverse')
+def collate_reverse(s1, s2):
+    return -cmp(s1, s2)
+
+# Usage:
+Book.select().order_by(collate_reverse.collation(Book.title))
+
+# Equivalent:
+Book.select().order_by(Book.title.asc(collation='reverse'))
+As you might have noticed, the original collate_reverse function has a special attribute called collation attached to it. This extra attribute provides a shorthand way to generate the SQL necessary to use our custom collation.
+register_collation(fn, name=None)
+Parameters:
+• 
+fn – The collation function.
+• 
+name (str) – Name of collation (defaults to function name)
+Register a user-defined collation. The collation will be registered each time a new connection is opened. Additionally, if a connection is already open, the collation will be registered with the open connection.
+unregister_function(name)
+Parameters:
+name – Name of the user-defined scalar function.
+Unregister the user-defined scalar function.
+unregister_aggregate(name)
+Parameters:
+name – Name of the user-defined aggregate.
+Unregister the user-defined aggregate.
+unregister_window_function(name)
+Parameters:
+name – Name of the user-defined window function.
+Unregister the user-defined window function.
+unregister_collation(name)
+Parameters:
+name – Name of the user-defined collation.
+Unregister the user-defined collation.
+load_extension(extension_module)
+Load the given extension shared library. Extension will be loaded for the current connection as well as all subsequent connections.
+db = SqliteDatabase('my_app.db')
+
+# Load extension in closure.so shared library.
+db.load_extension('closure')
+unload_extension(extension_module)
+Unregister extension from being automatically loaded on new connections.
+attach(filename, name)
+Parameters:
+• 
+filename (str) – Database to attach (or :memory: for in-memory)
+• 
+name (str) – Schema name for attached database.
+Returns:
+boolean indicating success
+Register another database file that will be attached to every database connection. If the main database is currently connected, the new database will be attached on the open connection.
+Databases that are attached using this method will be attached every time a database connection is opened.
+detach(name)
+Parameters:
+name (str) – Schema name for attached database.
+Returns:
+boolean indicating success
+Unregister another database file that was attached previously with a call to attach(). If the main database is currently connected, the attached database will be detached from the open connection.
+atomic(lock_type=None)
+Parameters:
+lock_type (str) – Locking strategy: DEFERRED, IMMEDIATE, EXCLUSIVE.
+Create an atomic context-manager / decorator, optionally using the specified locking strategy (default DEFERRED).
+Lock type only applies to the outermost atomic() block.
+See also:
+SQLite Transaction Locking Modes
+transaction(lock_type=None)
+Parameters:
+lock_type (str) – Locking strategy: DEFERRED, IMMEDIATE, EXCLUSIVE.
+Create a transaction context-manager / decorator, optionally using the specified locking strategy (default DEFERRED).
+class PostgresqlDatabase(database, register_unicode=True, encoding=None, isolation_level=None, prefer_psycopg3=False)
+Postgresql database implementation. Uses psycopg2 or psycopg3.
+Additional optional keyword-parameters:
+Parameters:
+• 
+register_unicode (bool) – Register unicode types.
+• 
+encoding (str) – Database encoding.
+• 
+isolation_level (int, str) – Isolation level constant, defined in the psycopg2.extensions module or psycopg.IsolationLevel enum (psycopg3). Also accepts string which is converted to the matching constant.
+• 
+prefer_psycopg3 (bool) – If both psycopg2 and psycopg3 are installed, instruct Peewee to prefer psycopg3.
+Example:
+db = PostgresqlDatabase(
+    'app',
+    user='postgres',
+    host='10.8.0.1',
+    port=5432,
+    password=os.environ['PGPASSWORD'],
+    isolation_level='SERIALIZABLE')
+interval(val)
+Parameters:
+val (str) – Time interval, e.g. '30 minutes'
+Returns:
+expression representing the interval.
+set_time_zone(timezone)
+Parameters:
+timezone (str) – timezone name, e.g. “US/Central”.
+Returns:
+no return value.
+Set the timezone on the current connection. If no connection is open, then one will be opened.
+set_isolation_level(isolation_level)
+Parameters:
+isolation_level (int, str) – Isolation level constant, defined in the psycopg2.extensions module or psycopg.IsolationLevel enum (psycopg3). Also accepts string which is converted to the matching constant. Set to None to use the server default.
+Example of setting isolation level:
+# psycopg2 or psycopg3
+db.set_isolation_level('SERIALIZABLE')
+
+# psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_SERIALIZABLE
+db.set_isolation_level(ISOLATION_LEVEL_SERIALIZABLE)
+
+# psycopg3
+from psycopg import IsolationLevel
+db.set_isolation_level(IsolationLevel.SERIALIZABLE)
+Isolation level values in order of increasing strictness:
+• 
+READ UNCOMMITTED
+• 
+READ COMMITTED
+• 
+REPEATABLE READ
+• 
+SERIALIZABLE
+See the Postgresql transaction isolation docs and Peewee’s Postgresql Isolation Notes for additional discussion.
+atomic(isolation_level=None)
+Parameters:
+isolation_level (int, str) – Isolation strategy: SERIALIZABLE, READ COMMITTED, REPEATABLE READ, READ UNCOMMITTED
+Create an atomic context-manager, optionally using the specified isolation level (if unspecified, the connection default will be used).
+Isolation level only applies to the outermost atomic() block.
+See the Postgresql transaction isolation docs and Peewee’s Postgresql Isolation Notes for additional discussion.
+transaction(isolation_level=None)
+Parameters:
+isolation_level (int, str) – Isolation strategy: SERIALIZABLE, READ COMMITTED, REPEATABLE READ, READ UNCOMMITTED
+Create a transaction context-manager, optionally using the specified isolation level (if unspecified, the connection default will be used).
+class MySQLDatabase(database, mariadb=None, **kwargs)
+MySQL database implementation.
+Parameters:
+mariadb (bool) – Ensure proper SQL generation on MariaDB, which has some quirks (notably JSONField). Default behavior is to use MySQL-flavor.
+Example:
+db = MySQLDatabase('app', host='10.8.0.1')
+atomic(isolation_level=None)
+Parameters:
+isolation_level (str) – Isolation strategy: SERIALIZABLE, READ COMMITTED, REPEATABLE READ, READ UNCOMMITTED
+Create an atomic context-manager, optionally using the specified isolation level (if unspecified, the server default will be used).
+Isolation level only applies to the outermost atomic() block.
+transaction(isolation_level=None)
+Parameters:
+isolation_level (str) – Isolation strategy: SERIALIZABLE, READ COMMITTED, REPEATABLE READ, READ UNCOMMITTED
+Create a transaction context-manager, optionally using the specified isolation level (if unspecified, the server default will be used).
+class _atomic
+Context-manager or decorator implementation for Database.atomic(). Uses a transaction at the outermost level and savepoints for nested calls.
+See Transactions for details on transaction management.
+__enter__()
+Begin the transaction or savepoint.
+Returns:
+Either a _transaction or _savepoint instance, depending on nesting.
+__exit__(exc_type, exc_val, exc_tb)
+Commit the transaction or savepoint if exiting cleanly. If an unhandled exception occurred, roll back.
+__call__(fn)
+Decorate the wrapped function with a transaction or savepoint. Equivalent to:
+@db.atomic()
+def modify_data():
+    ...
+
+def modify_data():
+    with db.atomic():
+        ...
+class _transaction
+The object yielded by Database.transaction() and the outermost layer of Database.atomic(). Users do not instantiate _transaction directly.
+A _transaction can be used as a context manager or as a decorator. On clean exit, the wrapped block is committed; on an unhandled exception, it is rolled back and the exception re-raised. Nested _transaction blocks share the outermost transaction - inner __enter__ / __exit__ pushes and pops a stack entry but does not emit BEGIN / COMMIT at the database level. For true nesting, use Database.atomic(), which emits a savepoint for inner blocks.
+See Transactions for details on transaction management.
+commit(begin=True)
+Parameters:
+begin (bool) – If True (default), automatically start a new transaction after the commit completes.
+Commit the current transaction. Subsequent statements inside the wrapped block run in the new transaction unless begin=False.
+rollback(begin=True)
+Parameters:
+begin (bool) – If True (default), automatically start a new transaction after the rollback completes.
+Roll back the current transaction. Subsequent statements inside the wrapped block run in the new transaction unless begin=False.
+class _savepoint
+The object yielded by Database.savepoint() and inner layers of calls to Database.atomic(). Users do not instantiate _savepoint directly.
+A _savepoint emits SAVEPOINT <id> on entry and either RELEASE SAVEPOINT <id> (on clean exit) or ROLLBACK TO SAVEPOINT <id> (on exception). The savepoint name is generated automatically and is unique per invocation. Savepoints can be nested arbitrarily, but must occur inside an active transaction.
+See Transactions for details on transaction management.
+commit(begin=True)
+Parameters:
+begin (bool) – If True (default), automatically begin a new savepoint after releasing.
+Release the current savepoint. Subsequent statements run inside the new savepoint unless begin=False.
+rollback(begin=True)
+Parameters:
+begin (bool) – If True (default), automatically begin a new savepoint after rollback.
+Roll back to the current savepoint. Subsequent statements run inside the new savepoint unless begin=False.
+Note:
+Inside with db.atomic() as txn:, the object bound to txn is a _transaction when atomic() is the outermost block, and a _savepoint when atomic() is nested inside another transaction or savepoint. Both classes expose the same commit() / rollback() interface, so code that calls txn.commit() or txn.rollback() works identically in either case.
+Model
+class Model(**kwargs)
+Parameters:
+kwargs – Mapping of field-name to value to initialize model with.
+Model class provides a high-level abstraction for working with database tables. Models are a one-to-one mapping with a database table (or a table-like object, such as a view). Subclasses of Model declare any number of Field instances as class attributes. These fields correspond to columns on the table.
+Table-level operations, such as select(), update(), insert() and delete() are implemented as classmethods.
+Row-level operations, such as save() and delete_instance() are implemented as instancemethods.
+Example:
+db = SqliteDatabase(':memory:')
+
+class User(Model):
+    username = TextField()
+    join_date = DateTimeField(default=datetime.datetime.now)
+    is_admin = BooleanField(default=False)
+
+admin = User(username='admin', is_admin=True)
+admin.save()
+classmethod alias([alias=None])
+Parameters:
+alias (str) – Optional name for alias.
+Returns:
+ModelAlias instance.
+Create an alias to the model-class. Model aliases allow you to reference the same Model multiple times in a query, for example when doing a self-join or sub-query.
+Example:
+Parent = Category.alias()
+sq = (Category
+      .select(Category, Parent)
+      .join(Parent, on=(Category.parent == Parent.id))
+      .where(Parent.name == 'parent category'))
+classmethod select(*fields)
+Parameters:
+fields – A list of model classes, field instances, functions or expressions. If no arguments are provided, all columns for the given model will be selected by default.
+Returns:
+ModelSelect query.
+Create a SELECT query. If no fields are explicitly provided, the query will by default SELECT all the fields defined on the model, unless you are using the query as a sub-query, in which case only the primary key will be selected by default.
+Example of selecting all columns:
+query = User.select().where(User.active == True).order_by(User.username)
+Example of selecting all columns on Tweet and the parent model, User. When the user foreign key is accessed on a Tweet instance no additional query will be needed (see N+1 for more details):
+query = (Tweet
+         .select(Tweet, User)
+         .join(User)
+         .order_by(Tweet.created_date.desc()))
+
+for tweet in query:
+    print(tweet.user.username, '->', tweet.content)
+Example of subquery only selecting the primary key:
+inactive_users = User.select().where(User.active == False)
+
+# Here, instead of defaulting to all columns, Peewee will default
+# to only selecting the primary key.
+Tweet.delete().where(Tweet.user.in_(inactive_users)).execute()
+See Querying for in-depth discussion.
+classmethod update(__data=None, **update)
+Parameters:
+• 
+__data (dict) – dict of fields to values.
+• 
+update – Field-name to value mapping.
+Create an UPDATE query.
+Example showing users being marked inactive if their registration has expired:
+q = (User
+     .update(active=False)
+     .where(User.registration_expired == True))
+q.execute()  # Execute the query, returning number of rows updated.
+Example showing an atomic update:
+q = (PageView
+     .update({PageView.count: PageView.count + 1})
+     .where(PageView.url == url))
+q.execute()  # Execute the query.
+Update queries support returning() with Postgresql and SQLite to obtain the updated rows:
+query = (User
+         .update(spam=True)
+         .where(User.username.contains('billing'))
+         .returning(User))
+for user in query:
+    print(f'Marked {user.username} as spam')
+See Updating Records for additional discussion.
+When an update query is executed, the number of rows modified will be returned.
+classmethod insert(__data=None, **insert)
+Parameters:
+• 
+__data (dict) – dict of fields to values to insert.
+• 
+insert – Field-name to value mapping.
+Create an INSERT query.
+Insert a new row into the database. If any fields on the model have default values, these values will be used if the fields are not explicitly set in the insert dictionary.
+Example showing creation of a new user:
+q = User.insert(username='admin', active=True, registration_expired=False)
+q.execute()  # perform the insert.
+You can also use Field objects as the keys:
+new_id = User.insert({User.username: 'admin'}).execute()
+If you have a model with a default value on one of the fields, and that field is not specified in the insert parameter, the default will be used:
+class User(Model):
+    username = CharField()
+    active = BooleanField(default=True)
+
+# This INSERT query will automatically specify `active=True`:
+User.insert(username='charlie')
+Insert queries support returning() with Postgresql and SQLite to obtain the inserted rows:
+alice, = (User
+          .insert(username='alice')
+          .returning(User)
+          .execute())
+print(f'Added {alice.username} with id = {alice.id}')
+When an insert query is executed on a table with an auto-incrementing primary key, the primary key of the new row will be returned.
+classmethod insert_many(rows, fields=None)
+Parameters:
+• 
+rows – An iterable that yields rows to insert.
+• 
+fields (list) – List of fields being inserted.
+Returns:
+number of rows modified (see note).
+INSERT multiple rows of data.
+The rows parameter must be an iterable that yields dictionaries or tuples, where the ordering of the tuple values corresponds to the fields specified in the fields argument. As with insert(), fields that are not specified in the dictionary will use their default value, if one exists.
+Due to the nature of bulk inserts, each row must contain the same fields. The following will not work:
+Person.insert_many([
+    {'first_name': 'Peewee', 'last_name': 'Herman'},
+    {'first_name': 'Huey'},  # Missing "last_name"!
+]).execute()
+Example of inserting multiple Users:
+data = [
+    ('charlie', True),
+    ('huey', False),
+    ('zaizee', False)]
+query = User.insert_many(data, fields=[User.username, User.is_admin])
+query.execute()
+Equivalent example using dictionaries:
+data = [
+    {'username': 'charlie', 'is_admin': True},
+    {'username': 'huey', 'is_admin': False},
+    {'username': 'zaizee', 'is_admin': False}]
+
+# Insert new rows.
+User.insert_many(data).execute()
+Because the rows parameter can be an arbitrary iterable, you can also use a generator:
+def get_usernames():
+    for username in ['charlie', 'huey', 'peewee']:
+        yield {'username': username}
+User.insert_many(get_usernames()).execute()
+Insert queries support returning() with Postgresql and SQLite to obtain the inserted rows:
+query = (User
+         .insert_many([{'username': 'alice'}, {'username': 'bob'}])
+         .returning(User))
+for user in query:
+    print(f'Added {user.username} with id = {user.id}')
+See Bulk Inserts for additional discussion.
+SQLite has a default limit of bound variables per statement. Additional discussion: Bulk Inserts.
+SQLite documentation:
+• 
+Max variable number limit
+• 
+SQLite compile-time flags
+The default return value is the number of rows modified. However, when using Postgresql, Peewee will return a cursor that yields the primary-keys of the inserted rows. To disable this functionality with Postgresql, append as_rowcount() to your insert.
+classmethod insert_from(query, fields)
+Parameters:
+• 
+query (Select) – SELECT query to use as source of data.
+• 
+fields – Fields to insert data into.
+Returns:
+number of rows modified (see note).
+Generates an INSERT INTO ... SELECT query, copying rows from one table into another without round-tripping data through Python:
+(TweetArchive
+ .insert_from(
+     Tweet.select(Tweet.user, Tweet.message),
+     fields=[TweetArchive.user, TweetArchive.message])
+ .execute())
+See Bulk Inserts for additional discussion.
+The default return value is the number of rows modified. However, when using Postgresql, Peewee will return a cursor that yields the primary-keys of the inserted rows. To disable this functionality with Postgresql, append as_rowcount() to your insert.
+classmethod replace(__data=None, **insert)
+Parameters:
+• 
+__data (dict) – dict of fields to values to insert.
+• 
+insert – Field-name to value mapping.
+SQLite and MySQL support a REPLACE query, which will replace the row in the event of a conflict:
+class User(BaseModel):
+    username = TextField(unique=True)
+    last_login = DateTimeField(null=True)
+
+# Insert, or replace the entire existing row.
+User.replace(username='huey', last_login=datetime.datetime.now()).execute()
+
+# Equivalent using insert():
+(User
+ .insert(username='huey', last_login=datetime.datetime.now())
+ .on_conflict_replace()
+ .execute())
+See Upsert for additional discussion.
+replace deletes and re-inserts, which changes the primary key. Use Insert.on_conflict() when the primary key must be preserved, or when only some columns should be updated.
+classmethod replace_many(rows, fields=None)
+Parameters:
+• 
+rows – An iterable that yields rows to insert.
+• 
+fields (list) – List of fields being inserted.
+INSERT multiple rows of data using REPLACE for conflict-resolution.
+See also:
+• 
+Model.insert_many() for syntax and examples.
+• 
+Upsert for additional discussion.
+replace_many may delete and re-insert rows, which changes the primary key. Use Insert.on_conflict() when the primary key must be preserved, or when only some columns should be updated.
+classmethod raw(sql, *params)
+Parameters:
+• 
+sql (str) – SQL query to execute.
+• 
+params – Parameters for query.
+Execute a SQL query directly.
+Example selecting rows from the User table:
+q = User.raw('select id, username from users')
+for user in q:
+    print(user.id, user.username)
+Generally the use of raw is reserved for those cases where you can significantly optimize a select query.
+classmethod delete()
+Create a DELETE query.
+Example showing the deletion of all inactive users:
+q = User.delete().where(User.active == False)
+q.execute()  # Remove the rows, return number of rows removed.
+Delete queries support returning() with Postgresql and SQLite to obtain the deleted rows:
+query = (User
+         .delete()
+         .where(User.username.contains('billing'))
+         .returning(User))
+for user in query:
+    print(f'Deleted: {user.username}')
+See also:
+• 
+Deleting Records for discussion and example usage.
+• 
+Model.delete_instance() for deleting individual rows.
+classmethod create(**query)
+Parameters:
+query – Mapping of field-name to value.
+INSERT new row into table and return corresponding model instance.
+Example showing the creation of a user (a row will be added to the database):
+user = User.create(username='admin', password='test')
+Note:
+create() is a shorthand for instantiate -> save.
+classmethod bulk_create(model_list, batch_size=None)
+Parameters:
+• 
+model_list (iterable) – a list or other iterable of unsaved Model instances.
+• 
+batch_size (int) – number of rows to batch per insert. If unspecified, all models will be inserted in a single query.
+Returns:
+no return value.
+Efficiently INSERT multiple unsaved model instances into the database. Unlike insert_many(), which accepts row data as a list of either dictionaries or lists, this method accepts a list of unsaved model instances.
+Example:
+user_list = [User(username='u%s' % i) for i in range(10)]
+
+with db.atomic():
+    # All 10 users are inserted in a single query.
+    User.bulk_create(user_list)
+Batches:
+user_list = [User(username='u%s' % i) for i in range(10)]
+
+with database.atomic():
+    # Will execute 4 INSERT queries (3 batches of 3, 1 batch of 1).
+    User.bulk_create(user_list, batch_size=3)
+• 
+The primary-key value for the newly-created models will only be set if you are using Postgresql (which supports the RETURNING clause).
+• 
+SQLite has a limit of bound parameters for a query, typically 999 for Sqlite < 3.32.0, and 32766 for newer versions.
+• 
+Strongly recommended that you wrap the call in a transaction using Database.atomic(). Otherwise an error in a batch mid-way through could leave the database in an inconsistent state.
+classmethod bulk_update(model_list, fields, batch_size=None)
+Parameters:
+• 
+model_list (iterable) – a list or other iterable of Model instances.
+• 
+fields (list) – list of fields to update.
+• 
+batch_size (int) – number of rows to batch per insert. If unspecified, all models will be inserted in a single query.
+Returns:
+total number of rows updated.
+UPDATE multiple model instances in a single query by generating a CASE statement mapping ids to new field values.
+Example:
+# First, create 3 users.
+u1, u2, u3 = [User.create(username='u%s' % i) for i in (1, 2, 3)]
+
+# Now let's modify their usernames.
+u1.username = 'u1-x'
+u2.username = 'u2-y'
+u3.username = 'u3-z'
+
+# Update all three rows using a single UPDATE query.
+User.bulk_update([u1, u2, u3], fields=[User.username])
+This will result in executing the following SQL:
+UPDATE "users" SET "username" = CASE "users"."id"
+    WHEN 1 THEN "u1-x"
+    WHEN 2 THEN "u2-y"
+    WHEN 3 THEN "u3-z" END
+WHERE "users"."id" IN (1, 2, 3);
+If you have a large number of objects to update, it is strongly recommended that you specify a batch_size and wrap the operation in a transaction:
+with database.atomic():
+    User.bulk_update(user_list, fields=['username'], batch_size=50)
+bulk_update may be slower than a direct UPDATE query when the list is very large, because the generated CASE expression grows proportionally. For updates that can be expressed as a single WHERE clause, the direct update() approach is faster.
+classmethod get(*query, **filters)
+Parameters:
+• 
+query – Zero or more Expression objects.
+• 
+filters – Mapping of field-name to value for Django-style filter.
+Raises:
+DoesNotExist
+Returns:
+Model instance matching the specified filters.
+Retrieve a single model instance matching the given filters. If no model is returned, a DoesNotExist is raised.
+user = User.get(User.username == username, User.active == True)
+This method is also exposed via the SelectQuery, though it takes no parameters:
+active = User.select().where(User.active == True)
+try:
+    user = (active
+            .where(
+                (User.username == username) &
+                (User.active == True))
+            .get())
+except User.DoesNotExist:
+    user = None
+The get() method is shorthand for selecting with a limit of 1. It has the added behavior of raising an exception when no matching row is found. If more than one row is found, the first row returned by the database cursor will be used.
+classmethod get_or_none(*query, **filters)
+Identical to Model.get() but returns None if no model matches the given filters.
+active = User.select().where(User.active == True)
+user = (active
+        .where(
+            (User.username == username) &
+            (User.active == True))
+        .get_or_none())
+classmethod get_by_id(pk)
+Parameters:
+pk – Primary-key value.
+Short-hand for calling Model.get() specifying a lookup by primary key. Raises a DoesNotExist if instance with the given primary key value does not exist.
+Example:
+user = User.get_by_id(1)  # Returns user with id = 1.
+classmethod set_by_id(key, value)
+Parameters:
+• 
+key – Primary-key value.
+• 
+value (dict) – Mapping of field to value to update.
+Short-hand for updating the data with the given primary-key. If no row exists with the given primary key, no exception will be raised.
+Example:
+# Set "is_admin" to True on user with id=3.
+User.set_by_id(3, {'is_admin': True})
+classmethod delete_by_id(pk)
+Parameters:
+pk – Primary-key value.
+Short-hand for deleting the row with the given primary-key. If no row exists with the given primary key, no exception will be raised.
+classmethod get_or_create(**kwargs)
+Parameters:
+• 
+kwargs – Mapping of field-name to value.
+• 
+defaults – Default values to use if creating a new row.
+Returns:
+Tuple of Model instance and boolean indicating if a new object was created.
+Attempt to get the row matching the given filters. If no matching row is found, create a new row.
+Warning:
+Race-conditions are possible when using this method.
+Example without get_or_create:
+# Without `get_or_create`, we might write:
+try:
+    person = Person.get(
+        (Person.first_name == 'John') &
+        (Person.last_name == 'Lennon'))
+except Person.DoesNotExist:
+    person = Person.create(
+        first_name='John',
+        last_name='Lennon',
+        birthday=datetime.date(1940, 10, 9))
+Equivalent code using get_or_create:
+person, created = Person.get_or_create(
+    first_name='John',
+    last_name='Lennon',
+    defaults={'birthday': datetime.date(1940, 10, 9)})
+classmethod filter(*dq_nodes, **filters)
+Parameters:
+• 
+dq_nodes – Zero or more DQ objects.
+• 
+filters – Django-style filters.
+Returns:
+ModelSelect query.
+get_id()
+Returns:
+The primary-key of the model instance.
+save(force_insert=False, only=None)
+Parameters:
+• 
+force_insert (bool) – Force INSERT query.
+• 
+only (list) – Only save the given Field instances.
+Returns:
+Number of rows modified.
+Save the data in the model instance. By default, the presence of a primary-key value will cause an UPDATE query to be executed.
+Example showing saving a model instance:
+user = User()
+user.username = 'some-user'  # does not touch the database
+user.save()  # change is persisted to the db
+When a model uses any primary key OTHER than an auto-incrementing integer it is necessary to specify force_insert=True when calling save() with a new instance:
+class Tag(Model):
+    tag = TextField(primary_key=True)
+
+t = Tag(tag='python')
+t.save(force_insert=True)
+
+# create() automatically specifies force_insert=True:
+t = Tag.create(tag='sqlite')
+dirty_fields
+Return list of fields that have been modified.
+Return type:
+list
+If you just want to persist modified fields, you can call model.save(only=model.dirty_fields).
+To always save a model’s dirty fields, use the Meta option only_save_dirty = True. Any calls to Model.save() will only save the dirty fields by default:
+class Person(Model):
+    first_name = CharField()
+    last_name = CharField()
+    dob = DateField()
+
+    class Meta:
+        database = db
+        only_save_dirty = True
+Peewee determines whether a field is “dirty” by observing when the field attribute is set on a model instance. If the field contains a value that is mutable, such as a dictionary instance, and that dictionary is then modified, Peewee will not notice the change.
+Warning:
+Do not do membership tests on this list, e.g. f in dirty_fields because if there is one or more fields in the dirty fields list, the field equality override will return a truthy Expression object. If you want to test if a field is dirty, instead check f.name in model.dirty_field_names.
+dirty_field_names
+Return list of field names that have been modified.
+Return type:
+list
+is_dirty()
+Return boolean indicating whether any fields were manually set.
+delete_instance(recursive=False, delete_nullable=False)
+Parameters:
+• 
+recursive (bool) – Delete related models.
+• 
+delete_nullable (bool) – Delete related models that have a null foreign key. If False nullable relations will be set to NULL.
+Delete the given instance. Any foreign keys set to cascade on delete will be deleted automatically. For more programmatic control, you can specify recursive=True, which will delete any non-nullable related models (those that are nullable will be set to NULL). If you wish to delete all dependencies regardless of whether they are nullable, set delete_nullable=True.
+Example:
+some_obj.delete_instance()
+See Deleting Records for additional discussion.
+classmethod bind(database, bind_refs=True, bind_backrefs=True)
+Parameters:
+• 
+database (Database) – database to bind to.
+• 
+bind_refs (bool) – Bind related models.
+• 
+bind_backrefs (bool) – Bind back-reference related models.
+Bind the model (and specified relations) to the given database.
+See also: Database.bind().
+classmethod bind_ctx(database, bind_refs=True, bind_backrefs=True)
+Like bind(), but returns a context manager that only binds the models for the duration of the wrapped block.
+See also: Database.bind_ctx().
+classmethod table_exists()
+Returns:
+boolean indicating whether the table exists.
+classmethod create_table(safe=True, **options)
+Parameters:
+safe (bool) – When True, the create table query will include an IF NOT EXISTS clause.
+Create the model table, indexes, constraints and sequences.
+Example:
+with database:
+    SomeModel.create_table()
+classmethod drop_table(safe=True, **options)
+Parameters:
+safe (bool) – If set to True, the drop table query will include an IF EXISTS clause.
+Drop the model table.
+truncate_table(restart_identity=False, cascade=False)
+Parameters:
+• 
+restart_identity (bool) – Restart the id sequence (postgresql-only).
+• 
+cascade (bool) – Truncate related tables as well (postgresql-only).
+Truncate (delete all rows) for the model.
+classmethod index(*fields, unique=False, safe=True, where=None, using=None, name=None)
+Parameters:
+• 
+fields – Fields to index.
+• 
+unique (bool) – Whether index is UNIQUE.
+• 
+safe (bool) – Whether to add IF NOT EXISTS clause.
+• 
+where (Expression) – Optional WHERE clause for index.
+• 
+using (str) – Index algorithm.
+• 
+name (str) – Optional index name.
+Expressive method for declaring an index on a model. Wraps the declaration of a ModelIndex instance.
+Examples:
+class Article(Model):
+    name = TextField()
+    timestamp = TimestampField()
+    status = IntegerField()
+    flags = BitField()
+
+    is_sticky = flags.flag(1)
+    is_favorite = flags.flag(2)
+
+# CREATE INDEX ... ON "article" ("name", "timestamp" DESC)
+idx = Article.index(Article.name, Article.timestamp.desc())
+
+# Be sure to add the index to the model:
+Article.add_index(idx)
+
+# CREATE UNIQUE INDEX ... ON "article" ("timestamp" DESC, "flags" & 2)
+# WHERE ("status" = 1)
+idx = (Article
+       .index(Article.timestamp.desc(),
+              Article.flags.bin_and(2),
+              unique=True)
+       .where(Article.status == 1))
+
+# Add index to model:
+Article.add_index(idx)
+classmethod add_index(*args, **kwargs)
+Parameters:
+• 
+args – a ModelIndex instance, Field(s) to index, or a SQL instance that contains the SQL for creating the index.
+• 
+kwargs – Keyword arguments passed to ModelIndex constructor.
+Add an index to the model’s definition.
+This method does not actually create the index in the database. Rather, it adds the index definition to the model’s metadata, so that a subsequent call to create_table() will create the new index (along with the table).
+Examples:
+class Article(Model):
+    name = TextField()
+    timestamp = TimestampField()
+    status = IntegerField()
+    flags = BitField()
+
+    is_sticky = flags.flag(1)
+    is_favorite = flags.flag(2)
+
+# CREATE INDEX ... ON "article" ("name", "timestamp") WHERE "status" = 1
+idx = Article.index(Article.name, Article.timestamp).where(Article.status == 1)
+Article.add_index(idx)
+
+# CREATE UNIQUE INDEX ... ON "article" ("timestamp" DESC, "flags" & 2)
+ts_flags_idx = Article.index(
+    Article.timestamp.desc(),
+    Article.flags.bin_and(2),
+    unique=True)
+Article.add_index(ts_flags_idx)
+
+# You can also specify a list of fields and use the same keyword
+# arguments that the ModelIndex constructor accepts:
+Article.add_index(
+    Article.name,
+    Article.timestamp.desc(),
+    where=(Article.status == 1))
+
+# Or even specify a SQL query directly:
+Article.add_index(SQL('CREATE INDEX ...'))
+dependencies(search_nullable=False)
+Parameters:
+search_nullable (bool) – Search models related via a nullable foreign key
+Return type:
+Generator expression yielding queries and foreign key fields.
+Generate a list of queries of dependent models. Yields a 2-tuple containing the query and corresponding foreign key field. Useful for searching dependencies of a model, i.e. things that would be orphaned in the event of a delete.
+__iter__()
+Returns:
+a ModelSelect for the given class.
+Convenience function for iterating over all instances of a model.
+Example:
+Setting.insert_many([
+    {'key': 'host', 'value': '192.168.1.2'},
+    {'key': 'port', 'value': '1337'},
+    {'key': 'user', 'value': 'nuggie'}]).execute()
+
+# Load settings from db into dict.
+settings = {setting.key: setting.value for setting in Setting}
+__len__()
+Returns:
+Count of rows in table.
+Example:
+n_accounts = len(Account)
+
+# Equivalent:
+n_accounts = Account.select().count()
+class ModelAlias(model, alias=None)
+Parameters:
+• 
+model (Model) – Model class to reference.
+• 
+alias (str) – (optional) name for alias.
+Provide a separate reference to a model in a query.
+With Peewee, we use Model.alias() to alias a model class so it can be referenced twice in a single query:
+Owner = User.alias()
+query = (Favorite
+         .select(Favorite, Tweet.content, User.username, Owner.username)
+         .join_from(Favorite, Owner)  # Determine owner of favorite.
+         .join_from(Favorite, Tweet)  # Join favorite -> tweet.
+         .join_from(Tweet, User))     # Join tweet -> user.
+See Relationships and Joins for additional discussion.
+class Metadata(model, database=None, table_name=None, indexes=None, primary_key=None, constraints=None, schema=None, only_save_dirty=False, depends_on=None, options=None, without_rowid=False, strict_tables=False, **kwargs)
+Parameters:
+• 
+model (Model) – Model class.
+• 
+database (Database) – database model is bound to.
+• 
+table_name (str) – Specify table name for model.
+• 
+indexes (list) – List of ModelIndex objects.
+• 
+primary_key – Primary key for model (only specified if this is a CompositeKey or False for no primary key.
+• 
+constraints (list) – List of table constraints.
+• 
+schema (str) – Schema table exists in.
+• 
+only_save_dirty (bool) – When save() is called, only save the fields which have been modified.
+• 
+options (dict) – Arbitrary options for the model.
+• 
+without_rowid (bool) – Specify WITHOUT ROWID (sqlite only).
+• 
+strict_tables (bool) – Specify STRICT (sqlite only, requires 3.37+).
+• 
+kwargs – Arbitrary setting attributes and values.
+Store metadata for a Model.
+This class should not be instantiated directly, but is instantiated using the attributes of a Model class’ inner Meta class. Metadata attributes are then available on Model._meta.
+Example:
+class User(Model):
+    ...
+    class Meta:
+        database = db
+        table_name = 'user'
+
+# After class-creation, Meta configuration lives here:
+isinstance(User._meta, Metadata)  # True
+User._meta.database is db         # True
+User._meta.table_name == 'user'   # True
+See also:
+Model Settings for usage.
+table
+Return a reference to the underlying Table object.
+model_graph(refs=True, backrefs=True, depth_first=True)
+Parameters:
+• 
+refs (bool) – Follow foreign-key references.
+• 
+backrefs (bool) – Follow foreign-key back-references.
+• 
+depth_first (bool) – Do a depth-first search (False for breadth-first).
+Traverse the model graph and return a list of 3-tuples, consisting of (foreign key field, model class, is_backref).
+set_database(database)
+Parameters:
+database (Database) – database object to bind Model to.
+Bind the model class to the given Database instance.
+Warning:
+This API should not need to be used. Instead, to change a Model database at run-time, use one of the following:
+• 
+Model.bind()
+• 
+Model.bind_ctx() (bind for scope of a context manager).
+• 
+Database.bind()
+• 
+Database.bind_ctx()
+set_table_name(table_name)
+Parameters:
+table_name (str) – table name to bind Model to.
+Bind the model class to the given table name at run-time.
+class SubclassAwareMetadata
+Metadata subclass that tracks Model subclasses. Useful for when you need to track all models in a project.
+Example:
+from peewee import SubclassAwareMetadata
+
+class Base(Model):
+    class Meta:
+        database = db
+        model_metadata_class = SubclassAwareMetadata
+
+# Create 3 model classes that inherit from Base.
+class A(Base): pass
+class B(Base): pass
+class C(Base): pass
+
+# Now let's make a helper for changing the `schema` for each Model.
+def change_schema(schema):
+    def _update(model):
+        model._meta.schema = schema
+    return _update
+
+# Set all models to use "schema1", e.g. "schema1.a", "schema1.b", etc.
+# Will apply the function to every subclass of Base.
+Base._meta.map_models(change_schema('schema1'))
+
+# Set all models to use "schema2", e.g. "schema2.a", "schema2.b", etc.
+Base._meta.map_models(change_schema('schema2'))
+map_models(fn)
+Apply a function to all subclasses.
+See also:
+ThreadSafeDatabaseMetadata for a Metadata subclass that supports changing the database attribute at run-time in a multi-threaded environment.
+class ModelSelect(model, fields_or_models)
+Parameters:
+• 
+model (Model) – Model class to select.
+• 
+fields_or_models – List of fields or model classes to select.
+Model-specific implementation of SELECT query.
+get()
+Parameters:
+database (Database) – database to execute query against.
+Returns:
+A single row from the database.
+Raises:
+DoesNotExist if row not found.
+Execute the query and return the first row, if it exists. Multiple calls will result in multiple queries being executed.
+If no matching row is found, raise DoesNotExist.
+peek(n=1)
+Parameters:
+n (int) – Number of rows to return.
+Returns:
+A single row if n = 1, else a list of rows.
+Execute the query and return the given number of rows from the start of the cursor. This function may be called multiple times safely, and will always return the first N rows of results.
+first(n=1)
+Parameters:
+n (int) – Number of rows to return.
+Returns:
+A single row if n = 1, else a list of rows.
+Like the peek() method, except a LIMIT is applied to the query to ensure that only n rows are returned. Multiple calls for the same value of n will not result in multiple executions.
+The query is altered in-place so it is not possible to call first() and then later iterate over the full result-set using the same query object. Again, this is done to ensure that multiple calls to first() will not result in multiple query executions.
+scalar(as_tuple=False, as_dict=False)
+Parameters:
+• 
+as_tuple (bool) – Return the result as a tuple?
+• 
+as_dict (bool) – Return the result as a dict?
+Returns:
+Single scalar value. If as_tuple = True, a row tuple is returned. If as_dict = True, a row dict is returned.
+Return a scalar value from the first row of results. If multiple scalar values are anticipated (e.g. multiple aggregations in a single query) then you may specify as_tuple=True to get the row tuple.
+Example:
+query = Note.select(fn.MAX(Note.timestamp))
+max_ts = query.scalar()
+
+query = Note.select(fn.MAX(Note.timestamp), fn.COUNT(Note.id))
+max_ts, n_notes = query.scalar(as_tuple=True)
+
+query = Note.select(fn.COUNT(Note.id).alias('count'))
+assert query.scalar(as_dict=True) == {'count': 123}
+scalars()
+Return an iterator that yields scalar values from the first column of each result row. This is the multi-row equivalent of scalar().
+Equivalent to:
+[row[0] for row in query.tuples()]
+Example:
+query = Note.select(Note.timestamp).order_by(Note.timestamp)
+all_timestamps = list(query.scalars())
+
+# Can also be iterated directly:
+for ts in Note.select(Note.timestamp).scalars():
+    print(ts)
+count(clear_limit=False)
+Parameters:
+clear_limit (bool) – Clear any LIMIT clause when counting.
+Returns:
+Number of rows in the query result-set.
+Return number of rows in the query result-set.
+Implemented by running SELECT COUNT(1) FROM (<current query>).
+Example:
+n = Tweet.select().where(Tweet.is_published == True).count()
+print('%d published tweets' % n)
+exists()
+Returns:
+Whether any results exist for the current query.
+Return a boolean indicating whether the current query has any results.
+Example:
+if User.select().where(User.username == 'Alice').exists():
+    print('User found')
+dicts(as_dict=True)
+Parameters:
+as_dict (bool) – Specify whether to return rows as dictionaries.
+Return rows as dictionaries.
+Example:
+query = (User
+         .select(User.username, fn.COUNT(Tweet.id).alias('tweet_count'))
+         .join(Tweet, JOIN.LEFT_OUTER)
+         .group_by(User.username)
+         .dicts())
+
+for row in query:
+    print(row)  # {'username': 'Alice', 'tweet_count': 12}
+tuples(as_tuple=True)
+Parameters:
+as_tuple (bool) – Specify whether to return rows as tuples.
+Return rows as tuples.
+Example:
+query = (User
+         .select(User.username, fn.COUNT(Tweet.id).alias('tweet_count'))
+         .join(Tweet, JOIN.LEFT_OUTER)
+         .group_by(User.username)
+         .tuples())
+
+for row in query:
+    print(row)  # ('Alice', 12)
+namedtuples(as_namedtuple=True)
+Parameters:
+as_namedtuple (bool) – Specify whether to return rows as named tuples.
+Return rows as named tuples.
+Example:
+query = (User
+         .select(User.username, fn.COUNT(Tweet.id).alias('tweet_count'))
+         .join(Tweet, JOIN.LEFT_OUTER)
+         .group_by(User.username)
+         .namedtuples())
+
+for row in query:
+    print(row)  # Row(username='Alice', tweet_count=12)
+objects(constructor=None)
+Parameters:
+constructor – Constructor (defaults to returning model instances)
+Return result rows as objects created using the given constructor. The default behavior is to create model instances.
+This method can be used, when selecting field data from multiple sources/models, to make all data available as attributes on the model being queried (as opposed to constructing the graph of joined model instances). For very complex queries this can have a positive performance impact, especially iterating large result sets.
+Example:
+query = (Tweet
+         .select(Tweet.id, Tweet.content, User.username)
+         .join(User)
+         .objects())  # Apply all selections to Tweet instance.
+
+# NOTE: the username is applied directly to the tweet object
+# and accessed via `tweet.username`:
+for tweet in query:
+    print(tweet.id, tweet.content, tweet.username)
+Similarly, you can use dicts(), tuples() or namedtuples() to achieve even more performance.
+models()
+Return result rows as Model instances, rebuilding the model graph from explicitly selected and joined data. This is the default.
+query = (Tweet
+         .select(Tweet, User)
+         .join(User))
+
+# Note that `tweet.user` is populated already since we SELECTed
+# columns from the joined User model.
+for tweet in query:
+    print(tweet.user.username, '->', tweet.content)
+For an in-depth discussion of foreign-keys, joins and relationships between models, refer to Relationships and Joins.
+join(dest, join_type='INNER', on=None, src=None, attr=None)
+Parameters:
+• 
+dest – A Model, ModelAlias, Select query, or other object to join to.
+• 
+join_type (str) – Join type, defaults to INNER.
+• 
+on – Join predicate or a ForeignKeyField to join on.
+• 
+src – Explicitly specify the source of the join. If not specified then the current join context will be used.
+• 
+attr (str) – Attribute to use when projecting columns from the joined model.
+Join with another table-like object.
+Join type may be one of:
+• 
+JOIN.INNER
+• 
+JOIN.LEFT_OUTER
+• 
+JOIN.RIGHT_OUTER
+• 
+JOIN.FULL
+• 
+JOIN.FULL_OUTER
+• 
+JOIN.CROSS
+Example selecting tweets and joining on user in order to restrict to only those tweets made by “admin” users:
+sq = Tweet.select().join(User).where(User.is_admin == True)
+Example selecting users and joining on a particular foreign key field. See the example app for a real-life usage:
+sq = User.select().join(Relationship, on=Relationship.to_user)
+For an in-depth discussion of foreign-keys, joins and relationships between models, refer to Relationships and Joins.
+join_from(src, dest, join_type='INNER', on=None, attr=None)
+Parameters:
+• 
+src – Source for join.
+• 
+dest – Table to join to.
+Use same parameter order as the non-model-specific join(). Bypasses the join context by requiring the join source to be specified.
+switch(ctx=None)
+Parameters:
+ctx – A Model, ModelAlias, subquery, or other object that was joined-on.
+Switch the join context - the source which subsequent calls to join() will be joined against. Used for specifying multiple joins against a single table.
+See Relationships and Joins for additional discussion.
+If the ctx is not given, then the query’s model will be used.
+The following example selects from tweet and joins on both user and tweet-flag:
+sq = Tweet.select().join(User).switch(Tweet).join(TweetFlag)
+
+# Equivalent (since Tweet is the query's model)
+sq = Tweet.select().join(User).switch().join(TweetFlag)
+filter(*args, **kwargs)
+Parameters:
+• 
+args – Zero or more DQ objects.
+• 
+kwargs – Django-style keyword-argument filters.
+Use Django-style filters to express a WHERE clause. Joins can be followed by chaining foreign-key fields. The supported operations are:
+• 
+eq - equals
+• 
+ne - not equals
+• 
+lt, lte - less-than, less-than or equal-to
+• 
+gt, gte - greater-than, greater-than or equal-to
+• 
+in - IN set of values
+• 
+is - IS (e.g. IS NULL).
+• 
+like, ilike - LIKE and ILIKE (case-insensitive)
+• 
+regexp - regular expression match
+Examples:
+# Get all tweets by user with username="peewee".
+q = Tweet.filter(user__username='peewee')
+
+# Get all posts that are draft or published, and written after 2023.
+q = Post.filter(
+    (DQ(status='draft') | DQ(status='published')),
+    timestamp__gte=datetime.date(2023, 1, 1))
+prefetch(*subqueries, prefetch_type=PREFETCH_TYPE.WHERE)
+Parameters:
+• 
+subqueries – A list of Model classes or select queries to prefetch. Each element may also be a (query, target_model) tuple: the target_model names which previously-listed model should be joined through when more than one candidate exists.
+• 
+prefetch_type – Query type to use for the subqueries.
+Returns:
+a list of models with selected relations prefetched.
+Execute the query, prefetching the given additional resources.
+Prefetch type may be one of:
+• 
+PREFETCH_TYPE.WHERE
+• 
+PREFETCH_TYPE.JOIN
+See also prefetch() standalone function.
+Example:
+# Fetch all Users and prefetch their associated tweets.
+query = User.select().prefetch(Tweet)
+for user in query:
+    print(user.username)
+    for tweet in user.tweets:
+        print('  *', tweet.content)
+Because prefetch must reconstruct a graph of models, it is necessary to be sure that the foreign-key/primary-key of any related models are selected, so that the related objects can be mapped correctly.
+Disambiguating multi-reference subqueries. If a subquery relates to more than one previously-fetched query (for example, a Favorite row that has foreign keys to both User and Tweet), use the (subquery, target_model) tuple form to pin the relationship:
+users = User.select()
+tweets = Tweet.select()
+favorites = Favorite.select()
+
+# Favorite will be attached to User (via Favorite.user), not to Tweet.
+query = prefetch(users, tweets, (favorites, User))
+class DoesNotExist
+Base exception class raised when a call to Model.get() (or other .get() method) fails to return a matching result. Model classes have a model-specific subclass as a top-level attribute:
+def get_user(email):
+    try:
+        return User.get(fn.LOWER(User.email) == email.lower())
+    except User.DoesNotExist:
+        return None
+class PeeweeException
+Base exception class for wrapped DB-API exceptions.
+class ImproperlyConfigured
+Exception raised for configuration issues like missing drivers.
+class DatabaseError
+class DataError
+class IntegrityError
+class InterfaceError
+class InternalError
+class NotSupportedError
+class OperationalError
+class ProgrammingError
+Exception wrappers for DB-API errors raised by the driver. Allows users to catch the Peewee exception wrappers rather than the driver-specific types.
+Fields
+class Field(null=False, index=False, unique=False, column_name=None, default=None, primary_key=False, constraints=None, sequence=None, collation=None, unindexed=False, choices=None, help_text=None, verbose_name=None, index_type=None)
+Parameters:
+• 
+null (bool) – Field allows NULLs.
+• 
+index (bool) – Create an index on field.
+• 
+unique (bool) – Create a unique index on field.
+• 
+column_name (str) – Specify column name for field.
+• 
+default – Default value (enforced in Python, not on server).
+• 
+primary_key (bool) – Field is the primary key.
+• 
+constraints (list) – List of constraints to apply to column, for example: [Check('price > 0')].
+• 
+sequence (str) – Sequence name for field.
+• 
+collation (str) – Collation name for field.
+• 
+unindexed (bool) – Declare field UNINDEXED (sqlite only).
+• 
+choices (list) – An iterable of 2-tuples mapping column values to display labels. Used for metadata purposes only, to help when displaying a dropdown of choices for field values, for example.
+• 
+help_text (str) – Help-text for field, metadata purposes only.
+• 
+verbose_name (str) – Verbose name for field, metadata purposes only.
+• 
+index_type (str) – Specify index type (postgres only), e.g. ‘BRIN’.
+Fields on a Model are analogous to columns on a table.
+field_type = '<some field type>'
+Attribute used to map this field to a column type, e.g. “INT”. See the FIELD object in the source for more information.
+column
+Retrieve a reference to the underlying Column object.
+model
+The model the field is bound to.
+name
+The name of the field.
+db_value(value)
+Coerce a Python value into a value suitable for storage in the database. Sub-classes operating on special data-types will most likely want to override this method.
+Example:
+class PickleField(BlobField):
+    # Values going from Python -> Database should be pickled.
+    def db_value(self, value):
+        if value is not None:
+            return pickle.dumps(value, pickle.HIGHEST_PROTOCOL)
+
+    # Values coming from the Database -> Python should be unpickled.
+    def python_value(self, value):
+        if value is not None:
+            return pickle.loads(value)
+python_value(value)
+Coerce a value from the database into a Python object. Sub-classes operating on special data-types will most likely want to override this method.
+Example:
+class PickleField(BlobField):
+    # Values going from Python -> Database should be pickled.
+    def db_value(self, value):
+        if value is not None:
+            return pickle.dumps(value, pickle.HIGHEST_PROTOCOL)
+
+    # Values coming from the Database -> Python should be unpickled.
+    def python_value(self, value):
+        if value is not None:
+            return pickle.loads(value)
+coerce(value)
+This method is a shorthand that is used, by default, by both db_value() and python_value().
+Parameters:
+value – arbitrary data from app or backend
+Return type:
+python data type
+class IntegerField
+Field class for storing integers.
+class BigIntegerField
+Field class for storing big integers (if supported by database).
+class SmallIntegerField
+Field class for storing small integers (if supported by database).
+class AutoField
+Field class for storing auto-incrementing primary keys.
+In SQLite, for performance reasons, the default primary key type simply uses the max existing value + 1 for new values, as opposed to the max ever value + 1. This means deleted records can have their primary keys reused. In conjunction with SQLite having foreign keys disabled by default (meaning ON DELETE is ignored, even if you specify it explicitly), this can lead to surprising and dangerous behaviour. To avoid this, you may want to use one or both of AutoIncrementField and pragmas=[('foreign_keys', 'on')] when you instantiate SqliteDatabase.
+class BigAutoField
+Field class for storing auto-incrementing primary keys using 64-bits.
+class IdentityField(generate_always=False)
+Parameters:
+generate_always (bool) – if specified, then the identity will always be generated (and specifying the value explicitly during INSERT will raise a programming error). Otherwise, the identity value is only generated as-needed.
+Field class for storing auto-incrementing primary keys using the Postgresql IDENTITY column type. The column definition ends up looking like this:
+id = IdentityField()
+# "id" INT GENERATED BY DEFAULT AS IDENTITY NOT NULL PRIMARY KEY
+Attention:
+Requires Postgresql >= 10
+class FloatField
+Field class for storing floating-point numbers.
+class DoubleField
+Field class for storing double-precision floating-point numbers.
+class DecimalField(max_digits=10, decimal_places=5, auto_round=False, rounding=None, **kwargs)
+Parameters:
+• 
+max_digits (int) – Maximum digits to store.
+• 
+decimal_places (int) – Maximum precision.
+• 
+auto_round (bool) – Automatically round values.
+• 
+rounding –
+Defaults to decimal.DefaultContext.rounding.
+Field class for storing decimal numbers. Values are represented as decimal.Decimal objects.
+class CharField(max_length=255)
+Field class for storing strings.
+Values that exceed length are NOT truncated automatically.
+class FixedCharField
+Field class for storing fixed-length strings.
+Values that exceed length are not truncated automatically.
+class TextField
+Field class for storing text.
+class BlobField
+Field class for storing binary data.
+class BitField
+Field class for storing options in a 64-bit integer column.
+Usage:
+class Post(Model):
+    content = TextField()
+    flags = BitField()
+
+    is_favorite = flags.flag(1)
+    is_sticky = flags.flag(2)
+    is_minimized = flags.flag(4)
+    is_deleted = flags.flag(8)
+
+>>> p = Post()
+>>> p.is_sticky = True
+>>> p.is_minimized = True
+>>> print(p.flags)  # Prints 4 | 2 --> "6"
+6
+>>> p.is_favorite
+False
+>>> p.is_sticky
+True
+We can use the flags on the Post class to build expressions in queries as well:
+# Generates a WHERE clause that looks like:
+# WHERE (post.flags & 1 != 0)
+query = Post.select().where(Post.is_favorite)
+
+# Query for sticky + favorite posts:
+query = Post.select().where(Post.is_sticky & Post.is_favorite)
+When bulk-updating one or more bits in a BitField, you can use bitwise operators to set or clear one or more bits:
+# Set the 4th bit on all Post objects.
+Post.update(flags=Post.flags | 8).execute()
+
+# Clear the 1st and 3rd bits on all Post objects.
+Post.update(flags=Post.flags & ~(1 | 4)).execute()
+For simple operations, the flags provide handy set() and clear() methods for setting or clearing an individual bit:
+# Set the "is_deleted" bit on all posts.
+Post.update(flags=Post.is_deleted.set()).execute()
+
+# Clear the "is_deleted" bit on all posts.
+Post.update(flags=Post.is_deleted.clear()).execute()
+flag(value=None)
+Parameters:
+value (int) – Value associated with flag, typically a power of 2.
+Returns a descriptor that can get or set specific bits in the overall value. When accessed on the class itself, it returns a Expression object suitable for use in a query.
+If the value is not provided, it is assumed that each flag will be an increasing power of 2, so if you had four flags, they would have the values 1, 2, 4, 8.
+class BigBitField
+Field class for storing arbitrarily-large bitmaps in a BLOB. The field will grow the underlying buffer as necessary, ensuring there are enough bytes of data to support the number of bits of data being stored.
+Example usage:
+class Bitmap(Model):
+    data = BigBitField()
+
+bitmap = Bitmap()
+
+# Sets the ith bit, e.g. the 1st bit, the 11th bit, the 63rd, etc.
+bits_to_set = (1, 11, 63, 31, 55, 48, 100, 99)
+for bit_idx in bits_to_set:
+    bitmap.data.set_bit(bit_idx)
+
+# We can test whether a bit is set using "is_set":
+assert bitmap.data.is_set(11)
+assert not bitmap.data.is_set(12)
+
+# We can clear a bit:
+bitmap.data.clear_bit(11)
+assert not bitmap.data.is_set(11)
+
+# We can also "toggle" a bit. Recall that the 63rd bit was set earlier.
+assert bitmap.data.toggle_bit(63) is False
+assert bitmap.data.toggle_bit(63) is True
+assert bitmap.data.is_set(63)
+
+# BigBitField supports item accessor by bit-number, e.g.:
+assert bitmap.data[63]
+bitmap.data[0] = 1
+del bitmap.data[0]
+
+# We can also combine bitmaps using bitwise operators, e.g.
+b = Bitmap(data=b'\x01')
+b.data |= b'\x02'
+assert list(b.data) == [1, 1, 0, 0, 0, 0, 0, 0]
+assert len(b.data) == 1
+clear()
+Clears the bitmap and sets length to 0.
+set_bit(idx)
+Parameters:
+idx (int) – Bit to set, indexed starting from zero.
+Sets the idx-th bit in the bitmap.
+clear_bit(idx)
+Parameters:
+idx (int) – Bit to clear, indexed starting from zero.
+Clears the idx-th bit in the bitmap.
+toggle_bit(idx)
+Parameters:
+idx (int) – Bit to toggle, indexed starting from zero.
+Returns:
+Whether the bit is set or not.
+Toggles the idx-th bit in the bitmap and returns whether the bit is set or not.
+Example:
+>>> bitmap = Bitmap()
+>>> bitmap.data.toggle_bit(10)  # Toggle the 10th bit.
+True
+>>> bitmap.data.toggle_bit(10)  # This will clear the 10th bit.
+False
+is_set(idx)
+Parameters:
+idx (int) – Bit index, indexed starting from zero.
+Returns:
+Whether the bit is set or not.
+Returns boolean indicating whether the idx-th bit is set or not.
+__getitem__(idx)
+Same as is_set()
+__setitem__(idx, value)
+Set the bit at idx to value (True or False).
+__delitem__(idx)
+Same as clear_bit()
+__len__()
+Return the length of the bitmap in bytes.
+__iter__()
+Returns an iterator yielding 1 or 0 for each bit in the bitmap.
+__and__(other)
+Parameters:
+other – Either BigBitField, bytes, bytearray or memoryview object.
+Returns:
+bitwise and of two bitmaps.
+__or__(other)
+Parameters:
+other – Either BigBitField, bytes, bytearray or memoryview object.
+Returns:
+bitwise or of two bitmaps.
+__xor__(other)
+Parameters:
+other – Either BigBitField, bytes, bytearray or memoryview object.
+Returns:
+bitwise xor of two bitmaps.
+class UUIDField
+Field class for storing uuid.UUID objects. With Postgres, the underlying column’s data-type will be UUID. Since SQLite and MySQL do not have a native UUID type, the UUID is stored as a VARCHAR instead.
+class BinaryUUIDField
+Field class for storing uuid.UUID objects efficiently in 16-bytes. Uses the database’s BLOB data-type (or VARBINARY in MySQL, or BYTEA in Postgres).
+class DateTimeField(formats=None, **kwargs)
+Parameters:
+formats (list) – A list of format strings to use when coercing a string to a date-time.
+Field class for storing datetime.datetime objects.
+Accepts a special parameter formats, which contains a list of formats the datetime can be encoded with (for databases that do not have support for a native datetime data-type). The default supported formats are:
+'%Y-%m-%d %H:%M:%S.%f' # year-month-day hour-minute-second.microsecond
+'%Y-%m-%d %H:%M:%S' # year-month-day hour-minute-second
+'%Y-%m-%d %H:%M:%S.%f%z' # ...with timezone offset
+'%Y-%m-%d %H:%M:%S%z' # ...with timezone offset
+'%Y-%m-%d' # year-month-day
+In addition, any string accepted by datetime.datetime.fromisoformat() is parsed automatically, including the T separator and a trailing Z (UTC). Custom formats are still consulted as a fallback for non-ISO inputs (e.g. '01/02/2003 01:37 PM').
+SQLite does not have a native datetime data-type, so datetimes are stored as strings. This is handled transparently by Peewee, but if you have pre-existing data you should ensure it is stored as YYYY-mm-dd HH:MM:SS or one of the other supported formats.
+year
+Reference the year of the value stored in the column in a query.
+Blog.select().where(Blog.pub_date.year == 2018)
+month
+Reference the month of the value stored in the column in a query.
+day
+Reference the day of the value stored in the column in a query.
+hour
+Reference the hour of the value stored in the column in a query.
+minute
+Reference the minute of the value stored in the column in a query.
+second
+Reference the second of the value stored in the column in a query.
+to_timestamp()
+Method that returns a database-specific function call that will allow you to work with the given date-time value as a numeric timestamp. This can sometimes simplify tasks like date math in a compatible way.
+Example:
+# Find all events that are exactly 1 hour long.
+query = (Event
+         .select()
+         .where((Event.start.to_timestamp() + 3600) ==
+                Event.stop.to_timestamp())
+         .order_by(Event.start))
+truncate(date_part)
+Parameters:
+date_part (str) – year, month, day, hour, minute or second.
+Returns:
+expression node to truncate date/time to given resolution.
+Truncates the value in the column to the given part. This method is useful for finding all rows within a given month, for instance.
+class DateField(formats=None, **kwargs)
+Parameters:
+formats (list) – A list of format strings to use when coercing a string to a date.
+Field class for storing datetime.date objects.
+Accepts a special parameter formats, which contains a list of formats the datetime can be encoded with (for databases that do not have support for a native date data-type). The default supported formats are:
+'%Y-%m-%d' # year-month-day
+'%Y-%m-%d %H:%M:%S' # year-month-day hour-minute-second
+'%Y-%m-%d %H:%M:%S.%f' # year-month-day hour-minute-second.microsecond
+In addition, any string accepted by datetime.datetime.fromisoformat() is parsed automatically.
+Note:
+If the incoming value does not match a format, it is returned as-is.
+year
+Reference the year of the value stored in the column in a query.
+Person.select().where(Person.dob.year == 1983)
+month
+Reference the month of the value stored in the column in a query.
+day
+Reference the day of the value stored in the column in a query.
+to_timestamp()
+See DateTimeField.to_timestamp().
+truncate(date_part)
+See DateTimeField.truncate(). Note that only year, month, and day are meaningful for DateField.
+class TimeField(formats=None, **kwargs)
+Parameters:
+formats (list) – A list of format strings to use when coercing a string to a time.
+Field class for storing datetime.time objects (not timedelta).
+Accepts a special parameter formats, which contains a list of formats the datetime can be encoded with (for databases that do not have support for a native time data-type). The default supported formats are:
+'%H:%M:%S.%f' # hour:minute:second.microsecond
+'%H:%M:%S' # hour:minute:second
+'%H:%M' # hour:minute
+'%Y-%m-%d %H:%M:%S.%f' # year-month-day hour-minute-second.microsecond
+'%Y-%m-%d %H:%M:%S' # year-month-day hour-minute-second
+Note:
+If the incoming value does not match a format, it is returned as-is.
+hour
+Reference the hour of the value stored in the column in a query.
+evening_events = Event.select().where(Event.time.hour > 17)
+minute
+Reference the minute of the value stored in the column in a query.
+second
+Reference the second of the value stored in the column in a query.
+class TimestampField(resolution=1, utc=False, **kwargs)
+Parameters:
+• 
+resolution – Can be provided as either a power of 10, or as an exponent indicating how many decimal places to store.
+• 
+utc (bool) – Treat timestamps as UTC.
+Field class for storing date-times as integer timestamps. Sub-second resolution is supported by multiplying by a power of 10 to get an integer.
+If the resolution parameter is 0 or 1, then the timestamp is stored using second resolution. A resolution between 2 and 6 is treated as the number of decimal places, e.g. resolution=3 corresponds to milliseconds. Alternatively, the decimal can be provided as a multiple of 10, such that resolution=10 will store 1/10th of a second resolution.
+The resolution parameter can be either 0-6 or 10, 100, etc up to 1000000 (for microsecond resolution). This allows sub-second precision while still using an IntegerField for storage. The default is second resolution.
+Also accepts a boolean parameter utc, used to indicate whether the timestamps should be UTC. Default is False.
+Finally, the field default is the current timestamp. If you do not want this behavior, then explicitly pass in default=None.
+class IPField
+Field class for storing IPv4 addresses efficiently (as integers).
+class BooleanField
+Field class for storing boolean values.
+class JSONField(dumps=None, loads=None, **kwargs)
+Parameters:
+• 
+dumps – Custom JSON serializer. Defaults to json.dumps.
+• 
+loads – Custom JSON deserializer. Defaults to json.loads. Silently ignored on Postgresql, where the driver (psycopg2 / psycopg3) deserializes JSON values before peewee sees them.
+Stores Python dict, list, scalar (str/int/float/bool), or None values as JSON. The column type used by CREATE TABLE is chosen per backend:
+• 
+SQLite: TEXT (avoids SQLite’s NUMERIC affinity coercing numeric-looking JSON to integers).
+• 
+Postgresql: JSONB.
+• 
+MySQL / MariaDB: JSON.
+Note:
+On SQLite, the field requires SQLite 3.38+ (for the -> / ->> operators). Use playhouse.sqlite_ext.JSONField on older SQLite installs.
+For Postgresql, to specify a GIN or GIST index use index_type:
+# Postgres only.
+data = JSONField(index=True, index_type='GIN')  # or GIST.
+__getitem__(key)
+Parameters:
+key – a dict key (str) or array index (int).
+Return type:
+JSONPath
+Return a JSONPath rooted at the given key. Chains:
+Doc.data['profile']['social']['fb']
+Doc.data['tags'][0]
+Doc.data['tags'][-1]  # negative indices supported on SQLite + Postgresql
+path(*keys)
+Return type:
+JSONPath
+Equivalent to chained __getitem__():
+Doc.data.path('profile', 'social', 'fb')
+# Same as Doc.data['profile']['social']['fb']
+__eq__(rhs)
+__ne__(rhs)
+Equality on the full document. The right-hand side is serialized through dumps and compared structurally on Postgresql (jsonb = jsonb) and MySQL (native JSON comparison). On SQLite and MariaDB the comparison is a byte-compare of the stored JSON text (SQLite canonicalizes both sides via json()).
+Doc.select().where(Doc.data == {'k': 'v'})  # structural where supported
+Doc.select().where(Doc.data == None)        # column IS NULL
+Note:
+On SQLite and MariaDB, the full-document equality is a byte comparison of the JSON text. Two dictionaries with the same contents but different insertion order may not match. If you need order-insensitive document equality on those backends, pass dumps=functools.partial(json.dumps, sort_keys=True) so both sides are canonicalized. On Postgresql and MySQL the comparison is structural and key order does not matter.
+length()
+Return the array length of the root document. See JSONPath.length() for the per-backend behavior on non-arrays.
+append(value)
+Return an UPDATE-clause expression that appends value to the root array. See JSONPath.append() for the per-backend SQL and notes.
+Doc.update(data=Doc.data.append('new')).execute()
+update(value)
+Return an UPDATE-clause expression that merges value into the root document. The semantics intentionally diverge by backend - see the “update divergence” note below.
+Doc.update(data=Doc.data.update({'new_field': 1})).execute()
+contains(value)
+contained_by(value)
+has_key(key)
+has_keys(key_list)
+has_any_keys(key_list)
+JSON structural containment and key-existence predicates. Postgresql uses @> / <@ / ? / ?& / ?|; MySQL / MariaDB use JSON_CONTAINS / JSON_CONTAINS_PATH. Not supported on SQLite - calling any of these on a SQLite-backed model raises peewee.NotSupportedError.
+Doc.select().where(Doc.data.contains({'env': 'prod'}))
+Doc.select().where(Doc.data.has_key('email'))
+Doc.select().where(Doc.data.has_keys(['env', 'region']))
+Warning:
+update() has intentionally divergent semantics across backends:
+• 
+SQLite, MySQL, MariaDB - RFC-7396 deep merge via json_patch / JSON_MERGE_PATCH. Nested objects are merged recursively; null values delete the key.
+• 
+Postgresql - shallow concat via the || operator. Top-level keys are overwritten; nested objects are replaced wholesale; null is stored as JSON null and does not delete the key.
+Example:
+Doc.create(data={'k': 'v', 'nested': {'a': 1, 'b': 2}})
+Doc.update(data=Doc.data.update({'k': None,
+                                 'nested': {'b': 99}})).execute()
+
+# SQLite / MySQL / MariaDB:
+#   {'nested': {'a': 1, 'b': 99}}      ('k' deleted; nested merged)
+# Postgresql:
+#   {'k': None, 'nested': {'b': 99}}   ('k' kept as null; nested overwritten)
+class JSONPath
+Returned by JSONField.__getitem__() and JSONField.path(). Represents an extraction at a path within the JSON document. SQL emission uses -> on SQLite, #> on Postgresql, or JSON_EXTRACT on MySQL by default. Text-mode uses ->> / #>> / JSON_UNQUOTE(JSON_EXTRACT(...)).
+__getitem__(key)
+Extend the path with another key:
+Doc.data['profile']['social']     # path = ('profile', 'social')
+Doc.data['tags'][0]               # path = ('tags', 0)
+path(*keys)
+Variadic equivalent of chained __getitem__():
+Doc.data.path('profile', 'social', 'fb')
+as_text(as_text=True)
+Return type:
+JSONPath
+Return the path value in text mode. SQL emission switches to the text-extract operator (->> on SQLite, #>> on Postgresql, JSON_UNQUOTE(JSON_EXTRACT(...)) on MySQL). In text mode, the returned value is a raw scalar (no JSON quoting) and equality is byte-text compare.
+Doc.data['name'].as_text() == 'huey'
+Doc.data['name'].as_text().ilike('h%')
+Pattern-matching operators (like(), ilike(), startswith(), endswith(), regexp(), iregexp()) automatically apply as_text() so calling them on a path does the right thing without needing .as_text() explicitly. contains() is not among them - on a path it performs JSON structural containment; for a substring test use .as_text().contains(...).
+as_int()
+Return type:
+peewee.Cast
+Return the path’s text extract cast to the backend’s integer type. Use for numeric comparisons:
+Doc.select().where(Doc.data['count'].as_int() > 10)
+Doc.select().order_by(Doc.data['count'].as_int())
+as_float()
+Return type:
+peewee.Cast
+Return the path’s text extract cast to the backend’s floating-point type.
+Doc.select().where(Doc.data['rating'].as_float() > 4.5)
+__eq__(rhs)
+__ne__(rhs)
+Equality on the path. In default (JSON) mode the right-hand side is canonicalized to match the extract (fn.json(...) on SQLite, the psycopg Jsonb adapter on Postgresql, JSON_COMPACT on MariaDB, CAST(... AS JSON) on MySQL) so the comparison works across backends:
+Doc.select().where(Doc.data['name'] == 'huey')
+Doc.select().where(Doc.data['count'] == 42)
+Doc.select().where(Doc.data['profile'] == {'fb': 'huey.cat'})
+In .as_text() mode the right-hand side is compared as plain text.
+Comparison against None is special, see is_null().
+is_null(is_null=True)
+Path-level “is empty” check. Matches rows where the extracted value is effectively absent, covering three distinct storage states:
+• 
+Underlying column is SQL NULL.
+• 
+The key is missing from the JSON document.
+• 
+The key is present but the stored value is JSON null.
+All three return Python None when extracted, and is_null() matches them uniformly. is_null(False) matches rows where the path resolves to a non-null Python value.
+# Rows where data['profile'] is missing, null, or column is NULL.
+Doc.select().where(Doc.data['profile'].is_null())
+
+# Rows where data['profile'] has a non-null value.
+Doc.select().where(Doc.data['profile'].is_null(False))
+path == None and path != None are equivalent to is_null() and is_null(False) respectively.
+Note:
+On MySQL and MariaDB, extracting a stored JSON null yields the string 'null' rather than SQL NULL, so is_null() does not match stored JSON nulls there. Missing keys and column SQL NULL are matched as documented.
+in_(rhs)
+not_in(rhs)
+Membership test. In default mode each right-hand-side element is canonicalized through the field’s value wrapper. In .as_text() mode elements are compared as plain text.
+Doc.select().where(Doc.data['name'].in_(['huey', 'mickey']))
+__lt__()
+__le__()
+__gt__()
+__ge__()
+between(lo, hi)
+Ordering and range comparisons. The right-hand side is canonicalized the same way as for equality. Per-backend behavior:
+• 
+Postgresql - structural jsonb ordering (type class then value).
+• 
+MySQL - JSON-typed comparison rules.
+• 
+SQLite and MariaDB - text comparison of the json-encoded value; '10' > '2' is lexicographic, which is rarely what you want.
+For portable strict-numeric ordering, use as_int() or as_float() first:
+# Backend-native ordering (lexicographic on SQLite!)
+Doc.select().where(Doc.data['count'] > 10)
+
+# Strict numeric ordering on every backend.
+Doc.select().where(Doc.data['count'].as_int() > 10)
+like(rhs)
+ilike(rhs)
+regexp(rhs)
+iregexp(rhs)
+Pattern-matching operators. Each automatically applies as_text() to the path before comparing.
+Doc.select().where(Doc.data['name'].ilike('h%'))
+Doc.select().where(Doc.data['name'].regexp(r'^h'))
+startswith(rhs)
+endswith(rhs)
+Substring shortcuts that wrap the right-hand side in % wildcards. Like like(), they auto-route through as_text():
+Doc.select().where(Doc.data['name'].startswith('h'))
+contains(rhs)
+JSON structural containment - @> on Postgresql, JSON_CONTAINS on MySQL / MariaDB. Raises NotImplementedError on SQLite.
+# JSON structural containment (sub-array membership).
+Doc.select().where(Doc.data['tags'].contains(['python']))
+
+# For a text substring test, drop to text mode instead:
+Doc.select().where(Doc.data['name'].as_text().contains('uey'))
+set(value)
+Return an UPDATE-clause expression that writes value at this path. Uses json_set / jsonb_set / JSON_SET per backend. Existing values are replaced; value=None writes JSON null (not SQL NULL):
+Doc.update(data=Doc.data['count'].set(99)).execute()
+Doc.update(data=Doc.data['profile'].set({'env': 'prod'})).execute()
+Note:
+Behavior when intermediate keys are missing diverges: data['a']['b'].set(1) on data={} creates the full chain on SQLite ({"a": {"b": 1}}), but is a silent no-op on Postgresql and MySQL / MariaDB, which only create the leaf when its parent already exists.
+insert(value)
+Return an UPDATE-clause expression that writes value at this path only if the path is currently absent. A stored JSON null counts as “present” and is not overwritten. Uses json_insert on SQLite and JSON_INSERT on MySQL / MariaDB; emulated on Postgresql via CASE WHEN (field #> '{k}') IS NULL THEN jsonb_set(...) ELSE field END (correct because #> returns SQL NULL for absent keys and jsonb 'null' for stored JSON nulls).
+# Initialize a counter only on rows that don't have one yet.
+Doc.update(data=Doc.data['count'].insert(0)).execute()
+replace(value)
+Return an UPDATE-clause expression that writes value at this path only if the path already exists. Uses json_replace on SQLite, jsonb_set(..., create_missing=false) on Postgresql, and JSON_REPLACE on MySQL / MariaDB.
+# Update existing counters; leave rows without one untouched.
+Doc.update(data=Doc.data['count'].replace(99)).execute()
+append(value)
+Return an UPDATE-clause expression that appends value to the array at this path. Uses json_set(field, '$.path[#]', value) on SQLite, jsonb_insert with a trailing '-1' path element on Postgresql, and JSON_ARRAY_APPEND on MySQL / MariaDB.
+Doc.update(data=Doc.data['tags'].append('python')).execute()
+Note:
+Behavior when the path holds a non-array value diverges across backends:
+• 
+SQLite - silently leaves the document unchanged.
+• 
+MySQL / MariaDB - wraps the existing value into an array before appending: {"a": 1} becomes {"a": [1, "x"]}.
+• 
+Postgresql - silently leaves scalars unchanged, but appending to an object inserts a literal "-1" key: {"a": {"b": 1}} becomes {"a": {"b": 1, "-1": "x"}}.
+Use only on values you know are arrays.
+remove()
+Return an UPDATE-clause expression that removes the value at this path. Uses json_remove / #- / JSON_REMOVE per backend.
+Doc.update(data=Doc.data['stale_key'].remove()).execute()
+length()
+Return the array length at this path. On non-array values the result diverges by backend:
+• 
+SQLite - returns 0 for non-arrays.
+• 
+Postgresql - raises cannot get array length of a non-array.
+• 
+MySQL / MariaDB - returns object key count for objects, 1 for scalars.
+Use only on values you know are arrays, or be prepared for the backend-specific semantics.
+Doc.select(Doc.data['tags'].length().alias('n_tags'))
+contained_by(value)
+Inverse of contains() - test whether the value at this path is a subset of value. Postgresql <@, MySQL / MariaDB JSON_CONTAINS(value, lhs). Not supported on SQLite.
+Doc.select().where(Doc.data['tags'].contained_by(
+    ['python', 'orm', 'sql']))
+has_key(key)
+has_keys(key_list)
+has_any_keys(key_list)
+Test whether the value at this path is an object containing the given key(s). Postgresql uses the ? / ?& / ?| operators; MySQL / MariaDB use JSON_CONTAINS_PATH. Not supported on SQLite.
+Doc.select().where(Doc.data.has_key('email'))
+Doc.select().where(Doc.data['profile'].has_keys(['env', 'region']))
+Doc.select().where(Doc.data.has_any_keys(['admin', 'staff']))
+class BareField(coerce=None, **kwargs)
+Parameters:
+coerce – Optional function to use for converting raw values into a specific format.
+Field class that does not specify a data-type (SQLite-only).
+Since data-types are not enforced, you can declare fields without any data-type. It is also common for SQLite virtual tables to use meta-columns or untyped columns, so for those cases as well you may wish to use an untyped field.
+Accepts a special coerce parameter, a function that takes a value coming from the database and converts it into the appropriate Python type.
+class ForeignKeyField(model, field=None, backref=None, on_delete=None, on_update=None, deferrable=None, object_id_name=None, lazy_load=True, constraint_name=None, **kwargs)
+Parameters:
+• 
+model (Model) – Model to reference or the string ‘self’ if declaring a self-referential foreign key.
+• 
+field (Field) – Field to reference on model (default is primary key).
+• 
+backref (str) – Accessor name for back-reference, or “+” to disable the back-reference accessor.
+• 
+on_delete (str) – ON DELETE action, e.g. 'CASCADE'..
+• 
+on_update (str) – ON UPDATE action.
+• 
+deferrable (str) – Control when constraint is enforced, e.g. 'INITIALLY DEFERRED'.
+• 
+object_id_name (str) – Name for object-id accessor.
+• 
+lazy_load (bool) – Fetch the related object when the foreign-key field attribute is accessed (if it was not already loaded). If this is disabled, accessing the foreign-key field will return the value stored in the foreign-key column.
+• 
+constraint_name (str) – (optional) name to use for foreign-key constraint.
+Field class for storing a foreign key.
+class User(Model):
+    name = TextField()
+
+class Tweet(Model):
+    user = ForeignKeyField(User, backref='tweets')
+    content = TextField()
+
+# "user" attribute
+>>> some_tweet.user
+<User: charlie>
+
+# "tweets" backref attribute
+>>> for tweet in charlie.tweets:
+...     print(tweet.content)
+Some tweet
+Another tweet
+Yet another tweet
+For an in-depth discussion of foreign-keys, joins and relationships between models, refer to Relationships and Joins.
+Foreign keys do not have a particular field_type as they will take their field type depending on the type of primary key on the model they are related to.
+If you manually specify a field, that field must be either a primary key or have a unique constraint.
+Note:
+Take care with foreign keys in SQLite. By default, ON DELETE has no effect, which can have surprising (and usually unwanted) effects on your database integrity. This can affect you even if you don’t specify on_delete, since the default ON DELETE behaviour (to fail without modifying your data) does not happen, and your data can be silently relinked. The safest thing to do is to specify pragmas={'foreign_keys': 1} when you instantiate SqliteDatabase.
+class DeferredForeignKey(rel_model_name, **kwargs)
+Parameters:
+rel_model_name (str) – Model name to reference.
+Field class for representing a deferred foreign key. Useful for circular foreign-key references, for example:
+class Husband(Model):
+    name = TextField()
+    wife = DeferredForeignKey('Wife', deferrable='INITIALLY DEFERRED')
+
+class Wife(Model):
+    name = TextField()
+    husband = ForeignKeyField(Husband, deferrable='INITIALLY DEFERRED')
+In the above example, when the Wife model is declared, the foreign-key Husband.wife is automatically resolved and turned into a regular ForeignKeyField.
+DeferredForeignKey references are resolved when model classes are declared and created. This means that if you declare a DeferredForeignKey to a model class that has already been imported and created, the deferred foreign key instance will never be resolved. For example:
+class User(Model):
+    username = TextField()
+
+class Tweet(Model):
+    # This will never actually be resolved, because the User
+    # model has already been declared.
+    user = DeferredForeignKey('user', backref='tweets')
+    content = TextField()
+In cases like these you should use the regular ForeignKeyField or you can manually resolve deferred foreign keys like so:
+# Tweet.user will be resolved into a ForeignKeyField:
+DeferredForeignKey.resolve(User)
+class ManyToManyField(model, backref=None, through_model=None, on_delete=None, on_update=None, prevent_unsaved=True)
+Parameters:
+• 
+model (Model) – Model to create relationship with.
+• 
+backref (str) – Accessor name for back-reference
+• 
+through_model (Model) – Model to use for the intermediary table. If not provided, a simple through table will be automatically created.
+• 
+on_delete (str) – ON DELETE action, e.g. 'CASCADE'. Will be used for foreign-keys in through model.
+• 
+on_update (str) – ON UPDATE action. Will be used for foreign-keys in through model.
+• 
+prevent_unsaved (bool) – Raise ValueError if accessing relation from an unsaved model instance (default True).
+The ManyToManyField provides a simple interface for working with many-to-many relationships, inspired by Django. A many-to-many relationship is typically implemented by creating a junction table with foreign keys to the two models being related. For instance, if you were building a syllabus manager for college students, the relationship between students and courses would be many-to-many. Here is the schema using standard APIs:
+Attention:
+This is not a field in the sense that there is no column associated with it. Rather, it provides a convenient interface for accessing rows of data related via a through model.
+Standard way of declaring a many-to-many relationship (without the use of the ManyToManyField):
+class Student(Model):
+    name = CharField()
+
+class Course(Model):
+    name = CharField()
+
+class StudentCourse(Model):
+    student = ForeignKeyField(Student)
+    course = ForeignKeyField(Course)
+To query the courses for a particular student, you would join through the junction table:
+# List the courses that "Huey" is enrolled in:
+courses = (Course
+           .select()
+           .join(StudentCourse)
+           .join(Student)
+           .where(Student.name == 'Huey'))
+for course in courses:
+    print(course.name)
+The ManyToManyField is designed to simplify this use-case by providing a field-like API for querying and modifying data in the junction table. Here is how our code looks using ManyToManyField:
+class Student(Model):
+    name = CharField()
+
+class Course(Model):
+    name = CharField()
+    students = ManyToManyField(Student, backref='courses')
+It does not matter from Peewee’s perspective which model the ManyToManyField goes on, since the back-reference is just the mirror image. In order to write valid Python, though, you will need to add the ManyToManyField on the second model so that the name of the first model is in the scope.
+We still need a junction table to store the relationships between students and courses. This model can be accessed by calling the get_through_model() method. This is useful when creating tables.
+# Create tables for the students, courses, and relationships between
+# the two.
+db.create_tables([
+    Student,
+    Course,
+    Course.students.get_through_model()])
+When accessed from a model instance, the ManyToManyField exposes a ModelSelect representing the set of related objects. Let’s use the interactive shell to see how all this works:
+>>> huey = Student.get(Student.name == 'huey')
+>>> [course.name for course in huey.courses]
+['English 101', 'CS 101']
+
+>>> engl_101 = Course.get(Course.name == 'English 101')
+>>> [student.name for student in engl_101.students]
+['Huey', 'Mickey', 'Zaizee']
+To add new relationships between objects, you can either assign the objects directly to the ManyToManyField attribute, or call the add() method. The difference between the two is that simply assigning will clear out any existing relationships, whereas add() can preserve existing relationships.
+>>> huey.courses = Course.select().where(Course.name.contains('english'))
+>>> for course in huey.courses.order_by(Course.name):
+...     print(course.name)
+English 101
+English 151
+English 201
+English 221
+
+>>> cs_101 = Course.get(Course.name == 'CS 101')
+>>> cs_151 = Course.get(Course.name == 'CS 151')
+>>> huey.courses.add([cs_101, cs_151])
+>>> [course.name for course in huey.courses.order_by(Course.name)]
+['CS 101', 'CS151', 'English 101', 'English 151', 'English 201',
+ 'English 221']
+This is quite a few courses, so let’s remove the 200-level english courses. To remove objects, use the remove() method.
+>>> huey.courses.remove(Course.select().where(Course.name.contains('2'))
+2
+>>> [course.name for course in huey.courses.order_by(Course.name)]
+['CS 101', 'CS151', 'English 101', 'English 151']
+To remove all relationships from a collection, you can use the clear() method. Let’s say that English 101 is canceled, so we need to remove all the students from it:
+>>> engl_101 = Course.get(Course.name == 'English 101')
+>>> engl_101.students.clear()
+For an overview of implementing many-to-many relationships using standard Peewee APIs, check out the Many-to-Many Relationships section. For all but the most simple cases, you will be better off implementing many-to-many using the standard APIs.
+through_model
+The Model representing the many-to-many junction table. Will be auto-generated if not explicitly declared.
+add(value, clear_existing=False)
+Parameters:
+• 
+value – Either a Model instance, a list of model instances, or a SelectQuery.
+• 
+clear_existing (bool) – Whether to remove existing relationships.
+Associate value with the current instance. You can pass in a single model instance, a list of model instances, or even a ModelSelect.
+Example code:
+# Huey needs to enroll in a bunch of courses, including all
+# the English classes, and a couple Comp-Sci classes.
+huey = Student.get(Student.name == 'Huey')
+
+# We can add all the objects represented by a query.
+english_courses = Course.select().where(
+    Course.name.contains('english'))
+huey.courses.add(english_courses)
+
+# We can also add lists of individual objects.
+cs101 = Course.get(Course.name == 'CS 101')
+cs151 = Course.get(Course.name == 'CS 151')
+huey.courses.add([cs101, cs151])
+remove(value)
+Parameters:
+value – Either a Model instance, a list of model instances, or a ModelSelect.
+Disassociate value from the current instance. Like add(), you can pass in a model instance, a list of model instances, or even a ModelSelect.
+Example code:
+# Huey is currently enrolled in a lot of english classes
+# as well as some Comp-Sci. He is changing majors, so we
+# will remove all his courses.
+english_courses = Course.select().where(
+    Course.name.contains('english'))
+huey.courses.remove(english_courses)
+
+# Remove the two Comp-Sci classes Huey is enrolled in.
+cs101 = Course.get(Course.name == 'CS 101')
+cs151 = Course.get(Course.name == 'CS 151')
+huey.courses.remove([cs101, cs151])
+clear()
+Remove all associated objects.
+Example code:
+# English 101 is canceled this semester, so remove all
+# the enrollments.
+english_101 = Course.get(Course.name == 'English 101')
+english_101.students.clear()
+get_through_model()
+Return the Model representing the many-to-many junction table. This can be specified manually when the field is being instantiated using the through_model parameter. If a through_model is not specified, one will automatically be created.
+When creating tables for an application that uses ManyToManyField, you must explicitly create the through table.
+# Get a reference to the automatically-created through table.
+StudentCourseThrough = Course.students.get_through_model()
+
+# Create tables for our two models as well as the through model.
+db.create_tables([
+    Student,
+    Course,
+    StudentCourseThrough])
+class DeferredThroughModel
+Place-holder for a through-model in cases where, due to a dependency, you cannot declare either a model or a many-to-many field without introducing NameErrors.
+Example:
+class Note(BaseModel):
+    content = TextField()
+
+NoteThroughDeferred = DeferredThroughModel()
+
+class User(BaseModel):
+    username = TextField()
+    notes = ManyToManyField(Note, through_model=NoteThroughDeferred)
+
+# Cannot declare this before "User" since it has a foreign-key to
+# the User model.
+class NoteThrough(BaseModel):
+    note = ForeignKeyField(Note)
+    user = ForeignKeyField(User)
+
+# Resolve dependencies.
+NoteThroughDeferred.set_model(NoteThrough)
+class CompositeKey(*field_names)
+Parameters:
+field_names – Names of fields that comprise the primary key.
+A primary key composed of multiple columns. Unlike the other fields, a composite key is defined in the model’s Meta class after the fields have been defined. It takes as parameters the string names of the fields to use as the primary key:
+class BlogTagThrough(Model):
+    blog = ForeignKeyField(Blog, backref='tags')
+    tag = ForeignKeyField(Tag, backref='blogs')
+
+    class Meta:
+        primary_key = CompositeKey('blog', 'tag')
+See Composite primary keys for additional discussion.
+Schema Manager
+class SchemaManager(model, database=None, **context_options)
+Parameters:
+• 
+model (Model) – Model class.
+• 
+database (Database) – if None defaults to model._meta.database.
+Provides methods for managing the creation and deletion of tables and indexes for the given model.
+create_table(safe=True, **options)
+Parameters:
+• 
+safe (bool) – Specify IF NOT EXISTS clause.
+• 
+options – Arbitrary options.
+Execute CREATE TABLE query for the given model.
+drop_table(safe=True, drop_sequences=True, **options)
+Parameters:
+• 
+safe (bool) – Specify IF EXISTS clause.
+• 
+drop_sequences (bool) – Drop any sequences associated with the columns on the table (postgres only).
+• 
+options – Arbitrary options.
+Execute DROP TABLE query for the given model.
+truncate_table(restart_identity=False, cascade=False)
+Parameters:
+• 
+restart_identity (bool) – Restart the id sequence (postgres-only).
+• 
+cascade (bool) – Truncate related tables as well (postgres-only).
+Execute TRUNCATE TABLE for the given model. If the database is Sqlite, which does not support TRUNCATE, then an equivalent DELETE query will be executed.
+create_indexes(safe=True)
+Parameters:
+safe (bool) – Specify IF NOT EXISTS clause.
+Execute CREATE INDEX queries for the indexes defined for the model.
+drop_indexes(safe=True)
+Parameters:
+safe (bool) – Specify IF EXISTS clause.
+Execute DROP INDEX queries for the indexes defined for the model.
+drop_index(field=None, index=None, safe=True)
+Parameters:
+• 
+field (Field) – field index to drop (for single-column indexes).
+• 
+index (ModelIndex) – index to drop (for indexes other than single-column, e.g. multi-col, partial, etc).
+• 
+safe (bool) – Specify IF EXISTS clause.
+Execute DROP INDEX query for the index specified.
+create_sequence(field)
+Parameters:
+field (Field) – Field instance which specifies a sequence.
+Create sequence for the given Field.
+drop_sequence(field)
+Parameters:
+field (Field) – Field instance which specifies a sequence.
+Drop sequence for the given Field.
+create_foreign_key(field)
+Parameters:
+field (ForeignKeyField) – Foreign-key field constraint to add.
+Add a foreign-key constraint for the given field. This method should not be necessary in most cases, as foreign-key constraints are created as part of table creation. The exception is when you are creating a circular foreign-key relationship using DeferredForeignKey. In those cases, it is necessary to first create the tables, then add the constraint for the deferred foreign-key:
+class Language(Model):
+    name = TextField()
+    selected_snippet = DeferredForeignKey('Snippet')
+
+class Snippet(Model):
+    code = TextField()
+    language = ForeignKeyField(Language, backref='snippets')
+
+# Creates both tables but does not create the constraint for the
+# Language.selected_snippet foreign key (because of the circular
+# dependency).
+db.create_tables([Language, Snippet])
+
+# Explicitly create the constraint:
+Language._schema.create_foreign_key(Language.selected_snippet)
+For more information, see documentation on Circular foreign key dependencies.
+Because SQLite has limited support for altering existing tables, it is not possible to add a foreign-key constraint to an existing SQLite table.
+create_all(safe=True, **table_options)
+Parameters:
+safe (bool) – Whether to specify IF NOT EXISTS.
+Create sequence(s), index(es) and table for the model.
+drop_all(safe=True, drop_sequences=True, **options)
+Parameters:
+• 
+safe (bool) – Whether to specify IF EXISTS.
+• 
+drop_sequences (bool) – Drop any sequences associated with the columns on the table (postgres only).
+• 
+options – Arbitrary options.
+Drop table for the model and associated indexes.
+create_table_as(table_name, query, safe=True, **meta)
+Parameters:
+• 
+table_name (str) – Name of the new table.
+• 
+query (Select) – Query whose result set will populate the new table.
+• 
+safe (bool) – Specify IF NOT EXISTS clause.
+• 
+meta – Additional table options forwarded to the context.
+Execute CREATE TABLE ... AS SELECT ... for the given model. The new table’s schema and column names are derived from the SELECT query’s result set.
+create_sequences()
+Create every sequence referenced by a field on the model. On databases where Database.sequences is False this method is a no-op. Called implicitly by create_all().
+drop_sequences()
+Drop every sequence referenced by a field on the model. On databases where Database.sequences is False this method is a no-op. Called implicitly by drop_all().
+class Index(name, table, expressions, unique=False, safe=False, where=None, using=None, nulls_distinct=None)
+Parameters:
+• 
+name (str) – Index name.
+• 
+table (Table) – Table to create index on.
+• 
+expressions – List of columns to index on (or expressions).
+• 
+unique (bool) – Whether index is UNIQUE.
+• 
+safe (bool) – Whether to add IF NOT EXISTS clause.
+• 
+where (Expression) – Optional WHERE clause for index.
+• 
+using (str) – Index algorithm.
+• 
+nulls_distinct (bool) – Postgres-only - specify True (NULLS DISTINCT) or False (NULLS NOT DISTINCT) - controls handling of NULL in unique indexes.
+safe(_safe=True)
+Parameters:
+_safe (bool) – Whether to add IF NOT EXISTS clause.
+where(*expressions)
+Parameters:
+expressions – zero or more expressions to include in the WHERE clause.
+Include the given expressions in the WHERE clause of the index. The expressions will be AND-ed together with any previously-specified WHERE expressions.
+using(_using=None)
+Parameters:
+_using (str) – Specify index algorithm for USING clause.
+nulls_distinct(nulls_distinct=None)
+Parameters:
+nulls_distinct (bool) – specify True (NULLS DISTINCT) or False for (NULLS NOT DISTINCT).
+Requires Postgres 15 or newer.
+Control handling of NULL values in unique indexes.
+class ModelIndex(model, fields, unique=False, safe=True, where=None, using=None, name=None, nulls_distinct=None)
+Parameters:
+• 
+model (Model) – Model class to create index on.
+• 
+fields (list) – Fields to index.
+• 
+unique (bool) – Whether index is UNIQUE.
+• 
+safe (bool) – Whether to add IF NOT EXISTS clause.
+• 
+where (Expression) – Optional WHERE clause for index.
+• 
+using (str) – Index algorithm or type, e.g. ‘BRIN’, ‘GiST’ or ‘GIN’.
+• 
+name (str) – Optional index name.
+• 
+nulls_distinct (bool) – Postgres-only - specify True (NULLS DISTINCT) or False (NULLS NOT DISTINCT) - controls handling of NULL in unique indexes.
+Expressive method for declaring an index on a model.
+Examples:
+class Article(Model):
+    name = TextField()
+    timestamp = TimestampField()
+    status = IntegerField()
+    flags = BitField()
+
+    is_sticky = flags.flag(1)
+    is_favorite = flags.flag(2)
+
+# CREATE INDEX ... ON "article" ("name", "timestamp")
+idx = ModelIndex(Article, (Article.name, Article.timestamp))
+
+# CREATE INDEX ... ON "article" ("name", "timestamp") WHERE "status" = 1
+idx = idx.where(Article.status == 1)
+
+# CREATE UNIQUE INDEX ... ON "article" ("timestamp" DESC, "flags" & 2) WHERE "status" = 1
+idx = ModelIndex(
+    Article,
+    (Article.timestamp.desc(), Article.flags.bin_and(2)),
+    unique = True).where(Article.status == 1)
+You can also use Model.index():
+idx = Article.index(Article.name, Article.timestamp).where(Article.status == 1)
+To add an index to a model definition use Model.add_index():
+idx = Article.index(Article.name, Article.timestamp).where(Article.status == 1)
+
+# Add above index definition to the model definition. When you call
+# Article.create_table() (or database.create_tables([Article])), the
+# index will be created.
+Article.add_index(idx)
+Query-builder
+class Node
+Base-class for all components which make up the AST for a SQL query.
+static copy(method)
+Decorator to use with Node methods that mutate the node’s state. This allows method-chaining, e.g.:
+query = MyModel.select()
+new_query = query.where(MyModel.field == 'value')
+unwrap()
+API for recursively unwrapping “wrapped” nodes. Base case is to return self.
+is_alias()
+API for determining if a node, at any point, has been explicitly aliased by the user.
+class Source(alias=None)
+A source of row tuples, for example a table, join, or select query. By default provides a “magic” attribute named “c” that is a factory for column/attribute lookups, for example:
+User = Table('users')
+query = (User
+         .select(User.c.username)
+         .where(User.c.active == True)
+         .order_by(User.c.username))
+alias(name)
+Returns a copy of the object with the given alias applied.
+select(*columns)
+Parameters:
+columns – Column instances, expressions, functions, sub-queries, or anything else that you would like to select.
+Create a Select query on the table. If the table explicitly declares columns and no columns are provided, then by default all the table’s defined columns will be selected.
+join(dest, join_type='INNER', on=None)
+Parameters:
+• 
+dest (Source) – Join the table with the given destination.
+• 
+join_type (str) – Join type.
+• 
+on – Expression to use as join predicate.
+Returns:
+a Join instance.
+Join type may be one of:
+• 
+JOIN.INNER
+• 
+JOIN.LEFT_OUTER
+• 
+JOIN.RIGHT_OUTER
+• 
+JOIN.FULL
+• 
+JOIN.FULL_OUTER
+• 
+JOIN.CROSS
+left_outer_join(dest, on=None)
+Parameters:
+• 
+dest (Source) – Join the table with the given destination.
+• 
+on – Expression to use as join predicate.
+Returns:
+a Join instance.
+Convenience method for calling join() using a LEFT OUTER join.
+class BaseTable
+Base class for table-like objects, which support JOINs via operator overloading.
+__and__(dest)
+Perform an INNER join on dest.
+__add__(dest)
+Perform a LEFT OUTER join on dest.
+__sub__(dest)
+Perform a RIGHT OUTER join on dest.
+__or__(dest)
+Perform a FULL OUTER join on dest.
+__mul__(dest)
+Perform a CROSS join on dest.
+class Table(name, columns=None, primary_key=None, schema=None, alias=None)
+Represents a table in the database (or a table-like object such as a view).
+Parameters:
+• 
+name (str) – Database table name
+• 
+columns (tuple) – List of column names (optional).
+• 
+primary_key (str) – Name of primary key column.
+• 
+schema (str) – Schema name used to access table (if necessary).
+• 
+alias (str) – Alias to use for table in SQL queries.
+If columns are specified, the magic “c” attribute will be disabled.
+When columns are not explicitly defined, tables have a special attribute “c” which is a factory that provides access to table columns dynamically.
+Example:
+User = Table('users')
+query = (User
+         .select(User.c.id, User.c.username)
+         .order_by(User.c.username))
+Equivalent example when columns are specified:
+User = Table('users', ('id', 'username'))
+query = (User
+         .select(User.id, User.username)
+         .order_by(User.username))
+bind(database=None)
+Parameters:
+database – Database object.
+Bind this table to the given database (or unbind by leaving empty).
+When a table is bound to a database, queries may be executed against it without the need to specify the database in the query’s execute method.
+bind_ctx(database=None)
+Parameters:
+database – Database object.
+Return a context manager that will bind the table to the given database for the duration of the wrapped block.
+select(*columns)
+Parameters:
+columns – Column instances, expressions, functions, sub-queries, or anything else that you would like to select.
+Create a Select query on the table. If the table explicitly declares columns and no columns are provided, then by default all the table’s defined columns will be selected.
+Examples:
+User = Table('users', ('id', 'username'))
+
+# Because columns were defined on the Table, we will default to
+# selecting both of the User table's columns.
+# Evaluates to SELECT id, username FROM users
+query = User.select()
+
+Note = Table('notes')
+query = (Note
+         .select(Note.c.content, Note.c.timestamp, User.username)
+         .join(User, on=(Note.c.user_id == User.id))
+         .where(Note.c.is_published == True)
+         .order_by(Note.c.timestamp.desc()))
+
+# Using a function to select users and the number of notes they
+# have authored.
+query = (User
+         .select(
+            User.username,
+            fn.COUNT(Note.c.id).alias('n_notes'))
+         .join(
+            Note,
+            JOIN.LEFT_OUTER,
+            on=(User.id == Note.c.user_id))
+         .order_by(fn.COUNT(Note.c.id).desc()))
+insert(insert=None, columns=None, **kwargs)
+Parameters:
+• 
+insert – A dictionary mapping column to value, an iterable that yields dictionaries (i.e. list), or a Select query.
+• 
+columns (list) – The list of columns to insert into when the data being inserted is not a dictionary.
+• 
+kwargs – Mapping of column-name to value.
+Create a Insert query into the table.
+replace(insert=None, columns=None, **kwargs)
+Parameters:
+• 
+insert – A dictionary mapping column to value, an iterable that yields dictionaries (i.e. list), or a Select query.
+• 
+columns (list) – The list of columns to insert into when the data being inserted is not a dictionary.
+• 
+kwargs – Mapping of column-name to value.
+Create a Insert query into the table whose conflict resolution method is to replace.
+update(update=None, **kwargs)
+Parameters:
+• 
+update – A dictionary mapping column to value.
+• 
+kwargs – Mapping of column-name to value.
+Create a Update query for the table.
+delete()
+Create a Delete query for the table.
+class Join(lhs, rhs, join_type=JOIN.INNER, on=None, alias=None)
+Represent a JOIN between two table-like objects.
+Parameters:
+• 
+lhs – Left-hand side of the join.
+• 
+rhs – Right-hand side of the join.
+• 
+join_type – Type of join. e.g. JOIN.INNER, JOIN.LEFT_OUTER, etc.
+• 
+on – Expression describing the join predicate.
+• 
+alias (str) – Alias to apply to joined data.
+on(predicate)
+Parameters:
+predicate (Expression) – join predicate.
+Specify the predicate expression used for this join.
+class ValuesList(values, columns=None, alias=None)
+Represent a values list that can be used like a table.
+Parameters:
+• 
+values – a list-of-lists containing the row data to represent.
+• 
+columns (list) – the names to give to the columns in each row.
+• 
+alias (str) – alias to use for values-list.
+Example:
+data = [(1, 'first'), (2, 'second')]
+vl = ValuesList(data, columns=('idx', 'name'))
+
+query = (vl
+         .select(vl.c.idx, vl.c.name)
+         .order_by(vl.c.idx))
+# Yields:
+# SELECT t1.idx, t1.name
+# FROM (VALUES (1, 'first'), (2, 'second')) AS t1(idx, name)
+# ORDER BY t1.idx
+columns(*names)
+Parameters:
+names – names to apply to the columns of data.
+Example:
+vl = ValuesList([(1, 'first'), (2, 'second')])
+vl = vl.columns('idx', 'name').alias('v')
+
+query = vl.select(vl.c.idx, vl.c.name)
+# Yields:
+# SELECT v.idx, v.name
+# FROM (VALUES (1, 'first'), (2, 'second')) AS v(idx, name)
+class CTE(name, query, recursive=False, columns=None, materialized=None)
+Represent a common-table-expression. For example queries, see Common Table Expressions.
+Parameters:
+• 
+name – Name for the CTE.
+• 
+query – Select query describing CTE.
+• 
+recursive (bool) – Whether the CTE is recursive.
+• 
+columns (list) – Explicit list of columns produced by CTE (optional).
+• 
+materialized (bool) – Specify MATERIALIZED or NOT MATERIALIZED clause.
+select_from(*columns)
+Create a SELECT query that utilizes the given common table expression as the source for a new query.
+Parameters:
+columns – One or more columns to select from the CTE.
+Returns:
+Select query utilizing the common table expression
+union_all(other)
+Used on the base-case CTE to construct the recursive term of the CTE.
+Parameters:
+other – recursive term, generally a Select query.
+Returns:
+a recursive CTE with the given recursive term.
+class ColumnBase
+Base-class for column-like objects, attributes or expressions.
+Column-like objects can be composed using various operators and special methods.
+• 
+&: Logical AND
+• 
+|: Logical OR
+• 
++: Addition
+• 
+-: Subtraction
+• 
+*: Multiplication
+• 
+/: Division
+• 
+^: Exclusive-OR
+• 
+==: Equality
+• 
+!=: Inequality
+• 
+>: Greater-than
+• 
+<: Less-than
+• 
+>=: Greater-than or equal
+• 
+<=: Less-than or equal
+• 
+<<: IN
+• 
+>>: IS (i.e. IS NULL)
+• 
+%: LIKE
+• 
+**: ILIKE
+• 
+bin_and(): Binary AND
+• 
+bin_or(): Binary OR
+• 
+in_(): IN
+• 
+not_in(): NOT IN
+• 
+regexp(): REGEXP
+• 
+is_null(True/False): IS NULL or IS NOT NULL
+• 
+contains(s): LIKE %s%
+• 
+startswith(s): LIKE s%
+• 
+endswith(s): LIKE %s
+• 
+between(low, high): BETWEEN low AND high
+• 
+concat(): ||
+alias(alias)
+Parameters:
+alias (str) – Alias for the given column-like object.
+Returns:
+a Alias object.
+Indicate the alias that should be given to the specified column-like object.
+bind_to(dest)
+Parameters:
+dest – Model to bind this expression to when constructing the model-graph. Destination must be among the JOINed tables.
+Returns:
+a BindTo object encapsulating the binding.
+Bind the current column/expression to a specific model.
+Example:
+name = Case(User.username, [
+    ('u1', 'User One'),
+    ('u2', 'User Two')], 'Someone Else')
+query = (Tweet
+         .select(Tweet.content, name.alias('display').bind_to(User))
+         .join(User))
+for tweet in query:
+    print(tweet.content, tweet.user.display)
+cast(as_type)
+Parameters:
+as_type (str) – Type name to cast to.
+Returns:
+a Cast object.
+Create a CAST expression.
+Example:
+# Cast a text column to integer for comparison.
+query = (Entry
+         .select()
+         .where(Entry.legacy_code.cast('INTEGER') > 100))
+asc(collation=None, nulls=None)
+Parameters:
+• 
+collation (str) – Collation name to use for sorting.
+• 
+nulls (str) – Sort nulls (FIRST or LAST).
+Returns:
+an ascending Ordering object for the column.
+desc(collation=None, nulls=None)
+Parameters:
+• 
+collation (str) – Collation name to use for sorting.
+• 
+nulls (str) – Sort nulls (FIRST or LAST).
+Returns:
+an descending Ordering object for the column.
+__invert__()
+Returns:
+a Negated wrapper for the column.
+class Column(source, name)
+Parameters:
+• 
+source (Source) – Source for column.
+• 
+name (str) – Column name.
+Column on a table or a column returned by a sub-query.
+class Alias(node, alias)
+Parameters:
+• 
+node (Node) – a column-like object.
+• 
+alias (str) – alias to assign to column.
+Create a named alias for the given column-like object.
+alias(alias=None)
+Parameters:
+alias (str) – new name (or None) for aliased column.
+Create a new Alias for the aliased column-like object. If the new alias is None, then the original column-like object is returned.
+class BindTo(node, dest)
+Represent the binding of a given expression/value to a destination. Created by ColumnBase.bind_to().
+class Negated(node)
+Represents a negated column-like object.
+class Value(value, converter=None, unpack=True)
+Parameters:
+• 
+value – Python object or scalar value.
+• 
+converter – Function used to convert value into type the database understands.
+• 
+unpack (bool) – Whether lists or tuples should be unpacked into a list of values or treated as-is.
+Value to be used in a parameterized query. It is the responsibility of the caller to ensure that the value passed in can be adapted to a type the database driver understands.
+AsIs(value, converter=None)
+Represents a Value that is treated as-is, and passed directly back to the database driver. This may be useful if you are using database extensions that accept native Python data-types and you do not wish Peewee to impose any handling of the values.
+In the event a converter is in scope for this value, the converter will be applied unless converter=False (in which case no conversion is applied by Peewee and the value is passed directly to the driver). The Postgres JSON extensions make use of this to pass dict and list to the driver, which then handles the JSON serialization more efficiently, for example.
+class Cast(node, cast)
+Parameters:
+• 
+node – A column-like object.
+• 
+cast (str) – Type to cast to.
+Represents a CAST(<node> AS <cast>) expression.
+class Ordering(node, direction, collation=None, nulls=None)
+Parameters:
+• 
+node – A column-like object.
+• 
+direction (str) – ASC or DESC
+• 
+collation (str) – Collation name to use for sorting.
+• 
+nulls (str) – Sort nulls (FIRST or LAST).
+Represent ordering by a column-like object.
+Postgresql supports a non-standard clause (“NULLS FIRST/LAST”). Peewee will automatically use an equivalent CASE statement for databases that do not support this (Sqlite / MySQL).
+collate(collation=None)
+Parameters:
+collation (str) – Collation name to use for sorting.
+Asc(node, collation=None, nulls=None)
+Short-hand for instantiating an ascending Ordering object.
+Desc(node, collation=None, nulls=None)
+Short-hand for instantiating an descending Ordering object.
+class Expression(lhs, op, rhs, flat=False)
+Parameters:
+• 
+lhs – Left-hand side.
+• 
+op – Operation.
+• 
+rhs – Right-hand side.
+• 
+flat (bool) – Whether to wrap expression in parentheses.
+Represent a binary expression of the form (lhs op rhs), e.g. (foo + 1).
+class Entity(*path)
+Parameters:
+path – Components that make up the dotted-path of the entity name.
+Represent a quoted entity in a query, such as a table, column, alias. The name may consist of multiple components, e.g. “a_table”.”column_name”.
+__getattr__(self, attr)
+Factory method for creating sub-entities.
+class SQL(sql, params=None)
+Parameters:
+• 
+sql (str) – SQL query string.
+• 
+params (tuple) – Parameters for query (optional).
+Represent a parameterized SQL query or query-fragment.
+Check(constraint, name=None)
+Parameters:
+• 
+constraint (str) – Constraint SQL.
+• 
+name (str) – constraint name.
+Represent a CHECK constraint.
+MySQL may not support a name parameter when inlining the constraint along with the column definition. The solution is to just put the named Check constraint in the model’s Meta.constraints list instead of in the field instances constraints=[...] list.
+Default(value)
+Parameters:
+value – default value (literal).
+Represent a DEFAULT constraint. It is important to note that this constraint does not accept a parameterized value, so the value literal must be given. If a string value is intended, it must be quoted.
+Examples:
+# "added" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP.
+added = DateTimeField(constraints=[Default('CURRENT_TIMESTAMP')])
+
+# "label" TEXT NOT NULL DEFAULT 'string literal'
+label = TextField(constraints=[Default("'string literal'")])
+
+# "status" INTEGER NOT NULL DEFAULT 0
+status = IntegerField(constraints=[Default(0)])
+class Function(name, arguments, coerce=True, python_value=None)
+Parameters:
+• 
+name (str) – Function name.
+• 
+arguments (tuple) – Arguments to function.
+• 
+coerce (bool) – Whether to coerce the function result to a particular data-type when reading function return values from the cursor.
+• 
+python_value (callable) – Function to use for converting the return value from the cursor.
+Represent an arbitrary SQL function call.
+Rather than instantiating this class directly, it is recommended to use the fn helper.
+Example of using fn to call an arbitrary SQL function:
+# Query users and count of tweets authored.
+query = (User
+         .select(User.username, fn.COUNT(Tweet.id).alias('ct'))
+         .join(Tweet, JOIN.LEFT_OUTER, on=(User.id == Tweet.user_id))
+         .group_by(User.username)
+         .order_by(fn.COUNT(Tweet.id).desc()))
+over(partition_by=None, order_by=None, start=None, end=None, window=None, exclude=None)
+Parameters:
+• 
+partition_by (list) – List of columns to partition by.
+• 
+order_by (list) – List of columns / expressions to order window by.
+• 
+start – A SQL instance or a string expressing the start of the window range.
+• 
+end – A SQL instance or a string expressing the end of the window range.
+• 
+frame_type (str) – Window.RANGE, Window.ROWS or Window.GROUPS.
+• 
+window (Window) – A Window instance.
+• 
+exclude – Frame exclusion, one of Window.CURRENT_ROW, Window.GROUP, Window.TIES or Window.NO_OTHERS.
+For an in-depth guide to using window functions with Peewee, see the Window Functions section.
+Examples:
+# Using a simple partition on a single column.
+query = (Sample
+         .select(
+            Sample.counter,
+            Sample.value,
+            fn.AVG(Sample.value).over([Sample.counter]))
+         .order_by(Sample.counter))
+
+# Equivalent example Using a Window() instance instead.
+window = Window(partition_by=[Sample.counter])
+query = (Sample
+         .select(
+            Sample.counter,
+            Sample.value,
+            fn.AVG(Sample.value).over(window))
+         .window(window)  # Note call to ".window()"
+         .order_by(Sample.counter))
+
+# Example using bounded window.
+query = (Sample
+         .select(Sample.value,
+                 fn.SUM(Sample.value).over(
+                    partition_by=[Sample.counter],
+                    start=Window.CURRENT_ROW,  # current row
+                    end=Window.following()))  # unbounded following
+         .order_by(Sample.id))
+filter(where)
+Parameters:
+where – Expression for filtering aggregate.
+Add a FILTER (WHERE...) clause to an aggregate function. The where expression is evaluated to determine which rows are fed to the aggregate function. This SQL feature is supported for Postgres and SQLite.
+coerce(coerce=True)
+Parameters:
+coerce (bool) – Whether to attempt to coerce function-call result to a Python data-type.
+When coerce is True, the target data-type is inferred using several heuristics. Read the source for BaseModelCursorWrapper._initialize_columns method to see how this works.
+python_value(func=None)
+Parameters:
+python_value (callable) – Function to use for converting the return value from the cursor.
+Specify a particular function to use when converting values returned by the database cursor. For example:
+# Get user and a list of their tweet IDs. The tweet IDs are
+# returned as a comma-separated string by the db, so we'll split
+# the result string and convert the values to python ints.
+convert_ids = lambda s: [int(i) for i in (s or '').split(',') if i]
+tweet_ids = (fn
+             .GROUP_CONCAT(Tweet.id)
+             .python_value(convert_ids))
+
+query = (User
+         .select(User.username, tweet_ids.alias('tweet_ids'))
+         .join(Tweet)
+         .group_by(User.username))
+
+for user in query:
+    print(user.username, user.tweet_ids)
+
+# e.g.,
+# huey [1, 4, 5, 7]
+# mickey [2, 3, 6]
+# zaizee []
+fn()
+The fn() helper is actually an instance of Function that implements a __getattr__ hook to provide a nice API for calling SQL functions.
+To create a node representative of a SQL function call, use the function name as an attribute on fn and then provide the arguments as you would if calling a Python function:
+# List users and the number of tweets they have authored,
+# from highest-to-lowest:
+sql_count = fn.COUNT(Tweet.id)
+query = (User
+         .select(User, sql_count.alias('count'))
+         .join(Tweet, JOIN.LEFT_OUTER)
+         .group_by(User)
+         .order_by(sql_count.desc()))
+
+# Get the timestamp of the most recent tweet:
+query = Tweet.select(fn.MAX(Tweet.timestamp))
+max_timestamp = query.scalar()  # Retrieve scalar result from query.
+Function calls can, like anything else, be composed and nested:
+# Get users whose username begins with "A" or "a":
+a_users = User.select().where(fn.LOWER(fn.SUBSTR(User.username, 1, 1)) == 'a')
+class Window(partition_by=None, order_by=None, start=None, end=None, frame_type=None, extends=None, exclude=None, alias=None)
+Parameters:
+• 
+partition_by (list) – List of columns to partition by.
+• 
+order_by (list) – List of columns to order by.
+• 
+start – A SQL instance or a string expressing the start of the window range.
+• 
+end – A SQL instance or a string expressing the end of the window range.
+• 
+frame_type (str) – Window.RANGE, Window.ROWS or Window.GROUPS.
+• 
+extends – A Window definition to extend. Alternately, you may specify the window’s alias instead.
+• 
+exclude – Frame exclusion, one of Window.CURRENT_ROW, Window.GROUP, Window.TIES or Window.NO_OTHERS.
+• 
+alias (str) – Alias for the window.
+Represent a WINDOW clause.
+For an in-depth guide to using window functions with Peewee, see the Window Functions section.
+RANGE
+ROWS
+GROUPS
+Specify the window frame_type. See Frame Types: RANGE vs ROWS vs GROUPS.
+CURRENT_ROW
+Reference to current row for use in start/end clause or the frame exclusion parameter.
+NO_OTHERS
+GROUP
+TIES
+Specify the window frame exclusion parameter.
+static preceding(value=None)
+Parameters:
+value – Number of rows preceding. If None is UNBOUNDED.
+Convenience method for generating SQL suitable for passing in as the start parameter for a window range.
+static following(value=None)
+Parameters:
+value – Number of rows following. If None is UNBOUNDED.
+Convenience method for generating SQL suitable for passing in as the end parameter for a window range.
+as_rows()
+as_range()
+as_groups()
+Specify the frame type.
+extends(window=None)
+Parameters:
+window (Window) – A Window definition to extend. Alternately, you may specify the window’s alias instead.
+exclude(frame_exclusion=None)
+Parameters:
+frame_exclusion – Frame exclusion, one of Window.CURRENT_ROW, Window.GROUP, Window.TIES or Window.NO_OTHERS.
+alias(alias=None)
+Parameters:
+alias (str) – Alias to use for window.
+Case(predicate, expression_tuples, default=None)
+Parameters:
+• 
+predicate – Predicate for CASE query (optional).
+• 
+expression_tuples – One or more cases to evaluate.
+• 
+default – Default value (optional).
+Returns:
+Representation of CASE statement.
+Example:
+Number = Table('numbers', ('val',))
+
+num_as_str = Case(Number.val, (
+    (1, 'one'),
+    (2, 'two'),
+    (3, 'three')), 'a lot')
+
+query = Number.select(Number.val, num_as_str.alias('num_str'))
+Equivalent SQL:
+SELECT "val",
+  CASE "val"
+      WHEN 1 THEN 'one'
+      WHEN 2 THEN 'two'
+      WHEN 3 THEN 'three'
+      ELSE 'a lot' END AS "num_str"
+FROM "numbers"
+Example:
+num_as_str = Case(None, (
+    (Number.val == 1, 'one'),
+    (Number.val == 2, 'two'),
+    (Number.val == 3, 'three')), 'a lot')
+query = Number.select(Number.val, num_as_str.alias('num_str'))
+Equivalent SQL:
+SELECT "val",
+  CASE
+      WHEN "val" = 1 THEN 'one'
+      WHEN "val" = 2 THEN 'two'
+      WHEN "val" = 3 THEN 'three'
+      ELSE 'a lot' END AS "num_str"
+FROM "numbers"
+class ForUpdate(expr, of=None, nowait=None, skip_locked=None)
+Parameters:
+• 
+expr (str) – Either a boolean (True) or a string indicating the desired lock strength, e.g. “FOR SHARE” or “FOR NO KEY UPDATE”.
+• 
+of – One or more models to restrict locking to.
+• 
+nowait (bool) – Specify NOWAIT option when locking.
+• 
+skip_locked (bool) – Specify SKIP LOCKED option when locking.
+Represent a FOR UPDATE SQL clause in a Select query. Typically you will call Select.for_update() rather than using this class directly.
+class NodeList(nodes, glue=' ', parens=False)
+Parameters:
+• 
+nodes (list) – Zero or more nodes.
+• 
+glue (str) – How to join the nodes when converting to SQL.
+• 
+parens (bool) – Whether to wrap the resulting SQL in parentheses.
+Represent a list of nodes, a multi-part clause, a list of parameters, etc.
+CommaNodeList(nodes)
+Parameters:
+nodes (list) – Zero or more nodes.
+Returns:
+a NodeList
+Represent a list of nodes joined by commas.
+EnclosedNodeList(nodes)
+Parameters:
+nodes (list) – Zero or more nodes.
+Returns:
+a NodeList
+Represent a list of nodes joined by commas and wrapped in parentheses.
+class DQ(**query)
+Parameters:
+query – Arbitrary filter expressions using Django-style lookups.
+Represent a composable Django-style filter expression suitable for use with the Model.filter() or ModelSelect.filter() methods.
+class Tuple(*args)
+Represent a SQL row value. Row-values are supported by most databases.
+class OnConflict(action=None, update=None, preserve=None, where=None, conflict_target=None, conflict_where=None, conflict_constraint=None)
+Parameters:
+• 
+action (str) – Action to take when resolving conflict.
+• 
+update – A dictionary mapping column to new value.
+• 
+preserve – A list of columns whose values should be preserved from the original INSERT. See also EXCLUDED.
+• 
+where – Expression to restrict the conflict resolution.
+• 
+conflict_target – Column(s) that comprise the constraint.
+• 
+conflict_where – Expressions needed to match the constraint target if it is a partial index (index with a WHERE clause).
+• 
+conflict_constraint (str) – Name of constraint to use for conflict resolution. Currently only supported by Postgres.
+Represent a conflict resolution clause for a data-modification query.
+See Upsert for detailed discussion.
+preserve(*columns)
+Parameters:
+columns – Columns whose values should be preserved.
+update(_data=None, **kwargs)
+Parameters:
+• 
+_data (dict) – Dictionary mapping column to new value.
+• 
+kwargs – Dictionary mapping column name to new value.
+The update() method supports being called with either a dictionary of column-to-value, or keyword arguments representing the same.
+where(*expressions)
+Parameters:
+expressions – Expressions that restrict the action of the conflict resolution clause.
+conflict_target(*constraints)
+Parameters:
+constraints – Column(s) to use as target for conflict resolution.
+conflict_where(*expressions)
+Parameters:
+expressions – Expressions that match the conflict target index, in the case the conflict target is a partial index.
+conflict_constraint(constraint)
+Parameters:
+constraint (str) – Name of constraints to use as target for conflict resolution. Currently only supported by Postgres.
+class EXCLUDED
+Helper object that exposes the EXCLUDED namespace that is used with INSERT ... ON CONFLICT to reference values in the conflicting data. This is a “magic” helper, such that one uses it by accessing attributes on it that correspond to a particular column.
+See Insert.on_conflict() for example usage.
+Queries
+class BaseQuery
+The parent class from which all other query classes are derived. While you will not deal with BaseQuery directly in your code, it implements some methods that are common across all query types.
+default_row_type = ROW.DICT
+bind(database=None)
+Parameters:
+database (Database) – Database to execute query against.
+Bind the query to the given database for execution.
+dicts(as_dict=True)
+Parameters:
+as_dict (bool) – Specify whether to return rows as dictionaries.
+Return rows as dictionaries.
+tuples(as_tuple=True)
+Parameters:
+as_tuple (bool) – Specify whether to return rows as tuples.
+Return rows as tuples.
+namedtuples(as_namedtuple=True)
+Parameters:
+as_namedtuple (bool) – Specify whether to return rows as named tuples.
+Return rows as named tuples.
+objects(constructor=None)
+Parameters:
+constructor – Function that accepts row dict and returns an arbitrary object.
+Return rows as arbitrary objects using the given constructor.
+sql()
+Returns:
+A 2-tuple consisting of the query’s SQL and parameters.
+execute(database)
+Parameters:
+database (Database) – Database to execute query against. Not required if query was previously bound to a database.
+Execute the query and return result (depends on type of query being executed). For example, select queries the return result will be an iterator over the query results.
+async aexecute(database=None)
+Async counterpart of execute(), for queries bound to an asyncio-compatible database. See Async Support.
+iterator(database=None)
+Parameters:
+database (Database) – Database to execute query against. Not required if query was previously bound to a database.
+Execute the query and return an iterator over the result-set. For large result-sets this method is preferable as rows are not cached in-memory during iteration.
+Because rows are not cached, the query may only be iterated over once. Subsequent iterations will return empty result-sets as the cursor will have been consumed.
+Example:
+query = StatTbl.select().order_by(StatTbl.timestamp).tuples()
+for row in query.iterator(db):
+    process_row(row)
+__iter__()
+Execute the query and return an iterator over the result-set.
+Unlike iterator(), this method will cause rows to be cached in order to allow efficient iteration, indexing and slicing.
+__getitem__(value)
+Parameters:
+value – Either an integer index or a slice.
+Retrieve a row or range of rows from the result-set.
+__len__()
+Return the number of rows in the result-set.
+This does not issue a COUNT() query. Instead, the result-set is loaded as it would be during normal iteration, and the length is determined from the size of the result set.
+class RawQuery(sql=None, params=None, **kwargs)
+Parameters:
+• 
+sql (str) – SQL query.
+• 
+params (tuple) – Parameters (optional).
+Create a query by directly specifying the SQL to execute.
+class Query(where=None, order_by=None, limit=None, offset=None, **kwargs)
+Parameters:
+• 
+where – Representation of WHERE clause.
+• 
+order_by (tuple) – Columns or values to order by.
+• 
+limit (int) – Value of LIMIT clause.
+• 
+offset (int) – Value of OFFSET clause.
+Base-class for queries that support method-chaining APIs.
+with_cte(*cte_list)
+Parameters:
+cte_list – zero or more CTE objects.
+Include the given common-table expressions in the query. Any previously specified CTEs will be overwritten. For examples of common-table expressions, see Common Table Expressions.
+cte(name, recursive=False, columns=None)
+Parameters:
+• 
+name (str) – Alias for common table expression.
+• 
+recursive (bool) – Will this be a recursive CTE?
+• 
+columns (list) – List of column names (as strings).
+Indicate that a query will be used as a common table expression. For example, if we are modelling a category tree and are using a parent-link foreign key, we can retrieve all categories and their absolute depths using a recursive CTE:
+class Category(Model):
+    name = TextField()
+    parent = ForeignKeyField('self', backref='children', null=True)
+
+# The base case of our recursive CTE will be categories that are at
+# the root level -- in other words, categories without parents.
+roots = (Category
+         .select(Category.name, Value(0).alias('level'))
+         .where(Category.parent.is_null())
+         .cte(name='roots', recursive=True))
+
+# The recursive term will select the category name and increment
+# the depth, joining on the base term so that the recursive term
+# consists of all children of the base category.
+RTerm = Category.alias()
+recursive = (RTerm
+             .select(RTerm.name, (roots.c.level + 1).alias('level'))
+             .join(roots, on=(RTerm.parent == roots.c.id)))
+
+# Express <base term> UNION ALL <recursive term>.
+cte = roots.union_all(recursive)
+
+# Select name and level from the recursive CTE.
+query = (cte
+         .select_from(cte.c.name, cte.c.level)
+         .order_by(cte.c.name))
+
+for category in query:
+    print(category.name, category.level)
+For more examples of CTEs, see Common Table Expressions.
+where(*expressions)
+Parameters:
+expressions – zero or more expressions to include in the WHERE clause.
+Include the given expressions in the WHERE clause of the query. The expressions will be AND-ed together with any previously-specified WHERE expressions.
+Example selection users where the username is equal to ‘somebody’:
+sq = User.select().where(User.username == 'somebody')
+Example selecting tweets made by users who are either editors or administrators:
+sq = Tweet.select().join(User).where(
+    (User.is_editor == True) |
+    (User.is_admin == True))
+Example of deleting tweets by users who are no longer active:
+inactive_users = User.select().where(User.active == False)
+dq = (Tweet
+      .delete()
+      .where(Tweet.user.in_(inactive_users)))
+dq.execute()  # Return number of tweets deleted.
+where() calls are chainable. Multiple calls will be “AND”-ed together.
+orwhere(*expressions)
+Parameters:
+expressions – zero or more expressions to include in the WHERE clause.
+Include the given expressions in the WHERE clause of the query. This method is the same as the Query.where() method, except that the expressions will be OR-ed together with any previously-specified WHERE expressions.
+Example:
+query = (User
+         .select()
+         .where(User.is_admin == True)
+         .orwhere(User.is_moderator == True))
+order_by(*values)
+Parameters:
+values – zero or more Column-like objects to order by.
+Define the ORDER BY clause. Any previously-specified values will be overwritten.
+order_by_extend(*values)
+Parameters:
+values – zero or more Column-like objects to order by.
+Extend any previously-specified ORDER BY clause with the given values.
+limit(value=None)
+Parameters:
+value (int) – specify value for LIMIT clause.
+offset(value=None)
+Parameters:
+value (int) – specify value for OFFSET clause.
+paginate(page, paginate_by=20)
+Parameters:
+• 
+page (int) – Page number of results (starting from 1).
+• 
+paginate_by (int) – Rows-per-page.
+Convenience method for specifying the LIMIT and OFFSET in a more intuitive way.
+This feature is designed with web-site pagination in mind, so the first page starts with page=1.
+Example:
+@app.route('/users/')
+def users():
+    query = User.select().order_by(User.username)
+    page = request.args.get('page')
+    if page and page.isdigit():
+        page = max(1, int(page))
+    else:
+        page = 1
+
+    # Render the requested page of results, displaying up to
+    # 20 users per page.
+    return render('users.html', users=query.paginate(page, 20))
+class SelectQuery
+Select query helper-class that implements operator-overloads for creating compound queries.
+select_from(*columns)
+Parameters:
+columns – one or more columns to select from the inner query.
+Returns:
+a new query that wraps the calling query.
+Create a new query that wraps the current (calling) query. For example, suppose you have a simple UNION query, and need to apply an aggregation on the union result-set. To do this, you need to write something like:
+SELECT "u"."owner", COUNT("u"."id") AS "ct"
+FROM (
+    SELECT "id", "owner", ... FROM "cars"
+    UNION
+    SELECT "id", "owner", ... FROM "motorcycles"
+    UNION
+    SELECT "id", "owner", ... FROM "boats") AS "u"
+GROUP BY "u"."owner"
+The select_from() method is designed to simplify constructing this type of query.
+Example peewee code:
+class Car(Model):
+    owner = ForeignKeyField(Owner, backref='cars')
+    # ... car-specific fields, etc ...
+
+class Motorcycle(Model):
+    owner = ForeignKeyField(Owner, backref='motorcycles')
+    # ... motorcycle-specific fields, etc ...
+
+class Boat(Model):
+    owner = ForeignKeyField(Owner, backref='boats')
+    # ... boat-specific fields, etc ...
+
+cars = Car.select(Car.owner)
+motorcycles = Motorcycle.select(Motorcycle.owner)
+boats = Boat.select(Boat.owner)
+
+union = cars | motorcycles | boats
+
+query = (union
+         .select_from(union.c.owner, fn.COUNT(union.c.id))
+         .group_by(union.c.owner))
+union_all(dest)
+Create a UNION ALL query with dest.
+__add__(dest)
+Create a UNION ALL query with dest.
+union(dest)
+Create a UNION query with dest.
+__or__(dest)
+Create a UNION query with dest.
+intersect(dest)
+Create an INTERSECT query with dest.
+__and__(dest)
+Create an INTERSECT query with dest.
+except_(dest)
+Create an EXCEPT query with dest. Note that the method name has a trailing “_” character since except is a Python reserved word.
+__sub__(dest)
+Create an EXCEPT query with dest.
+class SelectBase
+Base-class for Select and CompoundSelect queries.
+peek(database, n=1)
+Parameters:
+• 
+database (Database) – database to execute query against.
+• 
+n (int) – Number of rows to return.
+Returns:
+A single row if n = 1, else a list of rows.
+Execute the query and return the given number of rows from the start of the cursor. This function may be called multiple times safely, and will always return the first N rows of results.
+first(database, n=1)
+Parameters:
+• 
+database (Database) – database to execute query against.
+• 
+n (int) – Number of rows to return.
+Returns:
+A single row if n = 1, else a list of rows.
+Like the peek() method, except a LIMIT is applied to the query to ensure that only n rows are returned. Multiple calls for the same value of n will not result in multiple executions.
+The query is altered in-place so it is not possible to call first() and then later iterate over the full result-set using the same query object. Again, this is done to ensure that multiple calls to first() will not result in multiple query executions.
+scalar(database, as_tuple=False, as_dict=False)
+Parameters:
+• 
+database (Database) – database to execute query against.
+• 
+as_tuple (bool) – Return the result as a tuple?
+• 
+as_dict (bool) – Return the result as a dict?
+Returns:
+Single scalar value. If as_tuple = True, a row tuple is returned. If as_dict = True, a row dict is returned.
+Return a scalar value from the first row of results. If multiple scalar values are anticipated (e.g. multiple aggregations in a single query) then you may specify as_tuple=True to get the row tuple.
+Example:
+query = Note.select(fn.MAX(Note.timestamp))
+max_ts = query.scalar(db)
+
+query = Note.select(fn.MAX(Note.timestamp), fn.COUNT(Note.id))
+max_ts, n_notes = query.scalar(db, as_tuple=True)
+
+query = Note.select(fn.COUNT(Note.id).alias('count'))
+assert query.scalar(db, as_dict=True) == {'count': 123}
+count(database, clear_limit=False)
+Parameters:
+• 
+database (Database) – database to execute query against.
+• 
+clear_limit (bool) – Clear any LIMIT clause when counting.
+Returns:
+Number of rows in the query result-set.
+Return number of rows in the query result-set.
+Implemented by running SELECT COUNT(1) FROM (<current query>).
+exists(database)
+Parameters:
+database (Database) – database to execute query against.
+Returns:
+Whether any results exist for the current query.
+Return a boolean indicating whether the current query has any results.
+get(database)
+Parameters:
+database (Database) – database to execute query against.
+Returns:
+A single row from the database or None.
+Execute the query and return the first row, if it exists. Multiple calls will result in multiple queries being executed.
+If no matching row is found this method returns None - this differs from the behavior of ModelSelect.get() and Model.get(), which raise DoesNotExist when no row is found.
+class CompoundSelectQuery(lhs, op, rhs)
+Parameters:
+• 
+lhs (SelectBase) – A Select or CompoundSelect query.
+• 
+op (str) – Operation (e.g. UNION, INTERSECT, EXCEPT).
+• 
+rhs (SelectBase) – A Select or CompoundSelect query.
+Class representing a compound SELECT query.
+class Select(from_list=None, columns=None, group_by=None, having=None, distinct=None, windows=None, for_update=None, **kwargs)
+Parameters:
+• 
+from_list (list) – List of sources for FROM clause.
+• 
+columns (list) – Columns or values to select.
+• 
+group_by (list) – List of columns or values to group by.
+• 
+having (Expression) – Expression for HAVING clause.
+• 
+distinct – Either a boolean or a list of column-like objects.
+• 
+windows (list) – List of Window clauses.
+• 
+for_update (ForUpdate) – indicate SELECT…FOR UPDATE.
+Class representing a SELECT query.
+Rather than instantiating this directly, most-commonly you will use a factory method like Table.select() or Model.select().
+Methods on the select query can be chained together.
+Example selecting some user instances from the database. Only the id and username columns are selected. When iterated, will return instances of the User model:
+query = User.select(User.id, User.username)
+for user in query:
+    print(user.username)
+Example selecting users and additionally the number of tweets made by the user. The User instances returned will have an additional attribute, ‘count’, that corresponds to the number of tweets made:
+query = (User
+         .select(User, fn.COUNT(Tweet.id).alias('count'))
+         .join(Tweet, JOIN.LEFT_OUTER)
+         .group_by(User))
+for user in query:
+    print(user.username, 'has tweeted', user.count, 'times')
+While it is possible to instantiate Select directly, more commonly you will build the query using the method-chaining APIs.
+columns(*columns)
+Parameters:
+columns – Zero or more column-like objects to SELECT.
+Specify which columns or column-like values to SELECT.
+select(*columns)
+Parameters:
+columns – Zero or more column-like objects to SELECT.
+Same as Select.columns(), provided for backwards-compatibility.
+select_extend(*columns)
+Parameters:
+columns – Zero or more column-like objects to SELECT.
+Extend the current selection with the given columns.
+Example:
+def get_users(with_count=False):
+    query = User.select()
+    if with_count:
+        query = (query
+                 .select_extend(fn.COUNT(Tweet.id).alias('count'))
+                 .join(Tweet, JOIN.LEFT_OUTER)
+                 .group_by(User))
+    return query
+from_(*sources)
+Parameters:
+sources – Zero or more sources for the FROM clause.
+Specify which table-like objects should be used in the FROM clause.
+User = Table('users')
+Tweet = Table('tweets')
+query = (User
+         .select(User.c.username, Tweet.c.content)
+         .from_(User, Tweet)
+         .where(User.c.id == Tweet.c.user_id))
+for row in query.execute(db):
+    print(row['username'], '->', row['content'])
+join(dest, join_type='INNER', on=None)
+Parameters:
+• 
+dest – A table or table-like object.
+• 
+join_type (str) – Type of JOIN, default is “INNER”.
+• 
+on (Expression) – Join predicate.
+Join type may be one of:
+• 
+JOIN.INNER
+• 
+JOIN.LEFT_OUTER
+• 
+JOIN.RIGHT_OUTER
+• 
+JOIN.FULL
+• 
+JOIN.FULL_OUTER
+• 
+JOIN.CROSS
+Express a JOIN:
+User = Table('users', ('id', 'username'))
+Note = Table('notes', ('id', 'user_id', 'content'))
+
+query = (Note
+         .select(Note.content, User.username)
+         .join(User, on=(Note.user_id == User.id)))
+group_by(*columns)
+Parameters:
+values – zero or more Column-like objects to group by.
+Define the GROUP BY clause. Any previously-specified values will be overwritten.
+Additionally, to specify all columns on a given table, you can pass the table/model object in place of the individual columns.
+Example:
+query = (User
+         .select(User, fn.Count(Tweet.id).alias('count'))
+         .join(Tweet)
+         .group_by(User))
+group_by_extend(*columns)
+Parameters:
+values – zero or more Column-like objects to group by.
+Extend the GROUP BY clause with the given columns.
+having(*expressions)
+Parameters:
+expressions – zero or more expressions to include in the HAVING clause.
+Include the given expressions in the HAVING clause of the query. The expressions will be AND-ed together with any previously-specified HAVING expressions.
+Example:
+# Find users with 100 or more Tweets.
+query = (User
+         .select(User, fn.Count(Tweet.id).alias('count'))
+         .join(Tweet)
+         .group_by(User)
+         .having(fn.Count(Tweet.id) >= 100))
+distinct(*columns)
+Parameters:
+columns – Zero or more column-like objects.
+Indicate whether this query should use a DISTINCT clause. By specifying a single value of True the query will use a simple SELECT DISTINCT. Specifying one or more columns will result in a SELECT DISTINCT ON.
+window(*windows)
+Parameters:
+windows – zero or more Window objects.
+Define the WINDOW clause. Any previously-specified values will be overwritten.
+Example:
+# Equivalent example Using a Window() instance instead.
+window = Window(partition_by=[Sample.counter])
+query = (Sample
+         .select(
+            Sample.counter,
+            Sample.value,
+            fn.AVG(Sample.value).over(window))
+         .window(window)  # Note call to ".window()"
+         .order_by(Sample.counter))
+for_update(for_update=True, of=None, nowait=None, skip_locked=None)
+Parameters:
+• 
+for_update – Either a boolean or a string indicating the desired lock strength, e.g. “FOR SHARE” or “FOR NO KEY UPDATE”.
+• 
+of – One or more models to restrict locking to.
+• 
+nowait (bool) – Specify NOWAIT option when locking.
+• 
+skip_locked (bool) – Specify SKIP LOCKED option when locking.
+class _WriteQuery(table, returning=None, **kwargs)
+Parameters:
+• 
+table (Table) – Table to write to.
+• 
+returning (list) – List of columns for RETURNING clause.
+Base-class for write queries.
+returning(*returning)
+Parameters:
+returning – Zero or more column-like objects for RETURNING clause
+Specify the RETURNING clause of query (Postgresql and Sqlite):
+query = (User
+         .insert_many([{'username': 'foo'},
+                       {'username': 'bar'},
+                       {'username': 'baz'}])
+         .returning(User.id, User.username)
+         .namedtuples())
+data = query.execute()
+for row in data:
+    print('added:', row.username, 'with id=', row.id)
+See also:
+Returning Clause for additional discussion.
+class Update(table, update=None, **kwargs)
+Parameters:
+• 
+table (Table) – Table to update.
+• 
+update (dict) – Data to update.
+Class representing an UPDATE query.
+See Updating Records for additional discussion.
+Example:
+PageView = Table('page_views')
+query = (PageView
+         .update({PageView.c.page_views: PageView.c.page_views + 1})
+         .where(PageView.c.url == url))
+query.execute(database)
+from_(*sources)
+Parameters:
+sources (Source) – one or more Table, Model, query, or ValuesList to join with.
+Specify additional tables to join with using the UPDATE … FROM syntax, which is supported by Postgres. The Postgres documentation provides additional detail, but to summarize:
+When a FROM clause is present, what essentially happens is that the target table is joined to the tables mentioned in the from_list, and each output row of the join represents an update operation for the target table. When using FROM you should ensure that the join produces at most one output row for each row to be modified.
+Example:
+# Update multiple users in a single query.
+data = [('huey', True),
+        ('mickey', False),
+        ('zaizee', True)]
+vl = ValuesList(data, columns=('username', 'is_admin'), alias='vl')
+
+# Here we'll update the "is_admin" status of the above users,
+# "joining" the VALUES() on the "username" column.
+query = (User
+         .update(is_admin=vl.c.is_admin)
+         .from_(vl)
+         .where(User.username == vl.c.username))
+The above query produces the following SQL:
+UPDATE "users" SET "is_admin" = "vl"."is_admin"
+FROM (
+    VALUES ('huey', t), ('mickey', f), ('zaizee', t))
+    AS "vl"("username", "is_admin")
+WHERE ("users"."username" = "vl"."username")
+class Insert(table, insert=None, columns=None, on_conflict=None, **kwargs)
+Parameters:
+• 
+table (Table) – Table to INSERT data into.
+• 
+insert – Either a dict, a list, or a query.
+• 
+columns (list) – List of columns when insert is a list or query.
+• 
+on_conflict – Conflict resolution strategy.
+Class representing an INSERT query.
+See Inserting Records for additional discussion.
+Example:
+User = Table('users')
+
+query = User.insert({User.c.username: 'huey'})
+query.execute(database)
+as_rowcount(as_rowcount=True)
+Parameters:
+as_rowcount (bool) – Whether to return the modified row count (as opposed to the last-inserted row id).
+SQLite and MySQL return the last inserted rowid. Postgresql will return a cursor for iterating over the inserted id(s).
+If you prefer to receive the inserted row-count, then specify as_rowcount():
+db = MySQLDatabase(...)
+
+query = User.insert_many([...])
+# By default, the last rowid is returned:
+#last_id = query.execute()
+
+# To get the modified row-count:
+rowcount = query.as_rowcount().execute()
+on_conflict_ignore(ignore=True)
+Parameters:
+ignore (bool) – Whether to add ON CONFLICT IGNORE clause.
+Specify IGNORE conflict resolution strategy.
+on_conflict_replace(replace=True)
+Parameters:
+replace (bool) – Whether to add ON CONFLICT REPLACE clause.
+Specify REPLACE conflict resolution strategy (SQLite and MySQL only).
+on_conflict(action=None, update=None, preserve=None, where=None, conflict_target=None, conflict_where=None, conflict_constraint=None)
+Parameters:
+• 
+action (str) – Action to take when resolving conflict. If blank, action is assumed to be “update”.
+• 
+update – A dictionary mapping column to new value.
+• 
+preserve – A list of columns whose values should be preserved from the original INSERT.
+• 
+where – Expression to restrict the conflict resolution.
+• 
+conflict_target – Column(s) that comprise the constraint.
+• 
+conflict_where – Expressions needed to match the constraint target if it is a partial index (index with a WHERE clause).
+• 
+conflict_constraint (str) – Name of constraint to use for conflict resolution. Currently only supported by Postgres.
+Specify the parameters for an OnConflict clause to use for conflict resolution.
+See Upsert for additional discussion.
+Examples:
+class User(Model):
+    username = TextField(unique=True)
+    last_login = DateTimeField(null=True)
+    login_count = IntegerField()
+
+def log_user_in(username):
+    now = datetime.datetime.now()
+
+    # INSERT a new row for the user with the current timestamp and
+    # login count set to 1. If the user already exists, then we
+    # will preserve the last_login value from the "insert()" clause
+    # and atomically increment the login-count.
+    userid = (User
+              .insert(username=username, last_login=now, login_count=1)
+              .on_conflict(
+                  conflict_target=[User.username],
+                  preserve=[User.last_login],
+                  update={User.login_count: User.login_count + 1})
+              .execute())
+    return userid
+Example using the special EXCLUDED namespace:
+class KV(Model):
+    key = CharField(unique=True)
+    value = IntegerField()
+
+# Create one row.
+KV.create(key='k1', value=1)
+
+# Demonstrate usage of EXCLUDED.
+# Here we will attempt to insert a new value for a given key. If that
+# key already exists, then we will update its value with the *sum* of its
+# original value and the value we attempted to insert -- provided that
+# the new value is larger than the original value.
+query = (KV.insert(key='k1', value=10)
+         .on_conflict(conflict_target=[KV.key],
+                      update={KV.value: KV.value + EXCLUDED.value},
+                      where=(EXCLUDED.value > KV.value)))
+
+# Executing the above query will result in the following data being
+# present in the "kv" table:
+# (key='k1', value=11)
+query.execute()
+
+# If we attempted to execute the query *again*, then nothing would be
+# updated, as the new value (10) is now less than the value in the
+# original row (11).
+class Delete
+Class representing a DELETE query.
+See Deleting Records for additional discussion.
+Example:
+Tweet = Table('tweets')
+
+# Delete all unpublished tweets older than 30 days.
+cutoff = datetime.datetime.now() - datetime.timedelta(days=30)
+query = (Tweet
+         .delete()
+         .where(
+             (Tweet.c.is_published == False) &
+             (Tweet.c.timestamp < cutoff)))
+nrows = query.execute(database)
+prefetch(sq, *subqueries, prefetch_type=PREFETCH_TYPE.WHERE)
+Parameters:
+• 
+sq – Query to use as starting-point.
+• 
+subqueries – One or more models or ModelSelect queries to eagerly fetch. Each element may also be a (query, target_model) tuple: the target_model names which previously-listed model should be joined through when more than one candidate exists.
+• 
+prefetch_type – Query type to use for the subqueries.
+Returns:
+a list of models with selected relations prefetched. When called with no subqueries returns sq unmodified.
+Eagerly fetch related objects, allowing efficient querying of multiple tables when a 1-to-many relationship exists. The prefetch type changes how the subqueries are constructed which may be desirable depending on the database engine in use.
+Prefetch type may be one of:
+• 
+PREFETCH_TYPE.WHERE
+• 
+PREFETCH_TYPE.JOIN
+See Relationships and Joins for in-depth discussion of joining and prefetch.
+For example, it is simple to query a many-to-1 relationship efficiently:
+query = (Tweet
+         .select(Tweet, User)
+         .join(User))
+for tweet in query:
+    # Looking up tweet.user.username does not require a query since
+    # the related user's columns were selected.
+    print(tweet.user.username, '->', tweet.content)
+To efficiently do the inverse, query users and their tweets, you can use prefetch:
+query = User.select()
+for user in prefetch(query, Tweet):
+    print(user.username)
+    for tweet in user.tweets:  # Does not require additional query.
+        print('    ', tweet.content)
+Because prefetch must reconstruct a graph of models, it is necessary to be sure that the foreign-key/primary-key of any related models are selected, so that the related objects can be mapped correctly.
+Query-builder Internals
+class AliasManager
+Manages the aliases assigned to Source objects in SELECT queries, so as to avoid ambiguous references when multiple sources are used in a single query.
+add(source)
+Add a source to the AliasManager’s internal registry at the current scope. The alias will be automatically generated using the following scheme (where each level of indentation refers to a new scope):
+Parameters:
+source (Source) – Make the manager aware of a new source. If the source has already been added, the call is a no-op.
+get(source, any_depth=False)
+Return the alias for the source in the current scope. If the source does not have an alias, it will be given the next available alias.
+Parameters:
+source (Source) – The source whose alias should be retrieved.
+Returns:
+The alias already assigned to the source, or the next available alias.
+Return type:
+str
+__setitem__(source, alias)
+Manually set the alias for the source at the current scope.
+Parameters:
+source (Source) – The source for which we set the alias.
+push()
+Push a new scope onto the stack.
+pop()
+Pop scope from the stack.
+class State(scope, parentheses=False, subquery=False, **kwargs)
+Lightweight object for representing the state at a given scope. During SQL generation, each object visited by the Context can inspect the state. The State class allows Peewee to do things like:
+• 
+Use a common interface for field types or SQL expressions, but use vendor-specific data-types or operators.
+• 
+Compile a Column instance into a fully-qualified attribute, as a named alias, etc, depending on the value of the scope.
+• 
+Ensure parentheses are used appropriately.
+Parameters:
+• 
+scope (int) – The scope rules to be applied while the state is active.
+• 
+parentheses (bool) – Wrap the contained SQL in parentheses.
+• 
+subquery (bool) – Whether the current state is a child of an outer query.
+• 
+kwargs (dict) – Arbitrary settings which should be applied in the current state.
+class Context(**settings)
+Converts Peewee structures into parameterized SQL queries.
+Peewee structures should all implement a __sql__ method, which will be called by the Context class during SQL generation. The __sql__ method accepts a single parameter, the Context instance, which allows for recursive descent and introspection of scope and state.
+scope
+Return the currently-active scope rules.
+parentheses
+Return whether the current state is wrapped in parentheses.
+subquery
+Return whether the current state is the child of another query.
+scope_normal(**kwargs)
+The default scope. Sources are referred to by alias, columns by dotted-path from the source.
+scope_source(**kwargs)
+Scope used when defining sources, e.g. in the column list and FROM clause of a SELECT query. This scope is used for defining the fully-qualified name of the source and assigning an alias.
+scope_values(**kwargs)
+Scope used for UPDATE, INSERT or DELETE queries, where instead of referencing a source by an alias, we refer to it directly. Similarly, since there is a single table, columns do not need to be referenced by dotted-path.
+scope_cte(**kwargs)
+Scope used when generating the contents of a common-table-expression. Used after a WITH statement, when generating the definition for a CTE (as opposed to merely a reference to one).
+scope_column(**kwargs)
+Scope used when generating SQL for a column. Ensures that the column is rendered with its correct alias. Was needed because when referencing the inner projection of a sub-select, Peewee would render the full SELECT query as the “source” of the column (instead of the query’s alias + . + column). This scope allows us to avoid rendering the full query when we only need the alias.
+sql(obj)
+Append a composable Node object, sub-context, or other object to the query AST. Python values, such as integers, strings, floats, etc. are treated as parameterized values.
+Returns:
+The updated Context object.
+literal(keyword)
+Append a string-literal to the current query AST.
+Returns:
+The updated Context object.
+parse(node)
+Parameters:
+node (Node) – Instance of a Node subclass.
+Returns:
+a 2-tuple consisting of (sql, parameters).
+Convert the given node to a SQL AST and return a 2-tuple consisting of the SQL query and the parameters.
+query()
+Returns:
+a 2-tuple consisting of (sql, parameters) for the context.
+Constants and Helpers
+class Proxy
+Create a proxy or placeholder for another object.
+initialize(obj)
+Parameters:
+obj – Object to proxy to.
+Bind the proxy to the given object. Afterwards all attribute lookups and method calls on the proxy will be sent to the given object.
+Any callbacks that have been registered will be called.
+attach_callback(callback)
+Parameters:
+callback – A function that accepts a single parameter, the bound object.
+Returns:
+self
+Add a callback to be executed when the proxy is initialized.
+class DatabaseProxy
+Proxy subclass that is suitable to use as a placeholder for a Database instance.
+See Initializing the Database for details.
+Example:
+db = DatabaseProxy()
+
+class BaseModel(Model):
+    class Meta:
+        database = db
+
+# ... some time later ...
+if app.config['DEBUG']:
+    database = SqliteDatabase('local.db')
+elif app.config['TESTING']:
+    database = SqliteDatabase(':memory:')
+else:
+    database = PostgresqlDatabase('production')
+
+db.initialize(database)
+chunked(iterable, n)
+Parameters:
+• 
+iterable – an iterable that is the source of the data to be chunked.
+• 
+n (int) – chunk size
+Returns:
+a new iterable that yields n-length chunks of the source data.
+Efficient implementation for breaking up large lists of data into smaller-sized chunks.
+Usage:
+it = range(10)  # An iterable that yields 0...9.
+
+# Break the iterable into chunks of length 4.
+for chunk in chunked(it, 4):
+    print(', '.join(str(num) for num in chunk))
+
+# PRINTS:
+# 0, 1, 2, 3
+# 4, 5, 6, 7
+# 8, 9
+class IndexMetadata
+Metadata for indexes returned by Database.get_indexes()
+name
+sql
+columns
+unique
+table
+class ColumnMetadata
+Metadata for columns returned by Database.get_columns()
+name
+data_type
+null
+primary_key
+table
+default
+class ForeignKeyMetadata
+Metadata for foreign keys returned by Database.get_foreign_keys()
+column
+dest_table
+dest_column
+table
+class ViewMetadata
+Metadata for views returned by Database.get_views()
+name
+sql
+Playhouse Reference
+Module
+Section
+playhouse.sqlite_ext
+SQLite
+playhouse.cysqlite_ext
+CySqlite
+playhouse.sqliteq
+SqliteQueueDatabase
+playhouse.sqlite_udf
+User-Defined Function Collection
+playhouse.apsw_ext
+APSW
+playhouse.sqlcipher_ext
+SQLCipher
+playhouse.postgres_ext
+Postgresql
+playhouse.cockroachdb
+CockroachDB
+playhouse.mysql_ext
+MySQL and MariaDB
+playhouse.db_url
+Database URLs
+playhouse.pool
+Connection Pooling
+playhouse.migrate
+Schema Migrations
+playhouse.reflection
+Reflection
+playhouse.test_utils
+Test Utilities
+playhouse.fields
+Extra Field Types
+playhouse.shortcuts
+Shortcuts
+playhouse.hybrid
+Hybrid Attributes
+playhouse.kv
+Key/Value Store
+playhouse.signals
+Signals
+playhouse.dataset
+DataSet
+playhouse.flask_utils
+Flask Utilities
+peewee
+Watch coleifer/peewee on GitHub
+194 watchers on GitHub
+Navigation
+Installing and Testing
+Quickstart
+Example app
+Database
+Models and Fields
+Relationships and Joins
+Querying
+Writing Data
+Query Operators
+Transactions
+Schema Management
+Async Support
+Framework Integration
+Using Peewee Interactively
+Query Builder
+Query Examples Library
+API Reference
+■ Database
+■ Model
+■ Fields
+■ Schema Manager
+■ Query-builder
+■ Queries
+■ Query-builder Internals
+■ Constants and Helpers
+■ Playhouse Reference
+SQLite
+Postgresql
+MySQL and MariaDB
+Database Tooling
+ORM Utilities
+Recipes
+Contributing
+Quick search
+ 
+Go
+Read the Docs
+latest
+Stop the vibe-debugging. Every exception, every backtrace, grouped so you see patterns, not noise.
+Ads by EthicalAds
+Close Ad
+©charles leifer. | Powered by Sphinx 5.3.0 & Alabaster 0.7.16 | Page source

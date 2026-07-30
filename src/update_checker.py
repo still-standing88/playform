@@ -469,6 +469,12 @@ class UpdateChecker(QObject):
             )
             return
 
+        app_name = os.environ.get("APP_NAME", "PlayForm")
+        if sys.platform == "win32":
+            app_exe = app_path / f"{app_name}.exe"
+        else:
+            app_exe = app_path / app_name
+
         args = [
             str(updater_exe),
             "--temp",
@@ -477,6 +483,8 @@ class UpdateChecker(QObject):
             zip_name,
             "--install-dir",
             str(app_path),
+            "--launch",
+            str(app_exe),
         ]
 
         try:

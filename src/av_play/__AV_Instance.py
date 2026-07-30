@@ -79,6 +79,9 @@ class AVMediaInstance:
     def set_loop(self, loop:bool):
         self.__controler.set_loop(self.__id, loop)
 
+    def get_loop(self) -> bool:
+        return self.__controler.get_loop(self.__id)
+
     def get_length(self) -> int:
         return self.__controler.get_length(self.__id, )
 

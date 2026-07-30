@@ -33,6 +33,7 @@ class ExplorerView(QListWidget):
         self._focused_item_path:Optional[str] = None
         self._player = player
         self._instance:Optional[AVMediaInstance] = None
+        self._loop_enabled:bool = prefs.prefs.get("explorer_loop", False)
         self._explorer = explorer
         
         self._pending_media_path:Optional[str] = None
@@ -56,6 +57,11 @@ class ExplorerView(QListWidget):
 
     def set_player_bar(self, player_bar):
         self._player_bar = player_bar
+
+    def set_loop_enabled(self, enabled: bool):
+        self._loop_enabled = enabled
+        if self._instance is not None:
+            self._instance.set_loop(enabled)
 
     def open_file(self):
         if self._focused_item_path:
@@ -104,6 +110,11 @@ class ExplorerView(QListWidget):
             
             if self._instance is None:
                 self._instance = self._player.create_file_instance(self._pending_media_path)
+                # A freshly created mpv core defaults loop off - re-apply the
+                # checkbox's current state, since load_file() on an existing
+                # instance below keeps whatever loop state was already set on
+                # it.
+                self._instance.set_loop(self._loop_enabled)
             else:
                 self._instance.load_file(self._pending_media_path)
             # pause(), not stop(): mpv auto-plays on load by default, and this
