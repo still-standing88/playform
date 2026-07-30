@@ -682,18 +682,8 @@ class PlayerWidget(QWidget):
 
         try:
             self.player_controls.load_last_position()
-            last_pos = self.player_controls.last_position
-            if last_pos and last_pos > 0:
-                # A saved position within a second of the track's own
-                # duration means it was saved after the track played
-                # through to its natural end, not paused mid-way (see
-                # save_last_position()) -- seeking there just re-finishes
-                # the track instantly, which in a looping playlist looks
-                # exactly like the track getting skipped. Also guards
-                # against a bad value saved before that fix existed.
-                length = instance.get_length()
-                if not length or last_pos < length - 1:
-                    instance.set_position(last_pos)
+            if self.player_controls.last_position and self.player_controls.last_position > 0:
+                instance.set_position(self.player_controls.last_position)
         except av_play.AVError:
             pass
 
