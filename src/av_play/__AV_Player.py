@@ -255,18 +255,6 @@ class AVPlayer(ABC):
         # backend.
         self._monitor_running = False
 
-    def _on_track_file_loaded(self):
-        # Real confirmation from the backend (mpv's own file-loaded event --
-        # see MPVVideoPlayer._handle_mpv_file_loaded) that the current file
-        # has actually finished opening. Clears the "still loading" window
-        # precisely instead of guessing a fixed duration is always enough:
-        # real audio-device negotiation can legitimately take longer than a
-        # few seconds (see the WASAPI/DirectSound timing investigation under
-        # scripts/), and a fixed timeout that's shorter than that makes a
-        # track still genuinely opening look identical to one that already
-        # ended, causing a premature auto-advance before it ever played.
-        self._track_loading = False
-
     def _monitor_playback(self):
         # The backend reports AV_STATE_NOTHING both for "this file reached
         # EOF" (the case we want to act on) and, transiently, for "a new
@@ -276,13 +264,7 @@ class AVPlayer(ABC):
         # second, spurious _advance_track() call on top of whatever
         # navigation (previous()/next()/jump_to_track()/auto-advance) just
         # happened.
-        #
-        # This is now only a last-resort safety net (a file that never
-        # confirms loaded at all -- corrupt/broken/unreadable) rather than
-        # the primary signal: normal transitions clear _track_loading via
-        # _on_track_file_loaded() as soon as mpv actually confirms the file
-        # opened, however long that genuinely takes.
-        LOAD_GRACE_PERIOD = 20.0
+        LOAD_GRACE_PERIOD = 3.0
         while self._monitor_running and self._auto_play_enabled:
             try:
                 if self._primary_instance:
