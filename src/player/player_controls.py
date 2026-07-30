@@ -655,6 +655,15 @@ class PlayerControls(QWidget):
             return
 
         current_pos = self.get_seek_position()
+        # A position within a second of the track's own duration means it
+        # played through to its natural end, not that the user paused or
+        # switched away mid-track. Saving "the end" as a resume point is
+        # never useful, and in a looping/repeated playlist it makes the
+        # track immediately re-finish itself the next time it loads --
+        # indistinguishable from the track getting skipped.
+        duration = self.seek_slider.maximum()
+        if duration and current_pos >= duration - 1:
+            current_pos = 0
         self._last_positions[self._current_file] = current_pos
 
         self._state.last_positions = self._last_positions
