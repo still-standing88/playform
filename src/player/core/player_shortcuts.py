@@ -93,6 +93,18 @@ class PlayerShortcuts:
             sh = QShortcut(shortcut, widget)
             sh.activated.connect(callback)
             sh.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+            # QShortcut defaults to autoRepeat=True -- holding a key even
+            # slightly past the OS repeat-delay threshold (or the event loop
+            # hiccuping under load, e.g. during audio device negotiation)
+            # re-fires activated repeatedly. Confirmed via mpv's own log: a
+            # single "Jump to the end" press produced repeated
+            # time-pos=<duration> seeks across multiple, unrelated
+            # already-loaded tracks seconds apart, each one immediately
+            # re-triggering EOF and advancing the playlist -- looking
+            # exactly like tracks getting skipped. None of these transport
+            # controls (seek/skip/next/previous/etc.) should ever fire more
+            # than once per physical press.
+            sh.setAutoRepeat(False)
             widget._shortcuts[shortcut] = sh
 
     def _on_repeat_start_shortcut(self):
@@ -133,6 +145,6 @@ class PlayerShortcuts:
             widget.player_controls.bookmarks_btn, widget.player_controls.goto_btn, widget.player_controls.screenshot_btn,
             widget.player_controls.seek_slider, widget.player_controls.mute_btn, widget.player_controls.volume_slider,
             widget.player_controls.time_label, widget.player_controls.current_track_label, widget.player_controls.more_btn,
-            widget.player_controls.toggle_controls_btn
+            widget.player_controls.toggle_controls_btn, widget.toggle_accordion_btn
         ]
         widget._key_event_filter.install_on_widgets(widgets)
