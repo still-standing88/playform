@@ -479,7 +479,21 @@ class PlayerControls(QWidget):
             self.shuffle_btn.setToolTip(_("Shuffle off"))
 
     def set_seek_range(self, minimum, maximum):
+        # QSlider.setRange() silently clamps an out-of-range current value
+        # into the new range and fires valueChanged when it does -- e.g.
+        # the slider still holding a previous, longer track's position/
+        # duration when a new, shorter track's range is set narrows it down
+        # to the new maximum. Unlike set_seek_position() below, this wasn't
+        # guarded, so that clamp was treated as a real user seek and sent
+        # straight to mpv, landing the new track right at its own ending
+        # (confirmed via a captured call stack: set_seek_range ->
+        # QSlider's own valueChanged -> _on_seek_value_changed ->
+        # seekChanged -> _on_seek_changed -> instance.set_position()).
+        # Self-perpetuating once triggered once, since it leaves the
+        # slider back near *this* track's own duration for the next one.
+        self.seek_slider.blockSignals(True)
         self.seek_slider.setRange(minimum, maximum)
+        self.seek_slider.blockSignals(False)
 
     def set_seek_position(self, position):
         self.seek_slider.blockSignals(True)
