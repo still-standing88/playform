@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Optional
 
-import av_play
+import media_core.av_play as av_play
 from PySide6.QtCore import QThread, Signal
 
 from app_config import prefs

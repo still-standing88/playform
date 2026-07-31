@@ -4,7 +4,7 @@ import time
 import logging
 from typing import Optional, Dict
 import utilities.mpv_bootstrap
-import av_play
+import media_core.av_play as av_play
 
 from PySide6.QtWidgets import (QWidget, QLayout, QVBoxLayout, QHBoxLayout, QSplitter,
                                QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox,

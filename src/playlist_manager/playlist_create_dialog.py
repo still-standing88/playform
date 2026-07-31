@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLineEdit,
                                QMessageBox, QSizePolicy)
 from PySide6.QtCore import Qt, Signal, Slot
 import utilities.mpv_bootstrap
-from av_play import Playlist, PlaylistEntry
+from media_core.av_play import Playlist, PlaylistEntry
 import os
 
 

@@ -1,4 +1,4 @@
-import av_play
+import media_core.av_play as av_play
 from app_config import prefs
 from utilities import signal_manager
 

@@ -6,8 +6,8 @@ import queue
 import threading
 from typing import List, Optional, Set
 
-import av_play
-from av_play.mpv_audio_filter import (
+import media_core.av_play as av_play
+from media_core.av_play.mpv_audio_filter import (
     MPVEqualizerFilter,
     MPVAudioFilter,
     MPVEchoFilter,
@@ -23,7 +23,7 @@ from av_play.mpv_audio_filter import (
     MPVPitchShiftFilter,
     MPVTempoScaleFilter,
 )
-from av_play.mpv_equalizer_presets import EQUALIZER_PRESETS
+from media_core.av_play.mpv_equalizer_presets import EQUALIZER_PRESETS
 from PySide6.QtCore import QObject, Signal, QThread
 
 from app_config import prefs

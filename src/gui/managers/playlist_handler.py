@@ -2,7 +2,7 @@ import os
 from PySide6.QtWidgets import QMessageBox
 from utilities.media_utils import get_media_files_from_directory
 import utilities.mpv_bootstrap
-from av_play import Playlist, PlaylistEntry
+from media_core.av_play import Playlist, PlaylistEntry
 from utilities.formats import formats
 from utilities.util_gui import messageBox
 from utilities import signal_manager

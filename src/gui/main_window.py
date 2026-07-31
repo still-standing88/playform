@@ -17,7 +17,7 @@ from app_db import UserFiles
 from app_config import prefs
 from EXPLORER.explorer_widget import ExplorerWidget
 import app_db
-import av_play
+import media_core.av_play as av_play
 from player.player_widget import PlayerWidget
 from playlist_manager.playlists_widget import PlaylistsWidget
 from .recents_favorites import RecentsAndFavoritesWidget
@@ -28,7 +28,7 @@ from utilities.util_gui import menuItem
 from utilities.speech import speech_manager
 from utilities import signal_manager
 import utilities.mpv_bootstrap
-from av_play import Playlist, PlaylistEntry
+from media_core.av_play import Playlist, PlaylistEntry
 from gui_controls.key_event_filter import ShortcutManager
 from app_constance.file_filter import file_filter
 from tools.logs_viewer_dialog import LogsViewerDialog
@@ -797,7 +797,7 @@ class MainWindow(QMainWindow):
             self.load_external_path(path)
 
     def load_external_path(self, path: str):
-        import av_play
+        import media_core.av_play as av_play
         if av_play.is_url(path):
             self.play_url(path)
         elif os.path.isdir(path):

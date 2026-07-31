@@ -9,7 +9,7 @@ from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap, QAction, QAction
 
 from typing import Optional, Callable, Dict
 import utilities.mpv_bootstrap
-from av_play import VideoPlayer, AVMediaInstance, AVPlaybackState
+from media_core.av_play import VideoPlayer, AVMediaInstance, AVPlaybackState
 from utilities.formats import formats, image_extensions
 from app_config import prefs, key_config
 from app_constance.styles import COLORS

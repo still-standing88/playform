@@ -6,7 +6,7 @@ from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel
 from PySide6.QtCore import Qt as qt, Slot, QSize
 import utilities.mpv_bootstrap
-from av_play import AVMediaInstance, VideoPlayer, AVPlaybackState
+from media_core.av_play import AVMediaInstance, VideoPlayer, AVPlaybackState
 from utilities.formats import image_extensions
 
 from app_config import prefs

@@ -24,7 +24,7 @@ def _clean_path_arg(raw_arg: str) -> str:
     arg = raw_arg.strip().strip('"').strip("'").strip()
     if not arg:
         return arg
-    import av_play
+    import media_core.av_play as av_play
     if not av_play.is_url(arg):
         arg = os.path.abspath(arg)
     return arg

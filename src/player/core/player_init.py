@@ -1,4 +1,4 @@
-import av_play
+import media_core.av_play as av_play
 
 from app_config import prefs
 from utilities.functions import get_debug_level, get_mpvlog_file, parse_mpv_options

@@ -1,6 +1,6 @@
 from typing import Optional
 import utilities.mpv_bootstrap
-import av_play
+import media_core.av_play as av_play
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QCheckBox
 

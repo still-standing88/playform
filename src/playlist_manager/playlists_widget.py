@@ -7,7 +7,7 @@ from .playlist_view import PlaylistView
 from .playlist_create_dialog import PlaylistCreateDialog
 from .playlist_edit_dialog import PlaylistEditDialog
 import utilities.mpv_bootstrap
-from av_play import Playlist, PlaylistManager
+from media_core.av_play import Playlist, PlaylistManager
 import os
 import json
 import re
