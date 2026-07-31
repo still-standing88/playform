@@ -1,12 +1,56 @@
 import os
 import json
-import pickle
 import hashlib
 import shutil
+import time
 import feedparser
 
 from datetime import datetime
 from time import mktime
+
+_PARSED_TIME_SUFFIX = "_parsed"
+
+
+def _feed_to_jsonable(obj):
+    """Recursively converts a feedparser.parse() result into plain
+    dict/list/str/int/float/bool/None so it can go through json.dump
+    without a custom encoder for the two leaf types feedparser actually
+    produces that json doesn't know natively: time.struct_time (every
+    *_parsed field) and, occasionally, an Exception instance
+    (bozo_exception)."""
+    if isinstance(obj, dict):
+        return {k: _feed_to_jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_feed_to_jsonable(v) for v in obj]
+    if isinstance(obj, time.struct_time):
+        return list(obj)
+    if isinstance(obj, BaseException):
+        return str(obj)
+    return obj
+
+
+def _jsonable_to_feed(obj, key=None):
+    """Reverses _feed_to_jsonable: rewraps plain dicts back into
+    feedparser.FeedParserDict so every caller's getattr/hasattr-style
+    attribute access (search_entries, sort_entries, get_entry_preview, ...)
+    keeps working exactly as it did against the pickled object, and
+    reconstructs time.struct_time for *_parsed fields so time.mktime()-style
+    consumers keep working too."""
+    if isinstance(obj, dict):
+        return feedparser.FeedParserDict({k: _jsonable_to_feed(v, key=k) for k, v in obj.items()})
+    if isinstance(obj, list):
+        if (
+            key
+            and key.endswith(_PARSED_TIME_SUFFIX)
+            and len(obj) == 9
+            and all(isinstance(x, (int, float)) for x in obj)
+        ):
+            try:
+                return time.struct_time(tuple(obj))
+            except (TypeError, ValueError):
+                pass
+        return [_jsonable_to_feed(v, key=key) for v in obj]
+    return obj
 
 
 class FeedManager:
@@ -26,7 +70,7 @@ class FeedManager:
         return hashlib.md5(url.encode('utf-8')).hexdigest()
 
     def _get_cache_path(self, url):
-        return os.path.join(self.cache_dir, f"{self._get_hash(url)}.pickle")
+        return os.path.join(self.cache_dir, f"{self._get_hash(url)}.json")
 
     def _meta_path(self):
         return os.path.join(self.cache_dir, 'feeds.json')
@@ -44,18 +88,19 @@ class FeedManager:
             self.feeds_meta = {}
 
     def _save_feed_data(self, url, data):
-        with open(self._get_cache_path(url), 'wb') as f:
-            pickle.dump(data, f)
+        with open(self._get_cache_path(url), 'w', encoding='utf-8') as f:
+            json.dump(_feed_to_jsonable(data), f)
 
     def _load_feed_data(self, url):
         if url in self.feed_data_cache:
             return self.feed_data_cache[url]
-        
+
         path = self._get_cache_path(url)
         if os.path.exists(path):
             try:
-                with open(path, 'rb') as f:
-                    data = pickle.load(f)
+                with open(path, 'r', encoding='utf-8') as f:
+                    raw = json.load(f)
+                    data = _jsonable_to_feed(raw)
                     self.feed_data_cache[url] = data
                     return data
             except Exception:
