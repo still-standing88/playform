@@ -185,19 +185,6 @@ class Explorer:
             self._root_path = self.get_root(self._current_path)
         self.__retrieve_listing()
 
-    def search(self, query: str, media_db=None):
-        """Start a new search rooted at the current NORMAL-mode location.
-        Calling this again while already viewing search results (or while
-        browsing a folder opened from them) re-searches from that same
-        original location rather than stacking searches."""
-        if self.mode == ExplorerMode.NORMAL:
-            self._pre_search_path = self._current_path
-
-        self._search_query = query
-        self.search_results = self._perform_search(self._pre_search_path, query, media_db)
-        self.mode = ExplorerMode.SEARCH_RESULTS
-        self._current_path = self._pre_search_path
-
     def begin_search(self, query: str, media_db=None) -> tuple:
         """Record search state without performing the (potentially slow)
         lookup itself - the caller runs the actual search off the UI thread
@@ -230,45 +217,6 @@ class Explorer:
         self.search_results = results
         self.mode = ExplorerMode.SEARCH_RESULTS
         self._current_path = self._pre_search_path
-
-    def _perform_search(self, root_path: str, query: str, media_db=None) -> list:
-        """Auto-detect: use the media database if root_path (or an
-        ancestor) has been cataloged, else fall back to a live recursive
-        filename search under root_path."""
-        query_lower = query.lower()
-        results = []
-
-        use_db = False
-        if media_db is not None:
-            try:
-                use_db = media_db.is_path_cataloged(root_path)
-            except Exception:
-                use_db = False
-
-        if use_db:
-            root_normalized = os.path.normcase(os.path.normpath(root_path))
-            for media_file in media_db.search_by_filename(query):
-                file_normalized = os.path.normcase(os.path.normpath(media_file.path))
-                if not file_normalized.startswith(root_normalized):
-                    continue
-                try:
-                    results.append(PathItem(path=media_file.path, type=PathType.FILE, info=PathInfo(media_file.path)))
-                except (OSError, ValueError):
-                    continue
-        else:
-            for dirpath, _dirnames, filenames in os.walk(root_path):
-                for name in filenames:
-                    if query_lower not in name.lower():
-                        continue
-                    if os.path.splitext(name)[1].lower() not in self._file_extensions:
-                        continue
-                    item_path = os.path.join(dirpath, name)
-                    try:
-                        results.append(PathItem(path=item_path, type=PathType.FILE, info=PathInfo(item_path)))
-                    except (OSError, ValueError):
-                        continue
-
-        return results
 
     def __retrieve_listing(self):
         self.folders.clear()

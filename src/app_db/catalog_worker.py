@@ -1,24 +1,26 @@
-import time
 from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal
 
 import app_db
-from .base_database import MediaFile, MediaType
 from app_config import prefs
-from utilities.formats import formats
+from media_core.metaindex import indexer as index_indexer
 
-_BATCH_SIZE = 200
+_COMMIT_EVERY = 50
 
 
 class CatalogWorker(QThread):
     """Single, long-lived, controllable thread for folder cataloging.
 
     Folders are scanned one at a time from a FIFO queue; enqueue_folder()
-    starts the thread if it isn't already running. The filesystem walk
-    happens here (I/O bound, off the UI thread); writes are handed to
-    media_db's own queue-writer thread via add_media_files(), so this
-    thread never touches SQLite directly.
+    starts the thread if it isn't already running. The filesystem walk and
+    the actual metadata extraction (via media_core.metaparser, through
+    metaindex.indexer) both happen here (I/O and CPU bound, off the UI
+    thread) against a metaindex connection this thread owns for the
+    duration of the scan - metaindex's sqlite3 connections aren't shared
+    across threads, so this worker never hands rows to another thread to
+    write, unlike catalog_roots bookkeeping which still goes through
+    media_db's own queue-writer thread.
     """
 
     folder_started = Signal(str)
@@ -50,62 +52,45 @@ class CatalogWorker(QThread):
             self._cancel_current = False
             self._scan_folder(path)
 
-    def _extension_map(self):
-        allowed = set(prefs.prefs.get("catalog_extensions", []))
-        video_exts = set(formats["video"])
-        mapping = {}
-        for ext in allowed:
-            mapping[ext] = MediaType.VIDEO if ext in video_exts else MediaType.AUDIO
-        return mapping
+    def _allowed_extensions(self) -> set:
+        return {"." + ext.lstrip(".").lower() for ext in prefs.prefs.get("catalog_extensions", [])}
 
     def _scan_folder(self, root_path: str):
         self.folder_started.emit(root_path)
-        extension_map = self._extension_map()
+        allowed_extensions = self._allowed_extensions()
         seen = added = skipped = 0
-        batch = []
 
+        conn = app_db.media_db.open_index_connection()
         try:
+            existing = index_indexer.load_existing_stats(conn)
+
             for file_path in Path(root_path).rglob("*"):
                 if self._cancel_current or not self._is_running:
                     break
 
                 try:
-                    if not file_path.is_file():
-                        continue
-                    suffix = file_path.suffix.lower().lstrip(".")
-                    media_type = extension_map.get(suffix)
-                    if media_type is None:
+                    if not file_path.is_file() or file_path.suffix.lower() not in allowed_extensions:
                         continue
 
-                    stat = file_path.stat()
                     seen += 1
-                    batch.append(MediaFile(
-                        id=app_db.media_db._generate_file_id(str(file_path)),
-                        path=str(file_path),
-                        filename=file_path.name,
-                        size=stat.st_size,
-                        duration=None,
-                        media_type=media_type,
-                        metadata={},
-                        date_added=str(stat.st_ctime),
-                        date_modified=str(stat.st_mtime),
-                    ))
-                    added += 1
+                    if index_indexer.index_file(conn, file_path, existing=existing):
+                        added += 1
+                    else:
+                        skipped += 1
 
-                    if len(batch) >= _BATCH_SIZE:
-                        app_db.media_db.add_media_files(batch)
-                        batch = []
+                    if seen % _COMMIT_EVERY == 0:
+                        conn.commit()
 
                     self.progress.emit(root_path, seen, added, skipped)
                 except (OSError, PermissionError):
                     skipped += 1
                     continue
 
-            if batch:
-                app_db.media_db.add_media_files(batch)
-
+            conn.commit()
             app_db.media_db.add_catalog_root(root_path)
             app_db.media_db.update_catalog_root_scan_stats(root_path, added)
             self.folder_finished.emit(root_path, added, skipped)
         except Exception as e:
             self.error.emit(root_path, str(e))
+        finally:
+            conn.close()

@@ -88,8 +88,7 @@ class SingletonDialogsManager:
         cataloged folder."""
         import app_db
         roots = app_db.media_db.get_catalog_roots()
-        for media in app_db.media_db.get_all_media():
-            app_db.media_db.delete_media_file(media.id)
+        app_db.media_db.clear_index()
         for root in roots:
             app_db.media_db.remove_catalog_root(root)
 
