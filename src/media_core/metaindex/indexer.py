@@ -384,12 +384,16 @@ def _extract_row_fields(meta: models.RawFileMetadata) -> dict:
     }
 
 
-def _load_existing_stats(conn: sqlite3.Connection) -> dict[str, tuple[float, int]]:
+def load_existing_stats(conn: sqlite3.Connection) -> dict[str, tuple[float, int]]:
     """One query for the whole table instead of the one-query-per-file
     pattern index_directory used to run — for a large library, that was the
     single biggest cost of a re-scan: N SELECTs just to answer "did this
     file change since last time?" for files that, on a repeat scan, mostly
     haven't. Returns {path: (mtime, size_bytes)}.
+
+    Public so callers indexing incrementally with their own progress
+    reporting (e.g. app_db's CatalogWorker) can reuse it instead of paying
+    the per-file SELECT cost index_file() falls back to without it.
     """
     cursor = conn.execute("SELECT path, mtime, size_bytes FROM files")
     return {row["path"]: (row["mtime"], row["size_bytes"]) for row in cursor.fetchall()}
@@ -471,7 +475,7 @@ def index_directory(db_path: str | Path, root: str | Path) -> IndexStats:
 
     conn = schema.open_db(db_path)
     try:
-        existing = _load_existing_stats(conn)
+        existing = load_existing_stats(conn)
         for path in root.rglob("*"):
             if not path.is_file() or path.suffix.lower() not in SUPPORTED_EXTENSIONS:
                 continue

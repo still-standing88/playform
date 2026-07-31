@@ -8,29 +8,10 @@ from dataclasses import dataclass
 from peewee import SqliteDatabase
 
 
-class MediaType(Enum):
-    VIDEO = "VIDEO"
-    AUDIO = "AUDIO"
-    MUSIC = "MUSIC"
-
-
 class FileCategory(Enum):
     FAVORITE = "FAVORITE"
     RECENT = "RECENT"
     LIBRARY = "LIBRARY"
-
-
-@dataclass
-class MediaFile:
-    id: str
-    path: str
-    filename: str
-    size: int
-    duration: Optional[float]
-    media_type: MediaType
-    metadata: dict
-    date_added: str
-    date_modified: str
 
 
 @dataclass
