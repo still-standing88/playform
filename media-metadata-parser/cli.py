@@ -6,6 +6,7 @@ inspect a single file's raw extraction without touching the database.
     python cli.py filter <db_path> [--category X] [--creator Y] [--format Z]
     python cli.py stats <db_path>
     python cli.py inspect <file_path>
+    python cli.py clear <db_path> [--yes]
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ import json
 import logging
 import sys
 
-from db import indexer, search
+from metaindex import indexer, schema, search
 from metaparser import extractor
 
 
@@ -53,6 +54,20 @@ def _cmd_stats(args: argparse.Namespace) -> None:
 def _cmd_inspect(args: argparse.Namespace) -> None:
     meta = extractor.extract(args.file_path)
     print(json.dumps(dataclasses.asdict(meta), indent=2, default=str))
+
+
+def _cmd_clear(args: argparse.Namespace) -> None:
+    if not args.yes:
+        confirm = input(f"This deletes every indexed row in {args.db_path} (schema/indexes are kept). Continue? [y/N] ")
+        if confirm.strip().lower() not in ("y", "yes"):
+            print("aborted")
+            return
+    conn = schema.open_db(args.db_path)
+    try:
+        schema.clear(conn)
+    finally:
+        conn.close()
+    print(f"cleared index at {args.db_path}")
 
 
 def _print_results(results: list[search.SearchResult]) -> None:
@@ -106,6 +121,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_inspect = subparsers.add_parser("inspect", help="run extraction on one file, print raw metadata, no DB involved")
     p_inspect.add_argument("file_path")
     p_inspect.set_defaults(func=_cmd_inspect)
+
+    p_clear = subparsers.add_parser(
+        "clear", help="delete all indexed rows and reclaim disk space (schema/indexes are kept, safe to re-index afterward)"
+    )
+    p_clear.add_argument("db_path")
+    p_clear.add_argument("-y", "--yes", action="store_true", help="skip the confirmation prompt")
+    p_clear.set_defaults(func=_cmd_clear)
 
     return parser
 

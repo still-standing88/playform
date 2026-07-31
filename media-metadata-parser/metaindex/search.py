@@ -1,5 +1,5 @@
 """Query interface over the index: free-text search via FTS5, plus
-structured filters over the columns db.schema/db.indexer populate. Every
+structured filters over the columns metaindex.schema/metaindex.indexer populate. Every
 function returns plain dicts (via sqlite3.Row) rather than leaking cursors,
 so callers (cli.py today, potentially a GUI later) don't need to know
 anything about the schema beyond field names.
@@ -12,7 +12,7 @@ import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 
-from db import schema
+from metaindex import schema
 
 _SELECT_COLUMNS = """
     files.id, files.path, files.filename, files.file_format,
@@ -21,6 +21,15 @@ _SELECT_COLUMNS = """
     files.duration_secs, files.sample_rate, files.channels,
     files.indexed_at, files.has_errors
 """
+
+# bm25() weights, one per files_fts column IN DECLARATION ORDER (filename,
+# description, category, subcategory, fx_name, creator_id, source_id,
+# tags_blob — see schema.py's _CREATE_FTS). Unweighted bm25 treats a match
+# in tags_blob (the broadest, noisiest free-text catch-all) the same as a
+# match in filename or description — a filename/description hit is a much
+# stronger signal of relevance, so it's weighted higher; tags_blob is
+# weighted lowest since it's the most likely to contain an incidental match.
+_BM25_WEIGHTS = "10.0, 8.0, 5.0, 4.0, 5.0, 3.0, 3.0, 1.0"
 
 
 @dataclass
@@ -68,9 +77,11 @@ class SearchResult:
 
 def full_text_search(db_path: str | Path, query: str, limit: int = 50) -> list[SearchResult]:
     """FTS5 MATCH search across filename/description/category/subcategory/
-    fx_name/creator_id/source_id/tags_blob, ranked by FTS5's default bm25.
-    A malformed FTS query (unbalanced quotes, bad operators) is treated as a
-    plain phrase rather than raising — search should degrade, not 500.
+    fx_name/creator_id/source_id/tags_blob, ranked by bm25 with
+    filename/description weighted above the broader tags_blob catch-all
+    (see _BM25_WEIGHTS). A malformed FTS query (unbalanced quotes, bad
+    operators) is treated as a plain phrase rather than raising — search
+    should degrade, not 500.
     """
     conn = schema.connect(db_path)
     try:
@@ -81,7 +92,7 @@ def full_text_search(db_path: str | Path, query: str, limit: int = 50) -> list[S
                 FROM files_fts
                 JOIN files ON files.id = files_fts.rowid
                 WHERE files_fts MATCH ?
-                ORDER BY bm25(files_fts)
+                ORDER BY bm25(files_fts, {_BM25_WEIGHTS})
                 LIMIT ?
                 """,
                 (query, limit),
@@ -94,7 +105,7 @@ def full_text_search(db_path: str | Path, query: str, limit: int = 50) -> list[S
                 FROM files_fts
                 JOIN files ON files.id = files_fts.rowid
                 WHERE files_fts MATCH ?
-                ORDER BY bm25(files_fts)
+                ORDER BY bm25(files_fts, {_BM25_WEIGHTS})
                 LIMIT ?
                 """,
                 (escaped, limit),

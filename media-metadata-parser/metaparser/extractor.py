@@ -1,6 +1,6 @@
 """Top-level orchestrator: sniff format, route to the right walker/
 interpreters, assemble a models.RawFileMetadata. This is the only module
-callers (db.indexer, cli) should need to import directly.
+callers (metaindex.indexer, cli) should need to import directly.
 
 Every interpreter call is wrapped so a single bad chunk records an error and
 moves on instead of aborting the whole file — per plan.md, "never let

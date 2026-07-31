@@ -52,7 +52,7 @@ def extract_as_dict(path: str | Path) -> dict:
     # dataclasses.asdict(): asdict() alone leaves nested bytes values (e.g.
     # an unrecognized RealMedia object's raw payload) as real bytes objects,
     # which a caller's own json.dumps would then fail on. default=str here
-    # matches the same convention db/indexer.py already uses for raw_json.
+    # matches the same convention metaindex/indexer.py already uses for raw_json.
     return json.loads(json.dumps(dataclasses.asdict(meta), default=str))
 
 

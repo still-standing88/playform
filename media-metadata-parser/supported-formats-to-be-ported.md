@@ -39,7 +39,7 @@ solves it (per `plan.md`'s own "solved problem, don't reinvent" call).
 
 A second pass also caught and fixed **extension-routing gaps for formats
 this project already had full support for**, found by cross-referencing
-`extractor.py`'s actual routing tables and `db/indexer.py`'s scan allowlist
+`extractor.py`'s actual routing tables and `metaindex/indexer.py`'s scan allowlist
 against PlayForm's declared list line by line, not from memory:
 `.mp1`/`.mp2` (MPEG Layer I/II — same decoder as `.mpg`'s audio path) and
 `.vob` (DVD Video Object — literally MPEG Program Stream) now route through
@@ -47,7 +47,7 @@ against PlayForm's declared list line by line, not from memory:
 `realmedia_walker.py` (same RMFF container as `.rm`/`.rmvb`); `.divx` routes
 through the AVI/RIFF path. Separately, `.ac3`, `.eac3`, `.tta`, `.mpc`,
 `.spx`, and `.ogv` were already fully supported by `mutagen` but had never
-been added to `db/indexer.py`'s `SUPPORTED_EXTENSIONS` — a directory scan
+been added to `metaindex/indexer.py`'s `SUPPORTED_EXTENSIONS` — a directory scan
 was silently skipping them even though direct extraction worked fine.
 
 Everything else in PlayForm's declared list (`.avi` via our own RIFF walker

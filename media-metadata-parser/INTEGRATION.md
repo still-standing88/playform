@@ -13,8 +13,8 @@ From the main app's own virtualenv:
 pip install -e path/to/media-metadata-parser
 ```
 
-That makes `import metaparser` (and `import db`, if the richer path below is
-used) work anywhere in the app, editable — changes to this module's source
+That makes `import metaparser` (and `import metaindex`, if the richer path
+below is used) work anywhere in the app, editable — changes to this module's source
 take effect immediately, no reinstall step. `pyproject.toml` is the
 canonical dependency list (`mutagen`, `lxml`); `pip install -e .[dev]` also
 pulls in `pytest`.
@@ -66,13 +66,13 @@ without also querying into the JSON text.
 
 ## Option 2 — richer: structured columns + FTS5 search
 
-Port `db/schema.py`'s structured columns (`cat_id`, `category`, `duration_secs`,
+Port `metaindex/schema.py`'s structured columns (`cat_id`, `category`, `duration_secs`,
 ...) and its `files_fts` FTS5 virtual table into `MediaDatabase.MEDIA_SCHEMA`
 (a migration, since `media_files` already has rows), then have
 `CatalogWorker` populate both the existing columns and the new ones via
-`db.indexer._extract_row_fields()` — already built, tested, and — as of the
+`metaindex.indexer._extract_row_fields()` — already built, tested, and — as of the
 most recent pass — wired for descriptive text vs. technical/structured
-fields (see `db/indexer.py`'s `_fields_from_*` helpers): real content only
+fields (see `metaindex/indexer.py`'s `_fields_from_*` helpers): real content only
 ever reaches free-text search, never raw keys, byte blobs, or per-frame-only
 values pretending to be whole-file numbers.
 

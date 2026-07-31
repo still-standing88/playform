@@ -58,8 +58,16 @@ _CREATE_INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_files_cat_id ON files(cat_id);",
     "CREATE INDEX IF NOT EXISTS idx_files_creator_id ON files(creator_id);",
     "CREATE INDEX IF NOT EXISTS idx_files_file_format ON files(file_format);",
+    # filter_search's min_duration/max_duration range filter had no index at
+    # all — a full table scan on every call once the library is large.
+    "CREATE INDEX IF NOT EXISTS idx_files_duration_secs ON files(duration_secs);",
 ]
 
+# prefix='2 3 4' precomputes prefix indexes for 2-4 character prefixes, so a
+# "search as you type" style query (e.g. "expl" while the user is still
+# typing "explosion") stays fast without scanning the full term dictionary
+# once the library is large — FTS5 handles occasional prefix queries fine
+# without this, but it's cheap to have and only helps at scale.
 _CREATE_FTS = """
 CREATE VIRTUAL TABLE IF NOT EXISTS files_fts USING fts5(
     filename,
@@ -71,7 +79,8 @@ CREATE VIRTUAL TABLE IF NOT EXISTS files_fts USING fts5(
     source_id,
     tags_blob,
     content='files',
-    content_rowid='id'
+    content_rowid='id',
+    prefix='2 3 4'
 );
 """
 
@@ -105,6 +114,18 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA foreign_keys=ON;")
+    # synchronous=NORMAL is the standard, safe pairing with WAL (durability
+    # is still guaranteed across app crashes; only an OS-level power loss
+    # mid-write is the tradeoff, same as most production SQLite deployments
+    # accept) — meaningfully faster writes than the default FULL, which
+    # fsyncs on every transaction regardless of journal mode.
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    # 8MB page cache (default is ~2MB) and a 256MB mmap window — both cheap,
+    # both help once the index is large enough that it doesn't fit entirely
+    # in the default cache; negative cache_size means "KB", per SQLite's own
+    # convention (positive would mean "number of pages").
+    conn.execute("PRAGMA cache_size=-8000;")
+    conn.execute("PRAGMA mmap_size=268435456;")
     return conn
 
 
@@ -112,6 +133,13 @@ def initialize(conn: sqlite3.Connection) -> None:
     conn.execute(_CREATE_FILES_TABLE)
     for stmt in _CREATE_INDEXES:
         conn.execute(stmt)
+    # NOTE: CREATE VIRTUAL TABLE IF NOT EXISTS is a no-op against an already-
+    # created files_fts from before the prefix= option was added above — an
+    # existing database file needs `python cli.py clear <db_path>` (or just
+    # deleting the file) followed by a re-index to actually pick it up. No
+    # migration path is built for this since no real index exists yet to
+    # migrate (see plan.md's testing-phase status) — worth revisiting if
+    # that's no longer true by the time this is read.
     conn.execute(_CREATE_FTS)
     for stmt in _CREATE_TRIGGERS:
         conn.execute(stmt)
@@ -123,3 +151,25 @@ def open_db(db_path: str | Path) -> sqlite3.Connection:
     conn = connect(db_path)
     initialize(conn)
     return conn
+
+
+def clear(conn: sqlite3.Connection) -> None:
+    """Deletes every indexed row and reclaims the freed disk space.
+    files_fts is kept in sync automatically via the files_ad trigger — no
+    separate FTS cleanup needed. Schema/indexes/triggers are left in place,
+    so a caller can re-run index_directory() immediately afterward without
+    needing to reopen or reinitialize anything.
+    """
+    conn.execute("DELETE FROM files;")
+    conn.commit()
+    conn.execute("VACUUM;")  # must run outside any open transaction, hence the commit() just above
+
+
+def optimize(conn: sqlite3.Connection) -> None:
+    """Refreshes the query planner's statistics — SQLite doesn't do this on
+    its own as a table grows, and stale statistics on a formerly-small,
+    now-large table can lead to a genuinely worse query plan being chosen.
+    Recommended by SQLite's own docs to run periodically (e.g. once per
+    indexing session), not on every single write.
+    """
+    conn.execute("PRAGMA optimize;")

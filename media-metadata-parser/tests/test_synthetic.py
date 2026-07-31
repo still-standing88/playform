@@ -51,7 +51,8 @@ from metaparser.interpreters import (
 )
 from metaparser.ucs import categories, filename_parser
 
-from db import indexer, schema, search
+import cli
+from metaindex import indexer, schema, search
 
 
 # ---------------------------------------------------------------------------
@@ -1588,7 +1589,7 @@ def test_end_to_end_handles_corrupt_bext_gracefully(tmp_path: Path):
 
 
 # ---------------------------------------------------------------------------
-# db.indexer: search-field extraction from the new raw sources
+# metaindex.indexer: search-field extraction from the new raw sources
 #
 # The point of these tests is the negative space as much as the positive:
 # every _fields_from_* helper must only ever put genuinely descriptive
@@ -1736,3 +1737,125 @@ def test_indexer_index_and_search_finds_matroska_title_end_to_end(tmp_path: Path
     # is scoped to descriptive text, not a blind dump of raw_json.
     assert search.full_text_search(db_path, "libmatroska")[0].filename == "sample.mkv"
     assert search.full_text_search(db_path, "0x4999") == []
+
+
+# ---------------------------------------------------------------------------
+# metaindex: perf-tuning additions (batched rescan lookup, indexes, PRAGMAs,
+# bm25 weighting, prefix search, clear/reset)
+# ---------------------------------------------------------------------------
+
+
+def test_schema_connect_applies_perf_pragmas(tmp_path: Path):
+    conn = schema.open_db(tmp_path / "index.sqlite3")
+    try:
+        assert conn.execute("PRAGMA synchronous").fetchone()[0] == 1  # NORMAL
+        assert conn.execute("PRAGMA cache_size").fetchone()[0] == -8000
+        assert conn.execute("PRAGMA mmap_size").fetchone()[0] > 0
+        assert conn.execute("PRAGMA journal_mode").fetchone()[0].lower() == "wal"
+    finally:
+        conn.close()
+
+
+def test_schema_duration_index_exists(tmp_path: Path):
+    conn = schema.open_db(tmp_path / "index.sqlite3")
+    try:
+        names = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")}
+        assert "idx_files_duration_secs" in names
+    finally:
+        conn.close()
+
+
+def test_indexer_index_directory_skips_unchanged_files_on_rescan(tmp_path: Path):
+    media_dir = tmp_path / "lib"
+    media_dir.mkdir()
+    (media_dir / "sample.mkv").write_bytes(build_matroska_bytes())
+
+    db_path = tmp_path / "index.sqlite3"
+    first = indexer.index_directory(db_path, media_dir)
+    assert first.indexed == 1
+    assert first.skipped_unchanged == 0
+
+    # Same files, unmodified — the batched existing-stats lookup must still
+    # correctly recognize nothing changed, exactly like the old per-file
+    # SELECT did.
+    second = indexer.index_directory(db_path, media_dir)
+    assert second.indexed == 0
+    assert second.skipped_unchanged == 1
+
+
+def test_search_bm25_weighting_ranks_filename_match_above_tags_blob_only_match(tmp_path: Path):
+    # File A: the query term is in the filename. File B: the query term
+    # only shows up buried in tags_blob (via a Matroska ARTIST tag it
+    # otherwise has nothing else in common with). Unweighted bm25 could
+    # plausibly rank either first; the weighting in _BM25_WEIGHTS must put
+    # the filename match ahead.
+    db_path = tmp_path / "index.sqlite3"
+    conn = schema.open_db(db_path)
+    try:
+        conn.execute(
+            """INSERT INTO files (path, filename, file_format, mtime, size_bytes, indexed_at,
+               description, tags_blob, raw_json, has_errors)
+               VALUES ('/a/zephyr.wav', 'zephyr.wav', 'wav', 1, 1, '2026-01-01', NULL, NULL, '{}', 0)"""
+        )
+        conn.execute(
+            """INSERT INTO files (path, filename, file_format, mtime, size_bytes, indexed_at,
+               description, tags_blob, raw_json, has_errors)
+               VALUES ('/b/other.wav', 'other.wav', 'wav', 1, 1, '2026-01-01', NULL, 'mix by zephyr studios', '{}', 0)"""
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    results = search.full_text_search(db_path, "zephyr")
+    assert len(results) == 2
+    assert results[0].filename == "zephyr.wav"
+
+
+def test_schema_clear_removes_rows_and_fts_then_allows_reindex(tmp_path: Path):
+    media_path = tmp_path / "sample.mkv"
+    media_path.write_bytes(build_matroska_bytes())
+
+    db_path = tmp_path / "index.sqlite3"
+    conn = schema.open_db(db_path)
+    try:
+        indexer.index_file(conn, media_path)
+        conn.commit()
+    finally:
+        conn.close()
+    assert search.stats(db_path)["total_files"] == 1
+    assert search.full_text_search(db_path, "Test Title") != []
+
+    conn = schema.open_db(db_path)
+    try:
+        schema.clear(conn)
+    finally:
+        conn.close()
+
+    assert search.stats(db_path)["total_files"] == 0
+    assert search.full_text_search(db_path, "Test Title") == []  # FTS side cleared too, via the trigger
+
+    # Schema/indexes survive a clear — re-indexing works with no extra setup.
+    conn = schema.open_db(db_path)
+    try:
+        indexer.index_file(conn, media_path)
+        conn.commit()
+    finally:
+        conn.close()
+    assert search.stats(db_path)["total_files"] == 1
+
+
+def test_cli_clear_command_with_yes_flag(tmp_path: Path, capsys):
+    media_path = tmp_path / "sample.mkv"
+    media_path.write_bytes(build_matroska_bytes())
+    db_path = tmp_path / "index.sqlite3"
+
+    conn = schema.open_db(db_path)
+    try:
+        indexer.index_file(conn, media_path)
+        conn.commit()
+    finally:
+        conn.close()
+
+    exit_code = cli.main(["clear", str(db_path), "--yes"])
+    assert exit_code == 0
+    assert search.stats(db_path)["total_files"] == 0

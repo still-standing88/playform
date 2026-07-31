@@ -201,7 +201,7 @@ def extract_attr_list_pairs(tree: dict) -> dict[str, str]:
 def extract_steinberg_sfx_fields(tree: dict) -> dict[str, str]:
     """Convenience lookup mapping known Steinberg ATTR_LIST attribute names
     to the same canonical field names extract_sfx_fields uses, so callers
-    (db.indexer) can try both without caring which vendor scheme a given
+    (metaindex.indexer) can try both without caring which vendor scheme a given
     file happens to use.
     """
     attrs = extract_attr_list_pairs(tree)

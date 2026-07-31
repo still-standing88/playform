@@ -79,9 +79,9 @@ must not crash the walker if encountered.
 5. **Common tag formats** (`metaparser/tags/`) — MP3/FLAC/M4A/video containers via
    `mutagen`, not reinvented. This is the path that also covers plain music/video
    files with no bext/iXML at all.
-6. **Indexing/search** (`db/`) — SQLite + FTS5, built against the raw-blob shape from
+6. **Indexing/search** (`metaindex/`) — SQLite + FTS5, built against the raw-blob shape from
    step 4 so it doesn't need to change when normalization lands later.
-7. **CLI** (`cli.py`) — thin glue over `extractor` + `db`.
+7. **CLI** (`cli.py`) — thin glue over `extractor` + `metaindex`.
 8. **Synthetic self-tests** — hand-built WAV/AIFF byte strings with known bext/iXML/
    LIST payloads, so the walkers and interpreters are verified byte-exact before any
    real-world file ever touches them.
@@ -124,7 +124,7 @@ media-metadata-parser/
 │       ├── __init__.py
 │       ├── audio_tags.py          mutagen-based MP3/FLAC/etc
 │       └── video_tags.py          mutagen-based MP4/MKV/etc
-├── db/
+├── metaindex/
 │   ├── __init__.py
 │   ├── schema.py                  SQLite schema + FTS5 virtual table
 │   ├── indexer.py                 directory walk -> extractor -> upsert

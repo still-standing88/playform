@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from metaparser import extractor, models
-from db import schema
+from metaindex import schema
 
 logger = logging.getLogger(__name__)
 
@@ -328,17 +328,37 @@ def _extract_row_fields(meta: models.RawFileMetadata) -> dict:
     }
 
 
-def index_file(conn: sqlite3.Connection, path: Path) -> bool:
+def _load_existing_stats(conn: sqlite3.Connection) -> dict[str, tuple[float, int]]:
+    """One query for the whole table instead of the one-query-per-file
+    pattern index_directory used to run — for a large library, that was the
+    single biggest cost of a re-scan: N SELECTs just to answer "did this
+    file change since last time?" for files that, on a repeat scan, mostly
+    haven't. Returns {path: (mtime, size_bytes)}.
+    """
+    cursor = conn.execute("SELECT path, mtime, size_bytes FROM files")
+    return {row["path"]: (row["mtime"], row["size_bytes"]) for row in cursor.fetchall()}
+
+
+def index_file(conn: sqlite3.Connection, path: Path, existing: dict[str, tuple[float, int]] | None = None) -> bool:
     """Extracts and upserts a single file. Returns True if it was (re-)
     indexed, False if skipped as unchanged. Extraction failures are caught,
     logged, and recorded on the row as has_errors rather than aborting the
     whole directory scan.
+
+    `existing`, when given, is consulted instead of running a per-file
+    SELECT — pass the dict from _load_existing_stats() when indexing many
+    files (index_directory does this). Omit it for one-off single-file
+    calls, where a single query is cheap and preloading the whole table
+    would be wasteful.
     """
     stat = path.stat()
-    existing = conn.execute(
-        "SELECT mtime, size_bytes FROM files WHERE path = ?", (str(path),)
-    ).fetchone()
-    if existing is not None and existing["mtime"] == stat.st_mtime and existing["size_bytes"] == stat.st_size:
+    if existing is not None:
+        prior = existing.get(str(path))
+    else:
+        row = conn.execute("SELECT mtime, size_bytes FROM files WHERE path = ?", (str(path),)).fetchone()
+        prior = (row["mtime"], row["size_bytes"]) if row else None
+
+    if prior is not None and prior[0] == stat.st_mtime and prior[1] == stat.st_size:
         return False
 
     try:
@@ -395,12 +415,13 @@ def index_directory(db_path: str | Path, root: str | Path) -> IndexStats:
 
     conn = schema.open_db(db_path)
     try:
+        existing = _load_existing_stats(conn)
         for path in root.rglob("*"):
             if not path.is_file() or path.suffix.lower() not in SUPPORTED_EXTENSIONS:
                 continue
             stats.scanned += 1
             try:
-                changed = index_file(conn, path)
+                changed = index_file(conn, path, existing=existing)
             except Exception as exc:
                 logger.error("indexing failed for %s: %s", path, exc)
                 stats.failed += 1
@@ -415,6 +436,11 @@ def index_directory(db_path: str | Path, root: str | Path) -> IndexStats:
                 logger.info("indexed %d/%d scanned so far", stats.indexed, stats.scanned)
 
         conn.commit()
+        # Refresh query-planner statistics once per scan (not per file —
+        # PRAGMA optimize is meant to be run occasionally, not on a hot
+        # path) so filter_search/full_text_search keep a good query plan as
+        # the table grows across repeated scans.
+        schema.optimize(conn)
     finally:
         conn.close()
 

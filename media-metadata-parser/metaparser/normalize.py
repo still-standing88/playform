@@ -6,7 +6,7 @@ sample corpus to build the table from (the SFX drive, later phase) — wiring
 it up before that point would mean designing a schema blind, which is the
 exact mistake plan.md calls out avoiding.
 
-`db.indexer` intentionally does NOT import this module yet — it indexes
+`metaindex.indexer` intentionally does NOT import this module yet — it indexes
 straight off the raw blobs in models.RawFileMetadata. Once ALIASES below is
 populated from real data, wire normalize_fields() into the indexer's ingest
 path so search can work over normalized field names without re-scanning.

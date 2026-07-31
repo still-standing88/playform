@@ -22,7 +22,7 @@ metaparser-cli = "cli:main"
 py-modules = ["cli"]
 
 [tool.setuptools.packages.find]
-include = ["metaparser*", "db*"]
+include = ["metaparser*", "metaindex*"]
 
 [tool.setuptools.package-data]
 metaparser = ["data/*.json"]
