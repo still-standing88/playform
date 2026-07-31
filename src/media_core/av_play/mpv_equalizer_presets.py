@@ -1,6 +1,6 @@
 # 10-band graphic EQ presets at [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000] Hz,
-# the same band layout VLC's libvlc_audio_equalizer_* preset table used, reproduced from the
-# well-known public reference values (originally Winamp's EQF set) rather than the libvlc binary.
+# the standard 10-band ISO/Winamp EQF layout, reproduced from the well-known
+# public reference values rather than any particular player's binary.
 EQUALIZER_PRESETS: list[tuple[str, list[float]]] = [
     ("Flat", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
     ("Classical", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -7.0, -7.0, -7.0, -9.0]),

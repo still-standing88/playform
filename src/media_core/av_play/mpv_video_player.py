@@ -744,7 +744,7 @@ class MPVVideoPlayer(AVPlayer):
         self.__mpv_interface.run_on_mpv(lambda m: setattr(m, 'vf', f"scale={width}:{height}"), wait=False)
 
     def set_video_adjust_float(self, name: str, value: float):
-        # VLC-era widget range is 0.0-2.0 (brightness/contrast/saturation) or
+        # The widget's own range is 0.0-2.0 (brightness/contrast/saturation) or
         # 0.1-10.0 (gamma) with 1.0 == neutral; mpv's equalizer properties are
         # -100..100 with 0 == neutral. hue is already degrees on both sides.
         if name == "hue":

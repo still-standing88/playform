@@ -438,8 +438,8 @@ class MPVGateFilter(MPVAudioFilter):
 
 class MPVEqualizerFilter(MPVAudioFilter):
     """10-band graphic equalizer built from chained ffmpeg `equalizer` nodes,
-    at the same band frequencies VLC's libvlc_audio_equalizer_* API used, so
-    existing preset data and UI (band count/frequencies) carry over as-is."""
+    at the standard ISO/Winamp band frequencies, so existing preset data and
+    UI (band count/frequencies) carry over as-is."""
 
     BAND_FREQUENCIES = [60.0, 170.0, 310.0, 600.0, 1000.0, 3000.0, 6000.0, 12000.0, 14000.0, 16000.0]
 
