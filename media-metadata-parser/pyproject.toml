@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "media-metaparser"
+version = "0.1.0"
+description = "Dynamic, ExifTool-inspired audio/video metadata extraction and SQLite/FTS5 indexing"
+requires-python = ">=3.10"
+dependencies = [
+    "mutagen>=1.47",
+    "lxml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+metaparser-cli = "cli:main"
+
+[tool.setuptools]
+py-modules = ["cli"]
+
+[tool.setuptools.packages.find]
+include = ["metaparser*", "db*"]
+
+[tool.setuptools.package-data]
+metaparser = ["data/*.json"]

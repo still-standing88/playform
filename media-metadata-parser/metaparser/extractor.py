@@ -13,9 +13,38 @@ import logging
 from pathlib import Path
 
 from metaparser import models
-from metaparser.chunks import iff_walker, rf64, riff_walker
+from metaparser.chunks import (
+    amr_walker,
+    caf_walker,
+    dts_walker,
+    dv_walker,
+    ebml_walker,
+    flv_walker,
+    iff_walker,
+    mp4_walker,
+    mpeg_walker,
+    realmedia_walker,
+    rf64,
+    riff_walker,
+    ts_walker,
+)
 from metaparser.chunks.riff_walker import RawChunk
-from metaparser.interpreters import bext, ixml, list_info, opportunistic
+from metaparser.interpreters import (
+    amr,
+    bext,
+    caf,
+    dts,
+    dv,
+    flash_video,
+    ixml,
+    list_info,
+    m2ts,
+    matroska,
+    mpeg,
+    opportunistic,
+    quicktime_udta,
+    realmedia,
+)
 from metaparser.tags import audio_tags, video_tags
 from metaparser.ucs import filename_parser
 
@@ -26,8 +55,38 @@ logger = logging.getLogger(__name__)
 # (the same LIST/INFO title/artist/comment convention WAV uses) from this
 # package's own RIFF walker below — no need for mutagen or any external
 # tool for the container types this package can already parse natively.
-_CHUNK_WALKER_EXTENSIONS = {".wav", ".wave", ".aif", ".aiff", ".aifc", ".avi"}
-_VIDEO_EXTENSIONS = {".mp4", ".m4v", ".mov", ".wmv", ".asf", ".mkv", ".webm"}
+_CHUNK_WALKER_EXTENSIONS = {".wav", ".wave", ".aif", ".aiff", ".aifc", ".avi", ".divx"}
+# Matroska/WebM: same reasoning as AVI above — EBML is a different binary
+# shape from RIFF/IFF, so it gets its own walker (metaparser.chunks.ebml_walker)
+# instead of going through mutagen (which has no MKV/WebM support at all).
+_EBML_WALKER_EXTENSIONS = {".mkv", ".mka", ".webm"}
+# .ra (RealAudio) is the same RMFF container as .rm/.rmvb, just an
+# audio-only encoder convention for the file extension — no separate walker
+# needed, it's already the exact format realmedia_walker.py reads.
+_REALMEDIA_EXTENSIONS = {".rm", ".rmvb", ".ra"}
+# .f4v is deliberately NOT here: despite the "flv" lineage in the name, F4V
+# is Adobe's later ISO-BMFF (MP4-family) container, not the classic FLV
+# tag-stream format this walker reads — real .f4v files start with an MP4
+# 'ftyp' box, not "FLV" magic, so they're routed through _VIDEO_EXTENSIONS
+# (mutagen's MP4 reader) alongside .mp4/.m4v/.mov instead.
+_FLV_EXTENSIONS = {".flv"}
+# .mp1/.mp2 (MPEG audio Layers I/II) and .vob (DVD Video Object, which is
+# just MPEG Program Stream under a different extension convention) are all
+# the exact same underlying format mpeg_walker.py/mpeg.py already read —
+# mutagen's mp3 module is Layer III (MP3) only, so .mp1/.mp2 would otherwise
+# get no metadata at all despite this project already having the decoder.
+_MPEG_EXTENSIONS = {".mpg", ".mpeg", ".m2v", ".mp1", ".mp2", ".vob"}
+_M2TS_EXTENSIONS = {".ts", ".m2ts", ".mts"}
+_DV_EXTENSIONS = {".dv"}
+_AMR_EXTENSIONS = {".amr"}
+_CAF_EXTENSIONS = {".caf"}
+_DTS_EXTENSIONS = {".dts"}
+# ISO-BMFF (MP4-family) extensions where the legacy pre-ilst udta text-atom
+# walker is worth running as a supplementary source alongside mutagen. .wmv/
+# .asf are ASF-family, not ISO-BMFF, so they're excluded from that walk (see
+# _extract_video) despite being routed through the same mutagen-based path.
+_VIDEO_EXTENSIONS = {".mp4", ".m4v", ".mov", ".wmv", ".asf", ".f4v", ".3gp", ".3g2"}
+_ISO_BMFF_EXTENSIONS = {".mp4", ".m4v", ".mov", ".f4v", ".3gp", ".3g2"}
 
 # bext/iXML chunk ids show up with inconsistent casing across vendors
 # ('iXML', 'IXML', 'ixml'). Compare lower-cased, but chunk_id is preserved
@@ -49,6 +108,24 @@ def extract(path: str | Path) -> models.RawFileMetadata:
 
     if suffix in _CHUNK_WALKER_EXTENSIONS:
         return _extract_chunked(path)
+    if suffix in _EBML_WALKER_EXTENSIONS:
+        return _extract_ebml(path)
+    if suffix in _REALMEDIA_EXTENSIONS:
+        return _extract_realmedia(path)
+    if suffix in _FLV_EXTENSIONS:
+        return _extract_flv(path)
+    if suffix in _MPEG_EXTENSIONS:
+        return _extract_mpeg(path)
+    if suffix in _M2TS_EXTENSIONS:
+        return _extract_m2ts(path)
+    if suffix in _DV_EXTENSIONS:
+        return _extract_dv(path)
+    if suffix in _AMR_EXTENSIONS:
+        return _extract_amr(path)
+    if suffix in _CAF_EXTENSIONS:
+        return _extract_caf(path)
+    if suffix in _DTS_EXTENSIONS:
+        return _extract_dts(path)
     if suffix in _VIDEO_EXTENSIONS:
         return _extract_video(path)
     return _extract_tagged_audio(path)
@@ -161,9 +238,280 @@ def _process_list_chunk(chunk: RawChunk, meta: models.RawFileMetadata) -> None:
         logger.debug("unhandled LIST type %r — not INFO or adtl, skipping", list_type)
 
 
+def _extract_ebml(path: Path) -> models.RawFileMetadata:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise ExtractionError(f"could not read {path}: {exc}") from exc
+
+    if not ebml_walker.is_ebml(data):
+        meta = models.RawFileMetadata(
+            file_path=str(path),
+            file_format="unknown",
+            errors=["file has no EBML magic (0x1A45DFA3) despite EBML-walkable extension"],
+        )
+        meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+        return meta
+
+    errors: list[str] = []
+    try:
+        tree = matroska.parse(data)
+    except matroska.MatroskaParseError as exc:
+        errors.append(f"matroska parse failed: {exc}")
+        tree = {}
+
+    ebml_header = tree.get("EBML") if tree else None
+    if isinstance(ebml_header, list):
+        ebml_header = ebml_header[0] if ebml_header else {}
+    doc_type = ebml_header.get("DocType") if isinstance(ebml_header, dict) else None
+    file_format = "webm" if isinstance(doc_type, str) and doc_type.lower() == "webm" else "matroska"
+
+    meta = models.RawFileMetadata(file_path=str(path), file_format=file_format, errors=errors)
+    if tree:
+        meta.matroska_raw = tree
+
+    # mutagen has no MKV/WebM support at all today, so this is currently a
+    # no-op for these extensions — kept for consistency with the WAV/AIFF
+    # supplementary-tag call in _extract_chunked, and picks up mutagen
+    # support automatically if it's ever added upstream.
+    try:
+        plain_tags = audio_tags.extract(path)
+        if plain_tags:
+            meta.tags_raw = plain_tags
+    except Exception as exc:  # defensive: audio_tags.extract already catches broadly, but never let this be fatal
+        meta.errors.append(f"supplementary tag extraction failed: {exc}")
+
+    meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+
+    return meta
+
+
+def _extract_realmedia(path: Path) -> models.RawFileMetadata:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise ExtractionError(f"could not read {path}: {exc}") from exc
+
+    if not realmedia_walker.is_realmedia(data):
+        meta = models.RawFileMetadata(
+            file_path=str(path),
+            file_format="unknown",
+            errors=["file has no '.RMF' magic despite RealMedia extension"],
+        )
+        meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+        return meta
+
+    errors: list[str] = []
+    try:
+        tree = realmedia.parse(data)
+    except realmedia_walker.RealMediaParseError as exc:
+        errors.append(f"realmedia walk failed: {exc}")
+        tree = {}
+
+    meta = models.RawFileMetadata(
+        file_path=str(path),
+        file_format="rmvb" if path.suffix.lower() == ".rmvb" else "realmedia",
+        errors=errors,
+    )
+    if tree:
+        meta.realmedia_raw = tree
+
+    meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+    return meta
+
+
+def _extract_flv(path: Path) -> models.RawFileMetadata:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise ExtractionError(f"could not read {path}: {exc}") from exc
+
+    if not flv_walker.is_flv(data):
+        meta = models.RawFileMetadata(
+            file_path=str(path),
+            file_format="unknown",
+            errors=["file has no 'FLV' magic despite .flv extension"],
+        )
+        meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+        return meta
+
+    errors: list[str] = []
+    try:
+        summary = flash_video.parse(data)
+    except flv_walker.FlvParseError as exc:
+        errors.append(f"flv walk failed: {exc}")
+        summary = None
+
+    meta = models.RawFileMetadata(file_path=str(path), file_format="flv", errors=errors)
+    if summary:
+        meta.flv_raw = summary
+
+    meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+    return meta
+
+
+def _extract_mpeg(path: Path) -> models.RawFileMetadata:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise ExtractionError(f"could not read {path}: {exc}") from exc
+
+    summary = mpeg.parse(data)
+    errors: list[str] = []
+    if not summary:
+        errors.append("no recognizable MPEG audio frame sync or video sequence header found")
+
+    meta = models.RawFileMetadata(file_path=str(path), file_format="mpeg", errors=errors)
+    if summary:
+        meta.mpeg_raw = summary
+
+    meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+    return meta
+
+
+def _extract_m2ts(path: Path) -> models.RawFileMetadata:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise ExtractionError(f"could not read {path}: {exc}") from exc
+
+    if not ts_walker.is_transport_stream(data):
+        meta = models.RawFileMetadata(
+            file_path=str(path),
+            file_format="unknown",
+            errors=["no MPEG-TS sync pattern found despite .ts/.m2ts/.mts extension"],
+        )
+        meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+        return meta
+
+    errors: list[str] = []
+    try:
+        summary = m2ts.parse(data)
+    except ts_walker.TsParseError as exc:
+        errors.append(f"m2ts walk failed: {exc}")
+        summary = None
+
+    meta = models.RawFileMetadata(file_path=str(path), file_format="m2ts", errors=errors)
+    if summary:
+        meta.m2ts_raw = summary
+
+    meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+    return meta
+
+
+def _extract_dv(path: Path) -> models.RawFileMetadata:
+    try:
+        data = path.read_bytes()
+        file_size = path.stat().st_size
+    except OSError as exc:
+        raise ExtractionError(f"could not read {path}: {exc}") from exc
+
+    errors: list[str] = []
+    try:
+        summary = dv.parse(data, file_size=file_size)
+    except dv.DvParseError as exc:
+        errors.append(f"dv parse failed: {exc}")
+        summary = None
+
+    meta = models.RawFileMetadata(file_path=str(path), file_format="dv", errors=errors)
+    if summary:
+        meta.dv_raw = summary
+
+    meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+    return meta
+
+
+def _extract_amr(path: Path) -> models.RawFileMetadata:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise ExtractionError(f"could not read {path}: {exc}") from exc
+
+    errors: list[str] = []
+    try:
+        summary = amr.parse(data)
+    except amr_walker.AmrParseError as exc:
+        errors.append(f"amr parse failed: {exc}")
+        summary = None
+
+    meta = models.RawFileMetadata(file_path=str(path), file_format="amr", errors=errors)
+    if summary:
+        meta.amr_raw = summary
+
+    meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+    return meta
+
+
+def _extract_caf(path: Path) -> models.RawFileMetadata:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise ExtractionError(f"could not read {path}: {exc}") from exc
+
+    if not caf_walker.is_caf(data):
+        meta = models.RawFileMetadata(
+            file_path=str(path),
+            file_format="unknown",
+            errors=["file has no 'caff' magic despite .caf extension"],
+        )
+        meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+        return meta
+
+    errors: list[str] = []
+    try:
+        summary = caf.parse(data)
+    except caf_walker.CafParseError as exc:
+        errors.append(f"caf walk failed: {exc}")
+        summary = None
+
+    meta = models.RawFileMetadata(file_path=str(path), file_format="caf", errors=errors)
+    if summary:
+        meta.caf_raw = summary
+
+    meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+    return meta
+
+
+def _extract_dts(path: Path) -> models.RawFileMetadata:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise ExtractionError(f"could not read {path}: {exc}") from exc
+
+    errors: list[str] = []
+    try:
+        summary = dts.parse(data)
+    except dts.DtsInterpretError as exc:
+        errors.append(f"dts parse failed: {exc}")
+        summary = None
+
+    meta = models.RawFileMetadata(file_path=str(path), file_format="dts", errors=errors)
+    if summary:
+        meta.dts_raw = summary
+
+    meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
+    return meta
+
+
 def _extract_video(path: Path) -> models.RawFileMetadata:
     tags = video_tags.extract(path)
     meta = models.RawFileMetadata(file_path=str(path), file_format=tags.get("format", "unknown_video"), tags_raw=tags)
+
+    # Supplementary: closes the specific gap mutagen's ilst-only MP4 reader
+    # has for pre-iTunes QuickTime files (see quicktime_udta.py's docstring).
+    # Best-effort and never fatal to the primary mutagen-based extraction —
+    # a udta walk failure just means this project's own bonus source is
+    # unavailable, not that the whole file's extraction should fail.
+    if path.suffix.lower() in _ISO_BMFF_EXTENSIONS:
+        try:
+            data = path.read_bytes()
+            if mp4_walker.is_iso_bmff(data):
+                udta = quicktime_udta.parse(data)
+                if udta:
+                    meta.udta_raw = udta
+        except Exception as exc:
+            meta.errors.append(f"udta extraction failed: {exc}")
+
     meta.ucs_from_filename = _ucs_result_to_dict(filename_parser.parse_filename(path))
     return meta
 

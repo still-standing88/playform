@@ -1,3 +1,5 @@
 mutagen>=1.47
 lxml>=6.0
-music-tag>=0.4.3
+# pyproject.toml is now the canonical dependency list (`pip install -e .`,
+# or `pip install -e .[dev]` for pytest) — this file is kept for quick
+# `pip install -r requirements.txt` workflows and must stay in sync with it.

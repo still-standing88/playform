@@ -25,42 +25,27 @@ reader doesn't parse that older structure, so such files come back with no
 tags even though the data is genuinely present in the file. Confirmed
 against an ffmpeg-generated .mov specifically. A from-scratch MP4/QuickTime
 atom walker (same idea as the RIFF/IFF ones, just ISO-BMFF box shaped)
-would close this; not built, since it's a bigger, separately-scoped task.
+would close this; not built, since it's a bigger, separately-scoped task —
+see ../../supported-formats-to-be-ported.md.
 
 MKV/WebM (EBML-based, a fundamentally different binary structure from RIFF/
-IFF) have no independent parser here yet — mutagen can't read them, and per
-project policy ExifTool is a dev-time cross-check oracle only (see
-exiftool_bridge.py), never a runtime dependency. Files in those two formats
-come back with empty tags rather than silently reaching for the external
-binary. Building a minimal EBML tag reader (Segment/Tags/Tag/SimpleTag) is
-future work if real samples in these formats show up.
+IFF) no longer land here at all: metaparser.extractor routes `.mkv`/`.mka`/
+`.webm` through its own EBML walker + metaparser.interpreters.matroska before
+this module would ever see them — see extractor._extract_ebml.
 """
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 from metaparser.tags import audio_tags
 
-logger = logging.getLogger(__name__)
-
-# mp4/m4v/mov share one atom structure; asf covers wmv. AVI is handled by
-# metaparser.extractor's RIFF path, not here — see module docstring.
-_MUTAGEN_VIDEO_EXTENSIONS = {".mp4", ".m4v", ".mov", ".wmv", ".asf"}
-
-# No parser exists for these yet (see module docstring) — logged once per
-# call at debug level so a scan over a library containing them is visibly
-# explainable, without treating "no metadata" as an error.
-_UNSUPPORTED_EXTENSIONS = {".mkv", ".webm"}
+# mp4/m4v/mov/f4v share one atom structure (f4v is ISO-BMFF despite the FLV-
+# suggestive name — see extractor._FLV_EXTENSIONS); asf covers wmv. AVI is
+# handled by metaparser.extractor's RIFF path, MKV/MKA/WebM by its EBML path,
+# and classic .flv by its own tag-stream path — none of those reach this module.
+_MUTAGEN_VIDEO_EXTENSIONS = {".mp4", ".m4v", ".mov", ".wmv", ".asf", ".f4v"}
 
 
 def extract(path: str | Path) -> dict:
-    path = Path(path)
-    suffix = path.suffix.lower()
-
-    if suffix in _UNSUPPORTED_EXTENSIONS:
-        logger.debug("%s has no independent parser yet (EBML-based, not RIFF/IFF) — returning no tags", suffix)
-        return {}
-
-    return audio_tags.extract(path)
+    return audio_tags.extract(Path(path))
