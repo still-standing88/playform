@@ -67,9 +67,9 @@ class CatalogProgressDialog(QDialog):
 
         button_row = QHBoxLayout()
         button_row.addStretch()
-        self.cancel_button = QPushButton(_("Cancel Current Folder"))
-        self.cancel_button.clicked.connect(self._worker.cancel_current)
-        button_row.addWidget(self.cancel_button)
+        self.pause_button = QPushButton(_("Pause"))
+        self.pause_button.clicked.connect(self._on_pause_clicked)
+        button_row.addWidget(self.pause_button)
         layout.addLayout(button_row)
 
     def _connect_worker(self):
@@ -77,6 +77,7 @@ class CatalogProgressDialog(QDialog):
         self._worker.progress.connect(self._on_progress)
         self._worker.folder_finished.connect(self._on_folder_finished)
         self._worker.error.connect(self._on_error)
+        self._worker.paused_changed.connect(self._on_paused_changed)
 
     def _sync_initial_state(self):
         """Cross-thread signals are queued - if the worker was already
@@ -94,6 +95,7 @@ class CatalogProgressDialog(QDialog):
         else:
             self._on_folder_started(worker.current_folder)
             self._on_progress(worker.current_folder, worker.current_seen, worker.current_added, worker.current_skipped)
+        self._on_paused_changed(worker.is_paused())
 
     @Slot(str)
     def _on_folder_started(self, path):
@@ -113,6 +115,17 @@ class CatalogProgressDialog(QDialog):
     def _on_error(self, path, message):
         self.folder_label.setText(_("Error scanning {path}").format(path=path))
         self.stats_label.setText(message)
+
+    @Slot(bool)
+    def _on_paused_changed(self, paused):
+        self.pause_button.setText(_("Resume") if paused else _("Pause"))
+
+    @Slot()
+    def _on_pause_clicked(self):
+        if self._worker.is_paused():
+            self._worker.resume()
+        else:
+            self._worker.pause()
 
     def is_busy(self) -> bool:
         return self._worker.isRunning()
@@ -135,13 +148,14 @@ class CatalogProgressDialog(QDialog):
             box = QMessageBox(self)
             box.setWindowTitle(_("Cataloging in Progress"))
             box.setText(_("A folder is still being cataloged."))
-            box.setInformativeText(_("Close anyway? Cataloging will continue in the background."))
-            close_btn = box.addButton(_("Close"), QMessageBox.ButtonRole.AcceptRole)
-            cancel_btn = box.addButton(_("Cancel"), QMessageBox.ButtonRole.RejectRole)
-            box.setDefaultButton(cancel_btn)
+            box.setInformativeText(_("Would you like to terminate the current scan and close?"))
+            terminate_btn = box.addButton(_("Terminate"), QMessageBox.ButtonRole.AcceptRole)
+            keep_going_btn = box.addButton(_("Keep Scanning"), QMessageBox.ButtonRole.RejectRole)
+            box.setDefaultButton(keep_going_btn)
             box.exec()
-            if box.clickedButton() != close_btn:
+            if box.clickedButton() != terminate_btn:
                 return
+            self._worker.cancel_all()
         # accept() hides without firing closeEvent, which would leave
         # dialog_closed never emitted and the singleton dialog stuck
         # "closed but not reset" - close() triggers closeEvent properly.

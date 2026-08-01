@@ -1,3 +1,4 @@
+import threading
 from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal
@@ -27,12 +28,16 @@ class CatalogWorker(QThread):
     progress = Signal(str, int, int, int)  # path, files_seen, added, skipped
     folder_finished = Signal(str, int, int)  # path, added, skipped
     error = Signal(str, str)
+    paused_changed = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._pending = []
         self._is_running = True
         self._cancel_current = False
+        # Set = running, cleared = paused. Starts set (not paused).
+        self._resume_event = threading.Event()
+        self._resume_event.set()
 
         # Mirrors the state of the last emitted signal, so a dialog that
         # connects after a folder_started/progress signal already fired
@@ -54,10 +59,34 @@ class CatalogWorker(QThread):
 
     def cancel_current(self):
         self._cancel_current = True
+        self._resume_event.set()  # unblock a paused wait so cancellation can take effect
+
+    def cancel_all(self):
+        """Cancels the folder currently being scanned and drops any queued
+        (not-yet-started) folders - used when the user asks to terminate
+        outright rather than just stop the current one. Doesn't touch
+        _is_running, so the same worker instance (a singleton reused for
+        the app's lifetime) is still usable for a future catalog request."""
+        self._pending.clear()
+        self.cancel_current()
 
     def stop(self):
         self._is_running = False
         self._cancel_current = True
+        self._resume_event.set()
+
+    def pause(self):
+        if self._resume_event.is_set():
+            self._resume_event.clear()
+            self.paused_changed.emit(True)
+
+    def resume(self):
+        if not self._resume_event.is_set():
+            self._resume_event.set()
+            self.paused_changed.emit(False)
+
+    def is_paused(self) -> bool:
+        return not self._resume_event.is_set()
 
     def run(self):
         while self._is_running and self._pending:
@@ -82,6 +111,7 @@ class CatalogWorker(QThread):
             existing = index_indexer.load_existing_stats(conn)
 
             for file_path in Path(root_path).rglob("*"):
+                self._resume_event.wait()
                 if self._cancel_current or not self._is_running:
                     break
 
