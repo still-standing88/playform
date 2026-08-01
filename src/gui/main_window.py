@@ -154,6 +154,7 @@ class MainWindow(QMainWindow):
         self.setup_ui()
         self.setup_statusbar()
         self.menu_manager.setup_menus()
+        self.setup_menubar_indicators()
         self.toolbar_manager.setup_toolbar()
         self.dock_manager.setup_dock_widgets()
         self.toolbar_manager.setup_panels_toolbar()
@@ -227,37 +228,52 @@ class MainWindow(QMainWindow):
         self.status_label.setObjectName("statusLabel")
         self.status_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.status_bar.addWidget(self.status_label, 1)
-        
+
         self.media_info_label = QLabel("")
         self.media_info_label.setObjectName("mediaInfoLabel")
         self.media_info_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.status_bar.addPermanentWidget(self.media_info_label)
-        
+
+        self.status_bar.show()
+
+        signal_manager.statusbar_message.connect(self._update_status_message)
+        signal_manager.media_info_message.connect(self.media_info_label.setText)
+
+    def setup_menubar_indicators(self):
+        """"Restore minimized" indicators, in the menu bar's own corner
+        instead of the status bar. The status bar is the first thing
+        squeezed off-screen once two docks together exceed the screen's
+        available height (see setup_statusbar()'s status_bar minimum-height
+        comment) - the menu bar row doesn't compete for that same space, so
+        these stay reachable exactly when the status bar wouldn't be."""
+        self.menubar_indicators = QWidget()
+        self.menubar_indicators.setObjectName("menubarIndicators")
+        indicators_layout = QHBoxLayout(self.menubar_indicators)
+        indicators_layout.setContentsMargins(0, 0, 4, 0)
+        indicators_layout.setSpacing(4)
+
         self.show_tool_button = QPushButton(_("Show Tool"))
         self.show_tool_button.setObjectName("showToolButton")
         self.show_tool_button.clicked.connect(self.show_hidden_tool)
         self.show_tool_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.show_tool_button.setVisible(False)
-        self.status_bar.addPermanentWidget(self.show_tool_button)
+        indicators_layout.addWidget(self.show_tool_button)
 
         self.show_downloader_button = QPushButton(_("Show Downloader"))
         self.show_downloader_button.setObjectName("showDownloaderButton")
         self.show_downloader_button.clicked.connect(self._show_minimized_downloader)
         self.show_downloader_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.show_downloader_button.setVisible(False)
-        self.status_bar.addPermanentWidget(self.show_downloader_button)
+        indicators_layout.addWidget(self.show_downloader_button)
 
         self.show_catalog_button = QPushButton(_("Show Cataloging"))
         self.show_catalog_button.setObjectName("showCatalogButton")
         self.show_catalog_button.clicked.connect(self._show_minimized_catalog)
         self.show_catalog_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.show_catalog_button.setVisible(False)
-        self.status_bar.addPermanentWidget(self.show_catalog_button)
-        
-        self.status_bar.show()
-        
-        signal_manager.statusbar_message.connect(self._update_status_message)
-        signal_manager.media_info_message.connect(self.media_info_label.setText)
+        indicators_layout.addWidget(self.show_catalog_button)
+
+        self.menuBar().setCornerWidget(self.menubar_indicators, Qt.Corner.TopRightCorner)
         
     def connect_signals(self):
         self.recents_and_favorites_widget.itemRequested.connect(self.play_file)
