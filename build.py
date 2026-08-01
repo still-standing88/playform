@@ -54,6 +54,18 @@ def _base_args(output_dir, debug_build=False) -> list[str]:
         "--include-package-data=qdarkstyle",
         "--nofollow-import-to=ffmpeg_binary",
         "--nofollow-import-to=assets_rc",
+        # media_core (av_play/metaindex/metaparser) is compiled separately by
+        # build_media_core_pyd into its own .pyd, moved into app.dist below -
+        # same pattern as assets_rc. Since the main compile never follows
+        # into media_core, it also never discovers the third-party packages
+        # only media_core imports (python-mpv, lxml, mutagen aren't imported
+        # anywhere else in src/) - force their inclusion explicitly so
+        # app.dist still ships them; without this the compiled media_core.pyd
+        # would fail to import them at runtime.
+        "--nofollow-import-to=media_core",
+        "--include-package=mpv",
+        "--include-package=lxml",
+        "--include-package=mutagen",
         "--nofollow-import-to=pygments",
         "--nofollow-import-to=sqlalchemy.ext",
         "--nofollow-import-to=sqlalchemy.dialects.mssql",
@@ -130,7 +142,30 @@ def build_assets_pyd(c):
     )
 
 
-@task(pre=[build_assets_pyd])
+@task
+def build_media_core_pyd(c):
+    """Compile src/media_core (av_play/metaindex/metaparser) to a native
+    .pyd module (output: dist/) - same --module pattern as build_assets_pyd,
+    just for a real multi-file package instead of one flat .py file.
+    --include-package=media_core is what makes Nuitka embed every submodule
+    (av_play, metaindex, metaparser and their own subpackages) into the one
+    compiled extension, so `import media_core.av_play` etc. keeps working
+    against the compiled artifact exactly as it does against the source tree.
+    """
+    media_core_dir = SRC_DIR / "media_core"
+    if not media_core_dir.exists():
+        print(f"media_core package not found at {media_core_dir}, skipping.")
+        return
+    print("Compiling media_core package to .pyd module...")
+    c.run(
+        f"{sys.executable} -m nuitka --module {media_core_dir} --include-package=media_core "
+        f"--output-dir={BIN_DIR} --remove-output",
+        pty=False,
+        in_stream=False,
+    )
+
+
+@task(pre=[build_assets_pyd, build_media_core_pyd])
 def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, compiler=None, debug_build=False):
     """Compile the application with Nuitka."""
     plat = _detect_platform(target_platform)
@@ -180,10 +215,11 @@ def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, com
         app_dist_dir = BIN_DIR / "app.dist"
 
     if app_dist_dir.exists():
-        for pyd_file in BIN_DIR.glob("assets_rc*.pyd"):
-            dest_pyd = app_dist_dir / pyd_file.name
-            shutil.move(str(pyd_file), str(dest_pyd))
-            print(f"Moved {pyd_file.name} -> {dest_pyd}")
+        for pattern in ("assets_rc*.pyd", "media_core*.pyd"):
+            for pyd_file in BIN_DIR.glob(pattern):
+                dest_pyd = app_dist_dir / pyd_file.name
+                shutil.move(str(pyd_file), str(dest_pyd))
+                print(f"Moved {pyd_file.name} -> {dest_pyd}")
 
         (app_dist_dir / "bin").mkdir(exist_ok=True)
 
