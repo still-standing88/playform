@@ -324,16 +324,17 @@ class MainWindow(QMainWindow):
 
     def download_url(self, url: str):
         from player.util.url import is_url_supported
-        from player.util.utilities import ensure_ytdlp_available
+
+        if is_url_supported(url):
+            QMessageBox.warning(
+                self,
+                _("Unsupported Download"),
+                _("Downloading from this type of link isn't supported yet."),
+            )
+            return
 
         downloader = self._get_shared_downloader()
-        if is_url_supported(url):
-            if not ensure_ytdlp_available(self):
-                return
-            downloader.add_ytdlp_download(url)
-        else:
-            downloader.add_download(url)
-
+        downloader.add_download(url)
         self.open_downloader()
 
     def load_folder_as_playlist(self, folder_path: str):
