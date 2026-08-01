@@ -23,6 +23,7 @@ class CatalogProgressDialog(QDialog):
 
         self.ui()
         self._connect_worker()
+        self._sync_initial_state()
 
     def ui(self):
         layout = QVBoxLayout(self)
@@ -32,6 +33,7 @@ class CatalogProgressDialog(QDialog):
         title_bar = QHBoxLayout()
         title_label = QLabel(_("Database Cataloging"))
         title_label.setStyleSheet(TITLE_LABEL_STYLE)
+        title_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         title_bar.addWidget(title_label)
         title_bar.addStretch()
 
@@ -50,6 +52,7 @@ class CatalogProgressDialog(QDialog):
 
         self.folder_label = QLabel(_("No folder being scanned"))
         self.folder_label.setWordWrap(True)
+        self.folder_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         layout.addWidget(self.folder_label)
 
         self.progress_bar = QProgressBar()
@@ -57,6 +60,7 @@ class CatalogProgressDialog(QDialog):
         layout.addWidget(self.progress_bar)
 
         self.stats_label = QLabel("")
+        self.stats_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         layout.addWidget(self.stats_label)
 
         layout.addStretch()
@@ -73,6 +77,23 @@ class CatalogProgressDialog(QDialog):
         self._worker.progress.connect(self._on_progress)
         self._worker.folder_finished.connect(self._on_folder_finished)
         self._worker.error.connect(self._on_error)
+
+    def _sync_initial_state(self):
+        """Cross-thread signals are queued - if the worker was already
+        started (and had already emitted folder_started/progress) before
+        this dialog existed to connect to it, those specific emissions are
+        lost. Read the worker's own current-state snapshot directly instead
+        of assuming a signal will arrive to set it."""
+        worker = self._worker
+        if worker.current_folder is None:
+            return
+        if worker.current_error is not None:
+            self._on_error(worker.current_folder, worker.current_error)
+        elif worker.current_finished:
+            self._on_folder_finished(worker.current_folder, worker.current_added, worker.current_skipped)
+        else:
+            self._on_folder_started(worker.current_folder)
+            self._on_progress(worker.current_folder, worker.current_seen, worker.current_added, worker.current_skipped)
 
     @Slot(str)
     def _on_folder_started(self, path):

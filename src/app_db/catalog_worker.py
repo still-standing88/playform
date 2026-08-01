@@ -34,6 +34,19 @@ class CatalogWorker(QThread):
         self._is_running = True
         self._cancel_current = False
 
+        # Mirrors the state of the last emitted signal, so a dialog that
+        # connects after a folder_started/progress signal already fired
+        # (e.g. queued cross-thread emits landing before the dialog exists
+        # to receive them) can still initialize itself correctly instead of
+        # being stuck on "No folder being scanned" while stats keep
+        # updating from progress signals it does catch.
+        self.current_folder = None
+        self.current_seen = 0
+        self.current_added = 0
+        self.current_skipped = 0
+        self.current_finished = True
+        self.current_error = None
+
     def enqueue_folder(self, path: str):
         self._pending.append(path)
         if not self.isRunning():
@@ -56,6 +69,10 @@ class CatalogWorker(QThread):
         return {"." + ext.lstrip(".").lower() for ext in prefs.prefs.get("catalog_extensions", [])}
 
     def _scan_folder(self, root_path: str):
+        self.current_folder = root_path
+        self.current_seen = self.current_added = self.current_skipped = 0
+        self.current_finished = False
+        self.current_error = None
         self.folder_started.emit(root_path)
         allowed_extensions = self._allowed_extensions()
         seen = added = skipped = 0
@@ -81,6 +98,7 @@ class CatalogWorker(QThread):
                     if seen % _COMMIT_EVERY == 0:
                         conn.commit()
 
+                    self.current_seen, self.current_added, self.current_skipped = seen, added, skipped
                     self.progress.emit(root_path, seen, added, skipped)
                 except (OSError, PermissionError):
                     skipped += 1
@@ -89,8 +107,11 @@ class CatalogWorker(QThread):
             conn.commit()
             app_db.media_db.add_catalog_root(root_path)
             app_db.media_db.update_catalog_root_scan_stats(root_path, added)
+            self.current_finished = True
             self.folder_finished.emit(root_path, added, skipped)
         except Exception as e:
+            self.current_finished = True
+            self.current_error = str(e)
             self.error.emit(root_path, str(e))
         finally:
             conn.close()
