@@ -29,28 +29,43 @@ class DownloadListItem(QWidget):
         
         self.filename_label = QLabel(download_item.filename)
         self.filename_label.setStyleSheet("font-weight: bold;")
-        
+        self.filename_label.setFocusPolicy(Qt.TabFocus)
+        self.filename_label.setAccessibleName(_("Download filename"))
+        self.filename_label.setAccessibleDescription(download_item.filename)
+
         self.status_label = QLabel(self.status_text(download_item.status))
-        
+        self.status_label.setFocusPolicy(Qt.TabFocus)
+        self.status_label.setAccessibleName(_("Download status"))
+        self.status_label.setAccessibleDescription(self.status_label.text())
+
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
         self.progress_bar.setTextVisible(True)
-        
+        self.progress_bar.setFocusPolicy(Qt.TabFocus)
+        self.progress_bar.setAccessibleName(_("Download progress"))
+        self.progress_bar.setAccessibleDescription(_("0 percent"))
+
         info_layout = QHBoxLayout()
         self.size_label = QLabel(_("0 B / 0 B"))
+        self.size_label.setFocusPolicy(Qt.TabFocus)
+        self.size_label.setAccessibleName(_("Downloaded size"))
+        self.size_label.setAccessibleDescription(self.size_label.text())
         self.speed_label = QLabel(_("0 B/s"))
+        self.speed_label.setFocusPolicy(Qt.TabFocus)
+        self.speed_label.setAccessibleName(_("Download speed"))
+        self.speed_label.setAccessibleDescription(self.speed_label.text())
         info_layout.addWidget(self.size_label)
         info_layout.addStretch()
         info_layout.addWidget(self.speed_label)
-        
+
         layout.addWidget(self.filename_label)
         layout.addWidget(self.status_label)
         layout.addWidget(self.progress_bar)
         layout.addLayout(info_layout)
-        
+
         self.setLayout(layout)
-        
+
         download_item.progress_changed.connect(self.update_progress)
         download_item.status_changed.connect(self.update_status)
         download_item.speed_changed.connect(self.update_speed)
@@ -59,12 +74,15 @@ class DownloadListItem(QWidget):
         if total > 0:
             percentage = int((downloaded / total) * 100)
             self.progress_bar.setValue(percentage)
-        
+            self.progress_bar.setAccessibleDescription(_("{percent} percent").format(percent=percentage))
+
         self.size_label.setText(f"{self.format_size(downloaded)} / {self.format_size(total)}")
-    
+        self.size_label.setAccessibleDescription(self.size_label.text())
+
     def update_status(self, status):
         self.status_label.setText(self.status_text(status))
-        
+        self.status_label.setAccessibleDescription(self.status_label.text())
+
         if status == DownloadStatus.COMPLETED:
             self.progress_bar.setValue(100)
             self.status_label.setStyleSheet("color: green;")
@@ -79,6 +97,7 @@ class DownloadListItem(QWidget):
     
     def update_speed(self, speed):
         self.speed_label.setText(f"{self.format_size(speed)}/s")
+        self.speed_label.setAccessibleDescription(self.speed_label.text())
     
     @staticmethod
     def format_size(bytes_size):
@@ -122,6 +141,8 @@ class DownloaderWidget(QWidget):
         self.list_widget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.list_widget.customContextMenuRequested.connect(self.show_context_menu)
         self.list_widget.currentItemChanged.connect(self.on_selection_changed)
+        self.list_widget.setAccessibleName(_("Downloads list"))
+        self.list_widget.setAccessibleDescription(_("List of current, queued, and finished downloads"))
         
         left_layout.addWidget(QLabel(_("Downloads:")))
         left_layout.addWidget(self.list_widget)
@@ -148,6 +169,8 @@ class DownloaderWidget(QWidget):
         self.info_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.info_label.setFocusPolicy(Qt.TabFocus)
         self.info_label.setMinimumHeight(100)
+        self.info_label.setAccessibleName(_("Selected download information"))
+        self.info_label.setAccessibleDescription(self.info_label.text())
         
         self.more_info_btn = QPushButton(_("More Info"))
         self.more_info_btn.setCheckable(True)
@@ -163,6 +186,7 @@ class DownloaderWidget(QWidget):
         self.more_info_content.setAlignment(Qt.AlignTop)
         self.more_info_content.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.more_info_content.setFocusPolicy(Qt.TabFocus)
+        self.more_info_content.setAccessibleName(_("Additional download details"))
         
         self.more_info_scroll.setWidget(self.more_info_content)
         
@@ -232,6 +256,7 @@ class DownloaderWidget(QWidget):
         if not current:
             self.current_item = None
             self.info_label.setText(_("No download selected"))
+            self.info_label.setAccessibleDescription(self.info_label.text())
             self.more_info_btn.setEnabled(False)
             self.more_info_btn.setChecked(False)
             self.more_info_scroll.setVisible(False)
@@ -249,35 +274,58 @@ class DownloaderWidget(QWidget):
     def update_info_display(self):
         if not self.current_item:
             return
-        
+
         info = self.current_item.get_info()
         status_text = DownloadListItem.status_text(self.current_item.status)
-        
+
         text = f"<b>{_('Filename')}:</b> {info['filename']}<br>"
         text += f"<b>{_('Status')}:</b> {status_text}<br>"
         text += f"<b>{_("Progress")}:</b> {DownloadListItem.format_size(info['downloaded_size'])} / "
         text += f"{DownloadListItem.format_size(info['total_size'])}<br>"
         text += f"<b>{_("Speed")}:</b> {DownloadListItem.format_size(info['speed'])}/s"
-        
+
         if info['error']:
             text += f"<br><b style='color: red;'>{_("Error")}:</b> {info['error']}"
-        
+
         self.info_label.setText(text)
-    
+
+        # Plain-text mirror of the HTML above - a screen reader reading
+        # accessibleDescription verbatim shouldn't hear literal "<b>" tags.
+        plain = (
+            f"{_('Filename')}: {info['filename']}. "
+            f"{_('Status')}: {status_text}. "
+            f"{_('Progress')}: {DownloadListItem.format_size(info['downloaded_size'])} / "
+            f"{DownloadListItem.format_size(info['total_size'])}. "
+            f"{_('Speed')}: {DownloadListItem.format_size(info['speed'])}/s."
+        )
+        if info['error']:
+            plain += f" {_('Error')}: {info['error']}"
+        self.info_label.setAccessibleDescription(plain)
+
     def update_more_info_display(self):
         if not self.current_item:
             return
-        
+
         info = self.current_item.get_info()
-        
+
         text = f"<b>{_("URL")}:</b><br>{info['url']}<br><br>"
         text += f"<b>{_("Destination")}:</b><br>{info['destination']}<br><br>"
         text += f"<b>{_("Full Path")}:</b><br>{info['filepath']}<br><br>"
         text += f"<b>{_("Retry Count")}:</b> {info['retry_count']}<br>"
-        
+
         if info['error']:
             text += f"<br><b>{_("Error Details")}:</b><br>{info['error']}"
-        
+
+        plain = (
+            f"{_('URL')}: {info['url']}. "
+            f"{_('Destination')}: {info['destination']}. "
+            f"{_('Full Path')}: {info['filepath']}. "
+            f"{_('Retry Count')}: {info['retry_count']}."
+        )
+        if info['error']:
+            plain += f" {_('Error Details')}: {info['error']}"
+        self.more_info_content.setAccessibleDescription(plain)
+
         self.more_info_content.setText(text)
     
     def toggle_more_info(self):
