@@ -18,6 +18,8 @@ _NO_WINDOW = {"creationflags": subprocess.CREATE_NO_WINDOW} if sys.platform == "
 
 
 def _get_deno_arg():
+    # Deno here is solely a yt-dlp dependency (its optional JS runtime for
+    # resolving some sites' streaming URLs) - PlayForm itself never invokes it.
     try:
         from utilities.functions import get_parent_dir
         name = "deno.exe" if os.name == "nt" else "deno"

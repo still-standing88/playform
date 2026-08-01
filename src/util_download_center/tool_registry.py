@@ -58,7 +58,8 @@ DENO = ToolDef(
     label="Deno",
     description=(
         "Deno is a secure, modern JavaScript and TypeScript runtime built on V8. "
-        "PlayForm uses Deno for scripting, automation, and extension support. "
+        "PlayForm doesn't use Deno directly - yt-dlp uses it as an optional JS "
+        "runtime to resolve certain sites' streaming URLs. "
         "The binary is distributed as a zip archive and extracted automatically."
     ),
     github_repo="denoland/deno",
