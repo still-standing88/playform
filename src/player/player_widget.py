@@ -767,11 +767,44 @@ class PlayerWidget(QWidget):
         finally:
             self._loading = False
 
+    def _resolve_playlist_choice(self, url: str) -> Optional[str]:
+        """If url carries both a video id and a playlist/Mix id, asks the
+        user whether to load just the video or the full playlist. Returns
+        the (possibly modified) URL to load, or None if the user cancelled."""
+        from player.util.url import has_video_and_playlist_params, is_mix_or_radio_playlist, strip_playlist_params
+
+        if not has_video_and_playlist_params(url):
+            return url
+
+        box = QMessageBox(self)
+        box.setWindowTitle(_("Video or Playlist?"))
+        box.setText(_("This link includes both a video and a playlist."))
+        informative = _("Would you like to load just this video, or the full playlist?")
+        if is_mix_or_radio_playlist(url):
+            informative = _("This looks like an auto-generated Mix/Radio playlist. ") + informative
+        box.setInformativeText(informative)
+        video_btn = box.addButton(_("Just This Video"), QMessageBox.ButtonRole.AcceptRole)
+        playlist_btn = box.addButton(_("Full Playlist"), QMessageBox.ButtonRole.ActionRole)
+        box.addButton(_("Cancel"), QMessageBox.ButtonRole.RejectRole)
+        box.setDefaultButton(video_btn)
+        box.exec()
+
+        clicked = box.clickedButton()
+        if clicked == video_btn:
+            return strip_playlist_params(url)
+        if clicked == playlist_btn:
+            return url
+        return None
+
     def change_path(self, path: str):
         if not path: return
 
         try:
             if av_play.is_url(path):
+                resolved = self._resolve_playlist_choice(path)
+                if resolved is None:
+                    return
+                path = resolved
                 self.player_controls._source_url = path
                 self.load_url(path)
             elif os.path.isfile(path):

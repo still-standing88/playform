@@ -6,7 +6,7 @@ import sys
 import re
 import threading
 from typing import Optional, List
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
 headers={ "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" }
 logger = logging.getLogger(__name__)
@@ -183,11 +183,43 @@ def has_playlist_param(url: str) -> bool:
 
 def is_playlist(url: str) -> bool:
     url_lower = url.lower()
-    
+
     if has_playlist_param(url_lower):
         return True
-    
+
     return any(indicator in url_lower for indicator in ['/sets/', '/albums/', '/playlist'])
+
+def has_video_and_playlist_params(url: str) -> bool:
+    """True when the URL has both a video id (v=) and a playlist id
+    (list=) - the ambiguous case (e.g. a YouTube "watch?v=...&list=..."
+    link) where is_playlist() alone would silently pick the playlist
+    without the single-video interpretation ever being offered."""
+    try:
+        params = parse_qs(urlparse(url).query)
+        return 'v' in params and 'list' in params
+    except Exception:
+        return False
+
+def is_mix_or_radio_playlist(url: str) -> bool:
+    """True when list= starts with 'RD' - YouTube's prefix for
+    auto-generated Mix/Radio playlists, as opposed to a real user-curated
+    playlist (any other prefix, e.g. 'PL', 'OLAK5uy_', ...)."""
+    try:
+        list_values = parse_qs(urlparse(url).query).get('list', [])
+        return bool(list_values) and list_values[0].startswith('RD')
+    except Exception:
+        return False
+
+def strip_playlist_params(url: str) -> str:
+    """Returns url with list/start_radio/index query params removed,
+    keeping just the video id - used when the user chooses to load a
+    single video from a link that also carries a playlist/Mix id."""
+    parsed = urlparse(url)
+    params = parse_qs(parsed.query)
+    for key in ('list', 'start_radio', 'index'):
+        params.pop(key, None)
+    new_query = urlencode(params, doseq=True)
+    return urlunparse(parsed._replace(query=new_query))
 
 def get_best_format(info) -> str:
     formats = info.get("formats", [])
