@@ -307,6 +307,11 @@ The Player panel is the heart of PlayForm. It is divided into these areas, from 
 | **Video Effects** | Deinterlace and Deband toggles. |
 | **Audio Filters** | Enable and configure available mpv audio filters, each with its own parameters. |
 
+- **Chapters** — Populated from the file's embedded chapter markers, if any. Click an entry to jump to it; the current chapter is highlighted.
+- **Color Adjustments** — Brightness, Contrast, Gamma, Hue, and Saturation sliders for video playback.
+- **Video Effects** — **Deinterlace** and **Deband** toggles.
+- **Audio Filters** — Twelve mpv filters, each enabled and configured independently: Echo, Reverb, Low Pass, High Pass, Band Pass, Compressor, Limiter, Gate, Flanger, Chorus, Pitch Shift, Tempo Scale.
+
 ### Player Controls (Transport Bar)
 
 The transport bar is organized into two rows:
