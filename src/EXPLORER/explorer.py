@@ -119,8 +119,16 @@ class Explorer:
     def get_current_path(self): return self._current_path
 
     def set_current_path(self, path):
-        if os.path.exists(path):
-            self._current_path = path
+        # Windows resolves a bare drive letter like "I:" (no trailing
+        # separator) via a hidden per-drive cwd, so os.path.exists("I:")
+        # passes -- but os.path.join("I:", "sub") == "I:sub" (no
+        # separator inserted), silently corrupting every path built under
+        # it from then on. mpv, unlike Windows, doesn't resolve that
+        # drive-relative form and fails to open the file. abspath()
+        # normalizes it to "I:\\" up front.
+        normalized = os.path.abspath(path) if path else path
+        if normalized and os.path.exists(normalized):
+            self._current_path = normalized
         else:
             self._current_path = self.default_path
         self._root_path = self.get_root(self._current_path)
