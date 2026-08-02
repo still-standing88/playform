@@ -48,6 +48,53 @@
 <body>
 <h1 id="playform-documentation">PlayForm Documentation</h1>
 <hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#1-software-overview">1. Software Overview</a><ul>
+<li><a href="#11-introduction">1.1. Introduction</a></li>
+<li><a href="#12-features">1.2. Features</a></li>
+<li><a href="#13-supported-media-formats">1.3. Supported Media Formats</a></li>
+<li><a href="#14-online-media-playback">1.4. Online Media Playback</a></li>
+</ul>
+</li>
+<li><a href="#2-a-tour-of-the-programs-user-interface">2. A Tour of the Program's User Interface</a><ul>
+<li><a href="#21-main-ui">2.1. Main UI</a><ul>
+<li><a href="#211-menubar">2.1.1. Menubar</a></li>
+<li><a href="#212-toolbar">2.1.2. Toolbar</a></li>
+<li><a href="#213-status-bar">2.1.3. Status Bar</a></li>
+<li><a href="#214-docking-panels">2.1.4. Docking Panels</a></li>
+</ul>
+</li>
+<li><a href="#22-player">2.2. Player</a></li>
+<li><a href="#23-explorer">2.3. Explorer</a></li>
+<li><a href="#24-playlists">2.4. Playlists</a></li>
+<li><a href="#25-recents-and-favorites">2.5. Recents and Favorites</a></li>
+<li><a href="#26-media-providers">2.6. Media Providers</a><ul>
+<li><a href="#261-podcasts">2.6.1. Podcasts</a></li>
+<li><a href="#262-radio">2.6.2. Radio</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#3-customization-and-options">3. Customization and Options</a><ul>
+<li><a href="#31-shortcuts">3.1. Shortcuts</a></li>
+<li><a href="#32-preferences">3.2. Preferences</a></li>
+<li><a href="#33-manage-database">3.3. Manage Database</a></li>
+</ul>
+</li>
+<li><a href="#4-tools">4. Tools</a><ul>
+<li><a href="#41-ffmpeg-tools">4.1. FFmpeg Tools</a></li>
+<li><a href="#42-subtitle-tools">4.2. Subtitle Tools</a></li>
+<li><a href="#43-other-tools">4.3. Other Tools</a></li>
+</ul>
+</li>
+<li><a href="#5-legal">5. Legal</a><ul>
+<li><a href="#51-software-license">5.1. Software License</a></li>
+<li><a href="#52-third-party-components">5.2. Third-Party Components</a></li>
+</ul>
+</li>
+</ul>
+<hr>
 <h1 id="1-software-overview">1. Software Overview</h1>
 <h2 id="11-introduction">1.1 Introduction</h2>
 <p>PlayForm is a cross-platform media player that lets you play audio and video files, stream online content from YouTube and other websites, listen to internet radio, and follow podcasts — all from a single application.</p>
@@ -460,6 +507,10 @@
 <td>Opens the Preferences dialog.</td>
 </tr>
 <tr>
+<td><strong>Manage Database…</strong></td>
+<td>Opens the Manage Database dialog (see <a href="#33-manage-database">Section 3.3</a>).</td>
+</tr>
+<tr>
 <td><strong>Manage Hotkeys</strong></td>
 <td>Opens the Hotkeys configuration dialog where all keyboard shortcuts can be remapped.</td>
 </tr>
@@ -496,14 +547,15 @@
 <li><strong>Toolbar Tools</strong> (right) — Tools currently assigned to the toolbar, in their display order.</li>
 </ul>
 <p>Between the two lists, four buttons allow you to add, remove, move up, and move down tools. Both lists support multi-selection (Ctrl+Click or Shift+Click). The <strong>Reset to Default</strong> button clears all tools from the toolbar. Click <strong>OK</strong> to save your changes, or <strong>Cancel</strong> to discard them. The configuration is kept between sessions.</p>
+<blockquote>
+<p><strong>Note:</strong> The top-right corner of the menu bar shows restore buttons — Show Tool, Show Downloader, Show Cataloging, Show Manage Database — whenever the corresponding window has been minimized.</p>
+</blockquote>
 <hr>
 <h3 id="213-status-bar">2.1.3. Status Bar</h3>
 <p>The status bar runs along the bottom of the main window and displays context-sensitive information:</p>
 <ul>
 <li><strong>Status message (left)</strong> — Displays the current application state, e.g. "Ready", "Playing", "Paused", "Stopped", "Loading: <em>filename</em>", or "No media loaded".</li>
 <li><strong>Media info (right)</strong> — Displays media-specific metadata (track title, artist, bitrate, etc.) when available.</li>
-<li><strong>Show Tool button (right)</strong> — Hidden by default. Appears when a tool window has been minimized; clicking it restores that tool.</li>
-<li><strong>Show Downloader button (right)</strong> — Hidden by default. Appears when the Download Manager has been minimized; clicking it restores the downloader dialog.</li>
 </ul>
 <hr>
 <h3 id="214-docking-panels">2.1.4. Docking Panels</h3>
@@ -559,6 +611,8 @@
 <blockquote>
 <p><strong>Note:</strong> The Radio Browser and Podcasts panels are created only when you first toggle them on — they do not consume resources until needed.</p>
 </blockquote>
+<h4 id="panels-toolbar">Panels Toolbar</h4>
+<p>A dedicated toolbar below the main toolbar gives each panel — Player, Recents/Favorites, Explorer, Playlists, Radio, Podcasts, and Console — a <strong>Show/Hide</strong> button and a <strong>Float</strong> button. Float detaches the panel into its own window; toggle it again to redock. Float is only available while the panel is visible.</p>
 <h4 id="player-panel-minimization">Player Panel Minimization</h4>
 <p>The Player panel behaves slightly differently from the others. The <strong>View &gt; Minimize Player</strong> menu item (Ctrl+H) collapses the player to show only the Play/Pause button and the minimize toggle. Pressing Ctrl+H again or clicking the toggle button restores the full player controls. This is useful when you want to listen to audio without the full player taking up screen space.</p>
 <p>Keyboard shortcuts are available for toggling each panel's visibility and for moving keyboard focus directly to a panel. See <a href="#31-shortcuts">Section 3.1</a> for the complete shortcut reference.</p>
@@ -570,12 +624,45 @@
 <li><strong>Video Display</strong> — The area where video content is rendered. For audio-only files, this area remains black. A loading overlay appears while online media is being resolved.</li>
 <li><strong>Segment Timeline</strong> — A visual timeline bar that shows the current playback progress, loop segments (as highlighted blocks), and bookmark markers (as vertical lines). You can click and drag to add or move loop segments and bookmarks directly.</li>
 <li><strong>Player Controls</strong> — The main transport bar with all playback buttons, the seek slider, volume controls, and more.</li>
-<li><strong>Subtitles Panel</strong> — A collapsible list that displays subtitle text with the current line highlighted in yellow. It begins hidden and can be toggled via the <strong>Show Subtitles</strong> / <strong>Hide Subtitles</strong> button in its header.</li>
-<li><strong>Filters Panel</strong> — Audio and video filter controls (equalizer and adjustment options).</li>
+<li><strong>Side Panel</strong> — A collapsible accordion of six sections, toggled with the <strong>Show/Hide Side Panel</strong> button. Click a section's header to open it; only one is open at a time.</li>
 </ol>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Chapters</strong></td>
+<td>Lists chapters for the current media; click one to jump to it.</td>
+</tr>
+<tr>
+<td><strong>Subtitles</strong></td>
+<td>Current subtitle text, with the active line highlighted.</td>
+</tr>
+<tr>
+<td><strong>Equalizer</strong></td>
+<td>Enable toggle, presets, preamp, and per-band gain sliders.</td>
+</tr>
+<tr>
+<td><strong>Color Adjustments</strong></td>
+<td>Brightness, Contrast, Gamma, Hue, and Saturation sliders.</td>
+</tr>
+<tr>
+<td><strong>Video Effects</strong></td>
+<td>Deinterlace and Deband toggles.</td>
+</tr>
+<tr>
+<td><strong>Audio Filters</strong></td>
+<td>Enable and configure available mpv audio filters, each with its own parameters.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="player-controls-transport-bar">Player Controls (Transport Bar)</h3>
 <p>The transport bar is organized into two rows:</p>
-<p><strong>Row 1 — Track Info:</strong> The current track's filename is displayed on the left. Right-clicking it opens a context menu with options to copy the file path, open the file location in Windows Explorer (for local files), or view video metadata (for YouTube URLs).</p>
+<p><strong>Row 1 — Track Info:</strong> The current track's filename is displayed on the left. Right-clicking it — or the video display — opens a context menu: <strong>Copy Path</strong>, <strong>Open in Explorer</strong> (local files), and for YouTube sources <strong>Show YouTube Info</strong>, <strong>Download Subtitle…</strong>, and <strong>View Comments…</strong>; <strong>View Media Metadata…</strong> is available for local files and other supported sources.</p>
 <p><strong>Row 2 — Controls</strong> (left to right):</p>
 <ul>
 <li><strong>Previous</strong> — Jumps to the previous track.</li>
@@ -617,8 +704,24 @@
 <td>0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5</td>
 </tr>
 <tr>
+<td><strong>Rotate</strong> ▶</td>
+<td>0°, 90°, 180°, 270°</td>
+</tr>
+<tr>
+<td><strong>Flip Horizontal</strong></td>
+<td>Checkable — mirrors the video horizontally.</td>
+</tr>
+<tr>
+<td><strong>Flip Vertical</strong></td>
+<td>Checkable — mirrors the video vertically.</td>
+</tr>
+<tr>
 <td><strong>Fullscreen</strong></td>
 <td>Toggle checkable — enters or exits fullscreen mode.</td>
+</tr>
+<tr>
+<td><strong>Reverse Playback</strong></td>
+<td>Checkable — plays audio in reverse. Only available for audio-only media.</td>
 </tr>
 </tbody>
 </table>
@@ -635,7 +738,7 @@
 <p>Loop segments and bookmarks are saved per-file and restored automatically when you reopen that file in a future session.</p>
 <h3 id="subtitles">Subtitles</h3>
 <p>When a video file is loaded, PlayForm automatically searches the same folder for a subtitle file with a matching filename. Supported subtitle formats loaded during playback include: .srt, .vtt, .smi, .sami, .scc, .dfxp, .ttml, .sub, and .ass.</p>
-<p>Subtitle text appears in the collapsible <strong>Subtitles</strong> panel below the player controls. The currently active subtitle line is highlighted in yellow. The panel can be shown or hidden with the toggle button in its header.</p>
+<p>Subtitle text appears in the <strong>Subtitles</strong> section of the side panel, with the currently active line highlighted in yellow.</p>
 <p><strong>Subtitle language</strong> is configurable in Preferences. If text-to-speech is enabled (also in Preferences), PlayForm will read each subtitle aloud using the Windows SAPI5 engine.</p>
 <p>The Player has a comprehensive set of keyboard shortcuts covering playback control, seeking, volume, fullscreen, bookmarks, repeat loops, and screenshots. All shortcuts are configurable and can be remapped via <strong>Options &gt; Manage Hotkeys</strong> (F4). See <a href="#31-shortcuts">Section 3.1</a> for the complete Player shortcut reference.</p>
 <hr>
@@ -656,6 +759,10 @@
 <tr>
 <td><strong>Path bar</strong></td>
 <td>Displays the current directory path. You can type or paste a new path and press Enter to navigate there directly. The <strong>Parent Directory</strong> button moves up one folder level.</td>
+</tr>
+<tr>
+<td><strong>Search box</strong></td>
+<td>Searches cataloged folders (see <a href="#33-manage-database">Section 3.3</a>) for matching files.</td>
 </tr>
 <tr>
 <td><strong>Files list</strong></td>
@@ -688,7 +795,8 @@
 <p><strong>For folders:</strong><br>
 - <strong>Navigate to folder</strong> — Enters the folder.<br>
 - <strong>Add to library</strong> — Saves the folder in the Library panel for quick access.<br>
-- <strong>Create playlist from folder</strong> — Creates a new playlist containing all media files from that folder.</p>
+- <strong>Create playlist from folder</strong> — Creates a new playlist containing all media files from that folder.<br>
+- <strong>Add Current Folder to Database</strong> (toolbar) — Queues the currently open folder for cataloging, so its files become searchable (see <a href="#33-manage-database">Section 3.3</a>).</p>
 <p><strong>Sort options:</strong> Files can be sorted by <strong>Name (A–Z / Z–A)</strong> or by <strong>Date (Newest first / Oldest first)</strong>.</p>
 <h3 id="file-info">File Info</h3>
 <p>When a file is selected, the Explorer displays its type extension, date modified, and size.</p>
@@ -1351,7 +1459,7 @@
 </table>
 <hr>
 <h2 id="32-preferences">3.2. Preferences</h2>
-<p>The Preferences dialog (<strong>Options &gt; Manage Preferences</strong>, Ctrl+P) allows you to configure PlayForm's behavior. Settings are organized into four tabs: <strong>General</strong>, <strong>Media</strong>, <strong>Accessibility</strong>, and <strong>Advanced</strong>.</p>
+<p>The Preferences dialog (<strong>Options &gt; Manage Preferences</strong>, Ctrl+P) allows you to configure PlayForm's behavior. Settings are organized into five tabs: <strong>General</strong>, <strong>Media</strong>, <strong>Accessibility</strong>, <strong>Advanced</strong>, and <strong>Database</strong>.</p>
 <p>Preferences are stored in <code>data/prefs.json</code>. If the file is missing or corrupted, PlayForm automatically restores the factory defaults. Changes to certain settings (language, MPV logging, MPV arguments, or debug level) require an application restart, which PlayForm will prompt you to perform.</p>
 <h3 id="general-tab">General Tab</h3>
 <table>
@@ -1529,6 +1637,74 @@
 </tr>
 </tbody>
 </table>
+<h3 id="database-tab">Database Tab</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Options</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Catalog audio files</strong></td>
+<td>On / Off</td>
+<td>On</td>
+<td>Include audio files when a folder is cataloged for search.</td>
+</tr>
+<tr>
+<td><strong>Catalog video files</strong></td>
+<td>On / Off</td>
+<td>On</td>
+<td>Include video files when a folder is cataloged for search.</td>
+</tr>
+<tr>
+<td><strong>Remember Explorer search history</strong></td>
+<td>On / Off</td>
+<td>On</td>
+<td>Keeps a history of Explorer search terms across sessions.</td>
+</tr>
+<tr>
+<td><strong>Clear Search History</strong></td>
+<td>button</td>
+<td>—</td>
+<td>Clears the stored Explorer search history immediately.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="33-manage-database">3.3. Manage Database</h2>
+<p>The Manage Database dialog (<strong>Options &gt; Manage Database…</strong>) lists every folder cataloged for Explorer search, with its file count and last-scanned time. Folders are added here or via Explorer's <strong>Add Current Folder to Database</strong> action.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Add Folder…</strong></td>
+<td>Browse for a folder and catalog it.</td>
+</tr>
+<tr>
+<td><strong>Rescan Selected</strong></td>
+<td>Re-scans the selected folder(s) for changes.</td>
+</tr>
+<tr>
+<td><strong>Remove Selected…</strong></td>
+<td>Removes the selected folder(s) and their indexed entries (confirmation required; files on disk are untouched).</td>
+</tr>
+<tr>
+<td><strong>Clear &amp; Rebuild Catalog…</strong></td>
+<td>Wipes the entire index and re-scans every cataloged folder (confirmation required).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Index Statistics</strong> shows the total number of indexed files and how many had errors during cataloging.</p>
+<p>A cataloging scan runs in the background; progress is shown in a dialog on top of Manage Database, where it can be paused or the whole scan canceled. Minimizing either dialog leaves a restore button in the menu-bar corner (see <a href="#211-menubar">Section 2.1.1</a>).</p>
 <hr>
 <h1 id="4-tools">4. Tools</h1>
 <p>PlayForm includes a suite of built-in tools accessible from the <strong>Tools</strong> menu. Tools open in a modal dialog window that can be minimized to the status bar while a task runs. Only one tool can be open at a time — opening a different tool will prompt you to close the current one first.</p>
@@ -1716,6 +1892,11 @@
 <td><strong>pysubs2</strong></td>
 <td>Subtitle parsing, writing, and conversion library</td>
 <td><a href="https://github.com/tkarabela/pysubs2">github.com/tkarabela/pysubs2</a></td>
+</tr>
+<tr>
+<td><strong>ExifTool</strong></td>
+<td>Reference implementation for PlayForm's media metadata engine; portions of its parsing approach were adapted into it</td>
+<td><a href="https://exiftool.org">exiftool.org</a></td>
 </tr>
 </tbody>
 </table>
