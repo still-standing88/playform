@@ -9,9 +9,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PlayForm 1.0.0\n"
+"Project-Id-Version: PlayForm 1.1.0\n"
 "Report-Msgid-Bugs-To: support@joybytes.dev\n"
-"POT-Creation-Date: 2026-06-22 16:41+0100\n"
+"POT-Creation-Date: 2026-08-02 16:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Still Standing <support@joybytes.dev>\n"
 "Language-Team: Joybytes <support@joybytes.dev>\n"
@@ -20,6 +20,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid " (Max retries reached)"
+msgstr ""
+
+msgid "#"
 msgstr ""
 
 msgid "&About PlayForm..."
@@ -31,6 +34,9 @@ msgstr ""
 msgid "&Batch Converter"
 msgstr ""
 
+msgid "&Bookmarks..."
+msgstr ""
+
 msgid "&Check for Updates..."
 msgstr ""
 
@@ -40,7 +46,7 @@ msgstr ""
 msgid "&Debug"
 msgstr ""
 
-msgid "&Documentation"
+msgid "&Documentation..."
 msgstr ""
 
 msgid "&Download Manager"
@@ -53,6 +59,9 @@ msgid "&File"
 msgstr ""
 
 msgid "&Forward"
+msgstr ""
+
+msgid "&Go to Time..."
 msgstr ""
 
 msgid "&Manage Hotkeys"
@@ -79,10 +88,16 @@ msgstr ""
 msgid "&Next"
 msgstr ""
 
+msgid "&Open"
+msgstr ""
+
 msgid "&Open File..."
 msgstr ""
 
 msgid "&Options"
+msgstr ""
+
+msgid "&Panels"
 msgstr ""
 
 msgid "&Play/Pause"
@@ -115,10 +130,6 @@ msgstr ""
 msgid "&View Logs…"
 msgstr ""
 
-#, python-brace-format
-msgid "'{title}' is already open. Please close it before opening another tool."
-msgstr ""
-
 msgid "(no log files)"
 msgstr ""
 
@@ -130,6 +141,12 @@ msgid "0 B / 0 B"
 msgstr ""
 
 msgid "0 B/s"
+msgstr ""
+
+msgid "0 percent"
+msgstr ""
+
+msgid "0° (Normal)"
 msgstr ""
 
 msgid "1 file saved."
@@ -213,10 +230,19 @@ msgstr ""
 msgid "<p><em>No summary or description available.</em></p>"
 msgstr ""
 
+msgid "A folder is still being cataloged."
+msgstr ""
+
+msgid "A modern, accessible media player for audio and video files."
+msgstr ""
+
 msgid "Abort & Close"
 msgstr ""
 
 msgid "Abort Downloads"
+msgstr ""
+
+msgid "About"
 msgstr ""
 
 msgid "Accessibility"
@@ -231,10 +257,16 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
+msgid "Add Current Folder to Database"
+msgstr ""
+
 msgid "Add Feed"
 msgstr ""
 
 msgid "Add Files"
+msgstr ""
+
+msgid "Add Folder..."
 msgstr ""
 
 msgid "Add Prefix/Suffix"
@@ -250,6 +282,9 @@ msgid "Add new"
 msgstr ""
 
 msgid "Add new path to library"
+msgstr ""
+
+msgid "Add to Database"
 msgstr ""
 
 msgid "Add to Favorites"
@@ -276,6 +311,9 @@ msgstr ""
 msgid "Added {count} track(s) to playlist"
 msgstr ""
 
+msgid "Additional download details"
+msgstr ""
+
 msgid "Advanced"
 msgstr ""
 
@@ -283,6 +321,12 @@ msgid "Advanced Format Options"
 msgstr ""
 
 msgid "Album"
+msgstr ""
+
+msgid "All Files (*.*)"
+msgstr ""
+
+msgid "Already in Database"
 msgstr ""
 
 #, python-brace-format
@@ -335,6 +379,9 @@ msgstr ""
 msgid "Audio Extraction"
 msgstr ""
 
+msgid "Audio Files"
+msgstr ""
+
 msgid ""
 "Audio Files (*.mp3 *.flac *.m4a *.aac *.aiff *.dsf *.ogg *.opus *.wav *.wv)"
 msgstr ""
@@ -342,10 +389,19 @@ msgstr ""
 msgid "Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)"
 msgstr ""
 
+msgid "Audio Filters"
+msgstr ""
+
+msgid "Audio codec"
+msgstr ""
+
 msgid "Audio extraction end time or duration"
 msgstr ""
 
 msgid "Audio extraction start time"
+msgstr ""
+
+msgid "Audio only -- disabled while the current media has a video track"
 msgstr ""
 
 msgid "Audio output format"
@@ -422,13 +478,52 @@ msgstr ""
 msgid "Cancelled"
 msgstr ""
 
+msgid "Cannot open file for writing"
+msgstr ""
+
 msgid "Case Sensitive"
+msgstr ""
+
+msgid "Catalog audio files"
+msgstr ""
+
+msgid "Catalog video files"
+msgstr ""
+
+msgid "Cataloged folders list"
+msgstr ""
+
+msgid "Cataloging"
+msgstr ""
+
+msgid "Cataloging in Progress"
 msgstr ""
 
 msgid "Change Case"
 msgstr ""
 
+msgid "Channels"
+msgstr ""
+
+msgid "Chapter"
+msgstr ""
+
+msgid "Chapters"
+msgstr ""
+
+msgid "Chapters display"
+msgstr ""
+
+msgid "Chapters for the current media"
+msgstr ""
+
 msgid "Clear"
+msgstr ""
+
+msgid "Clear & Rebuild Catalog"
+msgstr ""
+
+msgid "Clear && Rebuild Catalog..."
 msgstr ""
 
 msgid "Clear All Favorites"
@@ -447,6 +542,9 @@ msgid "Clear Favorites"
 msgstr ""
 
 msgid "Clear Recent Files"
+msgstr ""
+
+msgid "Clear Search History"
 msgstr ""
 
 msgid "Clear Tracks"
@@ -501,6 +599,13 @@ msgstr ""
 msgid "Codec"
 msgstr ""
 
+msgid "Color Adjustments"
+msgstr ""
+
+#, python-brace-format
+msgid "Comments saved to {path}"
+msgstr ""
+
 msgid "Completed"
 msgstr ""
 
@@ -513,6 +618,9 @@ msgstr ""
 msgid "Confirm Removal"
 msgstr ""
 
+msgid "Console"
+msgstr ""
+
 msgid "Console Output"
 msgstr ""
 
@@ -520,6 +628,11 @@ msgid "Console output. Tab key won't insert tabs inside editor."
 msgstr ""
 
 msgid "Contrast"
+msgstr ""
+
+msgid ""
+"Controls which file types are added to the media database when a folder is "
+"cataloged for search."
 msgstr ""
 
 msgid "Conversion Error"
@@ -595,6 +708,10 @@ msgid ""
 "\n"
 msgstr ""
 
+#, python-brace-format
+msgid "Couldn't open {error}"
+msgstr ""
+
 msgid "Country"
 msgstr ""
 
@@ -611,14 +728,16 @@ msgstr ""
 msgid "Created and loaded playlist '{playlist_name}' with {track_count} tracks"
 msgstr ""
 
-#, python-brace-format
-msgid "Created new playlist '{name}'"
+msgid "Created new playlist"
 msgstr ""
 
 msgid "Current File"
 msgstr ""
 
 msgid "Current video subtitles"
+msgstr ""
+
+msgid "Custom"
 msgstr ""
 
 msgid "Customize &Toolbar..."
@@ -630,10 +749,34 @@ msgstr ""
 msgid "Customize Toolbar..."
 msgstr ""
 
+msgid "Database"
+msgstr ""
+
+msgid "Database Cataloging"
+msgstr ""
+
+msgid "Database Cataloging closed"
+msgstr ""
+
+msgid "Database Cataloging minimized"
+msgstr ""
+
+msgid "Database Cataloging opened"
+msgstr ""
+
+msgid "Database Cataloging restored"
+msgstr ""
+
 msgid "Date (Newest First)"
 msgstr ""
 
 msgid "Date (Oldest First)"
+msgstr ""
+
+msgid "Date modified"
+msgstr ""
+
+msgid "Deband"
 msgstr ""
 
 msgid "Debug Console"
@@ -643,6 +786,9 @@ msgid "Debug Level:"
 msgstr ""
 
 msgid "Debug console initialized."
+msgstr ""
+
+msgid "Deinterlace"
 msgstr ""
 
 msgid "Delete Selected"
@@ -659,6 +805,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "Delete the selected {count} tracks?"
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Destination"
 msgstr ""
 
 msgid "Direct Media Link"
@@ -693,6 +845,9 @@ msgstr ""
 msgid "Download Error"
 msgstr ""
 
+msgid "Download Failed"
+msgstr ""
+
 msgid "Download Info:"
 msgstr ""
 
@@ -717,7 +872,25 @@ msgstr ""
 msgid "Download Now"
 msgstr ""
 
+msgid "Download Subtitle..."
+msgstr ""
+
 msgid "Download Utilities"
+msgstr ""
+
+msgid "Download filename"
+msgstr ""
+
+msgid "Download progress"
+msgstr ""
+
+msgid "Download speed"
+msgstr ""
+
+msgid "Download status"
+msgstr ""
+
+msgid "Downloaded size"
 msgstr ""
 
 #, python-brace-format
@@ -728,6 +901,12 @@ msgid "Downloading"
 msgstr ""
 
 msgid "Downloading Update"
+msgstr ""
+
+msgid "Downloading from this type of link isn't supported yet."
+msgstr ""
+
+msgid "Downloading subtitle..."
 msgstr ""
 
 msgid "Downloading update files, please wait..."
@@ -747,10 +926,16 @@ msgstr ""
 msgid "Downloads in Progress"
 msgstr ""
 
+msgid "Downloads list"
+msgstr ""
+
 msgid "Downloads:"
 msgstr ""
 
 msgid "Duplicate"
+msgstr ""
+
+msgid "Duration"
 msgstr ""
 
 msgid "Duration (seconds):"
@@ -762,10 +947,13 @@ msgstr ""
 msgid "Empty"
 msgstr ""
 
+msgid "Enable Equalizer"
+msgstr ""
+
 msgid "Enable Framerate Transformation"
 msgstr ""
 
-msgid "Enable VLC Logging"
+msgid "Enable MPV Logging"
 msgstr ""
 
 msgid "Enable Verbose Output"
@@ -781,6 +969,9 @@ msgid "End"
 msgstr ""
 
 msgid "End Time or Duration (optional):"
+msgstr ""
+
+msgid "Enter a valid time, e.g. 1:23 or 01:02:03."
 msgstr ""
 
 msgid "Enter feed URL:"
@@ -811,11 +1002,24 @@ msgstr ""
 msgid "Entry: {title}, Published: {published}, Link: {link}"
 msgstr ""
 
+msgid "Equalizer"
+msgstr ""
+
 msgid "Error"
+msgstr ""
+
+msgid "Error Details"
 msgstr ""
 
 #, python-brace-format
 msgid "Error converting {filename}"
+msgstr ""
+
+#, python-brace-format
+msgid "Error fetching comments: {error}"
+msgstr ""
+
+msgid "Error fetching video information:"
 msgstr ""
 
 #, python-brace-format
@@ -829,6 +1033,10 @@ msgstr ""
 msgid "Error occurred"
 msgstr ""
 
+#, python-brace-format
+msgid "Error scanning {path}"
+msgstr ""
+
 msgid "Error: No files selected."
 msgstr ""
 
@@ -836,6 +1044,15 @@ msgid "Exit"
 msgstr ""
 
 msgid "Explorer"
+msgstr ""
+
+msgid "Explorer Toolbar"
+msgstr ""
+
+msgid "Extension"
+msgstr ""
+
+msgid "Extra MPV Options:"
 msgstr ""
 
 msgid "Extract 1 Image Per Second"
@@ -991,10 +1208,19 @@ msgid ""
 "{error}"
 msgstr ""
 
+msgid "Fetching comments... this may take a while."
+msgstr ""
+
 msgid "Fetching download links from GitHub…"
 msgstr ""
 
+msgid "Fetching media metadata..."
+msgstr ""
+
 msgid "Fetching video information..."
+msgstr ""
+
+msgid "File"
 msgstr ""
 
 msgid "File Content Preview (Live)"
@@ -1006,10 +1232,19 @@ msgstr ""
 msgid "File loaded successfully"
 msgstr ""
 
+msgid "File size"
+msgstr ""
+
+msgid "Filename"
+msgstr ""
+
 msgid "Files"
 msgstr ""
 
 msgid "Files for Conversion (Batch)"
+msgstr ""
+
+msgid "Files with errors:"
 msgstr ""
 
 msgid "Filter By:"
@@ -1025,16 +1260,36 @@ msgstr ""
 msgid "Filtering by {filter_type}: {filter_value}..."
 msgstr ""
 
-msgid "Filters"
-msgstr ""
-
 msgid "Find and Replace"
 msgstr ""
 
 msgid "Find:"
 msgstr ""
 
+#, python-brace-format
+msgid "Finished: {path}"
+msgstr ""
+
+msgid "Flip Horizontal"
+msgstr ""
+
+msgid "Flip Vertical"
+msgstr ""
+
+msgid "Float"
+msgstr ""
+
 msgid "Folder"
+msgstr ""
+
+#, python-brace-format
+msgid "Folder: {path}. Files: {count}. Last scanned: {scanned}."
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Format ID"
 msgstr ""
 
 msgid "Forward"
@@ -1044,10 +1299,19 @@ msgstr ""
 msgid "Found {count} stations"
 msgstr ""
 
+msgid "Frame rate"
+msgstr ""
+
 msgid "From FPS:"
 msgstr ""
 
 msgid "Full Entry Details"
+msgstr ""
+
+msgid "Full Path"
+msgstr ""
+
+msgid "Full Playlist"
 msgstr ""
 
 msgid "Fullscreen"
@@ -1068,6 +1332,12 @@ msgstr ""
 msgid "Get/Update &Utilities..."
 msgstr ""
 
+msgid "Go to Timestamp"
+msgstr ""
+
+msgid "Go to time"
+msgstr ""
+
 #, python-brace-format
 msgid "HTTP {status}"
 msgstr ""
@@ -1075,16 +1345,13 @@ msgstr ""
 msgid "Hide"
 msgstr ""
 
-msgid "Hide Filters"
-msgstr ""
-
-msgid "Hide Subtitles"
-msgstr ""
-
-msgid "Hide subtitles"
+msgid "Hide Side Panel"
 msgstr ""
 
 msgid "Hide to status bar"
+msgstr ""
+
+msgid "Hide/Show Side Panel"
 msgstr ""
 
 msgid "Hotkeys Configuration"
@@ -1094,6 +1361,9 @@ msgid "Hotkeys updated"
 msgstr ""
 
 msgid "Hue"
+msgstr ""
+
+msgid "Icon View"
 msgstr ""
 
 msgid "Image Extraction"
@@ -1118,6 +1388,9 @@ msgstr ""
 msgid "Imported playlist '{name}'"
 msgstr ""
 
+msgid "Index Statistics"
+msgstr ""
+
 msgid "Info"
 msgstr ""
 
@@ -1139,16 +1412,22 @@ msgstr ""
 msgid "Invalid Feed"
 msgstr ""
 
-msgid "Invalid URL"
+msgid "Invalid MPV Options"
 msgstr ""
 
-msgid "Invalid VLC Arguments"
+msgid "Invalid URL"
 msgstr ""
 
 msgid "Invalid feed format"
 msgstr ""
 
+msgid "Just This Video"
+msgstr ""
+
 msgid "Keep SSA tags (output)"
+msgstr ""
+
+msgid "Keep Scanning"
 msgstr ""
 
 msgid "Keep all HTML tags (input)"
@@ -1166,6 +1445,9 @@ msgstr ""
 msgid "Language:"
 msgstr ""
 
+msgid "Last Scanned"
+msgstr ""
+
 msgid "Library"
 msgstr ""
 
@@ -1178,10 +1460,21 @@ msgstr ""
 msgid "Link Fetch Errors"
 msgstr ""
 
+msgid "List View"
+msgstr ""
+
 msgid "List of RSS feeds. Right-click for options."
 msgstr ""
 
+msgid "List of current, queued, and finished downloads"
+msgstr ""
+
 msgid "List of favorite media files"
+msgstr ""
+
+msgid ""
+"List of folders added to the media database, with file count and last scan "
+"time."
 msgstr ""
 
 msgid "List of log files in the application's logs folder"
@@ -1216,6 +1509,9 @@ msgstr ""
 msgid "Loaded {count} subtitle events"
 msgstr ""
 
+msgid "Loading URL:"
+msgstr ""
+
 #, python-brace-format
 msgid "Loading URL: {url}"
 msgstr ""
@@ -1237,6 +1533,9 @@ msgstr ""
 msgid "Loading {filter_type}..."
 msgstr ""
 
+msgid "Loading:"
+msgstr ""
+
 #, python-brace-format
 msgid "Loading: {filename}"
 msgstr ""
@@ -1254,16 +1553,43 @@ msgstr ""
 msgid "Logs folder: {path}"
 msgstr ""
 
+msgid "Loop"
+msgstr ""
+
 msgid "Lyrics tag editor"
 msgstr ""
 
 msgid "Lyrics:"
 msgstr ""
 
+msgid "MPV Logging:"
+msgstr ""
+
+msgid "MPV Settings"
+msgstr ""
+
 msgid "Main Toolbar"
 msgstr ""
 
 msgid "Main video playback area"
+msgstr ""
+
+msgid "Manage &Database..."
+msgstr ""
+
+msgid "Manage Database"
+msgstr ""
+
+msgid "Manage Database closed"
+msgstr ""
+
+msgid "Manage Database minimized"
+msgstr ""
+
+msgid "Manage Database opened"
+msgstr ""
+
+msgid "Manage Database restored"
 msgstr ""
 
 msgid "Manual Frame Selection"
@@ -1285,7 +1611,13 @@ msgstr ""
 msgid "Media Extractor"
 msgstr ""
 
+msgid "Media Metadata"
+msgstr ""
+
 msgid "Media Preview"
+msgstr ""
+
+msgid "Metadata Error"
 msgstr ""
 
 msgid "MicroDVD"
@@ -1333,19 +1665,22 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-msgid "Name (A\\u2013Z)"
+msgid "Name (A–Z)"
 msgstr ""
 
-msgid "Name (Z\\u2013A)"
+msgid "Name (Z–A)"
 msgstr ""
 
 msgid "Name:"
 msgstr ""
 
-msgid "Newest first"
+msgid "Network error"
 msgstr ""
 
-msgid "Next"
+msgid "Never"
+msgstr ""
+
+msgid "Newest first"
 msgstr ""
 
 msgid "Next Track"
@@ -1370,6 +1705,9 @@ msgid "No Playlists"
 msgstr ""
 
 msgid "No Releases Found"
+msgstr ""
+
+msgid "No Subtitles"
 msgstr ""
 
 msgid "No URL"
@@ -1400,6 +1738,9 @@ msgid "No file loaded."
 msgstr ""
 
 msgid "No files to convert."
+msgstr ""
+
+msgid "No folder being scanned"
 msgstr ""
 
 msgid "No links could be resolved."
@@ -1437,6 +1778,9 @@ msgstr ""
 msgid "No stream URL found for {name}"
 msgstr ""
 
+msgid "No subtitle track is available for this source."
+msgstr ""
+
 msgid "No supported media files found in the selected folder"
 msgstr ""
 
@@ -1469,16 +1813,10 @@ msgstr ""
 msgid "OK"
 msgstr ""
 
-msgid "Off"
-msgstr ""
-
 msgid "Oldest first"
 msgstr ""
 
 msgid "Omit FPS declaration (output)"
-msgstr ""
-
-msgid "On"
 msgstr ""
 
 msgid "One or more update files failed to download. Please try again later."
@@ -1514,8 +1852,7 @@ msgstr ""
 msgid "Open in Explorer"
 msgstr ""
 
-#, python-brace-format
-msgid "Opened {title}"
+msgid "Opened"
 msgstr ""
 
 msgid "Output Encoding:"
@@ -1525,6 +1862,9 @@ msgid "Output Format:"
 msgstr ""
 
 msgid "Page Link"
+msgstr ""
+
+msgid "Panels"
 msgstr ""
 
 msgid "Parent Directory"
@@ -1641,6 +1981,9 @@ msgstr ""
 msgid "Podcasts"
 msgstr ""
 
+msgid "Preamp"
+msgstr ""
+
 msgid "Preferences"
 msgstr ""
 
@@ -1650,7 +1993,7 @@ msgstr ""
 msgid "Prefix:"
 msgstr ""
 
-msgid "Previous"
+msgid "Preset"
 msgstr ""
 
 msgid "Previous Track"
@@ -1671,6 +2014,12 @@ msgstr ""
 msgid "Processing..."
 msgstr ""
 
+msgid "Progress"
+msgstr ""
+
+msgid "Protocol"
+msgstr ""
+
 msgid "Published"
 msgstr ""
 
@@ -1678,6 +2027,13 @@ msgid "Publisher"
 msgstr ""
 
 msgid "Queued"
+msgstr ""
+
+#, python-brace-format
+msgid "Queued {path} for cataloging"
+msgstr ""
+
+msgid "Radio"
 msgstr ""
 
 msgid "Radio Browser"
@@ -1707,6 +2063,12 @@ msgstr ""
 msgid "Recents && Favorites"
 msgstr ""
 
+msgid "Recents/Favorites"
+msgstr ""
+
+msgid "Refresh"
+msgstr ""
+
 msgid "Refresh All Feeds"
 msgstr ""
 
@@ -1734,6 +2096,9 @@ msgstr ""
 msgid "Register Click"
 msgstr ""
 
+msgid "Remember Explorer search history"
+msgstr ""
+
 msgid "Remove"
 msgstr ""
 
@@ -1746,16 +2111,28 @@ msgstr ""
 msgid "Remove Selected"
 msgstr ""
 
+msgid "Remove Selected..."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "Remove feed:\n"
 "{url}?"
 msgstr ""
 
+msgid "Remove from Database"
+msgstr ""
+
 msgid "Remove from Favorites"
 msgstr ""
 
 msgid "Remove miscellaneous events"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Remove {count} folder(s) from the database? Their indexed entries are "
+"deleted from the search index; nothing is touched on disk."
 msgstr ""
 
 #, python-brace-format
@@ -1795,14 +2172,16 @@ msgstr ""
 msgid "Repeat: One"
 msgstr ""
 
-#, python-brace-format
-msgid "Repeat: {state}"
-msgstr ""
-
 msgid "Replace With:"
 msgstr ""
 
+msgid "Rescan Selected"
+msgstr ""
+
 msgid "Reset to Default"
+msgstr ""
+
+msgid "Resolution"
 msgstr ""
 
 msgid "Restart Required"
@@ -1811,10 +2190,22 @@ msgstr ""
 msgid "Results"
 msgstr ""
 
+msgid "Resume"
+msgstr ""
+
+msgid "Retry"
+msgstr ""
+
+msgid "Retry Count"
+msgstr ""
+
 msgid "Retry Download"
 msgstr ""
 
-msgid "Rewind"
+msgid "Reverse Playback"
+msgstr ""
+
+msgid "Rotate"
 msgstr ""
 
 msgid "SRT"
@@ -1823,13 +2214,25 @@ msgstr ""
 msgid "Sample Rate (Audio):"
 msgstr ""
 
+msgid "Sample rate"
+msgstr ""
+
 msgid "Saturation"
 msgstr ""
 
 msgid "Save All Files"
 msgstr ""
 
+msgid "Save Comments"
+msgstr ""
+
 msgid "Save Current File"
+msgstr ""
+
+msgid "Save Failed"
+msgstr ""
+
+msgid "Save Subtitle File"
 msgstr ""
 
 msgid "Save URLs"
@@ -1838,16 +2241,23 @@ msgstr ""
 msgid "Save URLs:"
 msgstr ""
 
+msgid "Save to File..."
+msgstr ""
+
+msgid "Saved"
+msgstr ""
+
 msgid "Scale"
+msgstr ""
+
+#, python-brace-format
+msgid "Scanning: {path}"
 msgstr ""
 
 msgid "Scene Change Threshold (0.0-1.0):"
 msgstr ""
 
 msgid "Scene change detection threshold"
-msgstr ""
-
-msgid "Screenshot"
 msgstr ""
 
 msgid "Screenshot Format:"
@@ -1860,10 +2270,27 @@ msgstr ""
 msgid "Search"
 msgstr ""
 
+msgid "Search History"
+msgstr ""
+
 msgid "Search and Filter"
 msgstr ""
 
 msgid "Search button"
+msgstr ""
+
+#, python-brace-format
+msgid "Search complete: {count} result(s)"
+msgstr ""
+
+msgid "Search current folder"
+msgstr ""
+
+msgid "Search current folder..."
+msgstr ""
+
+#, python-brace-format
+msgid "Search failed: {error}"
 msgstr ""
 
 msgid "Search:"
@@ -1871,6 +2298,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Searching for '{search_name}'..."
+msgstr ""
+
+msgid "Searching..."
 msgstr ""
 
 msgid "Seek"
@@ -1895,6 +2325,9 @@ msgid "Select Cookies File"
 msgstr ""
 
 msgid "Select FFmpeg Directory"
+msgstr ""
+
+msgid "Select Folder to Catalog"
 msgstr ""
 
 msgid "Select Output Directory"
@@ -1939,6 +2372,9 @@ msgstr ""
 msgid "Select yt-dlp Directory"
 msgstr ""
 
+msgid "Selected download information"
+msgstr ""
+
 msgid "Selected path is not a directory"
 msgstr ""
 
@@ -1974,13 +2410,19 @@ msgstr ""
 msgid "Show &Recents/Favorites"
 msgstr ""
 
+msgid "Show Cataloging"
+msgstr ""
+
 msgid "Show Downloader"
 msgstr ""
 
 msgid "Show Favorites"
 msgstr ""
 
-msgid "Show Filters"
+msgid "Show Manage Database"
+msgstr ""
+
+msgid "Show Side Panel"
 msgstr ""
 
 msgid "Show Tool"
@@ -1990,13 +2432,6 @@ msgid "Show YouTube Info"
 msgstr ""
 
 msgid "Show favorites button"
-msgstr ""
-
-msgid "Show subtitles"
-msgstr ""
-
-#, python-brace-format
-msgid "Show {title}"
 msgstr ""
 
 #, python-brace-format
@@ -2020,6 +2455,9 @@ msgid "Shuffle: Off"
 msgstr ""
 
 msgid "Shuffle: On"
+msgstr ""
+
+msgid "Size"
 msgstr ""
 
 msgid ""
@@ -2095,10 +2533,17 @@ msgid ""
 "Codec: {codec}. Bitrate: {bitrate}."
 msgstr ""
 
+msgid "Status"
+msgstr ""
+
 msgid "Stop Error"
 msgstr ""
 
 msgid "Stopped"
+msgstr ""
+
+#, python-brace-format
+msgid "Stream ({type})"
 msgstr ""
 
 msgid "Style:"
@@ -2117,8 +2562,8 @@ msgid "Subtitle Editor"
 msgstr ""
 
 msgid ""
-"Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt *."
-"vtt);;All Files (*)"
+"Subtitle Files (*.ass *.json *.sami *.smi *.srt *.ssa *.sub *.ttml *.txt "
+"*.vtt);;All Files (*)"
 msgstr ""
 
 msgid "Subtitle conversion completed"
@@ -2130,6 +2575,9 @@ msgstr ""
 msgid "Subtitle conversion failed"
 msgstr ""
 
+msgid "Subtitle language"
+msgstr ""
+
 msgid "Subtitle processing completed"
 msgstr ""
 
@@ -2139,13 +2587,14 @@ msgstr ""
 msgid "Subtitle processing failed"
 msgstr ""
 
+#, python-brace-format
+msgid "Subtitle saved to {path}"
+msgstr ""
+
 msgid "Subtitles"
 msgstr ""
 
 msgid "Subtitles display"
-msgstr ""
-
-msgid "Subtitles section"
 msgstr ""
 
 msgid "Success"
@@ -2155,6 +2604,9 @@ msgid "Suffix:"
 msgstr ""
 
 msgid "Summary and description of selected entry"
+msgstr ""
+
+msgid "Supported Media Files"
 msgstr ""
 
 msgid "Tag"
@@ -2186,6 +2638,9 @@ msgstr ""
 msgid "Target format"
 msgstr ""
 
+msgid "Terminate"
+msgstr ""
+
 msgid "Text"
 msgstr ""
 
@@ -2195,7 +2650,7 @@ msgstr ""
 msgid "Text Operation"
 msgstr ""
 
-msgid "The VLC arguments are not valid. Please check the syntax."
+msgid "The MPV options are not valid. Please check the syntax."
 msgstr ""
 
 msgid ""
@@ -2233,6 +2688,17 @@ msgstr ""
 msgid "There aren't any log files yet."
 msgstr ""
 
+msgid ""
+"This clears the entire media database and re-scans every previously "
+"cataloged folder. Continue?"
+msgstr ""
+
+msgid "This link includes both a video and a playlist."
+msgstr ""
+
+msgid "This looks like an auto-generated Mix/Radio playlist. "
+msgstr ""
+
 msgid "This path already exists in the library."
 msgstr ""
 
@@ -2251,6 +2717,9 @@ msgstr ""
 msgid "Thumbnail generation mode"
 msgstr ""
 
+msgid "Time (hh:mm:ss or mm:ss):"
+msgstr ""
+
 #, python-brace-format
 msgid "Time: {time}, Speed: {speed:.2f}x"
 msgstr ""
@@ -2259,6 +2728,9 @@ msgid "Timestamp (HH:MM:SS):"
 msgstr ""
 
 msgid "Timestamp for manual frame selection"
+msgstr ""
+
+msgid "Timestamp to jump to"
 msgstr ""
 
 msgid "Timing Editor"
@@ -2276,13 +2748,13 @@ msgstr ""
 msgid "To FPS:"
 msgstr ""
 
+msgid "Toggle &Repeat: All"
+msgstr ""
+
 msgid "Toggle &Repeat: Off"
 msgstr ""
 
-msgid "Toggle Repeat: Off"
-msgstr ""
-
-msgid "Toggle Repeat: On"
+msgid "Toggle &Repeat: One"
 msgstr ""
 
 msgid "Too many redirects"
@@ -2300,6 +2772,9 @@ msgstr ""
 msgid "Toolbar Tools:"
 msgstr ""
 
+msgid "Total indexed files:"
+msgstr ""
+
 msgid "Tracks:"
 msgstr ""
 
@@ -2311,6 +2786,12 @@ msgid "Type a station name and press Enter to search"
 msgstr ""
 
 msgid "Type and press Enter to search entries..."
+msgstr ""
+
+msgid "Type extension"
+msgstr ""
+
+msgid "URL"
 msgstr ""
 
 msgid "URL Extraction Failed"
@@ -2326,6 +2807,13 @@ msgid "Unknown error"
 msgstr ""
 
 msgid "Unmute"
+msgstr ""
+
+#, python-brace-format
+msgid "Unrecognized path: {path}"
+msgstr ""
+
+msgid "Unsupported Download"
 msgstr ""
 
 msgid "Untitled"
@@ -2353,15 +2841,6 @@ msgstr ""
 msgid "Updater Not Found"
 msgstr ""
 
-msgid "VLC Arguments:"
-msgstr ""
-
-msgid "VLC Logging:"
-msgstr ""
-
-msgid "VLC Settings"
-msgstr ""
-
 msgid "Validating feed..."
 msgstr ""
 
@@ -2374,16 +2853,34 @@ msgstr ""
 msgid "Verbose Output:"
 msgstr ""
 
+msgid "Version"
+msgstr ""
+
+msgid "Video Comments"
+msgstr ""
+
 msgid "Video Display"
 msgstr ""
 
 msgid "Video Display Area"
 msgstr ""
 
+msgid "Video Effects"
+msgstr ""
+
 msgid "Video File:"
 msgstr ""
 
-msgid "Video Information:"
+msgid "Video Files"
+msgstr ""
+
+msgid "Video Information"
+msgstr ""
+
+msgid "Video Stats"
+msgstr ""
+
+msgid "Video codec"
 msgstr ""
 
 msgid "Video display area"
@@ -2395,7 +2892,16 @@ msgstr ""
 msgid "Video file input path"
 msgstr ""
 
+msgid "Video or Playlist?"
+msgstr ""
+
+msgid "View Comments..."
+msgstr ""
+
 msgid "View Full Entry Dump"
+msgstr ""
+
+msgid "View Media Metadata..."
 msgstr ""
 
 msgid "Voice Settings"
@@ -2426,10 +2932,22 @@ msgstr ""
 msgid "Warning"
 msgstr ""
 
+msgid "Website"
+msgstr ""
+
 msgid "What would you like to do?"
 msgstr ""
 
-msgid "YouTube Video Information"
+msgid "Would you like to load just this video, or the full playlist?"
+msgstr ""
+
+msgid "Would you like to terminate the current scan and close?"
+msgstr ""
+
+msgid "Zoom &In"
+msgstr ""
+
+msgid "Zoom &Out"
 msgstr ""
 
 msgid "cancel"
@@ -2441,10 +2959,30 @@ msgstr ""
 msgid "copy path"
 msgstr ""
 
+msgid "current shortcut"
+msgstr ""
+
 msgid "e.g., 00:01:30 or 90"
 msgstr ""
 
 msgid "e.g., 1.5s or -1m10s"
+msgstr ""
+
+msgid "hidden"
+msgstr ""
+
+msgid "in"
+msgstr ""
+
+msgid "is already open. Please close it before opening another tool."
+msgstr ""
+
+msgid ""
+"is currently processing. Please wait for it to complete or cancel the "
+"operation before closing."
+msgstr ""
+
+msgid "is not a valid URL. Check the URL format and try again."
 msgstr ""
 
 msgid "navigate to folder"
@@ -2469,7 +3007,15 @@ msgid "yt-dlp Settings"
 msgstr ""
 
 #, python-brace-format
+msgid "{added} added, {skipped} skipped"
+msgstr ""
+
+#, python-brace-format
 msgid "{app} is up to date (version {version})."
+msgstr ""
+
+#, python-brace-format
+msgid "{count} comment(s) loaded"
 msgstr ""
 
 #, python-brace-format
@@ -2481,9 +3027,13 @@ msgid "{count} files saved."
 msgstr ""
 
 #, python-brace-format
+msgid "{freq} band gain"
+msgstr ""
+
+#, python-brace-format
 msgid "{label} (Descending)"
 msgstr ""
 
 #, python-brace-format
-msgid "{title} hidden"
+msgid "{percent} percent"
 msgstr ""
