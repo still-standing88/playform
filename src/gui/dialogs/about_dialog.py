@@ -18,10 +18,14 @@ class AboutDialog(QDialog):
         self.ui()
 
 
+    _DEFAULT_DESCRIPTION = "A modern, accessible media player for audio and video files."
+
     def ui(self):
         name        = os.environ.get("APP_NAME", "PlayForm")
         version     = os.environ.get("APP_VERSION", "")
         description = os.environ.get("APP_DESCRIPTION", "")
+        if description == self._DEFAULT_DESCRIPTION:
+            description = _("A modern, accessible media player for audio and video files.")
         publisher   = os.environ.get("APP_PUBLISHER", "")
         copyright_  = os.environ.get("APP_COPYRIGHT", "")
         website     = os.environ.get("APP_WEBSITE", "")

@@ -9,19 +9,19 @@ def build_media_file_filter(format_descriptions: dict[str, dict[str, str]]) -> s
     
     audio_extensions = list(format_descriptions["audio"].keys())
     audio_pattern = " ".join(f"*.{ext}" for ext in audio_extensions)
-    filter_parts.insert(0, f"Audio Files ({audio_pattern})")
-    
+    filter_parts.insert(0, f"{_('Audio Files')} ({audio_pattern})")
+
     video_extensions = list(format_descriptions["video"].keys())
     video_pattern = " ".join(f"*.{ext}" for ext in video_extensions)
-    filter_parts.insert(1, f"Video Files ({video_pattern})")
-    
+    filter_parts.insert(1, f"{_('Video Files')} ({video_pattern})")
+
     all_extensions = []
     all_extensions.extend(format_descriptions["audio"].keys())
     all_extensions.extend(format_descriptions["video"].keys())
     all_pattern = " ".join(f"*.{ext}" for ext in all_extensions)
-    filter_parts.insert(0, f"Supported Media Files ({all_pattern})")
-    
-    filter_parts.append("All Files (*.*)")
+    filter_parts.insert(0, f"{_('Supported Media Files')} ({all_pattern})")
+
+    filter_parts.append(_("All Files (*.*)"))
     
     return ";;".join(filter_parts)
 
