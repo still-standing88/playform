@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QCheckBox, QPushButton, QLabel,
-    QMessageBox, QGroupBox
+    QGroupBox
 )
 
 from utilities.formats import formats as media_formats
@@ -32,10 +32,6 @@ class DatabasePanel(QWidget):
         info_label.setWordWrap(True)
         catalog_layout.addWidget(info_label)
 
-        self.rebuild_button = QPushButton(_("Clear && Rebuild Catalog..."))
-        self.rebuild_button.clicked.connect(self._on_rebuild_clicked)
-        catalog_layout.addWidget(self.rebuild_button)
-
         layout.addWidget(catalog_group)
 
         history_group = QGroupBox(_("Search History"))
@@ -66,21 +62,6 @@ class DatabasePanel(QWidget):
             extensions.extend(media_formats["video"])
         prefs["catalog_extensions"] = extensions
         prefs["store_search_history"] = self.store_search_history_cb.isChecked()
-
-    def _on_rebuild_clicked(self):
-        if self._main_window is None:
-            return
-        reply = QMessageBox.question(
-            self,
-            _("Clear & Rebuild Catalog"),
-            _("This clears the entire media database and re-scans every "
-              "previously cataloged folder. Continue?"),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        if reply != QMessageBox.StandardButton.Yes:
-            return
-        self._main_window.rebuild_catalog()
 
     def _on_clear_history_clicked(self):
         if self._main_window is not None:

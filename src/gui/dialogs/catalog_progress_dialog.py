@@ -78,6 +78,12 @@ class CatalogProgressDialog(QDialog):
         self._worker.folder_finished.connect(self._on_folder_finished)
         self._worker.error.connect(self._on_error)
         self._worker.paused_changed.connect(self._on_paused_changed)
+        # QThread.finished fires once run() returns - the whole queue is
+        # drained, whether by finishing every folder or by cancel_all()
+        # emptying it. Auto-closing here (rather than leaving a stale
+        # "Finished" dialog sitting on top) is what reveals Manage Database
+        # underneath again once cataloging is done.
+        self._worker.finished.connect(self._on_queue_drained)
 
     def _sync_initial_state(self):
         """Cross-thread signals are queued - if the worker was already
@@ -119,6 +125,10 @@ class CatalogProgressDialog(QDialog):
     @Slot(bool)
     def _on_paused_changed(self, paused):
         self.pause_button.setText(_("Resume") if paused else _("Pause"))
+
+    @Slot()
+    def _on_queue_drained(self):
+        self.close()
 
     @Slot()
     def _on_pause_clicked(self):

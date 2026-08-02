@@ -54,6 +54,7 @@ from system_tray import SystemTrayIcon
 from .dialogs.downloader_dialog import DownloaderDialog
 from .dialogs.about_dialog import AboutDialog
 from .dialogs.catalog_progress_dialog import CatalogProgressDialog
+from .dialogs.manage_database_dialog import ManageDatabaseDialog
 from downloader.downloader import Downloader
 from app_db.catalog_worker import CatalogWorker
 from utilities.functions import get_restart_flag
@@ -86,6 +87,11 @@ class MainWindow(QMainWindow):
         self._catalog_worker: Optional[CatalogWorker] = None
         self._catalog_dialog: Optional[CatalogProgressDialog] = None
         self.show_catalog_button: QPushButton
+
+        # Manage Database singleton - the catalog dialog above is always
+        # shown on top of this one, see gui.managers.singleton_dialogs_manager
+        self._manage_db_dialog: Optional[ManageDatabaseDialog] = None
+        self.show_manage_db_button: QPushButton
 
         self.radio_widget = None
         self.radio_dock = None
@@ -197,7 +203,7 @@ class MainWindow(QMainWindow):
             recent_callback=self.add_to_recents,
             playlist_callback=self.add_to_playlist,
             create_playlist_callback=self.create_playlist_from_folder,
-            catalog_folder_callback=self.catalog_folder
+            catalog_folder_callback=self.queue_folder_for_catalog
         )
         self.explorer_widget.setObjectName("explorerWidget")
         
@@ -272,6 +278,13 @@ class MainWindow(QMainWindow):
         self.show_catalog_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.show_catalog_button.setVisible(False)
         indicators_layout.addWidget(self.show_catalog_button)
+
+        self.show_manage_db_button = QPushButton(_("Show Manage Database"))
+        self.show_manage_db_button.setObjectName("showManageDbButton")
+        self.show_manage_db_button.clicked.connect(self._show_minimized_manage_database)
+        self.show_manage_db_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self.show_manage_db_button.setVisible(False)
+        indicators_layout.addWidget(self.show_manage_db_button)
 
         self.menuBar().setCornerWidget(self.menubar_indicators, Qt.Corner.TopRightCorner)
         
@@ -620,6 +633,9 @@ class MainWindow(QMainWindow):
     def catalog_folder(self, path: str):
         self.singleton_dialogs.catalog_folder(path)
 
+    def queue_folder_for_catalog(self, path: str):
+        self.singleton_dialogs.queue_folder_for_catalog(path)
+
     def rebuild_catalog(self):
         self.singleton_dialogs.rebuild_catalog()
 
@@ -631,6 +647,12 @@ class MainWindow(QMainWindow):
 
     def _show_minimized_catalog(self):
         self.singleton_dialogs.show_minimized_catalog()
+
+    def open_manage_database(self):
+        self.singleton_dialogs.open_manage_database()
+
+    def _show_minimized_manage_database(self):
+        self.singleton_dialogs.show_minimized_manage_database()
 
     def hide_to_tray(self):
         # Keep the persisted floating/geometry blob fresh on every hide, not

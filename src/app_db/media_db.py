@@ -78,6 +78,18 @@ class MediaDatabase(BaseDatabaseHandler):
         cursor = self._db.execute_sql("SELECT path FROM catalog_roots ORDER BY date_added ASC")
         return [row[0] for row in cursor.fetchall()]
 
+    def get_catalog_root_details(self) -> List[dict]:
+        """One query for every root's bookkeeping columns, for a UI list -
+        avoids an N+1 per-folder lookup the way indexer.load_existing_stats
+        avoids one per-file."""
+        cursor = self._db.execute_sql(
+            "SELECT path, date_added, date_last_scanned, file_count FROM catalog_roots ORDER BY date_added ASC"
+        )
+        return [
+            {"path": row[0], "date_added": row[1], "date_last_scanned": row[2], "file_count": row[3]}
+            for row in cursor.fetchall()
+        ]
+
     def is_path_cataloged(self, path: str) -> bool:
         normalized = os.path.normcase(os.path.normpath(path))
         for root in self.get_catalog_roots():
@@ -103,3 +115,25 @@ class MediaDatabase(BaseDatabaseHandler):
             index_schema.clear(conn)
         finally:
             conn.close()
+
+    def delete_indexed_files_for_root(self, path: str) -> int:
+        path = os.path.normpath(path)
+        conn = index_schema.open_db(self.index_db_path)
+        try:
+            return index_schema.delete_by_root(conn, path)
+        finally:
+            conn.close()
+
+    def remove_catalog_root_and_index(self, path: str) -> int:
+        """Single-folder equivalent of the clear_index()+remove_catalog_root()
+        pair rebuild_catalog() runs across every root - this only touches the
+        given root's own indexed rows and bookkeeping entry, leaving every
+        other cataloged folder untouched. Returns the number of indexed rows
+        deleted."""
+        path = os.path.normpath(path)
+        deleted = self.delete_indexed_files_for_root(path)
+        self.remove_catalog_root(path)
+        return deleted
+
+    def get_index_stats(self) -> dict:
+        return index_search.stats(self.index_db_path)

@@ -277,6 +277,10 @@ class MenuManager:
         self.main_window.preferences_action.triggered.connect(self.main_window.open_preferences)
         self.main_window.options_menu.addAction(self.main_window.preferences_action)
 
+        self.main_window.manage_database_action = QAction(_("Manage &Database..."), self.main_window)
+        self.main_window.manage_database_action.triggered.connect(self.main_window.open_manage_database)
+        self.main_window.options_menu.addAction(self.main_window.manage_database_action)
+
         self.main_window.hotkeys_action = QAction(_("&Manage Hotkeys"), self.main_window)
         self.main_window.hotkeys_action.triggered.connect(self.main_window.open_hotkeys)
         self.main_window.options_menu.addAction(self.main_window.hotkeys_action)

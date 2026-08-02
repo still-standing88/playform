@@ -6,6 +6,7 @@ from PySide6.QtCore import QThread, Signal
 import app_db
 from app_config import prefs
 from media_core.metaindex import indexer as index_indexer
+from media_core.metaindex import schema as index_schema
 
 _COMMIT_EVERY = 50
 
@@ -135,8 +136,13 @@ class CatalogWorker(QThread):
                     continue
 
             conn.commit()
+            # Total files currently indexed under this root, not just
+            # `added` (this scan's new/changed count) - a repeat scan of an
+            # unchanged folder would otherwise report a shrinking/zero
+            # file_count even though everything is still cataloged.
+            total = index_schema.count_under_root(conn, root_path)
             app_db.media_db.add_catalog_root(root_path)
-            app_db.media_db.update_catalog_root_scan_stats(root_path, added)
+            app_db.media_db.update_catalog_root_scan_stats(root_path, total)
             self.current_finished = True
             self.folder_finished.emit(root_path, added, skipped)
         except Exception as e:

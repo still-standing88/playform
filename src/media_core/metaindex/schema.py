@@ -11,6 +11,7 @@ picks WAL since the indexer is the only writer and search is read-only.
 
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
 
@@ -163,6 +164,41 @@ def clear(conn: sqlite3.Connection) -> None:
     conn.execute("DELETE FROM files;")
     conn.commit()
     conn.execute("VACUUM;")  # must run outside any open transaction, hence the commit() just above
+
+
+def _path_under_root(path: str, normalized_root: str, prefix: str) -> bool:
+    normalized_path = os.path.normcase(os.path.normpath(path))
+    return normalized_path == normalized_root or normalized_path.startswith(prefix)
+
+
+def count_under_root(conn: sqlite3.Connection, root_path: str | Path) -> int:
+    """Total indexed files whose path is root_path itself or somewhere
+    beneath it - the same prefix-matching rule app_db.media_db.is_path_cataloged
+    uses, so a catalog root's reported count always matches what search
+    actually treats as "this folder's files".
+    """
+    normalized_root = os.path.normcase(os.path.normpath(str(root_path)))
+    prefix = normalized_root + os.sep
+    cursor = conn.execute("SELECT path FROM files")
+    return sum(1 for row in cursor.fetchall() if _path_under_root(row["path"], normalized_root, prefix))
+
+
+def delete_by_root(conn: sqlite3.Connection, root_path: str | Path) -> int:
+    """Deletes every indexed row under root_path (itself or any descendant) -
+    the single-folder counterpart to clear(), for a "remove this cataloged
+    folder" action rather than wiping the whole index. files_fts stays in
+    sync automatically via the files_ad trigger. Returns the number of rows
+    deleted.
+    """
+    normalized_root = os.path.normcase(os.path.normpath(str(root_path)))
+    prefix = normalized_root + os.sep
+    cursor = conn.execute("SELECT id, path FROM files")
+    ids = [row["id"] for row in cursor.fetchall() if _path_under_root(row["path"], normalized_root, prefix)]
+    if not ids:
+        return 0
+    conn.executemany("DELETE FROM files WHERE id = ?", [(i,) for i in ids])
+    conn.commit()
+    return len(ids)
 
 
 def optimize(conn: sqlite3.Connection) -> None:
