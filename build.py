@@ -7,7 +7,7 @@ from invoke_config import *
 
 
 APP_NAME        = "PlayForm"
-APP_VERSION     = "1.1.0"
+APP_VERSION     = "1.2.0"
 APP_PUBLISHER   = "JoyBytes"
 APP_DESCRIPTION = "PlayForm Media Player"
 APP_COPYRIGHT   = f"Copyright (c) 2026 {APP_PUBLISHER}"
@@ -54,14 +54,6 @@ def _base_args(output_dir, debug_build=False) -> list[str]:
         "--include-package-data=qdarkstyle",
         "--nofollow-import-to=ffmpeg_binary",
         "--nofollow-import-to=assets_rc",
-        # media_core (av_play/metaindex/metaparser) is compiled separately by
-        # build_media_core_pyd into its own .pyd, moved into app.dist below -
-        # same pattern as assets_rc. Since the main compile never follows
-        # into media_core, it also never discovers the third-party packages
-        # only media_core imports (python-mpv, lxml, mutagen aren't imported
-        # anywhere else in src/) - force their inclusion explicitly so
-        # app.dist still ships them; without this the compiled media_core.pyd
-        # would fail to import them at runtime.
         "--nofollow-import-to=media_core",
         "--include-package=mpv",
         "--include-package=lxml",

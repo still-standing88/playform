@@ -3,7 +3,7 @@ import os
 
 APP_NAME = "PlayForm"
 APP_DESCRIPTION = "A modern, accessible media player for audio and video files."
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 APP_PUBLISHER = "Joybytes"
 APP_AUTHOR = "Still Standing"
 APP_LICENSE = "GPL-3.0"
