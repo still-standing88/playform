@@ -135,6 +135,7 @@ def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_
 
     build.compile_assets(c)
     build.build_assets_pyd(c)
+    build.build_media_core_pyd(c)
 
     public_key_py = SRC_DIR / "public_key.py"
     if not public_key_py.exists():
