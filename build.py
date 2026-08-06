@@ -136,14 +136,6 @@ def build_assets_pyd(c):
 
 @task
 def build_media_core_pyd(c):
-    """Compile src/media_core (av_play/metaindex/metaparser) to a native
-    .pyd module (output: dist/) - same --module pattern as build_assets_pyd,
-    just for a real multi-file package instead of one flat .py file.
-    --include-package=media_core is what makes Nuitka embed every submodule
-    (av_play, metaindex, metaparser and their own subpackages) into the one
-    compiled extension, so `import media_core.av_play` etc. keeps working
-    against the compiled artifact exactly as it does against the source tree.
-    """
     media_core_dir = SRC_DIR / "media_core"
     if not media_core_dir.exists():
         print(f"media_core package not found at {media_core_dir}, skipping.")
@@ -157,7 +149,7 @@ def build_media_core_pyd(c):
     )
 
 
-@task(pre=[build_assets_pyd, build_media_core_pyd])
+@task(pre=[build_media_core_pyd, build_assets_pyd])
 def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, compiler=None, debug_build=False):
     """Compile the application with Nuitka."""
     plat = _detect_platform(target_platform)
