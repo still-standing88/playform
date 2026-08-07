@@ -1,6 +1,31 @@
 # Tools Rewrite Plan (`tools-rewrite` branch)
 
-Status: **planning document**, no implementation yet. Written 2026-08-07.
+Status: **Phases A–D implemented and verified** (2026-08-07 session), except M4B
+Tools which stays a reserved stub per the deferral agreed with the user. See
+`git log` on this branch for the full commit-by-commit trail (one commit per
+file/edit, per the branch convention). Every new/moved widget was smoke-tested
+headless (`QT_QPA_PLATFORM=offscreen`) and the Speech Converter's SAPI5 file-save
++ pitch-XML path was verified against the real Windows SAPI engine on this
+machine (see commit history around `tools.speech_converter`).
+
+What shipped:
+- Phase A (steps 1–5): `media_core.ffmpeg` vendored, all import sites repointed,
+  `python-ffmpeg` dropped from requirements, `PathTreeWidget` built, and
+  `format_capabilities.py` built from the real ffmpeg-codecs manuals.
+- Phase B (steps 6–8): Batch Converter fully rewritten (Source/Convert/Processing/
+  Destination tabs, presets, 32-effect catalog grounded in the real ffmpeg-filters
+  manuals, threaded job runner); Media Extractor rewritten with a new Video mode
+  and reused Convert-tab panels; Thumbnail Generator moved mechanically.
+- Phase C (steps 9–12): Subtitle tools and Tag Editor moved into their own
+  modules; Speech Converter built new on `QTextToSpeech` + Windows SAPI5 direct
+  COM (file-save, `<pitch middle="N">` XML tags); M4B Tools stubbed + disabled
+  menu entry.
+- Phase D (step 14): `.claude/CLAUDE.md` updated with a new "Tools" section
+  describing the layout above.
+
+Not done / explicitly deferred: M4B Tools' real feature set (§2 of the original
+task) — parked until the user supplies the manuals/resources folder, per their
+answer in this session.
 
 Working rule for every phase below: **one commit per edit/file**, short/concise
 messages, per the repo convention already in `.claude/CLAUDE.md` and reiterated
