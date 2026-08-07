@@ -27,8 +27,14 @@ The git repo root is the `PlayForm/` folder (this file lives at
   queue-thread for writes (each writer thread gets its own connection + COM init/uninit
   on Windows). Two handlers: `user_db.py::UserFiles` (favorites/recents/library) and
   `media_db.py::MediaDatabase` (media metadata cache).
-- **Downloads/streams**: `yt-dlp` (YouTube), `feedparser` (podcasts), `radios` (internet
-  radio), `util_download_center/` (fetches/installs external tool binaries like yt-dlp/ffmpeg).
+- **Downloads/streams**: `yt-dlp` (YouTube), `feedparser` (podcasts),
+  `util_download_center/` (fetches/installs external tool binaries like yt-dlp/ffmpeg).
+  Internet radio uses `media_core.pyradios` (vendored `pyradios`, not the `radios` pip
+  package — see `git log -- src/media_core/pyradios`).
+- **FFmpeg wrapper**: `media_core.ffmpeg` — vendored `python-ffmpeg` (was the
+  `python-ffmpeg` pip package, imported as `from ffmpeg import FFmpeg`; now vendored the
+  same way `pyradios` was, see `git log -- src/media_core/ffmpeg`). **All ffmpeg-graph
+  code must import from `media_core.ffmpeg`, never from a pip `ffmpeg` package.**
 - **Subtitles**: `pysubs2`, `pycaption`. **Tags/metadata**: `mutagen`, `music-tag`.
 - **Build**: `Nuitka` via `pyinvoke` tasks (`build.py`, `tasks.py`, `dist.py`, root
   `invoke_config.py` for shared paths). Windows installer via WiX (`installer/windows/`).
@@ -64,6 +70,43 @@ when refactoring a manager.
 
 `src/gui/dialogs/`, `src/gui/prefs_panels/`, `src/gui/recents_favorites/` are more
 conventional (dialogs, prefs-dialog tabs, recents/favorites widgets over `app_db.UserFiles`).
+
+## Tools (`src/tools/`)
+
+As of the `tools-rewrite` branch, tools live in per-tool subpackages, not flat
+`src/tools/*_ui.py` files (that flat layout is gone — don't recreate it):
+
+- `tools/ffmpeg/` — everything driven by `media_core.ffmpeg`:
+  - `batch_converter/` — Source/Convert/Processing/Destination tabbed UI (`ui.py`),
+    with `format_capabilities.py` (per-audio-format encoder/option map, sourced from
+    `archive/docs/ffmpeg-manuals/ffmpeg-codecs/8-audio-encoders/`) and
+    `effects_catalog.py` (the Processing-tab Edits/Filters effect definitions, sourced
+    from `archive/docs/ffmpeg-manuals/ffmpeg-filters/8-audio-filters/`) as the source of
+    truth for what's offered in the UI — extend those tables rather than hardcoding new
+    format/filter strings in the UI layer. `job.py` builds the actual `media_core.ffmpeg`
+    command graph and runs it threaded.
+  - `media_extractor/` — audio/video/image extraction; reuses `batch_converter`'s
+    `AudioConvertPanel`/`VideoConvertPanel` for format options rather than duplicating them.
+  - `thumbnail_generator/` — mechanical move of the old tool, behavior unchanged.
+- `tools/subtitles/` — `converter_ui.py`, `editor_ui.py`, `handler.py` (was
+  `subtitle_*_ui.py` + `subtitle_handler.py` at the `tools/` root).
+- `tools/tag_editor/` — `ui.py` (was `tag_editor_ui.py`).
+- `tools/speech_converter/` — new tool built on `PySide6.QtTextToSpeech` (see the
+  `tts_demo.py` prototype at the repo root for the base API shape). `engine.py` wraps
+  `QTextToSpeech` for the cross-platform path and additionally drives `SAPI.SpVoice`/
+  `SAPI.SpFileStream` directly via `win32com.client` on Windows for two things Qt's API
+  doesn't expose: rendering speech to an audio file (`save_to_file`), and SAPI's
+  `<pitch middle="N">` XML markup (a SAPI-specific extension, not part of
+  `QTextToSpeech`'s normalized pitch parameter).
+- `tools/m4b_tools/` — reserved placeholder only; the Tools menu entry is disabled.
+  Scope depends on manuals the user hasn't provided yet (see `TOOLS_REWRITE_PLAN.md`).
+- `gui_controls/path_tree_widget.py` — shared file/folder source-tree control (used by
+  Batch Converter's Source tab; suitable for reuse by future tools needing the same
+  add-files/add-folder-with-format-filter workflow).
+
+Every tool is still wired into the app in exactly one place:
+`src/gui/managers/tool_window_manager.py` (`ToolWindowManager.open_*` methods) plus a
+matching `QAction` in `src/gui/managers/menu_manager.py`'s `setup_tools_menu()`.
 
 ## `app_config/` vs `app_constance/` — not a typo you should fix
 
