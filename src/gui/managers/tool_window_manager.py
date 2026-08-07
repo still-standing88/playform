@@ -5,6 +5,7 @@ from tools.tag_editor.ui import TagEditorUI
 from tools.ffmpeg.thumbnail_generator.ui import ThumbnailGeneratorUI
 from tools.subtitles.converter_ui import SubtitleConverterUI
 from tools.subtitles.editor_ui import SubtitleEditorUI
+from tools.speech_converter.ui import SpeechConverterUI
 from gui.dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
@@ -37,7 +38,10 @@ class ToolWindowManager:
     
     def open_subtitle_editor(self):
         self.open_tool_dialog("subtitle_editor", SubtitleEditorUI(), _("Subtitle Editor"))
-        
+
+    def open_speech_converter(self):
+        self.open_tool_dialog("speech_converter", SpeechConverterUI(), _("Speech Converter"))
+
     def open_tool_dialog(self, tool_name, tool_widget, title):
         if self.main_window.active_tool_name and self.main_window.active_tool_name != tool_name:
             if self.main_window.active_tool_name in self.main_window.tool_dialogs:
