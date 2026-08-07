@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QMessageBox
 from tools.ffmpeg.batch_converter.ui import BatchConverterUI
 from tools.ffmpeg.media_extractor.ui import ExtractorUI
 from tools.tag_editor_ui import TagEditorUI
-from tools.thumbnail_generator_ui import ThumbnailGeneratorUI
+from tools.ffmpeg.thumbnail_generator.ui import ThumbnailGeneratorUI
 from tools.subtitle_converter_ui import SubtitleConverterUI
 from tools.subtitle_editor_ui import SubtitleEditorUI
 from gui.dialogs.tool_dialog import ToolDialog
