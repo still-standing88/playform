@@ -1,66 +1,53 @@
 import asyncio
-import random
-import socket
 from typing import List, Optional, Dict, Any
 
-import backoff
 import httpx
-import orjson
 import pycountry
-from aiodns import DNSResolver
-from yarl import URL
-from radios import FilterBy, Order
-from radios.exceptions import (
+from media_core.pyradios.radios import RadioBrowser as _PyRadiosClient
+from media_providers.radio.radio_browser_types import (
+    Country,
+    FilterBy,
+    Language,
+    Order,
     RadioBrowserConnectionError,
     RadioBrowserConnectionTimeoutError,
     RadioBrowserError,
+    Station,
+    Stats,
+    Tag,
 )
-from radios.models import Country, Language, Station, Stats, Tag
 from media_providers.radio.radio_cache import RadioCache
 from media_providers.radio.radio_models import FavoritesManager
 
-_FALLBACK_HOSTS = [
-    "de1.api.radio-browser.info",
-    "de2.api.radio-browser.info",
-]
-
 
 class RadioBrowser:
-    """RadioBrowser with DNS SRV fallback and httpx (aiohttp workaround on Windows)."""
+    """Async-facing wrapper around media_core.pyradios's sync RadioBrowser client."""
 
     def __init__(self, user_agent: str, request_timeout: float = 8.0):
         self.user_agent = user_agent
         self.request_timeout = request_timeout
-        self.session: httpx.AsyncClient | None = None
-        self._close_session = False
-        self._host: str | None = None
+        self._client: _PyRadiosClient | None = None
 
-    @backoff.on_exception(
-        backoff.expo, RadioBrowserConnectionError, max_tries=5, logger=None
-    )
-    async def _request(
-        self,
-        uri: str = "",
-        method: str = "GET",
-        params: dict[str, Any] | None = None,
-    ) -> str:
-        if self._host is None:
+    async def _get_client(self) -> _PyRadiosClient:
+        if self._client is None:
+            def _build() -> _PyRadiosClient:
+                client = _PyRadiosClient(session=httpx.Client(timeout=httpx.Timeout(self.request_timeout)))
+                # pyradios' Request.get() passes this dict as the per-call headers
+                # override on every request; set it directly since the RadioBrowser
+                # constructor has no way to customize headers itself.
+                client.client._headers = {"User-Agent": self.user_agent, "Accept": "application/json"}
+                return client
+
             try:
-                resolver = DNSResolver()
-                result = await resolver.query("_api._tcp.radio-browser.info", "SRV")
-                random.shuffle(result)
-                self._host = result[0].host
-            except Exception:
-                self._host = random.choice(_FALLBACK_HOSTS)
+                self._client = await asyncio.to_thread(_build)
+            except (httpx.HTTPError, OSError, IndexError) as exception:
+                msg = "Error occurred while communicating with the Radio Browser API"
+                raise RadioBrowserConnectionError(msg) from exception
+        return self._client
 
-        url = str(URL.build(scheme="https", host=self._host, path="/json/").join(URL(uri)))
-
-        if self.session is None:
-            self.session = httpx.AsyncClient(
-                timeout=httpx.Timeout(self.request_timeout),
-                headers={"User-Agent": self.user_agent, "Accept": "application/json"},
-            )
-            self._close_session = True
+    async def _request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Any:
+        client = await self._get_client()
+        url = client.build_url(endpoint)
 
         if params:
             for key, value in params.items():
@@ -68,23 +55,17 @@ class RadioBrowser:
                     params[key] = str(value).lower()
 
         try:
-            response = await self.session.request(method, url, params=params)
-            response.raise_for_status()
-
-            content_type = response.headers.get("Content-Type", "")
-            text = response.text
-            if "application/json" not in content_type:
-                raise RadioBrowserError(response.status_code, {"message": text})
+            return await asyncio.to_thread(client.client.get, url, **(params or {}))
         except httpx.TimeoutException as exception:
-            self._host = None
+            self._client = None
             msg = "Timeout occurred while connecting to the Radio Browser API"
             raise RadioBrowserConnectionTimeoutError(msg) from exception
-        except (httpx.HTTPError, socket.gaierror) as exception:
-            self._host = None
+        except httpx.HTTPError as exception:
+            self._client = None
             msg = "Error occurred while communicating with the Radio Browser API"
             raise RadioBrowserConnectionError(msg) from exception
-
-        return text
+        except ValueError as exception:
+            raise RadioBrowserError(str(exception)) from exception
 
     def _coerce_order(self, value):
         if isinstance(value, Order):
@@ -104,8 +85,8 @@ class RadioBrowser:
         return str(bool(value)).lower()
 
     async def stats(self) -> Stats:
-        response = await self._request("stats")
-        return Stats.from_json(response)
+        response = await self._request("json/stats")
+        return Stats.from_dict(response)
 
     async def countries(self, **kwargs) -> list[Country]:
         order = self._coerce_order(kwargs.get('order', Order.NAME))
@@ -116,8 +97,7 @@ class RadioBrowser:
             "order": order.value,
             "reverse": self._to_api_bool(kwargs.get('reverse', False)),
         }
-        countries_data = await self._request("countrycodes", params=params)
-        countries = orjson.loads(countries_data)
+        countries = await self._request("json/countrycodes", params=params)
         for country in countries:
             country["code"] = country["name"]
             if country["name"] == "XK":
@@ -137,8 +117,7 @@ class RadioBrowser:
             "reverse": self._to_api_bool(kwargs.get('reverse', False)),
             "limit": kwargs.get('limit', 100000),
         }
-        languages_data = await self._request("languages", params=params)
-        languages = orjson.loads(languages_data)
+        languages = await self._request("json/languages", params=params)
         for language in languages:
             language["name"] = language["name"].title()
         return [Language.from_dict(l) for l in languages]
@@ -152,12 +131,11 @@ class RadioBrowser:
             "reverse": self._to_api_bool(kwargs.get('reverse', False)),
             "limit": kwargs.get('limit', 100000),
         }
-        tags_data = await self._request("tags", params=params)
-        tags = orjson.loads(tags_data)
+        tags = await self._request("json/tags", params=params)
         return [Tag.from_dict(t) for t in tags]
 
     def _stations_uri(self, filter_by, filter_term):
-        uri = "stations"
+        uri = "json/stations"
         if filter_by is not None:
             fbv = filter_by.value if isinstance(filter_by, FilterBy) else filter_by
             uri = f"{uri}/{fbv}"
@@ -177,14 +155,13 @@ class RadioBrowser:
 
     async def stations(self, **kwargs) -> list[Station]:
         uri = self._stations_uri(kwargs.get('filter_by'), kwargs.get('filter_term'))
-        stations_data = await self._request(uri, params=self._stations_params(kwargs))
-        stations = orjson.loads(stations_data)
+        stations = await self._request(uri, params=self._stations_params(kwargs))
         return [Station.from_dict(s) for s in stations]
 
     async def search(self, **kwargs) -> list[Station]:
         filter_by = kwargs.get('filter_by')
         filter_term = kwargs.get('filter_term')
-        uri = "stations/search"
+        uri = "json/stations/search"
         if filter_by is not None:
             fbv = filter_by.value if isinstance(filter_by, FilterBy) else filter_by
             uri = f"{uri}/{fbv}"
@@ -203,16 +180,17 @@ class RadioBrowser:
             "bitrate_max": kwargs.get('bitrate_max', 1000000),
         })
         params = {k: v for k, v in params.items() if v is not None}
-        stations_data = await self._request(uri, params=params)
-        stations = orjson.loads(stations_data)
+        stations = await self._request(uri, params=params)
         return [Station.from_dict(s) for s in stations]
 
     async def station_click(self, *, uuid: str) -> None:
-        await self._request(f"url/{uuid}")
+        await self._request(f"json/url/{uuid}")
 
     async def close(self) -> None:
-        if self.session and self._close_session:
-            await self.session.aclose()
+        client = self._client
+        self._client = None
+        if client is not None:
+            client.client._session.close()
 
     async def __aenter__(self):
         return self
