@@ -16,7 +16,7 @@ lxml
 pysubs2
 pycaption
 py-youtube==1.1.7
-radios
+pycountry
 feedparser
 
 httpx==0.28.1
