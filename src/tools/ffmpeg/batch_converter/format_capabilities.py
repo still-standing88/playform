@@ -88,7 +88,7 @@ AUDIO_FORMATS: dict[str, AudioFormatCapability] = {
                         value_range=(0, 9), default=2,
                         description="0 = highest quality/slowest, 9 = fastest/worst quality."),
             CodecOption("joint_stereo", "Joint Stereo", "bool", "joint_stereo", default=True),
-            CodecOption("cutoff", "Lowpass Cutoff (Hz)", "int", "cutoff", default=None),
+            CodecOption("cutoff", "Lowpass Cutoff (Hz)", "int", "cutoff", value_range=(0, 20000), default=0),
         ],
     ),
     "ogg": AudioFormatCapability(
@@ -106,9 +106,9 @@ AUDIO_FORMATS: dict[str, AudioFormatCapability] = {
         vbr_quality_range=(-1.0, 10.0),
         default_vbr_quality=3.0,
         codec_options=[
-            CodecOption("cutoff", "Lowpass Cutoff (Hz)", "int", "cutoff", default=0),
-            CodecOption("minrate", "Min Bitrate (kbps)", "int", "minrate", default=None),
-            CodecOption("maxrate", "Max Bitrate (kbps)", "int", "maxrate", default=None),
+            CodecOption("cutoff", "Lowpass Cutoff (Hz)", "int", "cutoff", value_range=(0, 20000), default=0),
+            CodecOption("minrate", "Min Bitrate (kbps)", "int", "minrate", value_range=(0, 5000), default=0),
+            CodecOption("maxrate", "Max Bitrate (kbps)", "int", "maxrate", value_range=(0, 5000), default=0),
         ],
     ),
     "opus": AudioFormatCapability(
@@ -153,7 +153,7 @@ AUDIO_FORMATS: dict[str, AudioFormatCapability] = {
                         choices=["aac_low", "mpeg2_aac_low", "aac_ltp"], default="aac_low"),
             CodecOption("aac_coder", "Coding Method", "choice", "aac_coder",
                         choices=["twoloop", "anmr", "fast"], default="twoloop"),
-            CodecOption("cutoff", "Cutoff Frequency (Hz)", "int", "cutoff", default=None),
+            CodecOption("cutoff", "Cutoff Frequency (Hz)", "int", "cutoff", value_range=(0, 20000), default=0),
         ],
     ),
     "m4a": AudioFormatCapability(
@@ -250,7 +250,7 @@ AUDIO_FORMATS: dict[str, AudioFormatCapability] = {
         default_bitrate_kbps=192,
         max_channels=6,
         codec_options=[
-            CodecOption("cutoff", "Lowpass Cutoff (Hz)", "int", "cutoff", default=None),
+            CodecOption("cutoff", "Lowpass Cutoff (Hz)", "int", "cutoff", value_range=(0, 20000), default=0),
             CodecOption("dialnorm", "Dialogue Normalization (dB)", "int", "dialnorm",
                         value_range=(-31, -1), default=-31),
         ],
