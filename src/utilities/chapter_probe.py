@@ -1,7 +1,7 @@
 import json
 
-from ffmpeg import FFmpeg
-from ffmpeg.errors import FFmpegError
+from media_core.ffmpeg import FFmpeg
+from media_core.ffmpeg.errors import FFmpegError
 
 from player.util.utilities import resolve_ffprobe_binary_path
 
