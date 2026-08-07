@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QThread, Signal
 from .ffmpeg_handler import FFmpegHandler
-from ffmpeg import FFmpegError, Progress
+from media_core.ffmpeg import FFmpegError, Progress
 from .utils import get_audio_formats_map, get_container_from_format
 from utilities import signal_manager
 
