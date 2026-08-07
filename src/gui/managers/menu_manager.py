@@ -250,6 +250,11 @@ class MenuManager:
         self.main_window.speech_converter_action.triggered.connect(self.main_window.tool_manager.open_speech_converter)
         self.main_window.tools_menu.addAction(self.main_window.speech_converter_action)
 
+        self.main_window.m4b_tools_action = QAction(_("M4B Tools (Coming Soon)"), self.main_window)
+        self.main_window.m4b_tools_action.setEnabled(False)
+        self.main_window.m4b_tools_action.setToolTip(_("M4B Tools is not implemented yet."))
+        self.main_window.tools_menu.addAction(self.main_window.m4b_tools_action)
+
         self.main_window.tools_menu.addSeparator()
 
         self.main_window.show_downloader_action = QAction(_("&Download Manager"), self.main_window)
