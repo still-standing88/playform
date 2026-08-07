@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QMessageBox
-from tools.batch_converter_ui import BatchConverterUI
+from tools.ffmpeg.batch_converter.ui import BatchConverterUI
 from tools.extractor_ui import ExtractorUI
 from tools.tag_editor_ui import TagEditorUI
 from tools.thumbnail_generator_ui import ThumbnailGeneratorUI
