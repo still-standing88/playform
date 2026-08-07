@@ -4,8 +4,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QComboBox, QPushButton, QGroupBox
 )
 from PySide6.QtCore import Signal
-from radios import Order
-from radios.models import Country, Language, Tag
+from media_providers.radio.radio_browser_types import Order, Country, Language, Tag
 from app_constance.styles import (
     RADIO_GROUP_BOX_STYLE, RADIO_COMBO_STYLE, 
     RADIO_LINE_EDIT_STYLE, RADIO_BUTTON_STYLE

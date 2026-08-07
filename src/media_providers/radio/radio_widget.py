@@ -3,8 +3,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QGroupBox, QStatusBar, QMessageBox
 )
 from PySide6.QtCore import Qt, Signal
-from radios import FilterBy
-from radios.models import Station
+from media_providers.radio.radio_browser_types import FilterBy, Station
 from media_providers.radio.radio_service import RadioService
 from media_providers.radio.radio_worker import RadioWorker
 from media_providers.radio.radio_filter_widget import RadioFilterWidget

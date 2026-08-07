@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Optional
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QMenu, QMessageBox, QApplication, QHeaderView
 from PySide6.QtCore import Qt, Signal
-from radios.models import Station
+from media_providers.radio.radio_browser_types import Station
 from app_constance.styles import RADIO_TREE_STYLE
 
 
