@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem, QMessageBox
 )
 from PySide6.QtCore import Qt, QThread, Signal
-from .subtitle_handler import detect_encoding, convert_and_clean_subtitles
+from .handler import detect_encoding, convert_and_clean_subtitles
 from utilities import signal_manager
 
 COMMON_ENCODINGS = ['utf-8', 'utf-16', 'windows-1252', 'latin-1', 'iso-8859-1', 'gbk', 'shift_jis']
