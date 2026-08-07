@@ -4,6 +4,7 @@ from .tag_editor.ui import TagEditorUI
 from tools.ffmpeg.thumbnail_generator.ui import ThumbnailGeneratorUI
 from .subtitles.converter_ui import SubtitleConverterUI
 from .subtitles.editor_ui import SubtitleEditorUI
+from .speech_converter.ui import SpeechConverterUI
 
 __all__ = [
     'BatchConverterUI',
@@ -12,4 +13,5 @@ __all__ = [
     'ThumbnailGeneratorUI',
     'SubtitleConverterUI',
     'SubtitleEditorUI',
+    'SpeechConverterUI',
 ]
