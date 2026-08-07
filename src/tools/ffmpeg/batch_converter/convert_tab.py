@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QGroupBox, QRadioButton,
-    QButtonGroup, QStackedWidget, QComboBox, QCheckBox, QLabel
+    QButtonGroup, QStackedWidget, QComboBox, QCheckBox, QLabel, QSpinBox,
+    QDoubleSpinBox, QLineEdit
 )
 
 from tools.ffmpeg.batch_converter.format_capabilities import AUDIO_FORMATS, get_format
@@ -101,6 +102,42 @@ class AudioConvertPanel(QWidget):
         }
         return result
 
+    def load_options(self, state: dict):
+        if not state:
+            return
+
+        format_index = self.format_combo.findData(state.get("format_id"))
+        if format_index >= 0:
+            self.format_combo.setCurrentIndex(format_index)
+
+        rate_index = self.sample_rate_combo.findData(state.get("sample_rate"))
+        if rate_index >= 0:
+            self.sample_rate_combo.setCurrentIndex(rate_index)
+
+        self.vbr_check.setChecked(state.get("vbr_quality") is not None)
+        bitrate_index = self.bit_rate_combo.findData(state.get("bit_rate_kbps"))
+        if bitrate_index >= 0:
+            self.bit_rate_combo.setCurrentIndex(bitrate_index)
+
+        depth_index = self.bit_depth_combo.findData(state.get("bit_depth"))
+        if depth_index >= 0:
+            self.bit_depth_combo.setCurrentIndex(depth_index)
+
+        for key, value in (state.get("codec_option_values") or {}).items():
+            widget = self._option_inputs.get(key)
+            if widget is None:
+                continue
+            if isinstance(widget, QComboBox):
+                index = widget.findData(value)
+                if index >= 0:
+                    widget.setCurrentIndex(index)
+            elif isinstance(widget, QCheckBox):
+                widget.setChecked(bool(value))
+            elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
+                widget.setValue(value)
+            elif isinstance(widget, QLineEdit):
+                widget.setText(str(value))
+
 
 class VideoConvertPanel(QWidget):
 
@@ -142,6 +179,26 @@ class VideoConvertPanel(QWidget):
             "framerate": None if self.framerate_combo.currentIndex() == 0 else self.framerate_combo.currentText(),
         }
 
+    def load_options(self, state: dict):
+        if not state:
+            return
+
+        format_index = self.format_combo.findText(state.get("format_label", ""))
+        if format_index >= 0:
+            self.format_combo.setCurrentIndex(format_index)
+
+        resolution = state.get("resolution")
+        self.resolution_combo.setCurrentIndex(self.resolution_combo.findText(resolution) if resolution else 0)
+
+        bit_rate = state.get("video_bit_rate")
+        if bit_rate:
+            index = self.bit_rate_combo.findText(bit_rate)
+            if index >= 0:
+                self.bit_rate_combo.setCurrentIndex(index)
+
+        framerate = state.get("framerate")
+        self.framerate_combo.setCurrentIndex(self.framerate_combo.findText(framerate) if framerate else 0)
+
 
 class ConvertTab(QWidget):
 
@@ -181,3 +238,14 @@ class ConvertTab(QWidget):
         if self.is_video_mode():
             return {"mode": "video", **self.video_panel.selected_options()}
         return {"mode": "audio", **self.audio_panel.selected_options()}
+
+    def load_options(self, state: dict):
+        if not state:
+            return
+
+        if state.get("mode") == "video":
+            self.video_radio.setChecked(True)
+            self.video_panel.load_options(state)
+        else:
+            self.audio_radio.setChecked(True)
+            self.audio_panel.load_options(state)
