@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QThread, Signal
 from .ffmpeg_handler import FFmpegHandler
-from ffmpeg import FFmpegError, Progress
+from media_core.ffmpeg import FFmpegError, Progress
 from utilities import signal_manager
 
 class FFmpegTaskThread(QThread):
