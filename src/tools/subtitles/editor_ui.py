@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QFont
-from .subtitle_handler import detect_encoding, read_subtitle_file, process_subtitles
+from .handler import detect_encoding, read_subtitle_file, process_subtitles
 from utilities import signal_manager
 
 COMMON_ENCODINGS = ['utf-8', 'utf-16', 'windows-1252', 'latin-1', 'iso-8859-1', 'gbk', 'shift_jis']
