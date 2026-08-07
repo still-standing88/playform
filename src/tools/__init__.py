@@ -1,6 +1,6 @@
 from tools.ffmpeg.batch_converter.ui import BatchConverterUI
 from tools.ffmpeg.media_extractor.ui import ExtractorUI
-from .tag_editor_ui import TagEditorUI
+from .tag_editor.ui import TagEditorUI
 from tools.ffmpeg.thumbnail_generator.ui import ThumbnailGeneratorUI
 from .subtitles.converter_ui import SubtitleConverterUI
 from .subtitles.editor_ui import SubtitleEditorUI
