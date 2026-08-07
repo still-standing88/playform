@@ -3,8 +3,8 @@ from tools.ffmpeg.batch_converter.ui import BatchConverterUI
 from tools.ffmpeg.media_extractor.ui import ExtractorUI
 from tools.tag_editor_ui import TagEditorUI
 from tools.ffmpeg.thumbnail_generator.ui import ThumbnailGeneratorUI
-from tools.subtitle_converter_ui import SubtitleConverterUI
-from tools.subtitle_editor_ui import SubtitleEditorUI
+from tools.subtitles.converter_ui import SubtitleConverterUI
+from tools.subtitles.editor_ui import SubtitleEditorUI
 from gui.dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
