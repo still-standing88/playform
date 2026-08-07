@@ -1,6 +1,6 @@
 import os
-from ffmpeg import FFmpeg
-from ffmpeg.asyncio import FFmpeg as AsyncFFmpeg
+from media_core.ffmpeg import FFmpeg
+from media_core.ffmpeg.asyncio import FFmpeg as AsyncFFmpeg
 
 from utilities.functions import get_parent_dir
 from player.util.utilities import resolve_ffmpeg_binary_path
