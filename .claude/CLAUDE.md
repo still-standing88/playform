@@ -85,13 +85,24 @@ As of the `tools-rewrite` branch, tools live in per-tool subpackages, not flat
   rather than under `tools/` (deliberately moved out of `tools/ffmpeg/batch_converter/`
   once both tools/ffmpeg/media_extractor started needing them too). Extend those tables
   rather than hardcoding new format/filter strings in a tool's UI layer.
+- `media_core.ffmpeg.conversion_job.ConversionRunner` — the actual batch-conversion
+  algorithm (resolve source entries to files, build filter chains from the effects
+  catalog, run each `media_core.ffmpeg` command, pause/resume via `threading.Event`).
+  Framework-agnostic on purpose: reports through plain callbacks
+  (`on_overall_progress`/`on_file_progress`/`on_file_completed`/`on_log_line`), takes
+  already-resolved ffmpeg/ffprobe executable paths as constructor args, and has zero
+  imports from `tools.*`/`app_config.*`/Qt — anything needing app settings (binary-path
+  resolution via prefs, Qt signals) stays in the `tools/` wrapper below it.
 - `tools/ffmpeg/` — GUI tools driven by `media_core.ffmpeg`:
   - `batch_converter/` — Source/Convert/Processing/Destination tabbed UI (`ui.py`),
-    `job.py` (builds the actual `media_core.ffmpeg` command graph and runs it threaded;
-    supports pause/resume between files via a `threading.Event`), `progress_dialog.py`
-    (tabbed Progress/Live-Log dialog with pause/cancel and a notify-on-finish combo that
-    posts through `QApplication.instance()._tray_icon`, the same tray icon `system_tray.py`
-    registers globally at startup).
+    `job.py` (a thin `QThread` wrapper: resolves the ffmpeg binary via `FFmpegHandler`
+    — which reads `app_config.prefs` — then hands off to `ConversionRunner`, re-emitting
+    its callbacks as Qt signals), `progress_dialog.py` (tabbed Progress/Live-Log dialog
+    with pause/cancel and a notify-on-finish combo that posts through
+    `QApplication.instance()._tray_icon`, the same tray icon `system_tray.py` registers
+    globally at startup). `finished_all` carries a `bool` — `False` means the run was
+    cancelled, not completed; the dialog still needs `mark_finished()` either way or its
+    Cancel button never turns into a working Close button.
   - `media_extractor/` — audio/video/image extraction; reuses `batch_converter`'s
     `AudioConvertPanel`/`VideoConvertPanel` for format options rather than duplicating them.
   - `thumbnail_generator/` — mechanical move of the old tool, behavior unchanged.
