@@ -116,8 +116,29 @@ As of the `tools-rewrite` branch, tools live in per-tool subpackages, not flat
   doesn't expose: rendering speech to an audio file (`save_to_file`), and SAPI's
   `<pitch middle="N">` XML markup (a SAPI-specific extension, not part of
   `QTextToSpeech`'s normalized pitch parameter).
-- `tools/m4b_tools/` — reserved placeholder only; the Tools menu entry is disabled.
-  Scope depends on manuals the user hasn't provided yet (see `TOOLS_REWRITE_PLAN.md`).
+- `media_core.m4b_tools` — audiobook (.m4b) engine: bind (folder/filelist → chaptered
+  .m4b), split (by embedded chapters or detected silence, templated multi-format naming),
+  slide (shift/trim chapter timings), cover (extract/apply art), labels (Audacity labels ⇄
+  ffmpeg chapter metadata ⇄ book chapters), combine (CSV/glob-driven multi-book merge with
+  chapter/cover/metadata handling), and a CSV metadata/chapter dump. Ported from the two
+  reference projects under `archive/` (`m4b-util` for the engine/CLI shape, `m4b-tools` for
+  CSV-driven combine + templated split naming + metadata dump), rebuilt on
+  `media_core.ffmpeg` instead of raw `subprocess`/`ffmpeg`/`ffprobe` calls or the original
+  `rich`/`lark`/`natsort` dependencies (none of which are runtime deps here). Same shape as
+  `conversion_job.ConversionRunner`: `audiobook.Audiobook` is the one engine every operation
+  funnels through (bind/slide/labels/combine all end in `Audiobook.bind()`, so there's a
+  single place that shells out to ffmpeg for concatenation/metadata/cover, not five), and
+  `bind.BindRunner`/`split.SplitRunner`/`combine.CombineRunner` report progress through
+  plain callbacks plus a `threading.Event`-based `runner.M4bToolsRunner` for pause/resume/
+  stop — zero Qt/`app_config` imports, ready for a `tools/m4b_tools/` QThread wrapper to
+  drive the same way `tools/ffmpeg/batch_converter/job.py` drives `ConversionRunner`.
+  `format_capabilities.py` gained an `"m4b"` audio format entry so plain many-files-to-
+  individual-.m4b conversion (no chapters/combining) already works through the existing
+  Batch Converter pipeline instead of needing a duplicate converter here.
+- `tools/m4b_tools/` — still just the reserved placeholder; the Tools menu entry is
+  disabled. The `media_core.m4b_tools` engine above is done — what's left is this Qt
+  wrapper layer (UI + `QThread` job wrappers per `ToolWindowManager`/`menu_manager`
+  conventions), not scoped yet.
 - `gui_controls/path_tree_widget.py` — shared file/folder source-tree control (used by
   Batch Converter's Source tab; suitable for reuse by future tools needing the same
   add-files/add-folder-with-format-filter workflow).
