@@ -87,6 +87,17 @@ class AudioConvertPanel(QWidget):
             self._option_inputs[option.key] = widget
             self.codec_options_form.addRow(option.label, widget)
 
+        self._rebuild_tab_order()
+
+    def _rebuild_tab_order(self):
+        # Codec-option widgets are destroyed and recreated on every format change, so Qt
+        # appends the new instances to the end of the window's tab order (after widgets
+        # created later, like the Begin button) unless explicitly re-chained here.
+        previous = self.bit_depth_combo
+        for widget in self._option_inputs.values():
+            self.setTabOrder(previous, widget)
+            previous = widget
+
     def current_format_id(self) -> str:
         return self.format_combo.currentData() or next(iter(AUDIO_FORMATS))
 
