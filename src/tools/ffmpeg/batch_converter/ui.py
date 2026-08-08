@@ -161,12 +161,16 @@ class BatchConverterUI(QWidget):
         if self.progress_dialog:
             self.progress_dialog.append_live_log(line)
 
-    def _on_finished(self):
+    def _on_finished(self, completed: bool):
         self.begin_button.setEnabled(True)
         if self.progress_dialog:
-            self.progress_dialog.mark_finished()
-            self._notify_finished()
-        signal_manager.statusbar_message.emit(_("Batch conversion finished"))
+            self.progress_dialog.mark_finished(completed)
+            if completed:
+                self._notify_finished()
+
+        signal_manager.statusbar_message.emit(
+            _("Batch conversion finished") if completed else _("Batch conversion cancelled")
+        )
 
     def _notify_finished(self):
         if not self.progress_dialog or self.progress_dialog.notify_preference() != NOTIFY_SYSTEM:
