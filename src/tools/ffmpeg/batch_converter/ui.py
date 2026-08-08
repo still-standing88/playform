@@ -10,7 +10,7 @@ from tools.ffmpeg.batch_converter.convert_tab import ConvertTab
 from tools.ffmpeg.batch_converter.processing_tab import ProcessingTab
 from tools.ffmpeg.batch_converter.destination_tab import DestinationTab
 from tools.ffmpeg.batch_converter.job import BatchConverterJob, resolve_files_from_entries
-from tools.ffmpeg.batch_converter.progress_dialog import BatchProgressDialog, NOTIFY_SYSTEM
+from gui_controls.job_progress_dialog import JobProgressDialog, NOTIFY_SYSTEM
 from tools.ffmpeg.batch_converter import presets
 from utilities import signal_manager
 
@@ -20,7 +20,7 @@ class BatchConverterUI(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.job: BatchConverterJob | None = None
-        self.progress_dialog: BatchProgressDialog | None = None
+        self.progress_dialog: JobProgressDialog | None = None
         self._build_ui()
         self._reload_presets()
 
@@ -120,7 +120,7 @@ class BatchConverterUI(QWidget):
         self.job.finished_all.connect(self._on_finished)
 
         total_files = len(resolve_files_from_entries(entries))
-        self.progress_dialog = BatchProgressDialog(total_files, self)
+        self.progress_dialog = JobProgressDialog(total_files, self, title=_("Batch Conversion Progress"))
         self.progress_dialog.cancel_requested.connect(self._on_cancel)
         self.progress_dialog.pause_toggled.connect(self._on_pause_toggled)
 
