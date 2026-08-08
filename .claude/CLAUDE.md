@@ -76,15 +76,22 @@ conventional (dialogs, prefs-dialog tabs, recents/favorites widgets over `app_db
 As of the `tools-rewrite` branch, tools live in per-tool subpackages, not flat
 `src/tools/*_ui.py` files (that flat layout is gone — don't recreate it):
 
-- `tools/ffmpeg/` — everything driven by `media_core.ffmpeg`:
+- `media_core.ffmpeg.format_capabilities` (per-audio-format encoder/option map, sourced
+  from `archive/docs/ffmpeg-manuals/ffmpeg-codecs/8-audio-encoders/`) and
+  `media_core.ffmpeg.effects_catalog` (the Batch Converter Processing tab's Edits/Filters
+  effect definitions, sourced from `archive/docs/ffmpeg-manuals/ffmpeg-filters/8-audio-filters/`)
+  are the source of truth for ffmpeg format/filter options — pure data + string-building
+  functions, no Qt or app-config dependency, which is why they live under `media_core`
+  rather than under `tools/` (deliberately moved out of `tools/ffmpeg/batch_converter/`
+  once both tools/ffmpeg/media_extractor started needing them too). Extend those tables
+  rather than hardcoding new format/filter strings in a tool's UI layer.
+- `tools/ffmpeg/` — GUI tools driven by `media_core.ffmpeg`:
   - `batch_converter/` — Source/Convert/Processing/Destination tabbed UI (`ui.py`),
-    with `format_capabilities.py` (per-audio-format encoder/option map, sourced from
-    `archive/docs/ffmpeg-manuals/ffmpeg-codecs/8-audio-encoders/`) and
-    `effects_catalog.py` (the Processing-tab Edits/Filters effect definitions, sourced
-    from `archive/docs/ffmpeg-manuals/ffmpeg-filters/8-audio-filters/`) as the source of
-    truth for what's offered in the UI — extend those tables rather than hardcoding new
-    format/filter strings in the UI layer. `job.py` builds the actual `media_core.ffmpeg`
-    command graph and runs it threaded.
+    `job.py` (builds the actual `media_core.ffmpeg` command graph and runs it threaded;
+    supports pause/resume between files via a `threading.Event`), `progress_dialog.py`
+    (tabbed Progress/Live-Log dialog with pause/cancel and a notify-on-finish combo that
+    posts through `QApplication.instance()._tray_icon`, the same tray icon `system_tray.py`
+    registers globally at startup).
   - `media_extractor/` — audio/video/image extraction; reuses `batch_converter`'s
     `AudioConvertPanel`/`VideoConvertPanel` for format options rather than duplicating them.
   - `thumbnail_generator/` — mechanical move of the old tool, behavior unchanged.
