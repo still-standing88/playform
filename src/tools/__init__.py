@@ -6,6 +6,7 @@ from .subtitles.converter_ui import SubtitleConverterUI
 from .subtitles.editor_ui import SubtitleEditorUI
 from .speech_converter.ui import SpeechConverterUI
 from .m4b_tools.audiobook_tools.ui import AudiobookToolsUI
+from .m4b_tools.combiner.ui import AudiobookCombinerUI
 
 __all__ = [
     'BatchConverterUI',
@@ -16,4 +17,5 @@ __all__ = [
     'SubtitleEditorUI',
     'SpeechConverterUI',
     'AudiobookToolsUI',
+    'AudiobookCombinerUI',
 ]
