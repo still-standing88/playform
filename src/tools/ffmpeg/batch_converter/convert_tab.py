@@ -55,29 +55,29 @@ class AudioConvertPanel(QWidget):
         fmt = get_format(self.current_format_id())
 
         self.sample_rate_combo.clear()
+        self.sample_rate_combo.addItem(_("Keep Original"), 0)
         for rate in fmt.sample_rates or []:
             self.sample_rate_combo.addItem(f"{rate} Hz", rate)
-        if fmt.default_sample_rate in (fmt.sample_rates or []):
-            self.sample_rate_combo.setCurrentIndex((fmt.sample_rates or []).index(fmt.default_sample_rate))
+        self.sample_rate_combo.setCurrentIndex(0)
 
         has_bitrate = bool(fmt.bitrates_kbps)
         self.bit_rate_combo.setVisible(has_bitrate)
         self.vbr_check.setVisible(has_bitrate and bool(fmt.vbr_quality_range))
         self.bit_rate_combo.clear()
         if has_bitrate:
+            self.bit_rate_combo.addItem(_("Keep Original (Encoder Default)"), 0)
             for rate in fmt.bitrates_kbps:
                 self.bit_rate_combo.addItem(f"{rate} kbps", rate)
-            if fmt.default_bitrate_kbps in fmt.bitrates_kbps:
-                self.bit_rate_combo.setCurrentIndex(fmt.bitrates_kbps.index(fmt.default_bitrate_kbps))
+            self.bit_rate_combo.setCurrentIndex(0)
 
         has_bit_depth = bool(fmt.bit_depths)
         self.bit_depth_combo.setVisible(has_bit_depth)
         self.bit_depth_combo.clear()
         if has_bit_depth:
+            self.bit_depth_combo.addItem(_("Keep Original"), 0)
             for depth in fmt.bit_depths:
                 self.bit_depth_combo.addItem(f"{depth}-bit", depth)
-            if fmt.default_bit_depth in fmt.bit_depths:
-                self.bit_depth_combo.setCurrentIndex(fmt.bit_depths.index(fmt.default_bit_depth))
+            self.bit_depth_combo.setCurrentIndex(0)
 
         self._clear_codec_options()
         self.codec_options_group.setVisible(bool(fmt.codec_options))
@@ -160,8 +160,9 @@ class VideoConvertPanel(QWidget):
         form.addRow(_("Resolution"), self.resolution_combo)
 
         self.bit_rate_combo = QComboBox(self)
+        self.bit_rate_combo.addItem(_("Keep Original (Encoder Default)"))
         self.bit_rate_combo.addItems(["500k", "1000k", "2000k", "4000k", "6000k", "8000k", "12000k"])
-        self.bit_rate_combo.setCurrentText("4000k")
+        self.bit_rate_combo.setCurrentIndex(0)
         form.addRow(_("Video Bit Rate"), self.bit_rate_combo)
 
         self.framerate_combo = QComboBox(self)
@@ -175,7 +176,7 @@ class VideoConvertPanel(QWidget):
             "format_label": self.format_combo.currentText(),
             "codec": get_video_formats_map().get(self.format_combo.currentText()),
             "resolution": None if self.resolution_combo.currentIndex() == 0 else self.resolution_combo.currentText(),
-            "video_bit_rate": self.bit_rate_combo.currentText(),
+            "video_bit_rate": None if self.bit_rate_combo.currentIndex() == 0 else self.bit_rate_combo.currentText(),
             "framerate": None if self.framerate_combo.currentIndex() == 0 else self.framerate_combo.currentText(),
         }
 
@@ -191,10 +192,7 @@ class VideoConvertPanel(QWidget):
         self.resolution_combo.setCurrentIndex(self.resolution_combo.findText(resolution) if resolution else 0)
 
         bit_rate = state.get("video_bit_rate")
-        if bit_rate:
-            index = self.bit_rate_combo.findText(bit_rate)
-            if index >= 0:
-                self.bit_rate_combo.setCurrentIndex(index)
+        self.bit_rate_combo.setCurrentIndex(self.bit_rate_combo.findText(bit_rate) if bit_rate else 0)
 
         framerate = state.get("framerate")
         self.framerate_combo.setCurrentIndex(self.framerate_combo.findText(framerate) if framerate else 0)
