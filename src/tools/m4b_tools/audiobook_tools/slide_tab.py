@@ -35,6 +35,7 @@ class SlideTab(QWidget):
         source_group = QGroupBox(_("Source (modified in place)"), self)
         source_row = QHBoxLayout(source_group)
         self.input_path_edit = QLineEdit(self)
+        self.input_path_edit.setAccessibleName(_("Source audiobook file path"))
         self.input_browse_button = QPushButton(_("Browse..."), self)
         source_row.addWidget(self.input_path_edit)
         source_row.addWidget(self.input_browse_button)
