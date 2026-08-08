@@ -10,7 +10,7 @@ from PySide6.QtCore import Qt, QThread, Signal
 from tools.ffmpeg_handler import FFmpegHandler
 from media_core.ffmpeg import FFmpegError, Progress
 from tools.ffmpeg.batch_converter.convert_tab import AudioConvertPanel, VideoConvertPanel
-from tools.ffmpeg.batch_converter.format_capabilities import build_ffmpeg_output_options
+from media_core.ffmpeg.format_capabilities import build_ffmpeg_output_options
 from tools.ffmpeg.media_extractor.image_panel import ImageExtractPanel
 from utilities import signal_manager
 
@@ -157,7 +157,7 @@ class ExtractorUI(QWidget):
             )
             output_kwargs["vn"] = None
             self._apply_end_time(output_kwargs)
-            from tools.ffmpeg.batch_converter.format_capabilities import get_format
+            from media_core.ffmpeg.format_capabilities import get_format
             extension = get_format(options["format_id"]).extension
             output_path = os.path.join(output_dir, f"{base_name}_audio.{extension}")
 
