@@ -254,9 +254,8 @@ class MenuManager:
         self.main_window.audiobook_tools_action.triggered.connect(self.main_window.tool_manager.open_audiobook_tools)
         self.main_window.tools_menu.addAction(self.main_window.audiobook_tools_action)
 
-        self.main_window.audiobook_combiner_action = QAction(_("Audiobook Combiner (Coming Soon)"), self.main_window)
-        self.main_window.audiobook_combiner_action.setEnabled(False)
-        self.main_window.audiobook_combiner_action.setToolTip(_("Audiobook Combiner is not implemented yet."))
+        self.main_window.audiobook_combiner_action = QAction(_("Audiobook Co&mbiner (Combine/Metadata Dump)"), self.main_window)
+        self.main_window.audiobook_combiner_action.triggered.connect(self.main_window.tool_manager.open_audiobook_combiner)
         self.main_window.tools_menu.addAction(self.main_window.audiobook_combiner_action)
 
         self.main_window.tools_menu.addSeparator()
