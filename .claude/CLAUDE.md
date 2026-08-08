@@ -135,10 +135,18 @@ As of the `tools-rewrite` branch, tools live in per-tool subpackages, not flat
   `format_capabilities.py` gained an `"m4b"` audio format entry so plain many-files-to-
   individual-.m4b conversion (no chapters/combining) already works through the existing
   Batch Converter pipeline instead of needing a duplicate converter here.
-- `tools/m4b_tools/` — still just the reserved placeholder; the Tools menu entry is
-  disabled. The `media_core.m4b_tools` engine above is done — what's left is this Qt
-  wrapper layer (UI + `QThread` job wrappers per `ToolWindowManager`/`menu_manager`
-  conventions), not scoped yet.
+- `tools/m4b_tools/` — two tools, grouped by UI shape rather than 1:1 with the engine's
+  operations: `audiobook_tools/` (Bind/Split/Slide/Labels/Cover tabs — all single-book
+  operations, `job.py` has `BindJob`/`SplitJob` for the two that report incremental
+  progress plus a generic `SimpleM4BTask` for the three quick single-outcome ones) and
+  `combiner/` (Combine/Metadata Dump tabs — both CSV/glob/multi-file-driven). Split's
+  format/codec-options panel reuses `tools.ffmpeg.batch_converter.convert_tab.AudioConvertPanel`
+  directly (required extending `SplitRunner` to actually honor `sample_rate`/`bit_depth`/
+  `bitrate_kbps`/`vbr_quality` instead of silently dropping them — check before assuming
+  a runner honors every field its dataclass-like kwargs suggest). `SimpleM4BTask` only
+  injects `on_log_line` into a wrapped function's kwargs if that function's signature
+  actually accepts it (`inspect.signature`) — `cover.extract_cover`/`add_cover` don't,
+  unlike `slide.run_slide`/labels' functions, so a blind inject crashes them.
 - `gui_controls/path_tree_widget.py` — shared file/folder source-tree control (used by
   Batch Converter's Source tab; suitable for reuse by future tools needing the same
   add-files/add-folder-with-format-filter workflow).
