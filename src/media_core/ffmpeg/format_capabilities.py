@@ -389,3 +389,28 @@ def build_ffmpeg_output_options(
                 options[option.ffmpeg_flag] = codec_option_values[option.key]
 
     return options
+
+
+VIDEO_FORMATS: dict[str, str] = {
+    "MP4 (H.264)": "libx264",
+    "MKV (H.264)": "libx264",
+    "WEBM (VP9)": "libvpx-vp9",
+    "AVI (MPEG-4)": "mpeg4",
+    "MOV (H.264)": "libx264",
+}
+
+_VIDEO_CONTAINERS: dict[str, str] = {
+    "MP4 (H.264)": ".mp4",
+    "MKV (H.264)": ".mkv",
+    "WEBM (VP9)": ".webm",
+    "AVI (MPEG-4)": ".avi",
+    "MOV (H.264)": ".mov",
+}
+
+
+def get_video_formats_map() -> dict[str, str]:
+    return VIDEO_FORMATS
+
+
+def get_container_from_format(format_label: str) -> str:
+    return _VIDEO_CONTAINERS.get(format_label, "")
