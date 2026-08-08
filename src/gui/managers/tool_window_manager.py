@@ -6,6 +6,7 @@ from tools.ffmpeg.thumbnail_generator.ui import ThumbnailGeneratorUI
 from tools.subtitles.converter_ui import SubtitleConverterUI
 from tools.subtitles.editor_ui import SubtitleEditorUI
 from tools.speech_converter.ui import SpeechConverterUI
+from tools.m4b_tools.audiobook_tools.ui import AudiobookToolsUI
 from gui.dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
@@ -41,6 +42,11 @@ class ToolWindowManager:
 
     def open_speech_converter(self):
         self.open_tool_dialog("speech_converter", SpeechConverterUI(), _("Speech Converter"))
+
+    def open_audiobook_tools(self):
+        if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
+            return
+        self.open_tool_dialog("audiobook_tools", AudiobookToolsUI(), _("Audiobook Tools"))
 
     def open_tool_dialog(self, tool_name, tool_widget, title):
         if self.main_window.active_tool_name and self.main_window.active_tool_name != tool_name:
