@@ -1,3 +1,5 @@
+import inspect
+
 from PySide6.QtCore import QThread, Signal
 
 from media_core.m4b_tools import BindRunner, SplitRunner
@@ -75,9 +77,21 @@ class SimpleM4BTask(QThread):
 
     def run(self):
         kwargs = dict(self._kwargs)
-        kwargs.setdefault("on_log_line", self.log_line.emit)
+        accepts_log_line = "on_log_line" in kwargs or self._accepts_kwarg(self._func, "on_log_line")
+        if accepts_log_line:
+            kwargs.setdefault("on_log_line", self.log_line.emit)
         try:
             result = self._func(*self._args, **kwargs)
             self.finished_job.emit(bool(result), "")
         except Exception as error:
             self.finished_job.emit(False, str(error))
+
+    @staticmethod
+    def _accepts_kwarg(func, name: str) -> bool:
+        try:
+            parameters = inspect.signature(func).parameters
+        except (TypeError, ValueError):
+            return False
+        return name in parameters or any(
+            p.kind == inspect.Parameter.VAR_KEYWORD for p in parameters.values()
+        )
