@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QT
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
-from tools.ffmpeg.batch_converter.effects_catalog import EFFECTS, effects_for_branch, categories_for_branch, get_effect
+from media_core.ffmpeg.effects_catalog import EFFECTS, effects_for_branch, categories_for_branch, get_effect
 from tools.ffmpeg.batch_converter.effect_dialog import EffectParameterDialog
 
 EFFECT_ID_ROLE = Qt.ItemDataRole.UserRole
