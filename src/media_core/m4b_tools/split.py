@@ -69,6 +69,10 @@ class SplitRunner(M4bToolsRunner):
         trim_silence: bool = False,
         padding: float = 0.0,
         include_cover: bool = True,
+        sample_rate: Optional[int] = None,
+        bit_depth: Optional[int] = None,
+        bitrate_kbps: Optional[float] = None,
+        vbr_quality: Optional[float] = None,
         codec_option_values: Optional[dict] = None,
         ffmpeg_executable: str = "ffmpeg",
         ffprobe_executable: str = "ffprobe",
@@ -90,6 +94,10 @@ class SplitRunner(M4bToolsRunner):
         self.trim_silence = trim_silence
         self.padding = padding
         self.include_cover = include_cover
+        self.sample_rate = sample_rate
+        self.bit_depth = bit_depth
+        self.bitrate_kbps = bitrate_kbps
+        self.vbr_quality = vbr_quality
         self.codec_option_values = codec_option_values or {}
         self.ffmpeg_executable = ffmpeg_executable
         self.ffprobe_executable = ffprobe_executable
@@ -155,7 +163,12 @@ class SplitRunner(M4bToolsRunner):
         ffmpeg.input(str(self.input_path), {"ss": segment.start_time, "t": duration})
 
         output_options = build_ffmpeg_output_options(
-            self.output_format, codec_option_values=self.codec_option_values,
+            self.output_format,
+            sample_rate=self.sample_rate,
+            bit_depth=self.bit_depth,
+            bitrate_kbps=self.bitrate_kbps,
+            vbr_quality=self.vbr_quality,
+            codec_option_values=self.codec_option_values,
         )
         output_options["vn"] = None
         output_options["map_chapters"] = "-1"
