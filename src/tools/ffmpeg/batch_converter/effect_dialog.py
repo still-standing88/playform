@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QDialog, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 
-from tools.ffmpeg.batch_converter.effects_catalog import EffectDefinition
+from media_core.ffmpeg.effects_catalog import EffectDefinition
 from tools.ffmpeg.batch_converter.param_widgets import make_param_widget, read_param_widget
 
 
