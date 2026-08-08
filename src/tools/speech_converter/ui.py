@@ -51,6 +51,11 @@ class SpeechConverterUI(QWidget):
 
         self.text_edit = SpeechTextEdit(self._open_text_file, self._save_as, self)
         self.text_edit.setPlaceholderText(_("Type or paste text to speak..."))
+        self.text_edit.setAccessibleName(_("Text to speak"))
+        self.text_edit.setAccessibleDescription(
+            _("Right-click for Open Text File and Save As. Shortcuts: F7 speak/pause, "
+              "F8 stop, Ctrl+O open, Ctrl+S save, Ctrl+F parameters.")
+        )
         layout.addWidget(self.text_edit, stretch=1)
 
         button_row = QHBoxLayout()
