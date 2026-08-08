@@ -143,10 +143,15 @@ class PlaylistView(QWidget):
     def show_context_menu(self, position):
         has_entries = self.current_playlist is not None and bool(self.current_playlist.entries)
         has_focused_item = self._get_focused_row() >= 0
-        has_target_rows = bool(self._selected_playlist_indexes())
+        target_rows = self._selected_playlist_indexes()
+        has_target_rows = bool(target_rows)
+        last_row = self.list_ctrl.get_item_count() - 1
 
-        self.move_up_action.setEnabled(has_target_rows)
-        self.move_down_action.setEnabled(has_target_rows)
+        can_move_up = has_target_rows and min(target_rows) > 0
+        can_move_down = has_target_rows and max(target_rows) < last_row
+
+        self.move_up_action.setEnabled(can_move_up)
+        self.move_down_action.setEnabled(can_move_down)
         self.delete_action.setEnabled(has_focused_item or has_target_rows)
         self.clear_action.setEnabled(has_entries)
         self.sort_menu.setEnabled(has_entries)
