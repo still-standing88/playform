@@ -26,6 +26,11 @@ class ProcessingTab(QWidget):
         self.tree.setColumnCount(1)
         self.tree.setHeaderLabels([_("Edits & Filters")])
         self.tree.itemSelectionChanged.connect(self._update_button_state)
+        self.tree.setAccessibleName(_("Edits and filters catalog"))
+        self.tree.setAccessibleDescription(
+            _("Browse Edits and Filters by category. Select an effect and use Add Effect "
+              "to configure and apply it; applied effects are marked with a checkmark.")
+        )
         layout.addWidget(self.tree)
 
         button_row = QHBoxLayout()
