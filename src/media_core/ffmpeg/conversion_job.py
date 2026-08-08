@@ -134,6 +134,15 @@ class ConversionRunner:
                 if output_path is None:
                     continue
 
+                if os.path.normcase(os.path.normpath(output_path)) == os.path.normcase(os.path.normpath(input_path)):
+                    message = (
+                        f"Skipped (output format matches source format, so output would overwrite "
+                        f"the source file): {input_path}"
+                    )
+                    log_lines.append(message)
+                    self._on_file_completed(input_path, True, message)
+                    continue
+
                 if os.path.exists(output_path) and not self.destination_options.get("overwrite_existing"):
                     message = f"Skipped (exists): {output_path}"
                     log_lines.append(message)
