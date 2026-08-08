@@ -81,6 +81,7 @@ class BindTab(QWidget):
 
         cover_row = QHBoxLayout()
         self.cover_path_edit = QLineEdit(self)
+        self.cover_path_edit.setAccessibleName(_("Cover image path"))
         self.cover_browse_button = QPushButton(_("Browse..."), self)
         cover_row.addWidget(self.cover_path_edit)
         cover_row.addWidget(self.cover_browse_button)
@@ -95,6 +96,7 @@ class BindTab(QWidget):
         output_group = QGroupBox(_("Output"), self)
         output_row = QHBoxLayout(output_group)
         self.output_path_edit = QLineEdit(self)
+        self.output_path_edit.setAccessibleName(_("Output .m4b file path"))
         self.output_browse_button = QPushButton(_("Browse..."), self)
         output_row.addWidget(self.output_path_edit)
         output_row.addWidget(self.output_browse_button)
