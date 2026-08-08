@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox, QLineEdit
 )
 
-from tools.ffmpeg.batch_converter.format_capabilities import AUDIO_FORMATS, get_format
+from media_core.ffmpeg.format_capabilities import AUDIO_FORMATS, get_format
 from tools.ffmpeg.batch_converter.param_widgets import make_param_widget, read_param_widget
 from tools.utils import get_video_formats_map
 
