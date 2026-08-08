@@ -33,6 +33,7 @@ class SplitTab(QWidget):
         source_group = QGroupBox(_("Source"), self)
         source_row = QHBoxLayout(source_group)
         self.input_path_edit = QLineEdit(self)
+        self.input_path_edit.setAccessibleName(_("Source audiobook file path"))
         self.input_browse_button = QPushButton(_("Browse..."), self)
         source_row.addWidget(self.input_path_edit)
         source_row.addWidget(self.input_browse_button)
@@ -104,6 +105,7 @@ class SplitTab(QWidget):
 
         output_row = QHBoxLayout()
         self.output_dir_edit = QLineEdit(self)
+        self.output_dir_edit.setAccessibleName(_("Output folder path"))
         self.output_browse_button = QPushButton(_("Browse..."), self)
         output_row.addWidget(self.output_dir_edit)
         output_row.addWidget(self.output_browse_button)
