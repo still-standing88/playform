@@ -72,10 +72,11 @@ class ParametersDialog(QDialog):
         self._update_pitch_mode(self.use_pitch_xml_check.isChecked())
 
     def _update_pitch_mode(self, use_xml: bool):
+        show_normal_pitch = not use_xml and self.engine.supports_normal_pitch()
         for i in range(self.pitch_row.count()):
             widget = self.pitch_row.itemAt(i).widget()
             if widget:
-                widget.setVisible(not use_xml)
+                widget.setVisible(show_normal_pitch)
         for i in range(self.pitch_xml_row.count()):
             widget = self.pitch_xml_row.itemAt(i).widget()
             if widget:
