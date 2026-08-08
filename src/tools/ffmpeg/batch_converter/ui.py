@@ -2,15 +2,15 @@ import os
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QPushButton, QComboBox,
-    QLabel, QProgressDialog, QMessageBox, QInputDialog
+    QLabel, QMessageBox, QInputDialog, QApplication, QSystemTrayIcon
 )
-from PySide6.QtCore import Qt
 
 from tools.ffmpeg.batch_converter.source_tab import SourceTab
 from tools.ffmpeg.batch_converter.convert_tab import ConvertTab
 from tools.ffmpeg.batch_converter.processing_tab import ProcessingTab
 from tools.ffmpeg.batch_converter.destination_tab import DestinationTab
-from tools.ffmpeg.batch_converter.job import BatchConverterJob
+from tools.ffmpeg.batch_converter.job import BatchConverterJob, resolve_files_from_entries
+from tools.ffmpeg.batch_converter.progress_dialog import BatchProgressDialog, NOTIFY_SYSTEM
 from tools.ffmpeg.batch_converter import presets
 from utilities import signal_manager
 
@@ -20,7 +20,7 @@ class BatchConverterUI(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.job: BatchConverterJob | None = None
-        self.progress_dialog: QProgressDialog | None = None
+        self.progress_dialog: BatchProgressDialog | None = None
         self._build_ui()
         self._reload_presets()
 
@@ -51,15 +51,11 @@ class BatchConverterUI(QWidget):
 
         button_row = QHBoxLayout()
         self.begin_button = QPushButton(_("Begin"), self)
-        self.cancel_button = QPushButton(_("Cancel"), self)
-        self.cancel_button.setEnabled(False)
         button_row.addStretch()
         button_row.addWidget(self.begin_button)
-        button_row.addWidget(self.cancel_button)
         layout.addLayout(button_row)
 
         self.begin_button.clicked.connect(self._on_begin)
-        self.cancel_button.clicked.connect(self._on_cancel)
         self.save_preset_button.clicked.connect(self._on_save_preset)
         self.delete_preset_button.clicked.connect(self._on_delete_preset)
         self.preset_combo.currentIndexChanged.connect(self._on_preset_selected)
@@ -120,14 +116,15 @@ class BatchConverterUI(QWidget):
         self.job.overall_progress.connect(self._on_overall_progress)
         self.job.file_progress.connect(self._on_file_progress)
         self.job.file_completed.connect(self._on_file_completed)
+        self.job.log_line.connect(self._on_log_line)
         self.job.finished_all.connect(self._on_finished)
 
-        self.progress_dialog = QProgressDialog(_("Converting..."), _("Cancel"), 0, 1, self)
-        self.progress_dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        self.progress_dialog.canceled.connect(self._on_cancel)
+        total_files = len(resolve_files_from_entries(entries))
+        self.progress_dialog = BatchProgressDialog(total_files, self)
+        self.progress_dialog.cancel_requested.connect(self._on_cancel)
+        self.progress_dialog.pause_toggled.connect(self._on_pause_toggled)
 
         self.begin_button.setEnabled(False)
-        self.cancel_button.setEnabled(True)
         self.job.start()
         self.progress_dialog.show()
         signal_manager.statusbar_message.emit(_("Batch conversion started"))
@@ -135,34 +132,51 @@ class BatchConverterUI(QWidget):
     def _on_cancel(self):
         if self.job:
             self.job.stop()
-        self.cancel_button.setEnabled(False)
+
+    def _on_pause_toggled(self, paused: bool):
+        if not self.job:
+            return
+        if paused:
+            self.job.pause()
+        else:
+            self.job.resume()
 
     def _on_overall_progress(self, current: int, total: int, filename: str):
-        if not self.progress_dialog:
-            return
-        self.progress_dialog.setMaximum(max(total, 1))
-        self.progress_dialog.setValue(current)
-        if filename:
-            self.progress_dialog.setLabelText(
-                _("Converting file {current} of {total}: {filename}").format(
-                    current=current + 1, total=total, filename=filename
-                )
-            )
+        if self.progress_dialog:
+            self.progress_dialog.set_overall_progress(current, total, filename)
 
     def _on_file_progress(self, text: str):
         if self.progress_dialog:
-            base = self.progress_dialog.labelText().split(" — ")[0]
-            self.progress_dialog.setLabelText(f"{base} — {text}")
+            self.progress_dialog.set_file_progress_detail(text)
 
     def _on_file_completed(self, path: str, success: bool, message: str):
+        if self.progress_dialog:
+            self.progress_dialog.append_file_result(message)
         if not success:
             signal_manager.statusbar_message.emit(
                 _("Failed: {filename} — {message}").format(filename=os.path.basename(path), message=message)
             )
 
+    def _on_log_line(self, line: str):
+        if self.progress_dialog:
+            self.progress_dialog.append_live_log(line)
+
     def _on_finished(self):
         self.begin_button.setEnabled(True)
-        self.cancel_button.setEnabled(False)
         if self.progress_dialog:
-            self.progress_dialog.close()
+            self.progress_dialog.mark_finished()
+            self._notify_finished()
         signal_manager.statusbar_message.emit(_("Batch conversion finished"))
+
+    def _notify_finished(self):
+        if not self.progress_dialog or self.progress_dialog.notify_preference() != NOTIFY_SYSTEM:
+            return
+
+        tray_icon = getattr(QApplication.instance(), "_tray_icon", None)
+        if tray_icon is not None and hasattr(tray_icon, "showMessage"):
+            tray_icon.showMessage(
+                _("Batch Conversion Finished"),
+                _("The batch conversion job has finished."),
+                QSystemTrayIcon.MessageIcon.Information,
+                5000,
+            )
