@@ -1,140 +1,108 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, QPushButton
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
 
-from media_core.ffmpeg.effects_catalog import EFFECTS, effects_for_branch, categories_for_branch, get_effect
-from tools.ffmpeg.batch_converter.effect_dialog import EffectParameterDialog
+from media_core.ffmpeg.effects_catalog import get_effect
+from tools.ffmpeg.batch_converter.effect_picker_dialog import EffectPickerDialog
 
 EFFECT_ID_ROLE = Qt.ItemDataRole.UserRole
 EFFECT_VALUES_ROLE = Qt.ItemDataRole.UserRole + 1
 
-_BRANCH_LABELS = {"edits": "Edits", "filters": "Filters"}
-
 
 class ProcessingTab(QWidget):
+    """Shows only the effects actually applied to this conversion, in application order.
+
+    Browsing the catalog and configuring parameters both happen in `EffectPickerDialog`,
+    opened via the Add Edit/Add Filter buttons (or Edit Selected, to reconfigure an
+    already-applied entry) — this list is the resulting chain, not a catalog browser.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._leaf_items: dict = {}
         self._build_ui()
-        self._populate_tree()
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
 
-        self.tree = QTreeWidget(self)
-        self.tree.setColumnCount(1)
-        self.tree.setHeaderLabels([_("Edits & Filters")])
-        self.tree.itemSelectionChanged.connect(self._update_button_state)
-        self.tree.setAccessibleName(_("Edits and filters catalog"))
-        self.tree.setAccessibleDescription(
-            _("Browse Edits and Filters by category. Select an effect and use Add Effect "
-              "to configure and apply it; applied effects are marked with a checkmark.")
+        self.applied_list = QListWidget(self)
+        self.applied_list.setAccessibleName(_("Applied edits and filters"))
+        self.applied_list.setAccessibleDescription(
+            _("Effects that will be applied to this conversion, in order. Use Add Edit or "
+              "Add Filter to add more; select an entry to edit or remove it.")
         )
-        layout.addWidget(self.tree)
+        self.applied_list.itemSelectionChanged.connect(self._update_button_state)
+        self.applied_list.itemDoubleClicked.connect(lambda _item: self._on_edit_selected())
+        layout.addWidget(self.applied_list)
 
         button_row = QHBoxLayout()
-        self.add_edit_button = QPushButton(_("Add Effect..."), self)
-        self.remove_button = QPushButton(_("Remove Effect"), self)
-        self.add_edit_button.clicked.connect(self._on_add_or_edit)
-        self.remove_button.clicked.connect(self._on_remove)
+        self.add_edit_button = QPushButton(_("Add Edit..."), self)
+        self.add_filter_button = QPushButton(_("Add Filter..."), self)
+        self.edit_selected_button = QPushButton(_("Edit Selected..."), self)
+        self.remove_button = QPushButton(_("Remove Selected"), self)
+        self.add_edit_button.clicked.connect(lambda: self._open_picker("edits"))
+        self.add_filter_button.clicked.connect(lambda: self._open_picker("filters"))
+        self.edit_selected_button.clicked.connect(self._on_edit_selected)
+        self.remove_button.clicked.connect(self._on_remove_selected)
         button_row.addWidget(self.add_edit_button)
-        button_row.addWidget(self.remove_button)
+        button_row.addWidget(self.add_filter_button)
         button_row.addStretch()
+        button_row.addWidget(self.edit_selected_button)
+        button_row.addWidget(self.remove_button)
         layout.addLayout(button_row)
 
         self._update_button_state()
 
-    def _populate_tree(self):
-        for branch in ("edits", "filters"):
-            branch_item = QTreeWidgetItem([_(_BRANCH_LABELS[branch])])
-            self.tree.addTopLevelItem(branch_item)
-            branch_item.setExpanded(True)
-
-            for category in categories_for_branch(branch):
-                category_item = QTreeWidgetItem([_(category)])
-                branch_item.addChild(category_item)
-
-                for effect in effects_for_branch(branch):
-                    if effect.category != category:
-                        continue
-                    leaf = QTreeWidgetItem([effect.label])
-                    leaf.setData(0, EFFECT_ID_ROLE, effect.id)
-                    category_item.addChild(leaf)
-                    self._leaf_items[effect.id] = leaf
-
     def _update_button_state(self):
-        item = self._selected_leaf()
-        if item is None:
-            self.add_edit_button.setEnabled(False)
-            self.add_edit_button.setText(_("Add Effect..."))
-            self.remove_button.setEnabled(False)
-            return
+        has_selection = self.applied_list.currentItem() is not None
+        self.edit_selected_button.setEnabled(has_selection)
+        self.remove_button.setEnabled(has_selection)
 
-        self.add_edit_button.setEnabled(True)
-        applied = item.data(0, EFFECT_VALUES_ROLE) is not None
-        self.add_edit_button.setText(_("Edit Effect...") if applied else _("Add Effect..."))
-        self.remove_button.setEnabled(applied)
+    def _make_item(self, effect_id: str, values: dict) -> QListWidgetItem:
+        item = QListWidgetItem(get_effect(effect_id).label)
+        item.setData(EFFECT_ID_ROLE, effect_id)
+        item.setData(EFFECT_VALUES_ROLE, values)
+        return item
 
-    def _selected_leaf(self):
-        items = self.tree.selectedItems()
-        if not items:
-            return None
-        item = items[0]
-        return item if item.data(0, EFFECT_ID_ROLE) else None
-
-    def _mark_applied(self, item: QTreeWidgetItem, applied: bool):
-        font = QFont(item.font(0))
-        font.setBold(applied)
-        item.setFont(0, font)
-        effect_id = item.data(0, EFFECT_ID_ROLE)
-        label = get_effect(effect_id).label
-        item.setText(0, f"✓ {label}" if applied else label)
-
-    def _on_add_or_edit(self):
-        item = self._selected_leaf()
-        if item is None:
-            return
-
-        effect = get_effect(item.data(0, EFFECT_ID_ROLE))
-        current_values = item.data(0, EFFECT_VALUES_ROLE)
-        dialog = EffectParameterDialog(effect, current_values, self)
+    def _open_picker(self, branch: str):
+        dialog = EffectPickerDialog(branch, self)
         if dialog.exec() == dialog.DialogCode.Accepted:
-            item.setData(0, EFFECT_VALUES_ROLE, dialog.values())
-            self._mark_applied(item, True)
-            self._update_button_state()
+            effect_id, values = dialog.result_effect()
+            if effect_id:
+                self.applied_list.addItem(self._make_item(effect_id, values))
+                self._update_button_state()
 
-    def _on_remove(self):
-        item = self._selected_leaf()
+    def _on_edit_selected(self):
+        item = self.applied_list.currentItem()
         if item is None:
             return
-        item.setData(0, EFFECT_VALUES_ROLE, None)
-        self._mark_applied(item, False)
+
+        effect_id = item.data(EFFECT_ID_ROLE)
+        values = item.data(EFFECT_VALUES_ROLE)
+        branch = get_effect(effect_id).branch
+        dialog = EffectPickerDialog(branch, self, initial_effect_id=effect_id, initial_values=values)
+        if dialog.exec() == dialog.DialogCode.Accepted:
+            new_effect_id, new_values = dialog.result_effect()
+            if new_effect_id:
+                item.setText(get_effect(new_effect_id).label)
+                item.setData(EFFECT_ID_ROLE, new_effect_id)
+                item.setData(EFFECT_VALUES_ROLE, new_values)
+
+    def _on_remove_selected(self):
+        for item in self.applied_list.selectedItems():
+            self.applied_list.takeItem(self.applied_list.row(item))
         self._update_button_state()
 
     def clear_all(self):
-        for item in self._leaf_items.values():
-            item.setData(0, EFFECT_VALUES_ROLE, None)
-            self._mark_applied(item, False)
+        self.applied_list.clear()
         self._update_button_state()
 
     def applied_effects(self) -> list:
-        result = []
-        for effect in EFFECTS:
-            item = self._leaf_items.get(effect.id)
-            if item is None:
-                continue
-            values = item.data(0, EFFECT_VALUES_ROLE)
-            if values is not None:
-                result.append((effect.id, values))
-        return result
+        return [
+            (self.applied_list.item(i).data(EFFECT_ID_ROLE), self.applied_list.item(i).data(EFFECT_VALUES_ROLE))
+            for i in range(self.applied_list.count())
+        ]
 
     def load_applied_effects(self, entries: list):
         self.clear_all()
         for effect_id, values in entries:
-            item = self._leaf_items.get(effect_id)
-            if item is None:
-                continue
-            item.setData(0, EFFECT_VALUES_ROLE, values)
-            self._mark_applied(item, True)
+            self.applied_list.addItem(self._make_item(effect_id, values))
         self._update_button_state()
