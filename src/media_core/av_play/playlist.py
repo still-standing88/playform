@@ -571,7 +571,43 @@ class Playlist:
         merged.entries = self.entries.copy()
         merged.entries.extend(other.entries)
         return merged
-    
+
+    def split(self, split_points: Iterable[int]) -> List['Playlist']:
+        points = sorted({p for p in split_points if 0 < p < len(self.entries)})
+        if not points:
+            return [self]
+
+        boundaries = [0] + points + [len(self.entries)]
+        parts = []
+        for i in range(len(boundaries) - 1):
+            start, end = boundaries[i], boundaries[i + 1]
+            part = Playlist(f"{self.title} (Part {i + 1})")
+            part.entries = self.entries[start:end]
+            part._format = self._format
+            parts.append(part)
+
+        return parts
+
+    def split_into_parts(self, num_parts: int) -> List['Playlist']:
+        num_parts = max(1, min(num_parts, len(self.entries) or 1))
+        if num_parts <= 1 or not self.entries:
+            return [self]
+
+        total = len(self.entries)
+        base, remainder = divmod(total, num_parts)
+        parts = []
+        start = 0
+        for i in range(num_parts):
+            size = base + (1 if i < remainder else 0)
+            end = start + size
+            part = Playlist(f"{self.title} (Part {i + 1})")
+            part.entries = self.entries[start:end]
+            part._format = self._format
+            parts.append(part)
+            start = end
+
+        return parts
+
     def __len__(self) -> int:
         return len(self.entries)
     
@@ -640,7 +676,34 @@ class PlaylistManager:
         self.playlists[name] = merged_playlist
         return merged_playlist
     
-    def sort_playlist(self, name: str, key: Union[str, Callable[[PlaylistEntry], Any]], 
+    def split_playlist(self, name: str, split_points: Optional[List[int]] = None,
+                      num_parts: Optional[int] = None,
+                      name_template: Optional[str] = None) -> Optional[List[Playlist]]:
+        playlist = self.get_playlist(name)
+        if not playlist:
+            return None
+
+        parts = playlist.split_into_parts(num_parts) if num_parts is not None else playlist.split(split_points or [])
+        if len(parts) <= 1:
+            return None
+
+        result = []
+        for i, part in enumerate(parts, 1):
+            part_name = (name_template or f"{name} - Part {{index}}").format(index=i)
+            if part_name in self.playlists:
+                suffix = 2
+                base_name = part_name
+                while f"{base_name} ({suffix})" in self.playlists:
+                    suffix += 1
+                part_name = f"{base_name} ({suffix})"
+
+            part.title = part_name
+            self.playlists[part_name] = part
+            result.append(part)
+
+        return result
+
+    def sort_playlist(self, name: str, key: Union[str, Callable[[PlaylistEntry], Any]],
                      reverse: bool = False) -> bool:
         playlist = self.get_playlist(name)
         if playlist:
