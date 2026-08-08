@@ -376,7 +376,13 @@ def build_ffmpeg_output_options(
     vbr_quality: Optional[float] = None,
     codec_option_values: Optional[dict] = None,
 ) -> dict:
-    """Build the kwargs dict to pass to `media_core.ffmpeg`'s `.output(url, **options)`."""
+    """Build the kwargs dict to pass to `media_core.ffmpeg`'s `.output(url, **options)`.
+
+    `sample_rate`/`bit_depth`/`bitrate_kbps` of `0` mean "keep original" — the
+    corresponding ffmpeg flag is omitted entirely so ffmpeg preserves the source's own
+    value (or falls back to the encoder's own default, for bitrate) instead of forcing
+    one. This is distinct from `None`, which falls back to this format's sensible default.
+    """
 
     fmt = get_format(format_id)
     options: dict = {}
@@ -386,19 +392,22 @@ def build_ffmpeg_output_options(
     else:
         options["c:a"] = fmt.encoder
 
-    resolved_rate = sample_rate or fmt.default_sample_rate
-    if resolved_rate:
-        options["ar"] = resolved_rate
+    if sample_rate != 0:
+        resolved_rate = sample_rate or fmt.default_sample_rate
+        if resolved_rate:
+            options["ar"] = resolved_rate
 
     if fmt.bitrates_kbps and fmt.id not in _PCM_FORMAT_IDS:
-        if bitrate_kbps is not None:
+        if bitrate_kbps == 0:
+            pass
+        elif bitrate_kbps is not None:
             options["b:a"] = f"{bitrate_kbps}k"
         elif vbr_quality is not None and fmt.vbr_quality_range:
             options["q:a"] = vbr_quality
         elif fmt.default_bitrate_kbps is not None:
             options["b:a"] = f"{fmt.default_bitrate_kbps}k"
 
-    if fmt.lossless and fmt.id not in _PCM_FORMAT_IDS and fmt.bit_depths:
+    if fmt.lossless and fmt.id not in _PCM_FORMAT_IDS and fmt.bit_depths and bit_depth != 0:
         sample_fmt = resolve_lossless_sample_fmt(fmt.id, bit_depth or fmt.default_bit_depth)
         if sample_fmt:
             options["sample_fmt"] = sample_fmt
