@@ -1,5 +1,6 @@
 import os
 import re
+import threading
 from datetime import datetime
 
 from PySide6.QtCore import QThread, Signal
@@ -66,9 +67,21 @@ class BatchConverterJob(QThread):
         self.processing_effects = processing_effects
         self.destination_options = destination_options
         self._is_running = True
+        self._resume_event = threading.Event()
+        self._resume_event.set()
 
     def stop(self):
         self._is_running = False
+        self._resume_event.set()
+
+    def pause(self):
+        self._resume_event.clear()
+
+    def resume(self):
+        self._resume_event.set()
+
+    def is_paused(self) -> bool:
+        return not self._resume_event.is_set()
 
     def run(self):
         files = resolve_files_from_entries(self.entries)
@@ -76,6 +89,10 @@ class BatchConverterJob(QThread):
         log_lines = []
 
         for index, (input_path, source_root) in enumerate(files):
+            if not self._is_running:
+                break
+
+            self._resume_event.wait()
             if not self._is_running:
                 break
 
@@ -154,6 +171,7 @@ class BatchConverterJob(QThread):
         @ffmpeg.on("stderr")
         def _on_stderr(line: str):
             captured.append(line)
+            self.log_line.emit(line)
 
         try:
             ffmpeg.execute()
@@ -208,6 +226,10 @@ class BatchConverterJob(QThread):
             self.file_progress.emit(
                 _("Time: {time}, Speed: {speed:.2f}x").format(time=progress.time, speed=progress.speed)
             )
+
+        @ffmpeg.on("stderr")
+        def _on_stderr(line: str):
+            self.log_line.emit(line)
 
         ffmpeg.execute()
 
