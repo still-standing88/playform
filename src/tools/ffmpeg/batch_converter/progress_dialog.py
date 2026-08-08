@@ -104,7 +104,7 @@ class BatchProgressDialog(QDialog):
     def append_live_log(self, line: str):
         self.live_log.appendPlainText(line)
 
-    def mark_finished(self):
+    def mark_finished(self, completed: bool = True):
         self.pause_button.setEnabled(False)
         self.cancel_button.setText(_("Close"))
         self.cancel_button.setEnabled(True)
@@ -113,4 +113,4 @@ class BatchProgressDialog(QDialog):
         except (TypeError, RuntimeError):
             pass
         self.cancel_button.clicked.connect(self.accept)
-        self.current_file_label.setText(_("Done."))
+        self.current_file_label.setText(_("Done.") if completed else _("Cancelled."))
