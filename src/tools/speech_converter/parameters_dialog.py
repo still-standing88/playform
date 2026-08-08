@@ -16,10 +16,13 @@ class ParametersDialog(QDialog):
 
     def _make_slider_row(self, label: str, low: int, high: int, value: int):
         row = QHBoxLayout()
-        row.addWidget(QLabel(label))
+        label_widget = QLabel(label)
+        row.addWidget(label_widget)
         slider = QSlider(Qt.Orientation.Horizontal, self)
         slider.setRange(low, high)
         slider.setValue(value)
+        slider.setAccessibleName(label)
+        label_widget.setBuddy(slider)
         value_label = QLabel(str(value), self)
         value_label.setFixedWidth(40)
         slider.valueChanged.connect(lambda v: value_label.setText(str(v)))
