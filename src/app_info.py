@@ -7,7 +7,7 @@ APP_VERSION = "1.2.0"
 APP_PUBLISHER = "Joybytes"
 APP_AUTHOR = "Still Standing"
 APP_LICENSE = "GPL-3.0"
-APP_COPYRIGHT = "Copyright © 2024 Still Standing"
+APP_COPYRIGHT = "Copyright © 2026 Still Standing"
 
 APP_WEBSITE = "https://github.com/still-standing88/playform"
 APP_GITHUB_REPO = "still-standing88/playform"  # owner/repo
