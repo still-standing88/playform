@@ -42,6 +42,7 @@ class JobProgressDialog(QDialog):
             self.progress_bar.setRange(0, self._total_files)
         else:
             self.progress_bar.setRange(0, 0)
+        self.progress_bar.setAccessibleName(_("Overall progress"))
         layout.addWidget(self.progress_bar)
 
         self.tabs = QTabWidget(self)
@@ -50,6 +51,8 @@ class JobProgressDialog(QDialog):
         progress_layout = QVBoxLayout(progress_tab)
         self.file_log = QPlainTextEdit(progress_tab)
         self.file_log.setReadOnly(True)
+        self.file_log.setAccessibleName(_("Per-file results"))
+        self.file_log.setAccessibleDescription(_("A running log of each completed, skipped, or failed file."))
         progress_layout.addWidget(self.file_log)
         self.tabs.addTab(progress_tab, _("Progress"))
 
@@ -58,16 +61,20 @@ class JobProgressDialog(QDialog):
         self.live_log = QPlainTextEdit(live_log_tab)
         self.live_log.setReadOnly(True)
         self.live_log.setMaximumBlockCount(5000)
+        self.live_log.setAccessibleName(_("Live log output"))
+        self.live_log.setAccessibleDescription(_("Raw ffmpeg output streamed live as the job runs."))
         live_log_layout.addWidget(self.live_log)
         self.tabs.addTab(live_log_tab, _("Live Log"))
 
         layout.addWidget(self.tabs, stretch=1)
 
         button_row = QHBoxLayout()
-        button_row.addWidget(QLabel(_("When finished:"), self))
+        notify_label = QLabel(_("When finished:"), self)
+        button_row.addWidget(notify_label)
         self.notify_combo = QComboBox(self)
         self.notify_combo.addItem(_("Show System Notification"), NOTIFY_SYSTEM)
         self.notify_combo.addItem(_("Stay Silent"), NOTIFY_SILENT)
+        notify_label.setBuddy(self.notify_combo)
         button_row.addWidget(self.notify_combo)
         button_row.addStretch()
 
