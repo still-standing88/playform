@@ -31,6 +31,7 @@ class AddFolderDialog(QDialog):
 
         path_row = QHBoxLayout()
         self.path_edit = QLineEdit(self)
+        self.path_edit.setAccessibleName(_("Folder path"))
         self.browse_button = QPushButton(_("Browse..."), self)
         self.browse_button.clicked.connect(self._browse)
         path_row.addWidget(self.path_edit)
@@ -53,6 +54,7 @@ class AddFolderDialog(QDialog):
         self.custom_combo = QComboBox(self)
         self.custom_combo.addItems(all_known_extensions())
         self.custom_combo.setEnabled(False)
+        self.custom_combo.setAccessibleName(_("Custom format extension"))
         layout.addWidget(self.custom_combo)
         self.custom_radio.toggled.connect(self.custom_combo.setEnabled)
 
@@ -109,6 +111,11 @@ class PathTreeWidget(QTreeWidget):
         self.setSelectionMode(QTreeWidget.SelectionMode.ExtendedSelection)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
+        self.setAccessibleName(_("Source files and folders"))
+        self.setAccessibleDescription(
+            _("Files and folders queued for processing. Right-click, or use the Add "
+              "button, to add files or folders. Select an item and press Delete to remove it.")
+        )
 
         header = self.header()
         header.setStretchLastSection(False)
