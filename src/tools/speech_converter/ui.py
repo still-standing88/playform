@@ -39,7 +39,7 @@ class SpeechConverterUI(QWidget):
 
         self.parameters = {
             "volume": 1.0, "rate": 0.0, "pitch": 0.0,
-            "use_pitch_xml": False, "pitch_xml_middle": 0,
+            "use_pitch_xml": self.engine.supports_pitch_xml(), "pitch_xml_middle": 0,
         }
 
         self._build_ui()
