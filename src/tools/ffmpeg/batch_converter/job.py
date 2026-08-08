@@ -7,8 +7,8 @@ from PySide6.QtCore import QThread, Signal
 
 from tools.ffmpeg_handler import FFmpegHandler
 from media_core.ffmpeg import FFmpegError, Progress
-from tools.ffmpeg.batch_converter.format_capabilities import build_ffmpeg_output_options, get_format
-from tools.ffmpeg.batch_converter.effects_catalog import get_effect
+from media_core.ffmpeg.format_capabilities import build_ffmpeg_output_options, get_format
+from media_core.ffmpeg.effects_catalog import get_effect
 from tools.utils import get_video_formats_map, get_container_from_format
 from utilities.chapter_probe import get_media_metadata
 
