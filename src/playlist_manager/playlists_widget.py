@@ -1,11 +1,14 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                                QListWidget, QSplitter, QLabel, QMessageBox,
-                               QFileDialog,
+                               QFileDialog, QMenu,
                                QListWidgetItem)
+from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt, Signal, Slot
 from .playlist_view import PlaylistView
 from .playlist_create_dialog import PlaylistCreateDialog
 from .playlist_edit_dialog import PlaylistEditDialog
+from .playlist_split_dialog import PlaylistSplitDialog
+from .playlist_merge_dialog import PlaylistMergeDialog
 import utilities.mpv_bootstrap
 from media_core.av_play import Playlist, PlaylistManager
 import os
@@ -27,6 +30,7 @@ class PlaylistsWidget(QWidget):
         self.playlist_manager = PlaylistManager()
         self.playlist_paths = {}
         self.setup_ui()
+        self.setup_playlists_context_menu()
         self.setup_data_paths()
         self.load_playlists_data()
         
@@ -55,6 +59,8 @@ class PlaylistsWidget(QWidget):
         self.playlists_list.setMaximumWidth(250)
         self.playlists_list.currentItemChanged.connect(self.on_current_playlist_changed)
         self.playlists_list.itemDoubleClicked.connect(self.edit_playlist)
+        self.playlists_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.playlists_list.customContextMenuRequested.connect(self.show_playlists_context_menu)
         splitter.addWidget(self.playlists_list)
         
         self.playlist_view = PlaylistView(
@@ -76,6 +82,151 @@ class PlaylistsWidget(QWidget):
         
         os.makedirs(self.data_dir, exist_ok=True)
         os.makedirs(self.playlists_dir, exist_ok=True)
+
+    def setup_playlists_context_menu(self):
+        self.playlists_context_menu = QMenu(self)
+
+        self.rename_playlist_action = QAction(_("Rename"), self)
+        self.rename_playlist_action.triggered.connect(self.rename_current_playlist)
+        self.playlists_context_menu.addAction(self.rename_playlist_action)
+
+        self.delete_playlist_action = QAction(_("Delete"), self)
+        self.delete_playlist_action.triggered.connect(self.delete_current_playlist)
+        self.playlists_context_menu.addAction(self.delete_playlist_action)
+
+        self.playlists_context_menu.addSeparator()
+
+        self.split_playlist_action = QAction(_("Split Playlist..."), self)
+        self.split_playlist_action.triggered.connect(self.split_current_playlist)
+        self.playlists_context_menu.addAction(self.split_playlist_action)
+
+        self.merge_playlists_action = QAction(_("Merge Playlists..."), self)
+        self.merge_playlists_action.triggered.connect(self.merge_playlists)
+        self.playlists_context_menu.addAction(self.merge_playlists_action)
+
+    @Slot(object)
+    def show_playlists_context_menu(self, position):
+        item = self.playlists_list.itemAt(position)
+        if item is not None:
+            self.playlists_list.setCurrentItem(item)
+
+        has_playlist = item is not None
+        has_multiple = self.playlists_list.count() >= 2
+
+        self.rename_playlist_action.setEnabled(has_playlist)
+        self.delete_playlist_action.setEnabled(has_playlist)
+        self.split_playlist_action.setEnabled(has_playlist)
+        self.merge_playlists_action.setEnabled(has_multiple)
+
+        global_pos = self.playlists_list.viewport().mapToGlobal(position)
+        self.playlists_context_menu.exec(global_pos)
+
+    @Slot()
+    def rename_current_playlist(self):
+        item = self.playlists_list.currentItem()
+        if item is not None:
+            self.edit_playlist(item)
+
+    @Slot()
+    def delete_current_playlist(self):
+        item = self.playlists_list.currentItem()
+        if item is None:
+            return
+
+        name = item.text()
+        reply = QMessageBox.question(
+            self,
+            _("Confirm"),
+            _("Delete playlist '{name}'? This cannot be undone.").format(name=name),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        file_path = self.playlist_paths.get(name)
+        self._remove_playlist_entry(name)
+
+        if file_path and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except OSError:
+                pass
+
+        if self.playlists_list.count():
+            if self.playlists_list.currentItem() is None:
+                self.playlists_list.setCurrentRow(0)
+        else:
+            self.playlist_view.set_playlist(None)
+
+        self.save_playlists_data()
+        signal_manager.statusbar_message.emit(
+            _("Deleted playlist '{name}'").format(name=name)
+        )
+
+    @Slot()
+    def split_current_playlist(self):
+        item = self.playlists_list.currentItem()
+        if item is None:
+            return
+
+        name = item.text()
+        playlist = self.playlist_manager.get_playlist(name)
+        if playlist is None:
+            return
+
+        if len(playlist.entries) < 2:
+            QMessageBox.information(
+                self,
+                _("Split Playlist"),
+                _("Playlist '{name}' needs at least 2 tracks to split.").format(name=name),
+            )
+            return
+
+        dialog = PlaylistSplitDialog(name, playlist, self)
+        dialog.playlist_split.connect(self.on_playlist_split)
+        dialog.exec()
+
+    @Slot(str, list)
+    def on_playlist_split(self, source_name, named_parts):
+        added_names = []
+        for name, playlist in named_parts:
+            unique_name = self._ensure_unique_playlist_name(name)
+            self.playlist_manager.playlists[unique_name] = playlist
+            self.playlist_paths[unique_name] = self._default_playlist_path(unique_name)
+            self.add_playlist_to_list(unique_name)
+            added_names.append(unique_name)
+
+        if not added_names:
+            return
+
+        self.save_playlists_data()
+        signal_manager.statusbar_message.emit(
+            _("Split '{name}' into {count} playlists").format(
+                name=source_name, count=len(added_names)
+            )
+        )
+
+        for i in range(self.playlists_list.count()):
+            if self.playlists_list.item(i).text() == added_names[0]:
+                self.playlists_list.setCurrentRow(i)
+                break
+
+    @Slot()
+    def merge_playlists(self):
+        if self.playlists_list.count() < 2:
+            QMessageBox.information(
+                self,
+                _("Merge Playlists"),
+                _("You need at least two playlists to merge."),
+            )
+            return
+
+        current_item = self.playlists_list.currentItem()
+        preselected = [current_item.text()] if current_item else []
+
+        dialog = PlaylistMergeDialog(self.playlist_manager, preselected, self)
+        dialog.playlists_merged.connect(self.on_playlist_created)
+        dialog.exec()
 
     def _safe_playlist_filename(self, name):
         safe_name = re.sub(r'[<>:"/\\\\|?*]+', "_", name).strip().strip(".")
