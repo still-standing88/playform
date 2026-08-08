@@ -43,6 +43,7 @@ class MetadataDumpTab(QWidget):
         output_group = QGroupBox(_("Output CSV"), self)
         output_row = QHBoxLayout(output_group)
         self.output_path_edit = QLineEdit(self)
+        self.output_path_edit.setAccessibleName(_("Output CSV file path"))
         self.output_browse_button = QPushButton(_("Browse..."), self)
         output_row.addWidget(self.output_path_edit)
         output_row.addWidget(self.output_browse_button)
