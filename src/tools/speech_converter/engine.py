@@ -49,6 +49,11 @@ class SpeechEngine(QObject):
     def supports_pitch_xml(self) -> bool:
         return self._sapi_voice is not None
 
+    def supports_normal_pitch(self) -> bool:
+        # SAPI5 silently ignores QTextToSpeech.setPitch() — the XML-tag path above is the
+        # only way to control pitch on that engine.
+        return self.engine_name != "sapi"
+
     def available_locales(self):
         return self.tts.availableLocales()
 
