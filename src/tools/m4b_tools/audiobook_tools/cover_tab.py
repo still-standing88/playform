@@ -109,7 +109,7 @@ class CoverTab(QWidget):
             QMessageBox.warning(self, _("No Output"), _("Choose where to save the cover image."))
             return
 
-        ffmpeg_path, _ = FFmpegHandler.get_ffmpeg_binary()
+        ffmpeg_path, _unused_ffprobe_path = FFmpegHandler.get_ffmpeg_binary()
         self._run_task(extract_cover, book_path, output_path, ffmpeg_executable=str(ffmpeg_path))
 
     def _on_apply(self):
@@ -128,7 +128,7 @@ class CoverTab(QWidget):
             QMessageBox.warning(self, _("Invalid Output"), _("Output must be a different file from the source."))
             return
 
-        ffmpeg_path, _ = FFmpegHandler.get_ffmpeg_binary()
+        ffmpeg_path, _unused_ffprobe_path = FFmpegHandler.get_ffmpeg_binary()
 
         def _apply(*, on_log_line=None):
             add_cover(book_path, cover_path, output_path, ffmpeg_executable=str(ffmpeg_path))
