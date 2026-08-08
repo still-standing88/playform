@@ -51,6 +51,9 @@ class JobProgressDialog(QDialog):
         progress_layout = QVBoxLayout(progress_tab)
         self.file_log = QPlainTextEdit(progress_tab)
         self.file_log.setReadOnly(True)
+        self.file_log.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.TextSelectableByKeyboard
+        )
         self.file_log.setAccessibleName(_("Per-file results"))
         self.file_log.setAccessibleDescription(_("A running log of each completed, skipped, or failed file."))
         progress_layout.addWidget(self.file_log)
@@ -61,6 +64,9 @@ class JobProgressDialog(QDialog):
         self.live_log = QPlainTextEdit(live_log_tab)
         self.live_log.setReadOnly(True)
         self.live_log.setMaximumBlockCount(5000)
+        self.live_log.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.TextSelectableByKeyboard
+        )
         self.live_log.setAccessibleName(_("Live log output"))
         self.live_log.setAccessibleDescription(_("Raw ffmpeg output streamed live as the job runs."))
         live_log_layout.addWidget(self.live_log)
