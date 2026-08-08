@@ -24,6 +24,7 @@ class DestinationTab(QWidget):
 
         target_row = QHBoxLayout()
         self.target_path_edit = QLineEdit(self)
+        self.target_path_edit.setAccessibleName(_("Destination folder path"))
         self.target_browse_button = QPushButton(_("Browse..."), self)
         target_row.addWidget(self.target_path_edit)
         target_row.addWidget(self.target_browse_button)
@@ -44,6 +45,7 @@ class DestinationTab(QWidget):
         log_row = QHBoxLayout()
         self.log_path_edit = QLineEdit(self)
         self.log_path_edit.setReadOnly(True)
+        self.log_path_edit.setAccessibleName(_("Log file path"))
         self.set_log_file_button = QPushButton(_("Set Log File..."), self)
         log_row.addWidget(self.log_path_edit)
         log_row.addWidget(self.set_log_file_button)
