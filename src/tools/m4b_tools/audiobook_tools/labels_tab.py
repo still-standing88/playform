@@ -110,7 +110,7 @@ class LabelsTab(QWidget):
         if not labels_path:
             return
 
-        _, ffprobe_path = FFmpegHandler.get_ffmpeg_binary()
+        _unused_ffmpeg_path, ffprobe_path = FFmpegHandler.get_ffmpeg_binary()
         self._run_task(
             _export_chapters, book_path, labels_path,
             ffprobe_executable=str(ffprobe_path) if ffprobe_path else "ffprobe",
