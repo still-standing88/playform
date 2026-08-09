@@ -97,7 +97,9 @@ class MainWindow(QMainWindow):
         self.radio_dock = None
         self.podcast_widget = None
         self.podcast_dock = None
-        
+        self.multi_device_capture_widget = None
+        self.multi_device_capture_dock = None
+
 
         self.explorer_dock: Optional[QDockWidget] = None
         self.player_dock: Optional[QDockWidget] = None
@@ -681,6 +683,8 @@ class MainWindow(QMainWindow):
         for tool_name, dialog in self.tool_dialogs.items():
             if dialog.is_tool_active():
                 return True
+        if self.multi_device_capture_widget and self.multi_device_capture_widget.engine.is_active():
+            return True
         return False
 
     def get_active_tool_names(self):
@@ -688,6 +692,8 @@ class MainWindow(QMainWindow):
         for tool_name, dialog in self.tool_dialogs.items():
             if dialog.is_tool_active():
                 active_tools.append(dialog.title)
+        if self.multi_device_capture_widget and self.multi_device_capture_widget.engine.is_active():
+            active_tools.append(_("Multi Device Capture"))
         return active_tools
 
     def confirm_close_with_active_tools(self):
@@ -819,7 +825,11 @@ class MainWindow(QMainWindow):
         
         if self.podcast_widget and hasattr(self.podcast_widget, 'close'):
             self.podcast_widget.close()
-        
+
+        if self.multi_device_capture_widget and self.multi_device_capture_widget.engine.is_active():
+            self.multi_device_capture_widget.engine.stop()
+
+
         if self.tray and self.tray.is_available() and not is_restarting:
             event.ignore()
             self.hide_to_tray()
