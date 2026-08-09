@@ -22,10 +22,12 @@ class MainWindowShortcuts:
             hotkeys["Toggle podcasts"]: self.toggle_podcasts_shortcut,
             hotkeys["Toggle radio"]: self.toggle_radio_shortcut,
             hotkeys["Toggle recents/favorites"]: self.toggle_recents_favorites_shortcut,
+            hotkeys["Toggle multi device capture"]: self.toggle_multi_device_capture_shortcut,
             hotkeys["Focus playlists"]: self.focus_playlists,
             hotkeys["Focus podcasts"]: self.focus_podcasts,
             hotkeys["Focus radio"]: self.focus_radio,
             hotkeys["Focus recents/favorites"]: self.focus_recents_favorites,
+            hotkeys["Focus multi device capture"]: self.focus_multi_device_capture,
             hotkeys["Hide window"]: mw.hide_to_tray,
             hotkeys["Exit"]: mw.close_application,
             hotkeys["Focus explorer"]: self.focus_explorer,
@@ -54,6 +56,9 @@ class MainWindowShortcuts:
 
         if hasattr(mw.player_widget, 'reset_shortcuts'):
             mw.player_widget.reset_shortcuts()
+
+        if mw.multi_device_capture_widget and hasattr(mw.multi_device_capture_widget, 'reset_shortcuts'):
+            mw.multi_device_capture_widget.reset_shortcuts()
 
     def install_shortcuts(self):
         self.main_window._shortcut_manager.install_on_application()
@@ -95,6 +100,12 @@ class MainWindowShortcuts:
         if mw.recents_favorites_dock and mw.recents_favorites_dock.isVisible():
             if mw.recents_and_favorites_widget:
                 mw.recents_and_favorites_widget.setFocus()
+
+    def focus_multi_device_capture(self):
+        mw = self.main_window
+        if mw.multi_device_capture_dock and mw.multi_device_capture_dock.isVisible():
+            if mw.multi_device_capture_widget:
+                mw.multi_device_capture_widget.setFocus()
 
     def toggle_explorer_shortcut(self):
         mw = self.main_window
@@ -143,6 +154,11 @@ class MainWindowShortcuts:
             # Create dock if it doesn't exist
             mw.show_radio_action.setChecked(True)
             mw.show_radio_action.trigger()
+
+    def toggle_multi_device_capture_shortcut(self):
+        mw = self.main_window
+        if mw.show_multi_device_capture_action:
+            mw.show_multi_device_capture_action.trigger()  # type: ignore
 
     def toggle_recents_favorites_shortcut(self):
         mw = self.main_window
