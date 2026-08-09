@@ -1,3 +1,5 @@
+import glob
+import os
 import sys
 import shutil
 import platform as _platform
@@ -19,6 +21,12 @@ QT_PLUGINS = [
     "styles",
     "iconengines",
     "imageformats",
+    # multi_device_capture (src/multi_device_capture) uses QtMultimedia -
+    # without this, --standalone builds ship no plugins/multimedia/*.dll at
+    # all, so QMediaDevices/QCamera/QWindowCapture enumerate nothing in the
+    # compiled app even though they work fine from a plain `python app.py`
+    # dev run (which sees the full pip-installed PySide6 plugins folder).
+    "multimedia",
 ]
 
 
@@ -79,12 +87,48 @@ def _translation_data_args() -> list[str]:
     return []
 
 
+def _qt_multimedia_ffmpeg_lib_args() -> list[str]:
+    """--include-qt-plugins=multimedia (above) only grabs plugins/multimedia/
+    *.dll. ffmpegmediaplugin.dll itself dynamically loads a handful of loose
+    ffmpeg shared libs (avcodec/avformat/avutil/swresample/swscale) that Qt's
+    PySide6 wheel ships one level up, next to Qt6Core.dll - not under
+    plugins/ at all, so Nuitka's own dependency walk over the plugin DLL is
+    what would need to catch them, not --include-qt-plugins. Rather than
+    trust that transitive walk, name them explicitly (glob'd so a PySide6
+    version bump - e.g. avcodec-61.dll - > avcodec-62.dll - doesn't silently
+    stop matching) and place them at the compiled app's root, the same
+    relative location they ship at in the wheel and where every other Qt*.dll
+    Nuitka's pyside6 plugin already places.
+    """
+    try:
+        import PySide6
+    except ImportError:
+        print("  [warn] PySide6 not importable from the build environment - "
+              "skipping explicit ffmpeg lib bundling for QtMultimedia.")
+        return []
+
+    pyside_dir = os.path.dirname(PySide6.__file__)
+    patterns = ("avcodec-*.dll", "avformat-*.dll", "avutil-*.dll", "swresample-*.dll", "swscale-*.dll")
+    found = []
+    for pattern in patterns:
+        found.extend(glob.glob(os.path.join(pyside_dir, pattern)))
+
+    if not found:
+        print(f"  [warn] No ffmpeg shared libs found under {pyside_dir} - "
+              "QtMultimedia's ffmpeg backend (needed for window capture) "
+              "may not work in the compiled build. Is PySide6-Addons installed?")
+        return []
+
+    return [f"--include-data-files={path}={os.path.basename(path)}" for path in found]
+
+
 def _windows_args(assets_dir, app_name) -> list[str]:
     args = [
         "--windows-console-mode=disable",
         "--assume-yes-for-downloads",
         f"--output-filename={app_name}.exe",
     ]
+    args += _qt_multimedia_ffmpeg_lib_args()
     icon = assets_dir / f"{app_name}.ico"
     if icon.exists():
         args.append(f"--windows-icon-from-ico={icon}")
