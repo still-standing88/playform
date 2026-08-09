@@ -76,6 +76,11 @@ key_dict = {
 "Mark9 position": "Ctrl+9",
 "Mark10 position": "Ctrl+0",
 "close media": "Ctrl+W"
+},
+"Multi Device Capture": {
+"Start capture": "Ctrl+Alt+R",
+"Pause/Resume capture": "Ctrl+Alt+P",
+"Stop capture": "Ctrl+Alt+S"
 }
 }
 
