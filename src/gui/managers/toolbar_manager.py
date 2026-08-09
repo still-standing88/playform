@@ -50,6 +50,9 @@ class ToolbarManager:
                               ensure_dock=mw.dock_manager._create_radio_dock)
         self._add_pane_group(_("Podcasts"), mw.show_podcast_action, "podcast_dock", "float_podcast_action",
                               ensure_dock=mw.dock_manager._create_podcast_dock)
+        self._add_pane_group(_("Multi Device Capture"), mw.show_multi_device_capture_action,
+                              "multi_device_capture_dock", "float_multi_device_capture_action",
+                              ensure_dock=mw.dock_manager._create_multi_device_capture_dock)
         self._add_pane_group(_("Console"), mw.show_console_dock_action, "debug_console_dock", "float_console_action")
 
         mw.panels_toolbar_first_widget = self._first_tab_widget
