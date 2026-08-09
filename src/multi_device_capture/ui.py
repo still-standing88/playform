@@ -1,19 +1,28 @@
-"""Multi Device Capture panel - top-level widget wired into the Tools menu
-the same way every other tool in tools/ is (see
-gui.managers.tool_window_manager.ToolWindowManager /
-gui.managers.menu_manager.MenuManager.setup_tools_menu).
+"""Multi Device Capture panel - a dock panel like Podcasts/Radio, not a
+modal Tools-menu dialog (see gui.managers.dock_manager.DockManager
+._create_multi_device_capture_dock / gui.managers.menu_manager.MenuManager
+.setup_view_menu's Panels submenu / gui.managers.toolbar_manager
+.ToolbarManager.setup_panels_toolbar).
 
 Three tabs, sessions/sources managed as separate pools (a session references
 sources rather than owning them):
     Sessions   - session list + source pool, each with add/edit/delete
     Capture    - transport: start/pause/resume/stop + live status
     Settings   - global audio/video defaults, category list + stack
+
+Lazily created on first show, same as Podcasts/Radio - closing the dock just
+hides it (FloatableDockWidget re-docks-and-hides rather than destroying), it
+doesn't tear this widget down. An in-progress capture surviving a hidden
+panel is intentional (mirrors a podcast download continuing off-screen); the
+engine only gets stopped on real app shutdown, via MainWindow.closeEvent /
+has_active_tools() (same "still active, are you sure" gate the ToolDialog
+tools use).
 """
 from __future__ import annotations
 
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMessageBox, QTabWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QTabWidget, QVBoxLayout, QWidget
 
 from app_config import key_config
 
@@ -28,7 +37,6 @@ HOTKEY_SECTION = "Multi Device Capture"
 class MultiDeviceCaptureUI(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.title = _("Multi Device Capture")
 
         self.sources = SourceRegistry()
         self.sessions = SessionRegistry()
@@ -68,7 +76,10 @@ class MultiDeviceCaptureUI(QWidget):
     # generically), but only fire while this panel has focus - capture transport
     # is deliberately not wired into the global `keyboard`-hook hotkeys, since a
     # background Start/Stop hotkey for an armed recorder is an easy way to start
-    # capturing devices without realizing it.
+    # capturing devices without realizing it. (Toggling/focusing the panel itself
+    # is a *global*-scope hotkey though - see "Toggle/Focus multi device capture"
+    # in the "Main interface" key_config section, wired in
+    # gui.managers.shortcuts_manager, same as Podcasts/Radio.)
 
     def _setup_shortcuts(self) -> None:
         for shortcut in self._shortcuts:
@@ -91,16 +102,3 @@ class MultiDeviceCaptureUI(QWidget):
 
     def reset_shortcuts(self) -> None:
         self._setup_shortcuts()
-
-    def closeEvent(self, event) -> None:
-        if self.engine.is_active():
-            answer = QMessageBox.question(
-                self,
-                _("Capture active"),
-                _("A capture is still running. Stop it and close?"),
-            )
-            if answer != QMessageBox.StandardButton.Yes:
-                event.ignore()
-                return
-            self.engine.stop()
-        super().closeEvent(event)
