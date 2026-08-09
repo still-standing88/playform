@@ -4,6 +4,7 @@ from app_config import prefs
 from tools.debug_console_dock import DebugConsoleDock
 from media_providers.radio import RadioBrowserWidget
 from media_providers.podcasts.feed_widget import FeedWidget
+from multi_device_capture.ui import MultiDeviceCaptureUI
 from utilities.session import dock_session
 from gui_controls.floatable_dock_widget import FloatableDockWidget
 
@@ -123,6 +124,7 @@ class DockManager:
             'playlists': self.main_window.playlists_dock.isVisible(),
             'radio': self.main_window.radio_dock.isVisible() if self.main_window.radio_dock else False,
             'podcast': self.main_window.podcast_dock.isVisible() if self.main_window.podcast_dock else False,
+            'multi_device_capture': self.main_window.multi_device_capture_dock.isVisible() if self.main_window.multi_device_capture_dock else False,
             'debug_console': self.main_window.debug_console_dock.isVisible() if hasattr(self.main_window, 'debug_console_dock') else False
         }
         dock_session.save_session(dock_states)
@@ -153,6 +155,12 @@ class DockManager:
             self.main_window.podcast_dock.setVisible(True)
             if hasattr(self.main_window, 'show_podcast_action'):
                 self.main_window.show_podcast_action.setChecked(True)
+
+        if dock_states.get('multi_device_capture', False):
+            self._create_multi_device_capture_dock()
+            self.main_window.multi_device_capture_dock.setVisible(True)
+            if hasattr(self.main_window, 'show_multi_device_capture_action'):
+                self.main_window.show_multi_device_capture_action.setChecked(True)
 
         if dock_states.get('debug_console', False) and hasattr(self.main_window, 'debug_console_dock'):
             self.main_window.debug_console_dock.setVisible(True)
@@ -207,6 +215,16 @@ class DockManager:
             self.main_window.podcast_dock.setVisible(checked)
             if checked and self.main_window.podcast_widget:
                 self.main_window.podcast_widget.setFocus()
+            self.update_focusable_widgets()
+        self._schedule_clamp_to_screen()
+
+    def toggle_multi_device_capture(self, checked):
+        if self.main_window.multi_device_capture_dock is None and checked:
+            self._create_multi_device_capture_dock()
+        if self.main_window.multi_device_capture_dock:
+            self.main_window.multi_device_capture_dock.setVisible(checked)
+            if checked and self.main_window.multi_device_capture_widget:
+                self.main_window.multi_device_capture_widget.setFocus()
             self.update_focusable_widgets()
         self._schedule_clamp_to_screen()
 
@@ -268,6 +286,20 @@ class DockManager:
             self.main_window.podcast_dock.visibilityChanged.connect(self.main_window.menu_manager.update_podcast_menu)
             self.main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.main_window.podcast_dock)
             self.main_window.tabifyDockWidget(self.recents_favorites_dock, self.main_window.podcast_dock)
+
+    def _create_multi_device_capture_dock(self):
+        if self.main_window.multi_device_capture_dock is None:
+            self.main_window.multi_device_capture_widget = MultiDeviceCaptureUI(self.main_window)
+            self.main_window.multi_device_capture_dock = FloatableDockWidget(_("Multi Device Capture"), self.main_window)
+            self.main_window.multi_device_capture_dock.setObjectName("multiDeviceCaptureDock")
+            self.main_window.multi_device_capture_dock.setWidget(self.main_window.multi_device_capture_widget)
+            self.main_window.multi_device_capture_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+            self.main_window.multi_device_capture_dock.setFeatures(self._floatable_features())
+            self._make_float_a_real_window(self.main_window.multi_device_capture_dock)
+            self._sync_float_action_for_dock(self.main_window.multi_device_capture_dock, "float_multi_device_capture_action")
+            self.main_window.multi_device_capture_dock.visibilityChanged.connect(self.main_window.menu_manager.update_multi_device_capture_menu)
+            self.main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.main_window.multi_device_capture_dock)
+            self.main_window.tabifyDockWidget(self.recents_favorites_dock, self.main_window.multi_device_capture_dock)
 
     def toggle_console_dock(self, checked):
         if not hasattr(self.main_window, 'debug_console_dock') or self.main_window.debug_console_dock is None:
@@ -547,7 +579,7 @@ class DockManager:
     def _all_docks(self):
         mw = self.main_window
         docks = [mw.recents_favorites_dock, mw.explorer_dock, mw.playlists_dock, self.player_dock]
-        docks += [d for d in (mw.radio_dock, mw.podcast_dock, getattr(mw, 'debug_console_dock', None)) if d is not None]
+        docks += [d for d in (mw.radio_dock, mw.podcast_dock, mw.multi_device_capture_dock, getattr(mw, 'debug_console_dock', None)) if d is not None]
         return docks
 
     def hide_floating_docks(self):
@@ -588,6 +620,8 @@ class DockManager:
             dock_widgets.append((self.main_window.radio_dock, self.main_window.radio_widget))
         if self.main_window.podcast_dock is not None:
             dock_widgets.append((self.main_window.podcast_dock, self.main_window.podcast_widget))
+        if self.main_window.multi_device_capture_dock is not None:
+            dock_widgets.append((self.main_window.multi_device_capture_dock, self.main_window.multi_device_capture_widget))
 
         for dock, widget in dock_widgets:
             if dock.isVisible() and widget:
