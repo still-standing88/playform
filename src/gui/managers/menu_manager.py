@@ -273,6 +273,10 @@ class MenuManager:
         self.main_window.speech_converter_action.triggered.connect(self.main_window.tool_manager.open_speech_converter)
         self.main_window.tools_menu.addAction(self.main_window.speech_converter_action)
 
+        self.main_window.multi_device_capture_action = QAction(_("&Multi Device Capture"), self.main_window)
+        self.main_window.multi_device_capture_action.triggered.connect(self.main_window.tool_manager.open_multi_device_capture)
+        self.main_window.tools_menu.addAction(self.main_window.multi_device_capture_action)
+
         self.main_window.tools_menu.addSeparator()
 
         self.main_window.show_downloader_action = QAction(_("&Download Manager"), self.main_window)
