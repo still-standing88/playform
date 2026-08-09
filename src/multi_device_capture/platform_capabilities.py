@@ -5,8 +5,41 @@ guessing produces controls that look real but silently do nothing.
 """
 from __future__ import annotations
 
+import glob
+import os
 import platform as _platform
 from typing import Optional
+
+
+def _select_ffmpeg_backend_if_available() -> None:
+    """QWindowCapture is only implemented by Qt Multimedia's FFmpeg backend -
+    on every native backend (the default on Windows/macOS) it silently
+    enumerates zero windows forever, which is exactly the "window capture
+    devices exist but never show up" symptom. Must run before the first real
+    QtMultimedia call (backend plugins load lazily on first use, not on
+    import), which is why this module - the one thing everything else in
+    this package funnels device queries through - does it at import time,
+    before its own QtMultimedia import below.
+
+    Only forces the switch if the ffmpeg plugin is actually present next to
+    this install and the caller/environment hasn't already picked a backend;
+    a strip-installed PySide6 without the plugin would otherwise lose every
+    backend, not just gain window capture.
+    """
+    if os.environ.get("QT_MEDIA_BACKEND"):
+        return
+    try:
+        import PySide6
+
+        plugin_dir = os.path.join(os.path.dirname(PySide6.__file__), "plugins", "multimedia")
+        has_ffmpeg_plugin = bool(glob.glob(os.path.join(plugin_dir, "*ffmpeg*")))
+    except Exception:
+        has_ffmpeg_plugin = False
+    if has_ffmpeg_plugin:
+        os.environ["QT_MEDIA_BACKEND"] = "ffmpeg"
+
+
+_select_ffmpeg_backend_if_available()
 
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtMultimedia import (
@@ -61,17 +94,28 @@ class PlatformCapabilities:
 
     @classmethod
     def available_types(cls) -> list[MediaType]:
+        """Types to offer in the Add Source wizard's Type dropdown.
+
+        Camera and Window are always offered, even with zero devices
+        currently enumerated: both are prone to transient/empty results in a
+        way Audio/Monitor essentially never are on a real machine - camera
+        enumeration can lag behind driver/hot-plug init, and window capture
+        depends on the active Qt Multimedia backend actually implementing it
+        (see _select_ffmpeg_backend_if_available() above). Hiding the type
+        outright when that first query came back empty left no way to even
+        retry; the wizard now shows an empty-state + Refresh instead. Audio/
+        Monitor stay gated on actually having ≥1 device, since a genuinely
+        input-device-less or headless machine has nothing real to offer there.
+        """
         available = []
         if cls.audio_inputs():
             available.append(MediaType.AUDIO_INPUT)
         if cls.audio_outputs():
             available.append(MediaType.AUDIO_OUTPUT)
-        if cls.cameras():
-            available.append(MediaType.CAMERA)
+        available.append(MediaType.CAMERA)
         if cls.screens():
             available.append(MediaType.MONITOR)
-        if cls.capturable_windows():
-            available.append(MediaType.WINDOW)
+        available.append(MediaType.WINDOW)
         return available
 
     # -- platform-specific gating ------------------------------------------
