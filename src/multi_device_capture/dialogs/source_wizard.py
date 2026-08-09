@@ -2,8 +2,11 @@
 
 Page 1 - Type & Device   (add mode: pick media type, then device/window)
                           (edit mode: type is fixed, only device/window is re-pickable)
-Page 2 - Settings        (form swaps per media type)
-Page 3 - Preview         (live QVideoWidget for video types, level meter for audio)
+Page 2 - Settings        (form swaps per media type; skipped entirely for a
+                          type/device with nothing editable - see
+                          TypeDevicePage.nextId() / _type_has_editable_settings())
+Page 3 - Preview         (opt-in checkbox; live QVideoWidget for video types,
+                          a real QAudioSource-driven level meter for audio input)
 """
 from __future__ import annotations
 
@@ -11,7 +14,6 @@ from typing import Optional
 
 from PySide6.QtMultimedia import (
     QAudioDevice,
-    QAudioInput,
     QCamera,
     QCameraDevice,
     QCapturableWindow,
@@ -21,10 +23,13 @@ from PySide6.QtMultimedia import (
 )
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QProgressBar,
+    QPushButton,
     QStackedWidget,
     QVBoxLayout,
     QWizard,
@@ -49,6 +54,12 @@ class TypeDevicePage(QWizardPage):
         self._selected_type: Optional[MediaType] = (
             edit_source.media_type if edit_source else None
         )
+        # Set by SourceWizard right after addPage() - lets nextId() jump
+        # straight to Preview for types/devices with nothing editable on
+        # page 2 (Monitor, Window, and a Camera reporting zero formats)
+        # instead of showing an empty Settings page.
+        self._settings_page_id: Optional[int] = None
+        self._preview_page_id: Optional[int] = None
 
         layout = QVBoxLayout(self)
 
@@ -70,10 +81,27 @@ class TypeDevicePage(QWizardPage):
             layout.addWidget(QLabel(_("Source type")))
             layout.addWidget(fixed)
 
-        layout.addWidget(QLabel(_("Device")))
+        device_row = QHBoxLayout()
+        device_row.addWidget(QLabel(_("Device")))
+        device_row.addStretch()
+        self.refresh_btn = QPushButton(_("Refresh devices"))
+        self.refresh_btn.clicked.connect(self._refresh_devices)
+        device_row.addWidget(self.refresh_btn)
+        layout.addLayout(device_row)
+
         self.device_combo = QComboBox()
         self.device_combo.setAccessibleName(_("Device"))
         layout.addWidget(self.device_combo)
+
+        # Camera/Window enumeration can genuinely come back empty (no camera
+        # plugged in, no capturable windows found by the current Qt
+        # Multimedia backend) - both types stay selectable regardless (see
+        # PlatformCapabilities.available_types()), so this explains why the
+        # device list is empty right now instead of it just looking broken.
+        self.empty_state_label = QLabel()
+        self.empty_state_label.setStyleSheet("color: gray; font-size: 11px;")
+        self.empty_state_label.setWordWrap(True)
+        layout.addWidget(self.empty_state_label)
 
         self.friendly_name_edit = QLineEdit()
         self.friendly_name_edit.setPlaceholderText(_("Friendly name shown in lists"))
@@ -97,6 +125,17 @@ class TypeDevicePage(QWizardPage):
         self._populate_devices(mt)
         if not self.friendly_name_edit.text():
             self.friendly_name_edit.setText(mt.label if mt else "")
+
+    _EMPTY_STATE_TEXT = {
+        MediaType.CAMERA: _(
+            "No cameras found. Make sure one is connected and allowed under "
+            "Windows Settings > Privacy > Camera, then Refresh."
+        ),
+        MediaType.WINDOW: _(
+            "No capturable windows found right now. Open the window you want to "
+            "capture, then Refresh."
+        ),
+    }
 
     def _populate_devices(self, mt: Optional[MediaType]) -> None:
         self.device_combo.clear()
@@ -125,6 +164,25 @@ class TypeDevicePage(QWizardPage):
                     self.device_combo.setCurrentIndex(i)
                     break
 
+        is_empty = self.device_combo.count() == 0
+        self.device_combo.setVisible(not is_empty)
+        self.empty_state_label.setText(self._EMPTY_STATE_TEXT.get(mt, "") if is_empty else "")
+        self.empty_state_label.setVisible(is_empty and mt in self._EMPTY_STATE_TEXT)
+        self.completeChanged.emit()
+
+    def _refresh_devices(self) -> None:
+        if self._edit_source is None:
+            current_type = self._selected_type
+            self.type_combo.blockSignals(True)
+            self.type_combo.clear()
+            for mt in PlatformCapabilities.available_types():
+                self.type_combo.addItem(mt.label, mt)
+            idx = self.type_combo.findData(current_type) if current_type is not None else -1
+            self.type_combo.setCurrentIndex(idx if idx >= 0 else 0)
+            self.type_combo.blockSignals(False)
+            self._selected_type = self.type_combo.currentData()
+        self._populate_devices(self._selected_type)
+
     def selected_type(self) -> Optional[MediaType]:
         return self._selected_type
 
@@ -134,6 +192,26 @@ class TypeDevicePage(QWizardPage):
 
     def isComplete(self) -> bool:
         return bool(self.friendly_name_edit.text()) and self.device_combo.count() > 0
+
+    def nextId(self) -> int:
+        if self._settings_page_id is not None and self._preview_page_id is not None:
+            if not _type_has_editable_settings(self.selected_type(), self.selected_device()):
+                return self._preview_page_id
+            return self._settings_page_id
+        return super().nextId()
+
+
+def _type_has_editable_settings(mt: Optional[MediaType], device) -> bool:
+    """Whether page 2 (Settings) has anything real for this type/device to
+    show - Monitor and Window have no Qt-backed configurable properties at
+    all (see ScreenSettingsForm/WindowSettingsForm), and a Camera device can
+    report zero formats (driver quirk, virtual camera) even though the type
+    itself generally does have settings."""
+    if mt in (MediaType.AUDIO_INPUT, MediaType.AUDIO_OUTPUT):
+        return True
+    if mt == MediaType.CAMERA:
+        return isinstance(device, QCameraDevice) and len(device.videoFormats()) > 0
+    return False
 
 
 class SettingsPage(QWizardPage):
@@ -181,10 +259,15 @@ class SettingsPage(QWizardPage):
 
 
 class PreviewPage(QWizardPage):
-    """Live preview so the user confirms they picked the right device
-    before saving. Video types get a QVideoWidget; audio gets device
-    confirmation (a true level meter needs a QAudioSource tap, which would
-    duplicate the recording path just to preview it - out of scope here)."""
+    """Live preview so the user confirms they picked the right device before
+    saving - camera/monitor/window get a QVideoWidget, audio gets a real
+    QAudioSource-driven level meter (see audio_level_meter.AudioLevelMeter).
+
+    Preview is opt-in via a checkbox rather than starting the moment this
+    page is shown: it's the point in the wizard that actually activates a
+    camera or microphone, and auto-starting that the instant Preview becomes
+    current is the kind of thing that should need a deliberate click, not
+    just clicking Next twice."""
 
     def __init__(self, type_device_page: TypeDevicePage, parent=None):
         super().__init__(parent)
@@ -194,9 +277,13 @@ class PreviewPage(QWizardPage):
         self._camera: Optional[QCamera] = None
         self._screen_capture: Optional[QScreenCapture] = None
         self._window_capture: Optional[QWindowCapture] = None
-        self._audio_input: Optional[QAudioInput] = None
+        self._audio_meter = None  # audio_level_meter.AudioLevelMeter, created lazily
 
         layout = QVBoxLayout(self)
+        self.preview_checkbox = QCheckBox(_("Enable live preview"))
+        self.preview_checkbox.toggled.connect(self._on_preview_toggled)
+        layout.addWidget(self.preview_checkbox)
+
         self.video_widget = QVideoWidget()
         self.video_widget.setMinimumHeight(220)
         self.level_meter = QProgressBar()
@@ -213,9 +300,36 @@ class PreviewPage(QWizardPage):
     def initializePage(self) -> None:
         self._teardown()
         mt = self._type_device_page.selected_type()
-        device = self._type_device_page.selected_device()
+        is_loopback = mt == MediaType.AUDIO_OUTPUT
         self.video_widget.setVisible(mt is not None and mt.is_video)
         self.level_meter.setVisible(mt in (MediaType.AUDIO_INPUT, MediaType.AUDIO_OUTPUT))
+        self.level_meter.setValue(0)
+
+        # Reset to unchecked on every visit (including navigating back and
+        # forward again) rather than remembering the last state - so a
+        # camera/mic already granted once doesn't silently reactivate.
+        self.preview_checkbox.blockSignals(True)
+        self.preview_checkbox.setChecked(False)
+        self.preview_checkbox.blockSignals(False)
+        self.preview_checkbox.setEnabled(not is_loopback)
+
+        if is_loopback:
+            self.status_label.setText(PlatformCapabilities.loopback_capture_note())
+        else:
+            self.status_label.setText(_("Click 'Enable live preview' to preview this device."))
+
+    def _on_preview_toggled(self, checked: bool) -> None:
+        self._teardown()
+        if not checked:
+            mt = self._type_device_page.selected_type()
+            if mt != MediaType.AUDIO_OUTPUT:
+                self.status_label.setText(_("Click 'Enable live preview' to preview this device."))
+            return
+        self._start_preview()
+
+    def _start_preview(self) -> None:
+        mt = self._type_device_page.selected_type()
+        device = self._type_device_page.selected_device()
 
         try:
             if mt == MediaType.CAMERA and isinstance(device, QCameraDevice):
@@ -235,16 +349,24 @@ class PreviewPage(QWizardPage):
                 self._session.setWindowCapture(self._window_capture)
                 self._window_capture.start()
                 self.status_label.setText(_("Previewing {device}").format(device=device.description()))
-            elif mt == MediaType.AUDIO_OUTPUT and isinstance(device, QAudioDevice):
-                self.level_meter.setValue(0)
-                self.status_label.setText(PlatformCapabilities.loopback_capture_note())
             elif mt == MediaType.AUDIO_INPUT and isinstance(device, QAudioDevice):
-                self.level_meter.setValue(0)
-                self.status_label.setText(
-                    _("Selected {device} - no live meter in this preview").format(device=device.description())
-                )
+                from .audio_level_meter import AudioLevelMeter
+
+                self._audio_meter = AudioLevelMeter(device, self)
+                self._audio_meter.level_changed.connect(self._on_audio_level)
+                self._audio_meter.error.connect(self._on_audio_error)
+                if self._audio_meter.start():
+                    self.status_label.setText(_("Previewing {device}").format(device=device.description()))
         except Exception as exc:  # device may vanish mid-wizard
             self.status_label.setText(_("Preview unavailable: {error}").format(error=exc))
+            self.preview_checkbox.setChecked(False)
+
+    def _on_audio_level(self, peak: float) -> None:
+        self.level_meter.setValue(int(peak * 100))
+
+    def _on_audio_error(self, message: str) -> None:
+        self.status_label.setText(_("Preview unavailable: {error}").format(error=message))
+        self.preview_checkbox.setChecked(False)
 
     def _teardown(self) -> None:
         for obj in (self._camera, self._screen_capture, self._window_capture):
@@ -256,6 +378,11 @@ class PreviewPage(QWizardPage):
         self._camera = None
         self._screen_capture = None
         self._window_capture = None
+        if self._audio_meter is not None:
+            self._audio_meter.stop()
+            self._audio_meter.deleteLater()
+            self._audio_meter = None
+        self.level_meter.setValue(0)
 
     def cleanupPage(self) -> None:
         self._teardown()
@@ -273,8 +400,10 @@ class SourceWizard(QWizard):
         self.preview_page = PreviewPage(self.type_device_page)
 
         self.addPage(self.type_device_page)
-        self.addPage(self.settings_page)
-        self.addPage(self.preview_page)
+        settings_page_id = self.addPage(self.settings_page)
+        preview_page_id = self.addPage(self.preview_page)
+        self.type_device_page._settings_page_id = settings_page_id
+        self.type_device_page._preview_page_id = preview_page_id
 
         if edit_source and edit_source.settings:
             # Pre-seed the settings page once it's shown by connecting to
@@ -289,7 +418,18 @@ class SourceWizard(QWizard):
         mt = self.type_device_page.selected_type()
         device = self.type_device_page.selected_device()
         friendly_name = self.type_device_page.friendly_name_edit.text()
-        settings = self.settings_page.current_settings()
+
+        # Settings page is skipped entirely (see TypeDevicePage.nextId()) for
+        # types/devices with nothing editable - pulling current_settings()
+        # from it unconditionally would return whatever form the QStackedWidget
+        # last happened to show instead of anything meaningful for this type.
+        settings_id = self.type_device_page._settings_page_id
+        if settings_id is not None and settings_id in self.visitedIds():
+            settings = self.settings_page.current_settings()
+        elif mt == MediaType.MONITOR and device is not None:
+            settings = {"screen_name": device.name()}
+        else:
+            settings = {}
 
         device_id = ""
         window_desc = ""
