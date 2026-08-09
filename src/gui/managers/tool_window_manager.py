@@ -8,6 +8,7 @@ from tools.subtitles.editor_ui import SubtitleEditorUI
 from tools.speech_converter.ui import SpeechConverterUI
 from tools.m4b_tools.audiobook_tools.ui import AudiobookToolsUI
 from tools.m4b_tools.combiner.ui import AudiobookCombinerUI
+from multi_device_capture.ui import MultiDeviceCaptureUI
 from gui.dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
@@ -53,6 +54,9 @@ class ToolWindowManager:
         if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
             return
         self.open_tool_dialog("audiobook_combiner", AudiobookCombinerUI(), _("Audiobook Combiner"))
+
+    def open_multi_device_capture(self):
+        self.open_tool_dialog("multi_device_capture", MultiDeviceCaptureUI(), _("Multi Device Capture"))
 
     def open_tool_dialog(self, tool_name, tool_widget, title):
         if self.main_window.active_tool_name and self.main_window.active_tool_name != tool_name:
