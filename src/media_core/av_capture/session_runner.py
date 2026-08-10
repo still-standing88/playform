@@ -59,6 +59,7 @@ class CaptureSessionRunner:
         sources: list[CaptureSourceConfig],
         capabilities: Optional[CaptureCapabilities] = None,
         ffmpeg_executable: str = "ffmpeg",
+        keep_segments: bool = False,
         on_source_started: Optional[Callable[[str, str], None]] = None,
         on_source_error: Optional[Callable[[str, str], None]] = None,
         on_source_stopped: Optional[Callable[[str, str], None]] = None,
@@ -69,6 +70,7 @@ class CaptureSessionRunner:
         self.sources = sources
         self.capabilities = capabilities or CaptureCapabilities(ffmpeg_executable)
         self.ffmpeg_executable = ffmpeg_executable
+        self.keep_segments = keep_segments
 
         self._on_source_started = on_source_started or (lambda *a: None)
         self._on_source_error = on_source_error or (lambda *a: None)
@@ -291,9 +293,10 @@ class CaptureSessionRunner:
             except OSError:
                 pass
 
-        for segment in segments:
-            try:
-                os.remove(segment)
-            except OSError:
-                pass
+        if not self.keep_segments:
+            for segment in segments:
+                try:
+                    os.remove(segment)
+                except OSError:
+                    pass
         return runtime.final_path
