@@ -38,6 +38,25 @@ def _looks_like_loopback(name: str) -> bool:
     return any(hint in lowered for hint in _LOOPBACK_NAME_HINTS)
 
 
+def _dshow_name_arg(name: str) -> str:
+    """Format a dshow device name for `-i video=<name>`/`audio=<name>`.
+
+    The dshow manual's own examples wrap names in double quotes
+    (`-i video="Camera"`), but that is shell-prompt guidance, not what this
+    process needs: ffmpeg is launched here via an argv list with no shell in
+    between (same as media_core.ffmpeg.FFmpeg.execute()), so nothing strips
+    a literal `"` before dshow's own `TYPE=NAME[:TYPE=NAME]` parser sees it.
+    Confirmed against the bundled ffmpeg build: quoted, it fails to find
+    *any* device (friendly name or `@device_...` alternative name alike,
+    "Could not find ... device with name [\"...\"]" - the quotes end up
+    baked into the name it searched for); unquoted, both forms resolve
+    correctly. A name containing a literal `:` would be misread as the
+    start of a second `TYPE=NAME` segment either way (quoting it doesn't
+    fix that on this build) - none of the devices this backend has ever
+    enumerated do, so that's a known, narrow gap rather than a guess."""
+    return name
+
+
 class WindowsBackend(CaptureBackend):
     name = "windows"
 
@@ -128,7 +147,7 @@ class WindowsBackend(CaptureBackend):
         result = run_probe(
             [
                 self.ffmpeg_executable, "-hide_banner", "-f", "dshow",
-                "-list_options", "true", "-i", f'video="{device.id}"',
+                "-list_options", "true", "-i", f"video={_dshow_name_arg(device.id)}",
             ],
             timeout=8.0,
         )
@@ -222,7 +241,7 @@ class WindowsBackend(CaptureBackend):
             pixel_format = settings.get("pixel_format")
             if pixel_format:
                 options["pixel_format"] = pixel_format
-            return InputSpec(format="dshow", url=f'video="{device.id}"', options=options)
+            return InputSpec(format="dshow", url=f"video={_dshow_name_arg(device.id)}", options=options)
 
         if kind == MediaKind.AUDIO_INPUT:
             options = {}
@@ -230,7 +249,7 @@ class WindowsBackend(CaptureBackend):
                 options["sample_rate"] = str(settings["sample_rate"])
             if settings.get("channels"):
                 options["channels"] = str(settings["channels"])
-            return InputSpec(format="dshow", url=f'audio="{device.id}"', options=options)
+            return InputSpec(format="dshow", url=f"audio={_dshow_name_arg(device.id)}", options=options)
 
         if kind == MediaKind.MONITOR:
             options = {"framerate": str(settings.get("fps") or 30)}
