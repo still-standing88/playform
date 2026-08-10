@@ -168,6 +168,37 @@ earlier QtMultimedia-based engine (`QCamera`/`QScreenCapture`/`QWindowCapture`/
 `capture_module_notes.docx` at the repo root are that earlier design's prototype/notes,
 kept only as historical reference (ask before deleting).
 
+The panel itself is a single consolidated view (`ui.py`'s `QStackedWidget`), not three
+tabs — that's a second-pass redesign of the original Sessions/Capture/Settings tab
+layout:
+- `views/configure_view.ConfigureView` — one Sessions list + one **session-scoped**
+  Sources list (Add Source attaches straight to whichever session is selected; there's
+  no separate "assign sources to a session" step/checklist). Editing is context-menu
+  only (`Edit`/`Duplicate`/`Delete`/`Remove from session`); `New session...` lives on the
+  sessions list's own context menu, not a button. If zero sessions exist, one is
+  auto-created **in memory only** ("Untitled session") and selected so Add Source never
+  needs a create-a-session detour first; it's silently persisted for real under an auto
+  name ("Session N") the moment its first source is added (see
+  `ConfigureView._promote_pending_session`), and a fresh one is recreated any time the
+  saved-session count drops back to zero.
+- `views/capture_view.CaptureView` — swapped in for `ConfigureView` (not just disabled)
+  while a capture runs: per-source live status + Pause/Resume/Cancel. Config UI simply
+  isn't there to edit mid-recording.
+- `device_status.DeviceStatusChecker` — non-intrusive "is this saved source's device
+  still connected" check: one `list_devices()` call per distinct `MediaKind` actually
+  used (not per source), off the GUI thread via `async_probe.AsyncProbe`, run on
+  session-select + a manual Refresh button — no polling timer.
+- `async_probe.AsyncProbe` is also what the Add/Edit Source wizard's device listing and
+  camera-format probing run through now (`dialogs/source_wizard.py`'s
+  `TypeDevicePage._start_probe`) — opening the wizard or clicking its Refresh button used
+  to block the GUI thread on a real ffmpeg/platform subprocess call; it no longer does.
+- `dialogs/settings_dialog.SettingsDialog` (was the Settings tab, now a button-launched
+  modal) holds the genuinely device-agnostic knobs: default output dir/container
+  (prefills `New session...`), default audio/video prefill for *new* sources, notify-on-
+  finish (via the app's tray icon, same pattern as `tools.ffmpeg.batch_converter`), and
+  keep-segments-after-pause (skip deleting a paused session's intermediate segment files
+  after they're concatenated).
+
 Device discovery and recording both go through the **same mechanisms the real `ffmpeg`
 CLI uses per platform** — grounded against `archive/docs/ffmpeg-manuals/ffmpeg-devices/`
 and verified against the bundled `bin/ffmpeg.exe` with real hardware, not assumed from
