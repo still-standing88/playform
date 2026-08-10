@@ -155,6 +155,58 @@ Every tool is still wired into the app in exactly one place:
 `src/gui/managers/tool_window_manager.py` (`ToolWindowManager.open_*` methods) plus a
 matching `QAction` in `src/gui/managers/menu_manager.py`'s `setup_tools_menu()`.
 
+## Multi Device Capture (`src/media_core/av_capture/` + `src/multi_device_capture/`)
+
+Multi-source recording (camera/monitor/window/audio-input/audio-output, N sources per
+session, pause/resume/stop). Same engine/Qt-wrapper split as the tools above:
+`media_core.av_capture` is the framework-agnostic engine (zero Qt imports), driven by a
+Qt dock panel at `src/multi_device_capture/` (not a `tools/` modal dialog — it's a dock
+like Podcasts/Radio; see `multi_device_capture/ui.py`'s docstring and
+`gui/managers/dock_manager.py::_create_multi_device_capture_dock`). This **replaced** an
+earlier QtMultimedia-based engine (`QCamera`/`QScreenCapture`/`QWindowCapture`/
+`QMediaRecorder`) that is gone from `multi_device_capture/` now; `capture_module.py` and
+`capture_module_notes.docx` at the repo root are that earlier design's prototype/notes,
+kept only as historical reference (ask before deleting).
+
+Device discovery and recording both go through the **same mechanisms the real `ffmpeg`
+CLI uses per platform** — grounded against `archive/docs/ffmpeg-manuals/ffmpeg-devices/`
+and verified against the bundled `bin/ffmpeg.exe` with real hardware, not assumed from
+docs alone:
+- **Windows** — `dshow` (camera + audio input, via `-list_devices true`/`-list_options
+  true`) and `gdigrab` (desktop/window via `offset_x`/`offset_y`/`video_size`/`title=`/
+  `hwnd=`); monitor/window enumeration itself is ctypes `EnumDisplayMonitors`/
+  `EnumWindows` (`backends/_win32_enum.py`) since gdigrab has no listing mechanism of its
+  own. No WASAPI loopback avdevice in this ffmpeg build, so "Audio output" capture is
+  reported unavailable rather than faked; a dshow audio device that already routes system
+  output (VB-Cable, Stereo Mix, VoiceMeeter) is still listed as a normal audio input and
+  flagged `loopback_hint=True`.
+- **macOS** — `avfoundation` (camera + screen + audio all from one `-list_devices true`
+  call). No per-window capture, no loopback device (BlackHole-style virtual device
+  suggested as an audio-input workaround instead).
+- **Linux** — `v4l2` (camera), `x11grab` (desktop/window; monitors via `xrandr`, windows
+  via `wmctrl`), `pulse` with `alsa` fallback (audio) — PulseAudio `.monitor` sources give
+  Linux genuine loopback capture, unlike Windows/macOS.
+- **Gotcha**: dshow's `-i video=`/`audio=` device name must be passed **unquoted** when
+  launched via an argv list (no shell in between, same as `media_core.ffmpeg.FFmpeg
+  .execute()`) — quoting it (as the dshow manual's shell-prompt examples show) makes this
+  ffmpeg build fail to find *any* device, friendly name or `@device_...` alternative name
+  alike. Confirmed by testing real captures; see `windows_backend._dshow_name_arg()`.
+- ffmpeg has no live pause primitive, so **pause = gracefully terminate the current
+  segment's ffmpeg process** (`FFmpeg.terminate()` → `SIGTERM`/`CTRL_BREAK_EVENT`, the
+  same signal `q`/Ctrl+C sends at a real ffmpeg CLI session) and **resume = start a new
+  segment**; on stop, multi-segment sources are losslessly joined with ffmpeg's own
+  concat demuxer (`-f concat -safe 0`, same mechanism `media_core.m4b_tools.audiobook
+  .Audiobook` uses for chapter files) — see `session_runner.py`.
+- The real-time level meter on the wizard's Preview page reads ffmpeg's own `astats`
+  filter (`astats=metadata=1:reset=1,ametadata=print:...:direct=1` — `direct=1` matters,
+  see `level_meter.py`'s docstring) instead of a separate audio-tap API, so it reflects
+  the exact device/options that would actually be recorded.
+- `media_core.ffmpeg.utils.create_subprocess` hides the ffmpeg console via
+  `STARTUPINFO`/`SW_HIDE` rather than `CREATE_NO_WINDOW` — the latter breaks
+  `CTRL_BREAK_EVENT` delivery entirely (no console = nothing for
+  `GenerateConsoleCtrlEvent` to signal), which silently hung every graceful-terminate
+  path; this benefits every `media_core.ffmpeg.FFmpeg`-based tool, not just capture.
+
 ## `app_config/` vs `app_constance/` — not a typo you should fix
 
 - `src/app_config/` = user-mutable runtime state: `prefs.py` (persisted to
