@@ -826,8 +826,12 @@ class MainWindow(QMainWindow):
         if self.podcast_widget and hasattr(self.podcast_widget, 'close'):
             self.podcast_widget.close()
 
-        if self.multi_device_capture_widget and self.multi_device_capture_widget.engine.is_active():
-            self.multi_device_capture_widget.engine.stop()
+        if self.multi_device_capture_widget:
+            # Synchronous: this ffmpeg-process-per-source engine needs each
+            # capture gracefully terminated (and any paused segments
+            # concatenated) before the app process exits, not just asked to
+            # stop and left running in the background.
+            self.multi_device_capture_widget.engine.shutdown()
 
 
         if self.tray and self.tray.is_available() and not is_restarting:
