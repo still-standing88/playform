@@ -4,11 +4,13 @@ modal Tools-menu dialog (see gui.managers.dock_manager.DockManager
 .setup_view_menu's Panels submenu / gui.managers.toolbar_manager
 .ToolbarManager.setup_panels_toolbar).
 
-Three tabs, sessions/sources managed as separate pools (a session references
-sources rather than owning them):
-    Sessions   - session list + source pool, each with add/edit/delete
-    Capture    - transport: start/pause/resume/stop + live status
-    Settings   - global audio/video defaults, category list + stack
+One consolidated view rather than three tabs: a QStackedWidget swaps
+between views/configure_view.ConfigureView (sessions + session-scoped
+sources, Add source / Settings / Start capture) and
+views/capture_view.CaptureView (live per-source status + Pause/Resume/
+Cancel), so the session/source configuration UI isn't sitting there
+editable mid-recording - clicking Start capture hides it entirely rather
+than just disabling it.
 
 Lazily created on first show, same as Podcasts/Radio - closing the dock just
 hides it (FloatableDockWidget re-docks-and-hides rather than destroying), it
@@ -22,16 +24,17 @@ from __future__ import annotations
 
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QTabWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QMessageBox, QStackedWidget, QVBoxLayout, QWidget
 
 from app_config import key_config
 from media_core.av_capture.capabilities import CaptureCapabilities
 from tools.ffmpeg_handler import FFmpegHandler
 
+from .dialogs import SettingsDialog
 from .engine import CaptureEngine
 from .registries import SessionRegistry, SourceRegistry
 from .settings import multi_device_capture_settings
-from .tabs import CaptureTab, SessionsTab, SettingsTab
+from .views import CaptureView, ConfigureView
 
 HOTKEY_SECTION = "Multi Device Capture"
 
@@ -43,38 +46,54 @@ class MultiDeviceCaptureUI(QWidget):
         self.sources = SourceRegistry()
         self.sessions = SessionRegistry()
         self.settings = multi_device_capture_settings
-        # One CaptureCapabilities instance shared by the engine and every
-        # Add/Edit Source wizard it opens, so device enumeration/backend
-        # availability is only probed once per Refresh rather than once per
-        # wizard.
         ffmpeg_path, _ffprobe_path = FFmpegHandler.get_ffmpeg_binary()
         self.capabilities = CaptureCapabilities(ffmpeg_executable=ffmpeg_path)
-        self.engine = CaptureEngine(capabilities=self.capabilities, parent=self)
+        self.engine = CaptureEngine(capabilities=self.capabilities, settings=self.settings, parent=self)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self.tabs = QTabWidget()
-        self.sessions_tab = SessionsTab(self.sessions, self.sources, self.capabilities)
-        self.capture_tab = CaptureTab(self.sessions, self.sources, self.engine)
-        self.settings_tab = SettingsTab(self.settings)
+        self.stack = QStackedWidget()
+        self.configure_view = ConfigureView(self.sessions, self.sources, self.capabilities, self.settings)
+        self.capture_view = CaptureView(self.sources)
+        self.stack.addWidget(self.configure_view)
+        self.stack.addWidget(self.capture_view)
+        layout.addWidget(self.stack)
 
-        self.tabs.addTab(self.sessions_tab, _("Sessions"))
-        self.tabs.addTab(self.capture_tab, _("Capture"))
-        self.tabs.addTab(self.settings_tab, _("Settings"))
-        self.tabs.currentChanged.connect(self._on_tab_changed)
+        self.configure_view.start_capture_requested.connect(self._start_capture)
+        self.configure_view.settings_requested.connect(self._open_settings)
+        self.capture_view.pause_requested.connect(self.engine.pause)
+        self.capture_view.resume_requested.connect(self.engine.resume)
+        self.capture_view.stop_requested.connect(self.engine.stop)
 
-        layout.addWidget(self.tabs)
-
-        self.sessions_tab.sessions_changed.connect(self.capture_tab.refresh_sessions)
-        self.sessions_tab.sources_changed.connect(self.capture_tab.refresh_sessions)
+        self.engine.state_changed.connect(self._on_state_changed)
+        self.engine.state_changed.connect(self.capture_view.on_state_changed)
+        self.engine.source_started.connect(self.capture_view.on_source_started)
+        self.engine.source_error.connect(self._on_source_error)
+        self.engine.source_stopped.connect(self.capture_view.on_source_stopped)
+        self.engine.duration_changed.connect(self.capture_view.on_duration_changed)
 
         self._shortcuts: list[QShortcut] = []
         self._setup_shortcuts()
 
-    def _on_tab_changed(self, index: int) -> None:
-        if self.tabs.tabText(index) == _("Capture"):
-            self.capture_tab.refresh_sessions()
+    # -- start/stop handoff between the two views ------------------------
+
+    def _start_capture(self, session, sources) -> None:
+        self.capture_view.begin(session, sources)
+        self.stack.setCurrentWidget(self.capture_view)
+        self.engine.start(session, sources)
+
+    def _on_state_changed(self, state: str) -> None:
+        if state in ("idle", "stopped"):
+            self.stack.setCurrentWidget(self.configure_view)
+
+    def _on_source_error(self, source_id: str, message: str) -> None:
+        self.capture_view.on_source_error(source_id, message)
+        if not source_id:
+            QMessageBox.warning(self, _("Capture error"), message)
+
+    def _open_settings(self) -> None:
+        SettingsDialog(self.settings, parent=self).exec()
 
     # -- hotkeys: Start / Pause-Resume / Stop capture --------------------
     #
@@ -89,6 +108,24 @@ class MultiDeviceCaptureUI(QWidget):
     # in the "Main interface" key_config section, wired in
     # gui.managers.shortcuts_manager, same as Podcasts/Radio.)
 
+    def start_capture(self) -> None:
+        if self.engine.is_active():
+            return
+        self.configure_view._on_start_clicked()
+
+    def toggle_pause_resume(self) -> None:
+        if not self.engine.is_active():
+            return
+        if self.engine.is_paused():
+            self.engine.resume()
+        else:
+            self.engine.pause()
+
+    def stop_capture(self) -> None:
+        if not self.engine.is_active():
+            return
+        self.engine.stop()
+
     def _setup_shortcuts(self) -> None:
         for shortcut in self._shortcuts:
             shortcut.setParent(None)
@@ -96,9 +133,9 @@ class MultiDeviceCaptureUI(QWidget):
 
         section = key_config.key_config[HOTKEY_SECTION] if HOTKEY_SECTION in key_config.key_config else {}
         mapping = {
-            section.get("Start capture", "Ctrl+Alt+R"): self.capture_tab.start_capture,
-            section.get("Pause/Resume capture", "Ctrl+Alt+P"): self.capture_tab.toggle_pause_resume,
-            section.get("Stop capture", "Ctrl+Alt+S"): self.capture_tab.stop_capture,
+            section.get("Start capture", "Ctrl+Alt+R"): self.start_capture,
+            section.get("Pause/Resume capture", "Ctrl+Alt+P"): self.toggle_pause_resume,
+            section.get("Stop capture", "Ctrl+Alt+S"): self.stop_capture,
         }
         for key_sequence, callback in mapping.items():
             if not key_sequence:

@@ -22,12 +22,14 @@ from __future__ import annotations
 import concurrent.futures
 
 from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 
 from media_core.av_capture.capabilities import CaptureCapabilities
 from media_core.av_capture.session_runner import CaptureSessionRunner
 from tools.ffmpeg_handler import FFmpegHandler
 
 from .models import CaptureSource, Session
+from .settings import MultiDeviceCaptureSettings
 
 
 class CaptureEngine(QObject):
@@ -37,15 +39,25 @@ class CaptureEngine(QObject):
     duration_changed = Signal(str, float)  # source_id, elapsed seconds
     state_changed = Signal(str)           # "idle" | "recording" | "paused" | "stopped"
 
-    def __init__(self, capabilities: CaptureCapabilities | None = None, parent=None):
+    def __init__(
+        self, capabilities: CaptureCapabilities | None = None,
+        settings: MultiDeviceCaptureSettings | None = None, parent=None,
+    ):
         super().__init__(parent)
         ffmpeg_path, _ffprobe_path = FFmpegHandler.get_ffmpeg_binary()
         self.capabilities = capabilities or CaptureCapabilities(ffmpeg_executable=ffmpeg_path)
+        self.settings = settings
         self._ffmpeg_executable = ffmpeg_path
         self._runner: CaptureSessionRunner | None = None
         self._active = False
         self._paused = False
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="av-capture-ctl")
+        # Notify-on-finish touches QApplication/QSystemTrayIcon, so it must
+        # run on the GUI thread - connect to our own (auto-queued across
+        # threads) signal rather than calling it from
+        # _on_runner_state_changed, which session_runner invokes directly
+        # from the executor thread.
+        self.state_changed.connect(self._maybe_notify_finished)
 
     def is_active(self) -> bool:
         return self._active
@@ -81,8 +93,10 @@ class CaptureEngine(QObject):
 
     def _start_sync(self, session: Session, sources: list[CaptureSource]) -> bool:
         self.capabilities.refresh()
+        keep_segments = bool(self.settings.get("keep_segments_after_pause", False)) if self.settings else False
         runner = CaptureSessionRunner(
             session, sources, capabilities=self.capabilities, ffmpeg_executable=self._ffmpeg_executable,
+            keep_segments=keep_segments,
             on_source_started=self.source_started.emit,
             on_source_error=self.source_error.emit,
             on_source_stopped=self.source_stopped.emit,
@@ -134,8 +148,26 @@ class CaptureEngine(QObject):
         self._paused = False
 
     def _on_runner_state_changed(self, state: str) -> None:
+        # Called directly by session_runner from the executor thread (not a
+        # Qt slot) - only touch the emit() here, which is the thread-safe
+        # boundary; anything GUI-only (notify-on-finish) hangs off the
+        # state_changed signal instead, see _maybe_notify_finished below.
         if state == "paused":
             self._paused = True
         elif state == "recording":
             self._paused = False
         self.state_changed.emit(state)
+
+    def _maybe_notify_finished(self, state: str) -> None:
+        if state != "stopped":
+            return
+        if self.settings is None or not self.settings.get("notify_on_finish", True):
+            return
+        # Same tray-notification path tools.ffmpeg.batch_converter uses -
+        # the app-wide QSystemTrayIcon registered at startup by system_tray.py.
+        tray_icon = getattr(QApplication.instance(), "_tray_icon", None)
+        if tray_icon is not None and hasattr(tray_icon, "showMessage"):
+            tray_icon.showMessage(
+                _("Capture Finished"), _("The multi-device capture has finished."),
+                QSystemTrayIcon.MessageIcon.Information, 5000,
+            )
