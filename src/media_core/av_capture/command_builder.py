@@ -16,6 +16,7 @@ import re
 
 from media_core.av_capture.backends.base import InputSpec
 from media_core.av_capture.capabilities import CaptureCapabilities
+from media_core.av_capture.device_probe import run_probe
 from media_core.av_capture.models import CaptureDevice, CaptureSourceConfig, MediaKind
 
 _INVALID_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*]')
@@ -58,3 +59,32 @@ def build_source_command(
     ffmpeg.input(input_spec.url, **{"f": input_spec.format, **input_spec.options})
     ffmpeg.output(output_path, **output_options_for(source.kind, source.settings))
     return ffmpeg
+
+
+def capture_still_frame(
+    capabilities: CaptureCapabilities,
+    kind: MediaKind,
+    device: CaptureDevice,
+    settings: dict,
+    output_path: str,
+    ffmpeg_executable: str = "ffmpeg",
+    timeout: float = 8.0,
+) -> tuple[bool, str]:
+    """One-shot device confirmation for the source wizard's Preview page:
+    grab a single frame to a PNG rather than a live video feed - simpler
+    than decoding a raw video stream from ffmpeg's stdout in real time, and
+    still proves the picked device/resolution/crop/cursor setting actually
+    produces the expected image, which is the point of a wizard preview."""
+    input_spec = capabilities.backend.build_input(kind, device, settings)
+    if input_spec is None:
+        return False, "This source type is not supported by the active capture backend."
+
+    args = [ffmpeg_executable, "-hide_banner", "-loglevel", "error", "-y", "-f", input_spec.format]
+    for key, value in input_spec.options.items():
+        args += [f"-{key}", str(value)]
+    args += ["-i", input_spec.url, "-frames:v", "1", output_path]
+
+    result = run_probe(args, timeout=timeout)
+    if not result.ok or result.returncode != 0:
+        return False, result.stderr.strip() or "ffmpeg exited with an error."
+    return True, ""
