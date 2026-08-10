@@ -167,9 +167,13 @@ class CaptureSessionRunner:
             runtime.failed = True
             return False
 
+        # Always suffixed, even for the first segment - runtime.final_path
+        # uses the bare base_name, and a segment must never collide with
+        # that: _finalize() may need to read *and* write files with these
+        # names in the same ffmpeg invocation (concat) or rename a single
+        # segment onto final_path (single-segment case).
         segment_index = len(runtime.segments)
-        suffix = f"_seg{segment_index + 1}" if segment_index else ""
-        segment_path = os.path.join(output_dir, f"{runtime.base_name}{suffix}.{self.session.container}")
+        segment_path = os.path.join(output_dir, f"{runtime.base_name}_seg{segment_index + 1}.{self.session.container}")
 
         try:
             ffmpeg = build_source_command(self.capabilities, runtime.source, device, segment_path, self.ffmpeg_executable)
