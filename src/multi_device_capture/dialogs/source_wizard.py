@@ -43,8 +43,9 @@ from PySide6.QtWidgets import (
 
 from media_core.av_capture.capabilities import CaptureCapabilities
 from media_core.av_capture.command_builder import capture_still_frame
-from media_core.av_capture.models import CaptureDevice
+from media_core.av_capture.models import CaptureDevice, CaptureFormatOption
 
+from ..async_probe import AsyncProbe
 from ..models import CaptureSource, MediaType, is_video, media_type_label, new_id
 from .forms import AudioSettingsForm, CameraSettingsForm, ScreenSettingsForm, WindowSettingsForm
 
@@ -53,7 +54,14 @@ class TypeDevicePage(QWizardPage):
     """Add mode: choose media type, then a device for that type.
     Edit mode: media type is fixed (passed in); only the device/window
     picker is shown, since re-typing a source would invalidate its
-    settings page."""
+    settings page.
+
+    Every device list (and, for Camera, its format list - needed up front
+    by nextId()/_type_has_editable_settings) comes from one background
+    probe via AsyncProbe rather than blocking the GUI thread on
+    CaptureCapabilities' real ffmpeg/platform subprocess calls - opening
+    this page or clicking Refresh used to freeze the wizard for however
+    long device enumeration took."""
 
     def __init__(self, capabilities: CaptureCapabilities, edit_source: Optional[CaptureSource] = None, parent=None):
         super().__init__(parent)
@@ -70,13 +78,18 @@ class TypeDevicePage(QWizardPage):
         self._settings_page_id: Optional[int] = None
         self._preview_page_id: Optional[int] = None
 
+        self._probe = AsyncProbe(self)
+        self._probe.result_ready.connect(self._on_probe_result)
+        self._probe.failed.connect(self._on_probe_failed)
+        self._devices_by_kind: dict[MediaType, list[CaptureDevice]] = {}
+        self._camera_formats_cache: dict[str, list[CaptureFormatOption]] = {}
+        self._loading = False
+
         layout = QVBoxLayout(self)
 
         self.type_combo = QComboBox()
         self.type_combo.setAccessibleName(_("Source type"))
         if edit_source is None:
-            for mt in capabilities.available_kinds():
-                self.type_combo.addItem(media_type_label(mt), mt)
             self.type_combo.currentIndexChanged.connect(self._on_type_changed)
             layout.addWidget(QLabel(_("Source type")))
             layout.addWidget(self.type_combo)
@@ -93,7 +106,7 @@ class TypeDevicePage(QWizardPage):
         device_row.addWidget(QLabel(_("Device")))
         device_row.addStretch()
         self.refresh_btn = QPushButton(_("Refresh devices"))
-        self.refresh_btn.clicked.connect(self._refresh_devices)
+        self.refresh_btn.clicked.connect(self._start_probe)
         device_row.addWidget(self.refresh_btn)
         layout.addLayout(device_row)
 
@@ -105,7 +118,8 @@ class TypeDevicePage(QWizardPage):
         # plugged in, no capturable windows found right now) - both types
         # stay selectable regardless (see CaptureCapabilities
         # .available_kinds()), so this explains why the device list is
-        # empty right now instead of it just looking broken.
+        # empty right now instead of it just looking broken. It also
+        # doubles as the "loading" status line while the probe is running.
         self.empty_state_label = QLabel()
         self.empty_state_label.setStyleSheet("color: gray; font-size: 11px;")
         self.empty_state_label.setWordWrap(True)
@@ -122,12 +136,66 @@ class TypeDevicePage(QWizardPage):
 
         layout.addStretch()
 
-        if edit_source is not None:
-            self._populate_devices(edit_source.media_type)
-        elif self.type_combo.count():
-            self._on_type_changed(0)
+        self._start_probe()
+
+    def _start_probe(self) -> None:
+        self._loading = True
+        self.refresh_btn.setEnabled(False)
+        self.device_combo.setEnabled(False)
+        self.device_combo.setVisible(False)
+        self.empty_state_label.setText(_("Checking available devices..."))
+        self.empty_state_label.setVisible(True)
+        self.completeChanged.emit()
+
+        capabilities = self.capabilities
+        edit_mt = self._edit_source.media_type if self._edit_source else None
+        capabilities.refresh()
+
+        def _work(_edit_mt=edit_mt):
+            kinds = [_edit_mt] if _edit_mt is not None else capabilities.available_kinds()
+            devices_by_kind = {kind: capabilities.list_devices(kind) for kind in kinds}
+            camera_formats = {
+                device.id: capabilities.camera_formats(device)
+                for device in devices_by_kind.get(MediaType.CAMERA, [])
+            }
+            return kinds, devices_by_kind, camera_formats
+
+        self._probe.run(_work)
+
+    def _on_probe_failed(self, message: str) -> None:
+        self._loading = False
+        self.refresh_btn.setEnabled(True)
+        self.empty_state_label.setText(_("Could not check devices: {error}").format(error=message))
+        self.empty_state_label.setVisible(True)
+        self.completeChanged.emit()
+
+    def _on_probe_result(self, result) -> None:
+        kinds, devices_by_kind, camera_formats = result
+        self._loading = False
+        self._devices_by_kind = devices_by_kind
+        self._camera_formats_cache = camera_formats
+        self.refresh_btn.setEnabled(True)
+
+        if self._edit_source is None:
+            current_type = self._selected_type
+            self.type_combo.blockSignals(True)
+            self.type_combo.clear()
+            for mt in kinds:
+                self.type_combo.addItem(media_type_label(mt), mt)
+            idx = self.type_combo.findData(current_type) if current_type is not None else -1
+            self.type_combo.setCurrentIndex(idx if idx >= 0 else 0)
+            self.type_combo.blockSignals(False)
+            self._selected_type = self.type_combo.currentData()
+        else:
+            self._selected_type = self._edit_source.media_type
+
+        self._populate_devices(self._selected_type)
+        if not self.friendly_name_edit.text() and self._selected_type is not None:
+            self.friendly_name_edit.setText(media_type_label(self._selected_type))
 
     def _on_type_changed(self, index: int) -> None:
+        if self._loading:
+            return
         mt = self.type_combo.itemData(index)
         self._selected_type = mt
         self._populate_devices(mt)
@@ -147,8 +215,9 @@ class TypeDevicePage(QWizardPage):
         return ""
 
     def _populate_devices(self, mt: Optional[MediaType]) -> None:
+        self.device_combo.setEnabled(True)
         self.device_combo.clear()
-        devices: list[CaptureDevice] = self.capabilities.list_devices(mt) if mt is not None else []
+        devices: list[CaptureDevice] = self._devices_by_kind.get(mt, []) if mt is not None else []
         for device in devices:
             label = f"{device.name} (likely loopback)" if device.loopback_hint else device.name
             self.device_combo.addItem(label, device)
@@ -168,20 +237,6 @@ class TypeDevicePage(QWizardPage):
         self.empty_state_label.setVisible(is_empty and bool(self._empty_state_text(mt)))
         self.completeChanged.emit()
 
-    def _refresh_devices(self) -> None:
-        self.capabilities.refresh()
-        if self._edit_source is None:
-            current_type = self._selected_type
-            self.type_combo.blockSignals(True)
-            self.type_combo.clear()
-            for mt in self.capabilities.available_kinds():
-                self.type_combo.addItem(media_type_label(mt), mt)
-            idx = self.type_combo.findData(current_type) if current_type is not None else -1
-            self.type_combo.setCurrentIndex(idx if idx >= 0 else 0)
-            self.type_combo.blockSignals(False)
-            self._selected_type = self.type_combo.currentData()
-        self._populate_devices(self._selected_type)
-
     def selected_type(self) -> Optional[MediaType]:
         return self._selected_type
 
@@ -190,17 +245,19 @@ class TypeDevicePage(QWizardPage):
         return self.device_combo.itemData(idx) if idx >= 0 else None
 
     def isComplete(self) -> bool:
-        return bool(self.friendly_name_edit.text()) and self.device_combo.count() > 0
+        return not self._loading and bool(self.friendly_name_edit.text()) and self.device_combo.count() > 0
 
     def nextId(self) -> int:
         if self._settings_page_id is not None and self._preview_page_id is not None:
-            if not _type_has_editable_settings(self.capabilities, self.selected_type(), self.selected_device()):
+            device = self.selected_device()
+            formats = self._camera_formats_cache.get(device.id, []) if device is not None else []
+            if not _type_has_editable_settings(self.selected_type(), device, formats):
                 return self._preview_page_id
             return self._settings_page_id
         return super().nextId()
 
 
-def _type_has_editable_settings(capabilities: CaptureCapabilities, mt: Optional[MediaType], device) -> bool:
+def _type_has_editable_settings(mt: Optional[MediaType], device, camera_formats: list) -> bool:
     """Whether page 2 (Settings) has anything real for this type/device to
     show. Monitor/Window now do (frame-rate cap + cursor toggle, both real
     gdigrab/x11grab/avfoundation options) - the previous QScreenCapture/
@@ -210,18 +267,20 @@ def _type_has_editable_settings(capabilities: CaptureCapabilities, mt: Optional[
     if mt in (MediaType.AUDIO_INPUT, MediaType.AUDIO_OUTPUT):
         return True
     if mt == MediaType.CAMERA:
-        return device is not None and len(capabilities.camera_formats(device)) > 0
+        return device is not None and len(camera_formats) > 0
     if mt in (MediaType.MONITOR, MediaType.WINDOW):
         return True
     return False
 
 
 class SettingsPage(QWizardPage):
-    def __init__(self, capabilities: CaptureCapabilities, type_device_page: TypeDevicePage, parent=None):
+    def __init__(self, capabilities: CaptureCapabilities, type_device_page: TypeDevicePage,
+                 global_settings=None, parent=None):
         super().__init__(parent)
         self.setTitle(_("Configure settings"))
         self.capabilities = capabilities
         self._type_device_page = type_device_page
+        self._global_settings = global_settings
 
         self.stack = QStackedWidget()
         self.audio_form = AudioSettingsForm()
@@ -237,22 +296,34 @@ class SettingsPage(QWizardPage):
     def initializePage(self) -> None:
         mt = self._type_device_page.selected_type()
         device = self._type_device_page.selected_device()
+        is_new_source = self._type_device_page._edit_source is None
         if mt in (MediaType.AUDIO_INPUT, MediaType.AUDIO_OUTPUT):
             self.stack.setCurrentWidget(self.audio_form)
+            if is_new_source and self._global_settings is not None:
+                self.audio_form.from_settings(self._global_settings.get_audio())
             if device is not None:
                 self.audio_form.load_device_defaults(device)
         elif mt == MediaType.CAMERA:
             self.stack.setCurrentWidget(self.camera_form)
             if device is not None:
-                self.camera_form.load_device_formats(self.capabilities, device)
+                formats = self._type_device_page._camera_formats_cache.get(device.id, [])
+                self.camera_form.load_device_formats(formats)
         elif mt == MediaType.MONITOR:
             self.stack.setCurrentWidget(self.screen_form)
+            if is_new_source and self._global_settings is not None:
+                self.screen_form.from_settings(self._video_defaults())
             if device is not None:
                 self.screen_form.load_screen(device, self.capabilities)
         elif mt == MediaType.WINDOW:
             self.stack.setCurrentWidget(self.window_form)
+            if is_new_source and self._global_settings is not None:
+                self.window_form.from_settings(self._video_defaults())
             if device is not None:
                 self.window_form.load_window(device, self.capabilities)
+
+    def _video_defaults(self) -> dict:
+        video = self._global_settings.get_video()
+        return {"fps": video.get("fps", 30), "capture_cursor": video.get("capture_cursor", False)}
 
     def current_settings(self) -> dict:
         return self.stack.currentWidget().to_settings()
@@ -424,7 +495,8 @@ class PreviewPage(QWizardPage):
 
 
 class SourceWizard(QWizard):
-    def __init__(self, capabilities: CaptureCapabilities, edit_source: Optional[CaptureSource] = None, parent=None):
+    def __init__(self, capabilities: CaptureCapabilities, edit_source: Optional[CaptureSource] = None,
+                 global_settings=None, parent=None):
         super().__init__(parent)
         self.setWindowTitle(_("Edit source") if edit_source else _("Add source"))
         self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
@@ -432,7 +504,7 @@ class SourceWizard(QWizard):
         self._edit_source = edit_source
 
         self.type_device_page = TypeDevicePage(capabilities, edit_source)
-        self.settings_page = SettingsPage(capabilities, self.type_device_page)
+        self.settings_page = SettingsPage(capabilities, self.type_device_page, global_settings)
         self.preview_page = PreviewPage(capabilities, self.type_device_page)
 
         self.addPage(self.type_device_page)

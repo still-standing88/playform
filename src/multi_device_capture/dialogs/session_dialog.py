@@ -1,42 +1,48 @@
+"""Session editor: name, output directory, container format only.
+
+The source checklist the previous version of this dialog had is gone -
+sources are now managed directly from the (session-scoped) source list in
+views/configure_view.py, "Add source" attaches straight to whichever
+session is selected rather than going through a separate assign-to-session
+step here. The "use custom audio/video settings for this session" checkbox
+is gone too: it toggled Session.settings_override between {} and None, but
+nothing ever read that field to actually override anything - dropped rather
+than kept as a control with no effect. The field itself is still accepted
+on load for old sessions.json files, just not exposed here.
+"""
 from __future__ import annotations
 
 from typing import Optional
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
     QHBoxLayout,
-    QLabel,
     QLineEdit,
-    QListWidget,
-    QListWidgetItem,
     QPushButton,
     QVBoxLayout,
 )
 
-from ..models import Session, media_type_label, new_id
-from ..registries import SourceRegistry
+from ..models import Session, new_id
 
 
 class SessionDialog(QDialog):
-    def __init__(self, sources: SourceRegistry, session: Optional[Session] = None, parent=None):
+    def __init__(self, session: Optional[Session] = None, default_output_dir: str = "",
+                 default_container: str = "mkv", parent=None):
         super().__init__(parent)
-        self.setWindowTitle(_("Edit session") if session else _("Add session"))
-        self._sources = sources
+        self.setWindowTitle(_("Edit session") if session else _("New session"))
         self._session = session
 
         layout = QVBoxLayout(self)
-
         form = QFormLayout()
+
         self.name_edit = QLineEdit(session.name if session else "")
         form.addRow(_("Name"), self.name_edit)
 
-        self.output_edit = QLineEdit(session.output_dir if session else "")
+        self.output_edit = QLineEdit(session.output_dir if session else default_output_dir)
         browse_row = QHBoxLayout()
         browse_row.addWidget(self.output_edit)
         browse_btn = QPushButton(_("Browse"))
@@ -46,34 +52,17 @@ class SessionDialog(QDialog):
 
         self.container_combo = QComboBox()
         self.container_combo.addItems(["mkv", "mp4", "mov"])
-        if session:
-            idx = self.container_combo.findText(session.container_format)
-            if idx >= 0:
-                self.container_combo.setCurrentIndex(idx)
+        self.container_combo.setCurrentText(session.container_format if session else default_container)
         form.addRow(_("Container format"), self.container_combo)
 
         layout.addLayout(form)
 
-        layout.addWidget(QLabel(_("Sources included in this session")))
-        self.source_list = QListWidget()
-        selected_ids = set(session.source_ids) if session else set()
-        for src in sources.all():
-            item = QListWidgetItem(f"{src.friendly_name}  ({media_type_label(src.media_type)})")
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(
-                Qt.CheckState.Checked if src.id in selected_ids else Qt.CheckState.Unchecked
-            )
-            item.setData(Qt.ItemDataRole.UserRole, src.id)
-            self.source_list.addItem(item)
-        layout.addWidget(self.source_list)
-
-        self.override_check = QCheckBox(_("Use custom audio/video settings for this session"))
-        self.override_check.setChecked(session.settings_override is not None if session else False)
-        layout.addWidget(self.override_check)
-
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
+        self._ok_button = buttons.button(QDialogButtonBox.StandardButton.Ok)
+        self._ok_button.setEnabled(bool(self.name_edit.text().strip()))
+        self.name_edit.textChanged.connect(lambda text: self._ok_button.setEnabled(bool(text.strip())))
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -84,27 +73,14 @@ class SessionDialog(QDialog):
             self.output_edit.setText(path)
 
     def result_session(self) -> Session:
-        source_ids = []
-        for i in range(self.source_list.count()):
-            item = self.source_list.item(i)
-            if item.checkState() == Qt.CheckState.Checked:
-                source_ids.append(item.data(Qt.ItemDataRole.UserRole))
-
-        override = {} if self.override_check.isChecked() else None
+        name = self.name_edit.text().strip()
+        output_dir = self.output_edit.text()
+        container = self.container_combo.currentText()
 
         if self._session:
-            self._session.name = self.name_edit.text()
-            self._session.source_ids = source_ids
-            self._session.output_dir = self.output_edit.text()
-            self._session.container_format = self.container_combo.currentText()
-            self._session.settings_override = override
+            self._session.name = name
+            self._session.output_dir = output_dir
+            self._session.container_format = container
             return self._session
 
-        return Session(
-            id=new_id(),
-            name=self.name_edit.text(),
-            source_ids=source_ids,
-            output_dir=self.output_edit.text(),
-            container_format=self.container_combo.currentText(),
-            settings_override=override,
-        )
+        return Session(id=new_id(), name=name, source_ids=[], output_dir=output_dir, container_format=container)

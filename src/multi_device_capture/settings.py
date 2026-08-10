@@ -24,6 +24,10 @@ DEFAULT_SETTINGS = {
     },
     "hotkeys_enabled": True,
     "last_active_session_id": "",
+    "default_output_dir": "",
+    "default_container": "mkv",
+    "notify_on_finish": True,
+    "keep_segments_after_pause": False,
 }
 
 
@@ -45,6 +49,13 @@ class MultiDeviceCaptureSettings:
 
     def set_video(self, values: dict) -> None:
         self.data.setdefault("video", {}).update(values)
+        self.save()
+
+    def get(self, key: str, default=None):
+        return self.data.get(key, DEFAULT_SETTINGS.get(key, default))
+
+    def set(self, key: str, value) -> None:
+        self.data[key] = value
         self.save()
 
     def save(self) -> bool:

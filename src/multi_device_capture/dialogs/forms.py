@@ -78,9 +78,12 @@ class CameraSettingsForm(QWidget):
         form.addRow(_("Frame rate"), self.fps)
         self._formats = []
 
-    def load_device_formats(self, capabilities: CaptureCapabilities, device: CaptureDevice) -> None:
+    def load_device_formats(self, formats: list) -> None:
+        """`formats` is pre-fetched (see TypeDevicePage's background probe
+        in dialogs/source_wizard.py) rather than queried here, so opening
+        this page never blocks the GUI thread on a camera format probe."""
         self.resolution.clear()
-        self._formats = capabilities.camera_formats(device)
+        self._formats = formats
         seen = set()
         for fmt in self._formats:
             if fmt.resolution in seen:
