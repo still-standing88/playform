@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from media_core.av_capture.capabilities import CaptureCapabilities
+
 from ..dialogs import SessionDialog, SourceWizard
 from ..registries import SessionRegistry, SourceRegistry
 
@@ -25,10 +27,11 @@ class SessionsTab(QWidget):
     sessions_changed = Signal()
     sources_changed = Signal()
 
-    def __init__(self, sessions: SessionRegistry, sources: SourceRegistry, parent=None):
+    def __init__(self, sessions: SessionRegistry, sources: SourceRegistry, capabilities: CaptureCapabilities, parent=None):
         super().__init__(parent)
         self.sessions = sessions
         self.sources = sources
+        self.capabilities = capabilities
 
         layout = QHBoxLayout(self)
         layout.addWidget(self._build_sessions_panel(), 1)
@@ -144,7 +147,7 @@ class SessionsTab(QWidget):
             self.source_list.addItem(item)
 
     def _add_source(self) -> None:
-        wizard = SourceWizard(parent=self)
+        wizard = SourceWizard(self.capabilities, parent=self)
         if wizard.exec() == QDialog.DialogCode.Accepted:
             self.sources.add(wizard.result_source())
             self._refresh_sources()
@@ -155,7 +158,7 @@ class SessionsTab(QWidget):
         if not item:
             return
         source = self.sources.get(item.data(Qt.ItemDataRole.UserRole))
-        wizard = SourceWizard(edit_source=source, parent=self)
+        wizard = SourceWizard(self.capabilities, edit_source=source, parent=self)
         if wizard.exec() == QDialog.DialogCode.Accepted:
             self.sources.add(wizard.result_source())
             self._refresh_sources()

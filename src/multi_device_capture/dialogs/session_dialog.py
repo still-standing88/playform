@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ..models import Session, new_id
+from ..models import Session, media_type_label, new_id
 from ..registries import SourceRegistry
 
 
@@ -58,7 +58,7 @@ class SessionDialog(QDialog):
         self.source_list = QListWidget()
         selected_ids = set(session.source_ids) if session else set()
         for src in sources.all():
-            item = QListWidgetItem(f"{src.friendly_name}  ({src.media_type.label})")
+            item = QListWidgetItem(f"{src.friendly_name}  ({media_type_label(src.media_type)})")
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             item.setCheckState(
                 Qt.CheckState.Checked if src.id in selected_ids else Qt.CheckState.Unchecked

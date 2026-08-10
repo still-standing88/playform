@@ -18,7 +18,13 @@ from ..registries import SessionRegistry, SourceRegistry
 
 class CaptureTab(QWidget):
     """Transport: start/pause/resume/stop + live status. Only runs what the
-    Sessions tab has already configured - no add/edit/delete here."""
+    Sessions tab has already configured - no add/edit/delete here.
+
+    engine.start()/pause()/resume()/stop() are asynchronous (they run on the
+    engine's own worker thread - see engine.py's docstring for why), so this
+    tab reacts to state_changed/source_* signals rather than a synchronous
+    return value; buttons are optimistically disabled on click and
+    corrected by the next state_changed."""
 
     def __init__(self, sessions: SessionRegistry, sources: SourceRegistry, engine: CaptureEngine, parent=None):
         super().__init__(parent)
@@ -60,6 +66,7 @@ class CaptureTab(QWidget):
         self.engine.source_started.connect(self._on_source_started)
         self.engine.source_error.connect(self._on_source_error)
         self.engine.source_stopped.connect(self._on_source_stopped)
+        self.engine.duration_changed.connect(self._on_duration_changed)
 
     def refresh_sessions(self) -> None:
         current_id = self.session_combo.currentData()
@@ -105,12 +112,14 @@ class CaptureTab(QWidget):
         if not selected:
             QMessageBox.information(self, _("No sources"), _("This session has no enabled sources."))
             return
-        if not self.engine.start(session, selected):
-            QMessageBox.warning(self, _("Capture failed"), _("None of this session's sources could be started."))
+        self.start_btn.setEnabled(False)
+        self.status_label.setText(_("Starting..."))
+        self.engine.start(session, selected)
 
     def toggle_pause_resume(self) -> None:
         if not self.engine.is_active():
             return
+        self.pause_btn.setEnabled(False)
         if self.engine.is_paused():
             self.engine.resume()
         else:
@@ -119,6 +128,8 @@ class CaptureTab(QWidget):
     def stop_capture(self) -> None:
         if not self.engine.is_active():
             return
+        self.stop_btn.setEnabled(False)
+        self.status_label.setText(_("Stopping..."))
         self.engine.stop()
 
     # -- engine signal handlers --
@@ -134,6 +145,7 @@ class CaptureTab(QWidget):
         elif state == "paused":
             self.status_label.setText(_("Paused"))
             self.pause_btn.setText(_("Resume"))
+            self.pause_btn.setEnabled(True)
         elif state in ("idle", "stopped"):
             self.status_label.setText(_("Idle"))
             self.start_btn.setEnabled(True)
@@ -151,8 +163,13 @@ class CaptureTab(QWidget):
         else:
             QMessageBox.warning(self, _("Capture error"), message)
 
-    def _on_source_stopped(self, source_id: str) -> None:
-        self._set_source_status(source_id, _("stopped"))
+    def _on_source_stopped(self, source_id: str, final_path: str) -> None:
+        text = _("stopped -> {path}").format(path=final_path) if final_path else _("stopped")
+        self._set_source_status(source_id, text)
+
+    def _on_duration_changed(self, source_id: str, elapsed_seconds: float) -> None:
+        minutes, seconds = divmod(int(elapsed_seconds), 60)
+        self._set_source_status(source_id, _("recording - {m:02d}:{s:02d}").format(m=minutes, s=seconds))
 
     def _set_source_status(self, source_id: str, text: str) -> None:
         for i in range(self.live_list.count()):

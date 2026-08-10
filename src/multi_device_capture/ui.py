@@ -25,6 +25,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTabWidget, QVBoxLayout, QWidget
 
 from app_config import key_config
+from media_core.av_capture.capabilities import CaptureCapabilities
+from tools.ffmpeg_handler import FFmpegHandler
 
 from .engine import CaptureEngine
 from .registries import SessionRegistry, SourceRegistry
@@ -41,13 +43,19 @@ class MultiDeviceCaptureUI(QWidget):
         self.sources = SourceRegistry()
         self.sessions = SessionRegistry()
         self.settings = multi_device_capture_settings
-        self.engine = CaptureEngine(self)
+        # One CaptureCapabilities instance shared by the engine and every
+        # Add/Edit Source wizard it opens, so device enumeration/backend
+        # availability is only probed once per Refresh rather than once per
+        # wizard.
+        ffmpeg_path, _ffprobe_path = FFmpegHandler.get_ffmpeg_binary()
+        self.capabilities = CaptureCapabilities(ffmpeg_executable=ffmpeg_path)
+        self.engine = CaptureEngine(capabilities=self.capabilities, parent=self)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.tabs = QTabWidget()
-        self.sessions_tab = SessionsTab(self.sessions, self.sources)
+        self.sessions_tab = SessionsTab(self.sessions, self.sources, self.capabilities)
         self.capture_tab = CaptureTab(self.sessions, self.sources, self.engine)
         self.settings_tab = SettingsTab(self.settings)
 

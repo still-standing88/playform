@@ -58,7 +58,7 @@ class SettingsTab(QWidget):
         fps = QSpinBox()
         fps.setRange(1, 240)
         fps.setValue(30)
-        cursor = QCheckBox(_("Capture cursor (applied in post-process, not Qt-native)"))
+        cursor = QCheckBox(_("Capture cursor by default (each Monitor/Window source can still override this)"))
         form.addRow(_("Resolution cap"), res_cap)
         form.addRow(_("Frame rate"), fps)
         form.addRow(cursor)

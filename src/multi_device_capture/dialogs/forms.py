@@ -1,16 +1,21 @@
 """Per-media-type settings forms used by page 2 of the Source wizard and by
 the Settings tab's global-defaults panel.
 
-Only exposes fields QtMultimedia actually backs (see
-platform_capabilities.PlatformCapabilities docstrings / the *_note() methods
-for what's deliberately left out and why).
+Every field here maps directly onto an option the active
+media_core.av_capture backend actually passes to ffmpeg (see
+backends/*.build_input()) - nothing is shown that the current
+platform/device can't back. Monitor/Window capture now expose real
+"Capture cursor" and frame-rate controls (gdigrab's draw_mouse/framerate,
+x11grab's draw_mouse/framerate, avfoundation's capture_cursor/framerate),
+which is a genuine capability gain over the previous QtMultimedia-based
+QScreenCapture/QWindowCapture, which exposed neither.
 """
 from __future__ import annotations
 
-from PySide6.QtMultimedia import QAudioDevice, QCameraDevice
-from PySide6.QtWidgets import QComboBox, QFormLayout, QLabel, QSpinBox, QWidget
+from PySide6.QtWidgets import QCheckBox, QComboBox, QFormLayout, QLabel, QSpinBox, QWidget
 
-from ..platform_capabilities import PlatformCapabilities
+from media_core.av_capture.capabilities import CaptureCapabilities
+from media_core.av_capture.models import CaptureDevice
 
 
 class AudioSettingsForm(QWidget):
@@ -20,9 +25,11 @@ class AudioSettingsForm(QWidget):
         self.sample_rate = QComboBox()
         self.sample_rate.setAccessibleName(_("Sample rate"))
         self.sample_rate.addItems(["44100", "48000", "96000"])
+        self.sample_rate.setCurrentText("48000")
         self.channels = QComboBox()
         self.channels.setAccessibleName(_("Channels"))
         self.channels.addItems([_("Mono"), _("Stereo")])
+        self.channels.setCurrentIndex(1)
         self.volume = QSpinBox()
         self.volume.setRange(0, 100)
         self.volume.setValue(100)
@@ -31,15 +38,15 @@ class AudioSettingsForm(QWidget):
         form.addRow(_("Channels"), self.channels)
         form.addRow(_("Volume"), self.volume)
 
-    def load_device_defaults(self, dev: QAudioDevice) -> None:
-        preferred = dev.preferredFormat()
-        rate_str = str(preferred.sampleRate())
-        idx = self.sample_rate.findText(rate_str)
-        if idx < 0:
-            self.sample_rate.insertItem(0, rate_str)
-            idx = 0
-        self.sample_rate.setCurrentIndex(idx)
-        self.channels.setCurrentIndex(0 if preferred.channelCount() == 1 else 1)
+    def load_device_defaults(self, device: CaptureDevice) -> None:
+        # ffmpeg's device-listing mechanisms (dshow/pulse/avfoundation) don't
+        # report a single "preferred" format the way QAudioDevice did - the
+        # dshow -list_options probe *does* enumerate exact supported
+        # (rate, channels) pairs, but doing that on every wizard page visit
+        # means spinning up an extra ffmpeg process per device; the sane
+        # default (48kHz stereo) covers virtually every capture device, and
+        # the fields stay user-editable exactly as before.
+        pass
 
     def to_settings(self) -> dict:
         return {
@@ -71,17 +78,15 @@ class CameraSettingsForm(QWidget):
         form.addRow(_("Frame rate"), self.fps)
         self._formats = []
 
-    def load_device_formats(self, dev: QCameraDevice) -> None:
+    def load_device_formats(self, capabilities: CaptureCapabilities, device: CaptureDevice) -> None:
         self.resolution.clear()
-        self._formats = list(dev.videoFormats())
+        self._formats = capabilities.camera_formats(device)
         seen = set()
         for fmt in self._formats:
-            res = fmt.resolution()
-            key = (res.width(), res.height())
-            if key in seen:
+            if fmt.resolution in seen:
                 continue
-            seen.add(key)
-            self.resolution.addItem(f"{res.width()}x{res.height()}", key)
+            seen.add(fmt.resolution)
+            self.resolution.addItem(fmt.resolution, fmt.resolution)
         self.resolution.currentIndexChanged.connect(self._refresh_fps)
         if self.resolution.count():
             self._refresh_fps(0)
@@ -93,22 +98,22 @@ class CameraSettingsForm(QWidget):
             return
         seen = set()
         for fmt in self._formats:
-            res = fmt.resolution()
-            if (res.width(), res.height()) != target:
+            if fmt.resolution != target:
                 continue
-            lo, hi = fmt.minFrameRate(), fmt.maxFrameRate()
-            for candidate in (lo, hi):
-                r = round(candidate)
-                if r and r not in seen:
-                    seen.add(r)
-                    self.fps.addItem(str(r), r)
+            fps_value = round(fmt.fps) if fmt.fps else 0
+            if not fps_value or fps_value in seen:
+                continue
+            seen.add(fps_value)
+            self.fps.addItem(str(fps_value), fps_value)
 
     def to_settings(self) -> dict:
-        res = self.resolution.currentData()
-        return {
-            "resolution": f"{res[0]}x{res[1]}" if res else "",
-            "fps": self.fps.currentData() or 0,
-        }
+        resolution = self.resolution.currentData()
+        settings = {"resolution": resolution or "", "fps": self.fps.currentData() or 0}
+        matching = [f for f in self._formats if f.resolution == resolution and round(f.fps or 0) == settings["fps"]]
+        if matching:
+            settings["pixel_format"] = matching[0].pixel_format
+            settings["codec"] = matching[0].codec
+        return settings
 
     def from_settings(self, s: dict) -> None:
         if "resolution" in s:
@@ -121,51 +126,60 @@ class CameraSettingsForm(QWidget):
                 self.fps.setCurrentIndex(idx)
 
 
-class ScreenSettingsForm(QWidget):
-    """QScreenCapture exposes essentially no configurable properties.
-    Cursor visibility / crop / FPS cap are NOT backed by Qt Multimedia and
-    are intentionally omitted here rather than shown as fake controls."""
+class _FrameCaptureSettingsForm(QWidget):
+    """Shared by Monitor/Window: both are gdigrab/x11grab/avfoundation
+    inputs with the same real, ffmpeg-backed knobs - a frame-rate cap and a
+    cursor-visibility toggle (draw_mouse / capture_cursor)."""
+
+    _LABEL_ROW = ""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         form = QFormLayout(self)
-        self.screen_label = QLabel("-")
-        form.addRow(_("Screen"), self.screen_label)
-        note = QLabel(PlatformCapabilities.screen_capture_note())
-        note.setStyleSheet("color: gray; font-size: 11px;")
-        note.setWordWrap(True)
-        form.addRow(note)
+        self.device_label = QLabel("-")
+        form.addRow(self._LABEL_ROW, self.device_label)
+        self.fps = QSpinBox()
+        self.fps.setRange(1, 60)
+        self.fps.setValue(30)
+        form.addRow(_("Frame rate"), self.fps)
+        self.capture_cursor = QCheckBox(_("Capture mouse cursor"))
+        self.capture_cursor.setChecked(True)
+        form.addRow(self.capture_cursor)
+        self._note_label = QLabel("")
+        self._note_label.setStyleSheet("color: gray; font-size: 11px;")
+        self._note_label.setWordWrap(True)
+        form.addRow(self._note_label)
 
-    def load_screen(self, screen) -> None:
-        self.screen_label.setText(f"{screen.name()} ({screen.geometry().width()}x{screen.geometry().height()})")
-
-    def to_settings(self) -> dict:
-        return {"screen_name": self.screen_label.text()}
-
-    def from_settings(self, s: dict) -> None:
-        if "screen_name" in s:
-            self.screen_label.setText(s["screen_name"])
-
-
-class WindowSettingsForm(QWidget):
-    """Same limitation as ScreenSettingsForm - QWindowCapture has no crop,
-    no cursor toggle, no FPS control in the public API."""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        form = QFormLayout(self)
-        self.window_label = QLabel("-")
-        form.addRow(_("Window"), self.window_label)
-        note = QLabel(PlatformCapabilities.window_capture_note())
-        note.setStyleSheet("color: gray; font-size: 11px;")
-        note.setWordWrap(True)
-        form.addRow(note)
-
-    def load_window(self, win) -> None:
-        self.window_label.setText(win.description())
+    def set_note(self, text: str) -> None:
+        self._note_label.setText(text)
+        self._note_label.setVisible(bool(text))
 
     def to_settings(self) -> dict:
-        return {}
+        return {"fps": self.fps.value(), "capture_cursor": self.capture_cursor.isChecked()}
 
     def from_settings(self, s: dict) -> None:
-        pass
+        if "fps" in s and s["fps"]:
+            self.fps.setValue(int(s["fps"]))
+        if "capture_cursor" in s:
+            self.capture_cursor.setChecked(bool(s["capture_cursor"]))
+
+
+class ScreenSettingsForm(_FrameCaptureSettingsForm):
+    _LABEL_ROW = _("Screen")
+
+    def load_screen(self, device: CaptureDevice, capabilities: CaptureCapabilities) -> None:
+        self.device_label.setText(device.name)
+        self.set_note(capabilities.screen_capture_note())
+
+    def to_settings(self) -> dict:
+        settings = super().to_settings()
+        settings["screen_name"] = self.device_label.text()
+        return settings
+
+
+class WindowSettingsForm(_FrameCaptureSettingsForm):
+    _LABEL_ROW = _("Window")
+
+    def load_window(self, device: CaptureDevice, capabilities: CaptureCapabilities) -> None:
+        self.device_label.setText(device.name)
+        self.set_note(capabilities.window_capture_note())
