@@ -36,12 +36,23 @@ def is_windows() -> bool:
 
 def create_subprocess(*args: Any, **kwargs: Any) -> subprocess.Popen:
     # On Windows, CREATE_NEW_PROCESS_GROUP flag is required to use CTRL_BREAK_EVENT signal,
-    # which is required to gracefully terminate the FFmpeg process. CREATE_NO_WINDOW stops a
-    # console window from being allocated for the (console-mode) ffmpeg.exe behind this GUI
-    # app - otherwise every conversion/capture flashes or holds open a black cmd window.
+    # which is required to gracefully terminate the FFmpeg process.
     # Reference: https://docs.python.org/3/library/subprocess.html#subprocess.Popen.send_signal
+    #
+    # To also stop a console window from flashing up behind this GUI app for the (console-
+    # mode) ffmpeg.exe, hide it via STARTUPINFO/SW_HIDE rather than CREATE_NO_WINDOW: a
+    # process started with CREATE_NO_WINDOW has *no* console at all, and
+    # GenerateConsoleCtrlEvent (what CTRL_BREAK_EVENT delivery is built on) needs a real
+    # console attached to the target process group to route the event through - without one,
+    # terminate() silently does nothing and the ffmpeg process (and this thread joining it)
+    # hangs forever. STARTF_USESHOWWINDOW + SW_HIDE keeps the console allocated, just not
+    # shown, so CTRL_BREAK_EVENT keeps working.
     if is_windows():
-        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW  # type: ignore
+        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+        kwargs["startupinfo"] = startupinfo
 
     return subprocess.Popen(*args, **kwargs)
 
