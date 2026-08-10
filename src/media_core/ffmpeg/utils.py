@@ -36,10 +36,12 @@ def is_windows() -> bool:
 
 def create_subprocess(*args: Any, **kwargs: Any) -> subprocess.Popen:
     # On Windows, CREATE_NEW_PROCESS_GROUP flag is required to use CTRL_BREAK_EVENT signal,
-    # which is required to gracefully terminate the FFmpeg process.
+    # which is required to gracefully terminate the FFmpeg process. CREATE_NO_WINDOW stops a
+    # console window from being allocated for the (console-mode) ffmpeg.exe behind this GUI
+    # app - otherwise every conversion/capture flashes or holds open a black cmd window.
     # Reference: https://docs.python.org/3/library/subprocess.html#subprocess.Popen.send_signal
     if is_windows():
-        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore
+        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW  # type: ignore
 
     return subprocess.Popen(*args, **kwargs)
 
