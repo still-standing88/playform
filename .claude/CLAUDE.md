@@ -228,10 +228,26 @@ docs alone:
   segment**; on stop, multi-segment sources are losslessly joined with ffmpeg's own
   concat demuxer (`-f concat -safe 0`, same mechanism `media_core.m4b_tools.audiobook
   .Audiobook` uses for chapter files) — see `session_runner.py`.
-- The real-time level meter on the wizard's Preview page reads ffmpeg's own `astats`
-  filter (`astats=metadata=1:reset=1,ametadata=print:...:direct=1` — `direct=1` matters,
-  see `level_meter.py`'s docstring) instead of a separate audio-tap API, so it reflects
-  the exact device/options that would actually be recorded.
+- The wizard's Preview page (`dialogs/source_wizard.PreviewPage`) is per-kind, not one
+  generic preview: Camera/Monitor/Window get a **live** feed —
+  `video_preview.VideoPreviewProbe` pipes a continuous downscaled MJPEG stream from
+  ffmpeg's stdout (`scale=480:-2,fps=12 -c:v mjpeg -f mjpeg -`), parsed on raw JPEG
+  SOI/EOI byte markers, one `QPixmap.loadFromData()` per frame — not the single
+  test-frame grab this used to be. Audio input gets real playback ("you should hear
+  it") — `audio_monitor.AudioMonitorProbe` captures raw s16le PCM from **one** ffmpeg
+  process and both computes a peak level locally (same struct.unpack technique the
+  pre-rewrite QAudioSource meter used) and feeds a `QAudioSink` for actual sound, rather
+  than running two simultaneous ffmpeg opens of the same mic (dshow doesn't guarantee
+  shared-mode access) or a second astats pass. `QAudioSink` is the one deliberate,
+  narrow QtMultimedia reuse in this module — it's raw PCM *output*, an area QtMultimedia
+  was never the problem (the migration was about its *capture* limitations). Audio
+  output/loopback keeps the ffmpeg `astats` metadata level meter only
+  (`astats=metadata=1:reset=1,ametadata=print:...:direct=1` — `direct=1` matters, see
+  `level_meter.py`'s docstring) — playing a loopback capture back out to the same device
+  it's monitoring would create an audible feedback loop, so there's no "hear it" option
+  for that one. All three preview probes surface subprocess-level failures (e.g. "device
+  already in use") instead of silently showing nothing, verified against a real busy
+  camera.
 - `media_core.ffmpeg.utils.create_subprocess` hides the ffmpeg console via
   `STARTUPINFO`/`SW_HIDE` rather than `CREATE_NO_WINDOW` — the latter breaks
   `CTRL_BREAK_EVENT` delivery entirely (no console = nothing for
