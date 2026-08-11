@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, Signal
 
 from gui_controls.list_tab import ListTabCtrl
 from gui_controls.player_key_event_filter import KeyEventFilter
-from gui_controls.param_widgets import make_param_widget, read_param_widget
+from gui_controls.param_widgets import make_param_widget, read_param_widget, connect_param_widget_changed
 from gui_controls.categorized_effect_picker import CategorizedEffectPickerDialog
 from media_core.av_play.mpv_effects_catalog import MPV_EFFECTS, get_mpv_effect
 from media_core.av_play import mpv_effect_presets
@@ -31,7 +31,7 @@ class EffectSummaryPanel(QWidget):
 
     editRequested = Signal()
 
-    def __init__(self, effect_label: str, summary_text: str, parent=None):
+    def __init__(self, effect_label: str, summary_text: str, enabled: bool, parent=None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
@@ -43,26 +43,45 @@ class EffectSummaryPanel(QWidget):
         self.summary_label = QLabel(summary_text, self)
         self.summary_label.setWordWrap(True)
         layout.addWidget(self.summary_label)
-        edit_button = QPushButton(_("Edit Parameters..."), self)
-        edit_button.clicked.connect(self.editRequested.emit)
-        layout.addWidget(edit_button)
+        self.edit_button = QPushButton(_("Edit Parameters..."), self)
+        self.edit_button.clicked.connect(self.editRequested.emit)
+        layout.addWidget(self.edit_button)
         layout.addStretch()
+        self.set_effect_enabled(enabled)
 
     def set_summary(self, text: str):
         self.summary_label.setText(text)
+
+    def set_effect_enabled(self, enabled: bool):
+        # Editing a disabled effect's parameters produces no audible
+        # feedback, so the edit affordance follows the same checked/
+        # unchecked state as the tab's own checkbox.
+        self.edit_button.setVisible(enabled)
 
 
 class EffectParamPopup(QDialog):
     """Edit an already-added effect's parameters, with a per-effect preset
     row (combo + New/Delete) on top. Kept as its own popup rather than
     inline specifically to save vertical space in the accordion panel --
-    see EffectSummaryPanel."""
+    see EffectSummaryPanel.
 
-    def __init__(self, effect_id: str, values: dict, parent=None):
+    Every value change (dragging a spinbox, picking a preset, ...) applies
+    immediately via on_param_changed, matching the old always-inline panel's
+    real-time behavior -- there is deliberately no OK/Cancel here (nothing
+    to discard: by the time you could click Cancel, you already heard the
+    change). Live changes are applied with persist=False for responsiveness
+    (skips a disk write per spinbox tick); on_closed fires once when the
+    popup closes so the caller can do a single final persist.
+    """
+
+    def __init__(self, effect_id: str, values: dict, on_param_changed, on_closed, parent=None):
         super().__init__(parent)
         self.effect_id = effect_id
         self._effect = get_mpv_effect(effect_id)
         self._param_inputs: dict = {}
+        self._on_param_changed = on_param_changed
+        self._on_closed = on_closed
+        self._building = False
 
         self.setWindowTitle(_("Edit {effect}").format(effect=self._effect.label))
         self.setMinimumWidth(420)
@@ -84,15 +103,12 @@ class EffectParamPopup(QDialog):
         layout.addWidget(self.param_form_container)
 
         button_row = QHBoxLayout()
-        self.ok_button = QPushButton(_("OK"), self)
-        self.cancel_button = QPushButton(_("Cancel"), self)
+        self.close_button = QPushButton(_("Close"), self)
         button_row.addStretch()
-        button_row.addWidget(self.ok_button)
-        button_row.addWidget(self.cancel_button)
+        button_row.addWidget(self.close_button)
         layout.addLayout(button_row)
 
-        self.ok_button.clicked.connect(self.accept)
-        self.cancel_button.clicked.connect(self.reject)
+        self.close_button.clicked.connect(self.accept)
         self.preset_combo.currentIndexChanged.connect(self._on_preset_selected)
         self.new_preset_button.clicked.connect(self._on_new_preset)
         self.delete_preset_button.clicked.connect(self._on_delete_preset)
@@ -110,14 +126,35 @@ class EffectParamPopup(QDialog):
             return
 
         default_dir = get_ir_dir() if self.effect_id == "convolution_reverb" else ""
-        for param in self._effect.params:
-            current_value = values.get(param.key, param.default)
-            widget = make_param_widget(
-                self, param.kind, param.choices, param.value_range, current_value, param.suffix,
-                default_dir=default_dir,
-            )
-            self._param_inputs[param.key] = widget
-            self.param_form.addRow(param.label, widget)
+        self._building = True
+        try:
+            for param in self._effect.params:
+                current_value = values.get(param.key, param.default)
+                widget = make_param_widget(
+                    self, param.kind, param.choices, param.value_range, current_value, param.suffix,
+                    default_dir=default_dir,
+                )
+                self._param_inputs[param.key] = widget
+                self.param_form.addRow(param.label, widget)
+                connect_param_widget_changed(widget, lambda key=param.key, w=widget: self._on_field_changed(key, w))
+        finally:
+            self._building = False
+
+    def _on_field_changed(self, key: str, widget):
+        if self._building:
+            return
+        self._apply(key, read_param_widget(widget))
+        self._mark_custom()
+
+    def _apply(self, key: str, value):
+        self._on_param_changed(key, value)
+
+    def _mark_custom(self):
+        if self.preset_combo.currentData() is not None:
+            self.preset_combo.blockSignals(True)
+            self.preset_combo.setCurrentIndex(0)
+            self.preset_combo.blockSignals(False)
+            self.delete_preset_button.setEnabled(False)
 
     def _current_values(self) -> dict:
         return {key: read_param_widget(widget) for key, widget in self._param_inputs.items()}
@@ -148,6 +185,11 @@ class EffectParamPopup(QDialog):
         except OSError:
             return
         self._build_param_form(values)
+        # Selecting a preset should be heard immediately, same as any other
+        # live edit -- apply every value it carries right away rather than
+        # waiting for the user to touch each field individually.
+        for key, value in values.items():
+            self._apply(key, value)
 
     def _on_new_preset(self):
         name, ok = QInputDialog.getText(self, _("New Preset"), _("Preset name:"))
@@ -168,8 +210,12 @@ class EffectParamPopup(QDialog):
         mpv_effect_presets.delete_preset(self.effect_id, name)
         self._reload_presets()
 
-    def result_values(self) -> dict:
-        return self._current_values()
+    def done(self, result):
+        # Covers every way the dialog can close (Close button, Esc, [x]) --
+        # fires the caller's one final persist regardless of exit path.
+        super().done(result)
+        if self._on_closed:
+            self._on_closed()
 
 
 class AudioFiltersWidget(QWidget):
@@ -194,7 +240,7 @@ class AudioFiltersWidget(QWidget):
         self.player = player
         self._populate()
 
-    def _populate(self):
+    def _populate(self, select_effect_id: str = None):
         if not self.player:
             return
         self._building = True
@@ -204,7 +250,8 @@ class AudioFiltersWidget(QWidget):
             for effect_id in self.player.get_audio_filter_names():
                 self._add_tab_for(effect_id)
             if self._names:
-                self.list_tab.tabLabels.setCurrentRow(0)
+                target = self._names.index(select_effect_id) if select_effect_id in self._names else 0
+                self.list_tab.tabLabels.setCurrentRow(target)
         finally:
             self._building = False
 
@@ -214,13 +261,14 @@ class AudioFiltersWidget(QWidget):
             return
         spec = self.player.get_audio_filter_param_spec(effect_id)
         values = spec[1] if spec else {}
-        panel = EffectSummaryPanel(effect.label, self._summarize(effect_id, values), self)
+        enabled = self.player.is_audio_filter_enabled(effect_id)
+        panel = EffectSummaryPanel(effect.label, self._summarize(effect_id, values), enabled, self)
         panel.editRequested.connect(lambda eid=effect_id: self._open_edit_popup(eid))
         self.list_tab.addTab(_(effect.label), panel)
         self._names.append(effect_id)
         tab = self.list_tab.getTab(len(self._names) - 1)
         if tab is not None:
-            tab.setActivated(self.player.is_audio_filter_enabled(effect_id))
+            tab.setActivated(enabled)
 
     @staticmethod
     def _summarize(effect_id: str, values: dict) -> str:
@@ -251,6 +299,9 @@ class AudioFiltersWidget(QWidget):
         if 0 <= index < len(self._names):
             enabled = item.checkState() == Qt.CheckState.Checked
             self.player.set_audio_filter_enabled(self._names[index], enabled)
+            panel = getattr(item, "widget", None)
+            if isinstance(panel, EffectSummaryPanel):
+                panel.set_effect_enabled(enabled)
 
     def _on_item_double_clicked(self, item):
         index = self.list_tab.tabLabels.row(item)
@@ -305,7 +356,10 @@ class AudioFiltersWidget(QWidget):
         if not effect_id:
             return
         self.player.add_audio_filter(effect_id, values, enabled=True)
-        self._populate()
+        # Jump straight to the effect just added -- otherwise _populate()'s
+        # default (row 0) can leave you looking at an unrelated tab while
+        # the one you just added scrolls out of the tab strip, unseen.
+        self._populate(select_effect_id=effect_id)
 
     def _delete_effect(self, effect_id: str):
         if not self.player:
@@ -328,9 +382,18 @@ class AudioFiltersWidget(QWidget):
             return
         spec = self.player.get_audio_filter_param_spec(effect_id)
         values = spec[1] if spec else {}
-        popup = EffectParamPopup(effect_id, values, self)
-        if popup.exec() != QDialog.DialogCode.Accepted:
-            return
-        for key, value in popup.result_values().items():
-            self.player.set_audio_filter_parameter(effect_id, key, value)
+
+        def on_param_changed(key, value):
+            # persist=False: this fires on every drag/tick while the popup
+            # is open, so skip the disk write here and do exactly one on
+            # close (on_closed below) -- matches the old inline panel's
+            # real-time feel without a persist-per-keystroke cost.
+            self.player.set_audio_filter_parameter(effect_id, key, value, persist=False)
+            self._refresh_tab_summary(effect_id)
+
+        def on_closed():
+            self.player.persist_audio_effects_chain()
+
+        popup = EffectParamPopup(effect_id, values, on_param_changed, on_closed, self)
+        popup.exec()
         self._refresh_tab_summary(effect_id)
