@@ -91,12 +91,16 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
         self._equalizer_filter: Optional[MPVEqualizerFilter] = None
         self._equalizer_filter_id: Optional[int] = None
 
-        # In-memory only (not persisted to prefs): audio filters stay applied
-        # for as long as this player/session is alive, not across restarts.
         # Objects are kept around even while disabled so re-enabling an
         # effect restores whatever parameters were last set on it.
+        # _added_effect_order tracks which catalog ids the user has
+        # explicitly added (and their display order), independent of the
+        # actual af-chain playback order _rebuild_filter_chain computes.
+        # The whole chain (added effects, enabled state, param values) is
+        # persisted to app_config.prefs -- see add_audio_filter et al.
         self._audio_filter_objects: dict[str, MPVAudioFilter] = {}
         self._audio_filter_ids: dict[str, int] = {}
+        self._added_effect_order: List[str] = []
 
     def get_equalizer_presets(self) -> List[str]:
         return [name for name, _bands in EQUALIZER_PRESETS]
@@ -146,7 +150,10 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             prefs.save()
 
     def get_audio_filter_names(self) -> List[str]:
-        return list(AUDIO_FILTER_CLASSES.keys())
+        """Currently *added* effect ids, in add order -- not the full
+        catalog (see media_core.av_play.mpv_effects_catalog.MPV_EFFECTS
+        for that; the "Add Effect" picker browses the catalog directly)."""
+        return list(self._added_effect_order)
 
     def _get_audio_filter_object(self, name: str) -> Optional[MPVAudioFilter]:
         if name not in self._audio_filter_objects:
@@ -166,7 +173,44 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
     def is_audio_filter_enabled(self, name: str) -> bool:
         return name in self._audio_filter_ids
 
-    def set_audio_filter_enabled(self, name: str, enabled: bool) -> None:
+    def add_audio_filter(self, effect_id: str, values: Optional[dict] = None,
+                          enabled: bool = True, persist: bool = True) -> bool:
+        """Add effect_id to the active chain (one instance per effect id --
+        adding an already-added id just updates it instead of duplicating)."""
+        filter_obj = self._get_audio_filter_object(effect_id)
+        if filter_obj is None:
+            return False
+
+        for param_name, value in (values or {}).items():
+            filter_obj.set_parameter(param_name, value)
+
+        if effect_id not in self._added_effect_order:
+            self._added_effect_order.append(effect_id)
+
+        self.set_audio_filter_enabled(effect_id, enabled, persist=False)
+
+        if persist:
+            self._persist_audio_effects_chain()
+        return True
+
+    def remove_audio_filter(self, effect_id: str, persist: bool = True) -> None:
+        if effect_id not in self._added_effect_order:
+            return
+        self.set_audio_filter_enabled(effect_id, False, persist=False)
+        self._added_effect_order.remove(effect_id)
+        self._audio_filter_objects.pop(effect_id, None)
+
+        if persist:
+            self._persist_audio_effects_chain()
+
+    def clear_audio_filters(self, persist: bool = True) -> None:
+        for effect_id in list(self._added_effect_order):
+            self.remove_audio_filter(effect_id, persist=False)
+
+        if persist:
+            self._persist_audio_effects_chain()
+
+    def set_audio_filter_enabled(self, name: str, enabled: bool, persist: bool = True) -> None:
         filter_obj = self._get_audio_filter_object(name)
         if filter_obj is None:
             return
@@ -182,7 +226,10 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
                 except Exception:
                     pass
 
-    def set_audio_filter_parameter(self, name: str, param_name: str, value) -> None:
+        if persist:
+            self._persist_audio_effects_chain()
+
+    def set_audio_filter_parameter(self, name: str, param_name: str, value, persist: bool = True) -> None:
         filter_obj = self._audio_filter_objects.get(name)
         if filter_obj is None:
             return
@@ -192,6 +239,35 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             instance.set_parameter(filter_id, param_name, value)
         else:
             filter_obj.set_parameter(param_name, value)
+
+        if persist:
+            self._persist_audio_effects_chain()
+
+    def _persist_audio_effects_chain(self) -> None:
+        chain = []
+        for effect_id in self._added_effect_order:
+            filter_obj = self._audio_filter_objects.get(effect_id)
+            if filter_obj is None:
+                continue
+            chain.append({
+                "id": effect_id,
+                "enabled": self.is_audio_filter_enabled(effect_id),
+                "values": dict(filter_obj.get_parameters()),
+            })
+        prefs.prefs["audio_effects_chain"] = chain
+        prefs.save()
+
+    def _apply_saved_audio_effects(self) -> None:
+        for entry in prefs.prefs.get("audio_effects_chain") or []:
+            effect_id = entry.get("id")
+            if not effect_id or effect_id not in AUDIO_FILTER_CLASSES:
+                continue
+            self.add_audio_filter(
+                effect_id,
+                values=entry.get("values") or {},
+                enabled=bool(entry.get("enabled", True)),
+                persist=False,
+            )
 
     def _apply_saved_equalizer(self) -> None:
         if not prefs.prefs.get("equalizer_enabled"):
@@ -216,6 +292,7 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             )
             self._preload_thread.start()
         self._apply_saved_equalizer()
+        self._apply_saved_audio_effects()
 
     def release(self):
         # release() is reachable from GUI event handlers on the Qt main

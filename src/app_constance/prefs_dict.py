@@ -50,5 +50,6 @@ prefs = {
 "explorer_view_mode": "list",
 "explorer_sort_mode": "name_asc",
 "store_search_history": True,
-"search_history": []
+"search_history": [],
+"audio_effects_chain": []
 }
