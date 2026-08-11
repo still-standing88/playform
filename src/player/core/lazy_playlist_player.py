@@ -243,6 +243,13 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
         if persist:
             self._persist_audio_effects_chain()
 
+    def persist_audio_effects_chain(self) -> None:
+        """Public entry point for callers that apply several parameter
+        changes with persist=False for responsiveness (e.g. dragging a
+        spinbox live) and need one explicit save once they're done --
+        see EffectParamPopup in audio_filters_widget.py."""
+        self._persist_audio_effects_chain()
+
     def _persist_audio_effects_chain(self) -> None:
         chain = []
         for effect_id in self._added_effect_order:
