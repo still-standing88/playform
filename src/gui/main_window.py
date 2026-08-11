@@ -97,9 +97,6 @@ class MainWindow(QMainWindow):
         self.radio_dock = None
         self.podcast_widget = None
         self.podcast_dock = None
-        self.multi_device_capture_widget = None
-        self.multi_device_capture_dock = None
-
 
         self.explorer_dock: Optional[QDockWidget] = None
         self.player_dock: Optional[QDockWidget] = None
@@ -680,11 +677,15 @@ class MainWindow(QMainWindow):
                 self.activateWindow()
     
     def has_active_tools(self):
+        # Multi Device Capture is a normal ToolDialog now (see
+        # tool_window_manager.open_multi_device_capture) - its activity is
+        # already covered here via MultiDeviceCaptureUI.thread, a QThread
+        # shim whose isRunning() reflects CaptureEngine.is_active() (see
+        # multi_device_capture/ui.py), same as every other tool's ToolDialog
+        # .is_tool_active() -> tool_widget.thread.isRunning() check.
         for tool_name, dialog in self.tool_dialogs.items():
             if dialog.is_tool_active():
                 return True
-        if self.multi_device_capture_widget and self.multi_device_capture_widget.engine.is_active():
-            return True
         return False
 
     def get_active_tool_names(self):
@@ -692,8 +693,6 @@ class MainWindow(QMainWindow):
         for tool_name, dialog in self.tool_dialogs.items():
             if dialog.is_tool_active():
                 active_tools.append(dialog.title)
-        if self.multi_device_capture_widget and self.multi_device_capture_widget.engine.is_active():
-            active_tools.append(_("Multi Device Capture"))
         return active_tools
 
     def confirm_close_with_active_tools(self):
@@ -744,11 +743,26 @@ class MainWindow(QMainWindow):
 
         if self.tray:
             self.tray.cleanup()
-        
+
+        self._shutdown_multi_device_capture()
+
         for dialog in list(self.tool_dialogs.values()):
             dialog.close()
-        
+
         QApplication.quit()
+
+    def _shutdown_multi_device_capture(self):
+        # Explicit rather than relying on ToolDialog.close() above: this
+        # ffmpeg-process-per-source engine needs each capture gracefully
+        # terminated (and any paused segments concatenated) before the app
+        # process exits, not just asked to stop and left running in the
+        # background - and QApplication.quit() a few lines down tears down
+        # the process regardless of whether a ToolDialog.closeEvent() (which
+        # warns and ignores the close while a tool is "active") let its own
+        # dialog.close() above actually succeed.
+        dialog = self.tool_dialogs.get("multi_device_capture")
+        if dialog is not None and hasattr(dialog.tool_widget, "engine"):
+            dialog.tool_widget.engine.shutdown()
         
     def save_window_state(self):
         self.dock_manager.save_window_state()
@@ -825,14 +839,6 @@ class MainWindow(QMainWindow):
         
         if self.podcast_widget and hasattr(self.podcast_widget, 'close'):
             self.podcast_widget.close()
-
-        if self.multi_device_capture_widget:
-            # Synchronous: this ffmpeg-process-per-source engine needs each
-            # capture gracefully terminated (and any paused segments
-            # concatenated) before the app process exits, not just asked to
-            # stop and left running in the background.
-            self.multi_device_capture_widget.engine.shutdown()
-
 
         if self.tray and self.tray.is_available() and not is_restarting:
             event.ignore()

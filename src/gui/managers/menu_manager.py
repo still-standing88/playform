@@ -229,14 +229,6 @@ class MenuManager:
         self.main_window.show_podcast_action.triggered.connect(self.main_window.dock_manager.toggle_podcast)
         self.main_window.panels_menu.addAction(self.main_window.show_podcast_action)
 
-        self.main_window.panels_menu.addSeparator()
-
-        self.main_window.show_multi_device_capture_action = QAction(_("Show &Multi Device Capture"), self.main_window)
-        self.main_window.show_multi_device_capture_action.setCheckable(True)
-        self.main_window.show_multi_device_capture_action.setChecked(False)
-        self.main_window.show_multi_device_capture_action.triggered.connect(self.main_window.dock_manager.toggle_multi_device_capture)
-        self.main_window.panels_menu.addAction(self.main_window.show_multi_device_capture_action)
-
     def setup_tools_menu(self):
         self.main_window.ffmpeg_tools_menu = self.main_window.tools_menu.addMenu(_("&FFmpeg Tools"))
 
@@ -280,6 +272,10 @@ class MenuManager:
         self.main_window.speech_converter_action = QAction(_("&Speech Converter"), self.main_window)
         self.main_window.speech_converter_action.triggered.connect(self.main_window.tool_manager.open_speech_converter)
         self.main_window.tools_menu.addAction(self.main_window.speech_converter_action)
+
+        self.main_window.multi_device_capture_action = QAction(_("Multi &Device Capture"), self.main_window)
+        self.main_window.multi_device_capture_action.triggered.connect(self.main_window.tool_manager.open_multi_device_capture)
+        self.main_window.tools_menu.addAction(self.main_window.multi_device_capture_action)
 
         self.main_window.tools_menu.addSeparator()
 
@@ -376,11 +372,6 @@ class MenuManager:
     def update_podcast_menu(self, visible):
         if hasattr(self.main_window, 'show_podcast_action'):
             self.main_window.show_podcast_action.setChecked(visible)
-        self.main_window.dock_manager.update_focusable_widgets()
-
-    def update_multi_device_capture_menu(self, visible):
-        if hasattr(self.main_window, 'show_multi_device_capture_action'):
-            self.main_window.show_multi_device_capture_action.setChecked(visible)
         self.main_window.dock_manager.update_focusable_widgets()
 
     def update_console_menu(self, visible):

@@ -1,8 +1,9 @@
-"""Multi Device Capture panel - a dock panel like Podcasts/Radio, not a
-modal Tools-menu dialog (see gui.managers.dock_manager.DockManager
-._create_multi_device_capture_dock / gui.managers.menu_manager.MenuManager
-.setup_view_menu's Panels submenu / gui.managers.toolbar_manager
-.ToolbarManager.setup_panels_toolbar).
+"""Multi Device Capture tool - a modal Tools-menu dialog like Batch
+Converter/Tag Editor/Speech Converter, opened via
+gui.managers.tool_window_manager.ToolWindowManager.open_multi_device_capture
+(wrapped in gui.dialogs.tool_dialog.ToolDialog, same as every other tool -
+see that class for the Hide/Close chrome and the "still active, are you
+sure" close gate).
 
 One consolidated view rather than three tabs: a QStackedWidget swaps
 between views/configure_view.ConfigureView (sessions + session-scoped
@@ -12,18 +13,20 @@ Cancel), so the session/source configuration UI isn't sitting there
 editable mid-recording - clicking Start capture hides it entirely rather
 than just disabling it.
 
-Lazily created on first show, same as Podcasts/Radio - closing the dock just
-hides it (FloatableDockWidget re-docks-and-hides rather than destroying), it
-doesn't tear this widget down. An in-progress capture surviving a hidden
-panel is intentional (mirrors a podcast download continuing off-screen); the
-engine only gets stopped on real app shutdown, via MainWindow.closeEvent /
-has_active_tools() (same "still active, are you sure" gate the ToolDialog
-tools use).
+Not a dock panel: it used to be one (Toggle/Focus multi device capture
+global hotkeys, a Panels-toolbar entry, a FloatableDockWidget), which meant
+the engine could keep recording invisibly behind a hidden dock - moved back
+to a tool because that "hidden but still active" state didn't fit a
+capture session that has a hard Start/Stop the way Podcasts/Radio's
+background downloads don't. As a tool, the dialog's own active-tool gate
+(ToolDialog.is_tool_active(), via the `thread` shim below) is what stands
+between the user and losing an in-progress recording; there is no dock/
+Panels-menu wiring to remove things from if this changes again.
 """
 from __future__ import annotations
 
+from PySide6.QtCore import QThread, Qt
 from PySide6.QtGui import QKeySequence, QShortcut
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox, QStackedWidget, QVBoxLayout, QWidget
 
 from app_config import key_config
@@ -39,6 +42,23 @@ from .views import CaptureView, ConfigureView
 HOTKEY_SECTION = "Multi Device Capture"
 
 
+class _EngineActivityThread(QThread):
+    """Never actually started - purely a vessel ToolDialog.is_tool_active()
+    can query via isRunning(), matching the `tool_widget.thread` convention
+    every other tool follows (its own background work genuinely is a
+    QThread, e.g. tools.ffmpeg.batch_converter.job.ConvertJob). This
+    engine's real work runs on CaptureEngine's own ThreadPoolExecutor
+    instead (see engine.py's docstring for why it isn't a QThread) - this
+    shim exists only so the Tools-menu's generic close-gate can see it."""
+
+    def __init__(self, engine: CaptureEngine, parent=None):
+        super().__init__(parent)
+        self._engine = engine
+
+    def isRunning(self) -> bool:
+        return self._engine.is_active()
+
+
 class MultiDeviceCaptureUI(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -49,6 +69,7 @@ class MultiDeviceCaptureUI(QWidget):
         ffmpeg_path, _ffprobe_path = FFmpegHandler.get_ffmpeg_binary()
         self.capabilities = CaptureCapabilities(ffmpeg_executable=ffmpeg_path)
         self.engine = CaptureEngine(capabilities=self.capabilities, settings=self.settings, parent=self)
+        self.thread = _EngineActivityThread(self.engine, self)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -100,13 +121,13 @@ class MultiDeviceCaptureUI(QWidget):
     # Local (widget-scoped) shortcuts, same pattern as EXPLORER/explorer_widget's
     # set_shortcuts(): read from app_config.key_config so they're user-remappable
     # through the existing Hotkeys dialog (which enumerates key_config sections
-    # generically), but only fire while this panel has focus - capture transport
+    # generically), but only fire while this dialog has focus - capture transport
     # is deliberately not wired into the global `keyboard`-hook hotkeys, since a
     # background Start/Stop hotkey for an armed recorder is an easy way to start
-    # capturing devices without realizing it. (Toggling/focusing the panel itself
-    # is a *global*-scope hotkey though - see "Toggle/Focus multi device capture"
-    # in the "Main interface" key_config section, wired in
-    # gui.managers.shortcuts_manager, same as Podcasts/Radio.)
+    # capturing devices without realizing it. These are the only
+    # multi-device-capture-specific hotkeys left; there is no global toggle/
+    # focus hotkey for the tool itself (it opens from the Tools menu like any
+    # other tool, not a dock).
 
     def start_capture(self) -> None:
         if self.engine.is_active():
