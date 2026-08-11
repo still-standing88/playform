@@ -279,6 +279,9 @@ class ConfigureView(QWidget):
     def _item_source_id(self, item: QListWidgetItem) -> Optional[str]:
         return item.data(_ROLE_ID) if item else None
 
+    def _existing_source_names(self) -> set:
+        return {s.friendly_name for s in self.sources.all()}
+
     def refresh_sources(self) -> None:
         self.source_list.blockSignals(True)
         self.source_list.clear()
@@ -310,7 +313,8 @@ class ConfigureView(QWidget):
             self._ensure_active_session_exists()
             self.refresh_sessions()
             session = self.selected_session()
-        wizard = SourceWizard(self.capabilities, global_settings=self.settings, parent=self)
+        wizard = SourceWizard(self.capabilities, global_settings=self.settings,
+                              existing_names=self._existing_source_names(), parent=self)
         if wizard.exec() != QDialog.DialogCode.Accepted:
             return
         source = wizard.result_source()

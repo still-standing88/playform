@@ -5,11 +5,13 @@ Page 1 - Type & Device   (add mode: pick media type, then device/window)
 Page 2 - Settings        (form swaps per media type; skipped entirely for a
                           type/device with nothing editable - see
                           TypeDevicePage.nextId() / _type_has_editable_settings())
-Page 3 - Preview         (opt-in checkbox; a real-time astats-based level
-                          meter for audio, a single test-frame grab for
-                          camera/monitor/window - see
-                          media_core.av_capture.level_meter /
-                          .command_builder.capture_still_frame)
+Page 3 - Preview         (opt-in checkbox; per-kind preview - live MJPEG feed
+                          for camera/monitor/window, real audio monitoring
+                          (hear it) + level meter for audio input, level
+                          meter only for audio output/loopback - see
+                          media_core.av_capture.{video_preview,audio_monitor,
+                          level_meter} and this module's PreviewPage
+                          docstring)
 
 Every device on every page is a plain media_core.av_capture.models
 .CaptureDevice - no more per-type Qt Multimedia classes
@@ -19,13 +21,9 @@ media kinds.
 """
 from __future__ import annotations
 
-import os
-import tempfile
-import threading
-import uuid
 from typing import Optional
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -42,7 +40,6 @@ from PySide6.QtWidgets import (
 )
 
 from media_core.av_capture.capabilities import CaptureCapabilities
-from media_core.av_capture.command_builder import capture_still_frame
 from media_core.av_capture.models import CaptureDevice, CaptureFormatOption
 
 from ..async_probe import AsyncProbe
@@ -63,11 +60,13 @@ class TypeDevicePage(QWizardPage):
     this page or clicking Refresh used to freeze the wizard for however
     long device enumeration took."""
 
-    def __init__(self, capabilities: CaptureCapabilities, edit_source: Optional[CaptureSource] = None, parent=None):
+    def __init__(self, capabilities: CaptureCapabilities, edit_source: Optional[CaptureSource] = None,
+                 existing_names: Optional[set] = None, parent=None):
         super().__init__(parent)
         self.setTitle(_("Select source") if edit_source else _("Select type and device"))
         self.capabilities = capabilities
         self._edit_source = edit_source
+        self._existing_names = existing_names or set()
         self._selected_type: Optional[MediaType] = (
             edit_source.media_type if edit_source else None
         )
@@ -84,6 +83,11 @@ class TypeDevicePage(QWizardPage):
         self._devices_by_kind: dict[MediaType, list[CaptureDevice]] = {}
         self._camera_formats_cache: dict[str, list[CaptureFormatOption]] = {}
         self._loading = False
+        # Tracks whether friendly_name_edit still holds an auto-filled value
+        # (kept in sync with the selected type) vs. something the user typed
+        # themselves (left alone from then on). False from the start in edit
+        # mode, since the field already holds the source's real name.
+        self._name_is_autofilled = edit_source is None
 
         layout = QVBoxLayout(self)
 
@@ -103,9 +107,10 @@ class TypeDevicePage(QWizardPage):
             layout.addWidget(fixed)
 
         device_row = QHBoxLayout()
-        device_row.addWidget(QLabel(_("Device")))
+        self.device_row_label = QLabel(_("Device"))
+        device_row.addWidget(self.device_row_label)
         device_row.addStretch()
-        self.refresh_btn = QPushButton(_("Refresh devices"))
+        self.refresh_btn = QPushButton(_("Refresh"))
         self.refresh_btn.clicked.connect(self._start_probe)
         device_row.addWidget(self.refresh_btn)
         layout.addLayout(device_row)
@@ -127,6 +132,7 @@ class TypeDevicePage(QWizardPage):
 
         self.friendly_name_edit = QLineEdit()
         self.friendly_name_edit.setPlaceholderText(_("Friendly name shown in lists"))
+        self.friendly_name_edit.textEdited.connect(self._on_name_edited_by_user)
         if edit_source:
             self.friendly_name_edit.setText(edit_source.friendly_name)
         layout.addWidget(QLabel(_("Friendly name")))
@@ -137,6 +143,26 @@ class TypeDevicePage(QWizardPage):
         layout.addStretch()
 
         self._start_probe()
+
+    def _on_name_edited_by_user(self, _text: str) -> None:
+        # textEdited (unlike textChanged) only fires from real user
+        # keystrokes, never from our own setText() calls below - so this is
+        # exactly "the user overrode the auto-fill, stop touching it".
+        self._name_is_autofilled = False
+
+    def _unique_default_name(self, mt: MediaType) -> str:
+        base = f"{media_type_label(mt)} {_('source')}"
+        if base not in self._existing_names:
+            return base
+        n = 1
+        while f"{base} {n}" in self._existing_names:
+            n += 1
+        return f"{base} {n}"
+
+    def _apply_autofill_name(self, mt: Optional[MediaType]) -> None:
+        if not self._name_is_autofilled or mt is None:
+            return
+        self.friendly_name_edit.setText(self._unique_default_name(mt))
 
     def _start_probe(self) -> None:
         self._loading = True
@@ -190,8 +216,7 @@ class TypeDevicePage(QWizardPage):
             self._selected_type = self._edit_source.media_type
 
         self._populate_devices(self._selected_type)
-        if not self.friendly_name_edit.text() and self._selected_type is not None:
-            self.friendly_name_edit.setText(media_type_label(self._selected_type))
+        self._apply_autofill_name(self._selected_type)
 
     def _on_type_changed(self, index: int) -> None:
         if self._loading:
@@ -199,8 +224,7 @@ class TypeDevicePage(QWizardPage):
         mt = self.type_combo.itemData(index)
         self._selected_type = mt
         self._populate_devices(mt)
-        if not self.friendly_name_edit.text():
-            self.friendly_name_edit.setText(media_type_label(mt) if mt else "")
+        self._apply_autofill_name(mt)
 
     def _empty_state_text(self, mt: Optional[MediaType]) -> str:
         if mt == MediaType.CAMERA:
@@ -215,6 +239,7 @@ class TypeDevicePage(QWizardPage):
         return ""
 
     def _populate_devices(self, mt: Optional[MediaType]) -> None:
+        self.device_row_label.setText(media_type_label(mt) if mt is not None else _("Device"))
         self.device_combo.setEnabled(True)
         self.device_combo.clear()
         devices: list[CaptureDevice] = self._devices_by_kind.get(mt, []) if mt is not None else []
@@ -334,32 +359,31 @@ class SettingsPage(QWizardPage):
 
 class PreviewPage(QWizardPage):
     """Live preview so the user confirms they picked the right device before
-    saving - audio gets a real astats-based level meter; camera/monitor/
-    window get a one-shot test-frame grab (see command_builder
-    .capture_still_frame - simpler and just as conclusive as decoding a
-    live video stream for a "did I pick the right device" check).
+    saving:
+    - Camera/Monitor/Window get a continuous downscaled MJPEG feed (see
+      media_core.av_capture.video_preview) - an actual live picture, not a
+      single test-frame grab.
+    - Audio input gets real audio monitoring (hear the mic through the
+      system's default output) plus a level meter, both driven off one
+      ffmpeg process's raw PCM (media_core.av_capture.audio_monitor).
+    - Audio output (loopback) keeps the astats-based level meter only -
+      playing a loopback capture back out to the same device it's
+      monitoring would create an audible feedback/echo loop, so there's no
+      "hear it" option for this one.
 
     Preview is opt-in via a checkbox rather than starting the moment this
     page is shown: it's the point in the wizard that actually opens a
     camera/microphone, and auto-starting that the instant Preview becomes
     current is the kind of thing that should need a deliberate click."""
 
-    _frame_ready = Signal(str)
-    _frame_failed = Signal(str)
-
     def __init__(self, capabilities: CaptureCapabilities, type_device_page: TypeDevicePage, parent=None):
         super().__init__(parent)
         self.setTitle(_("Preview"))
         self.capabilities = capabilities
         self._type_device_page = type_device_page
-        self._audio_meter = None  # dialogs.audio_level_meter.AudioLevelMeter, created lazily
-        self._frame_path = os.path.join(tempfile.gettempdir(), f"playform_capture_preview_{uuid.uuid4().hex}.png")
-        # capture_still_frame() runs in a background thread (see
-        # _capture_test_frame) - these signals marshal its result back onto
-        # the GUI thread instead of touching frame_label/status_label from
-        # that thread directly.
-        self._frame_ready.connect(self._on_frame_ready)
-        self._frame_failed.connect(self._on_frame_error)
+        self._audio_meter = None    # dialogs.audio_level_meter.AudioLevelMeter (Audio output only)
+        self._audio_monitor = None  # dialogs.audio_monitor.AudioMonitor (Audio input only)
+        self._video_preview = None  # dialogs.video_preview.VideoPreview
 
         layout = QVBoxLayout(self)
         self.preview_checkbox = QCheckBox(_("Enable live preview"))
@@ -384,7 +408,7 @@ class PreviewPage(QWizardPage):
         mt = self._type_device_page.selected_type()
         is_loopback = mt == MediaType.AUDIO_OUTPUT
         self.frame_label.setVisible(mt is not None and is_video(mt))
-        self.frame_label.setText(_("No test frame captured yet."))
+        self.frame_label.setText(_("No preview yet."))
         self.frame_label.setPixmap(QPixmap())
         self.level_meter.setVisible(mt in (MediaType.AUDIO_INPUT, MediaType.AUDIO_OUTPUT))
         self.level_meter.setValue(0)
@@ -396,10 +420,15 @@ class PreviewPage(QWizardPage):
         self.preview_checkbox.setChecked(False)
         self.preview_checkbox.blockSignals(False)
         self.preview_checkbox.setEnabled(not is_loopback)
-        self.preview_checkbox.setText(_("Capture a test frame") if mt is not None and is_video(mt) else _("Enable live preview"))
+        self.preview_checkbox.setText(_("Enable live preview"))
 
         if is_loopback:
-            self.status_label.setText(self.capabilities.loopback_note())
+            note = self.capabilities.loopback_note()
+            self.status_label.setText(
+                _("Playing this back would create an audio feedback loop, so there is no 'hear it' "
+                  "preview for a loopback source - level meter only.")
+                if not note else note
+            )
         else:
             self.status_label.setText(_("Click above to preview this device."))
 
@@ -412,61 +441,56 @@ class PreviewPage(QWizardPage):
             return
         self._start_preview()
 
+    def _current_settings(self) -> dict:
+        wizard = self.wizard()
+        settings_id = self._type_device_page._settings_page_id
+        if settings_id is not None and settings_id in wizard.visitedIds():
+            return wizard.settings_page.current_settings()
+        return {}
+
     def _start_preview(self) -> None:
         mt = self._type_device_page.selected_type()
         device = self._type_device_page.selected_device()
         if device is None:
             return
+        ffmpeg_executable = self.capabilities.ffmpeg_executable
 
         try:
-            if mt in (MediaType.AUDIO_INPUT, MediaType.AUDIO_OUTPUT):
+            if mt == MediaType.AUDIO_INPUT:
+                from .audio_monitor import AudioMonitor
+
+                self._audio_monitor = AudioMonitor(self.capabilities, device, ffmpeg_executable, self)
+                self._audio_monitor.level_changed.connect(self._on_audio_level)
+                self._audio_monitor.error.connect(self._on_audio_error)
+                if self._audio_monitor.start():
+                    self.status_label.setText(_("Previewing {device} - you should hear it.").format(device=device.name))
+            elif mt == MediaType.AUDIO_OUTPUT:
                 from .audio_level_meter import AudioLevelMeter
 
-                self._audio_meter = AudioLevelMeter(self.capabilities, device, mt, self.capabilities.ffmpeg_executable, self)
+                self._audio_meter = AudioLevelMeter(self.capabilities, device, mt, ffmpeg_executable, self)
                 self._audio_meter.level_changed.connect(self._on_audio_level)
                 self._audio_meter.error.connect(self._on_audio_error)
                 if self._audio_meter.start():
                     self.status_label.setText(_("Previewing {device}").format(device=device.name))
             elif mt is not None and is_video(mt):
-                self._capture_test_frame(mt, device)
+                from .video_preview import VideoPreview
+
+                self._video_preview = VideoPreview(self.capabilities, device, mt, self._current_settings(), ffmpeg_executable, self)
+                self._video_preview.frame_ready.connect(self._on_video_frame)
+                self._video_preview.error.connect(self._on_video_error)
+                if self._video_preview.start():
+                    self.status_label.setText(_("Previewing {device}").format(device=device.name))
         except Exception as exc:  # device may vanish mid-wizard
             self.status_label.setText(_("Preview unavailable: {error}").format(error=exc))
             self.preview_checkbox.setChecked(False)
 
-    def _capture_test_frame(self, mt: MediaType, device: CaptureDevice) -> None:
-        wizard = self.wizard()
-        settings_id = self._type_device_page._settings_page_id
-        if settings_id is not None and settings_id in wizard.visitedIds():
-            settings = wizard.settings_page.current_settings()
-        else:
-            settings = {}
-        self.status_label.setText(_("Capturing test frame..."))
-        self.preview_checkbox.setEnabled(False)
+    def _on_video_frame(self, jpeg_bytes: bytes) -> None:
+        pixmap = QPixmap()
+        if pixmap.loadFromData(jpeg_bytes, "JPEG"):
+            self.frame_label.setPixmap(pixmap.scaledToWidth(400, Qt.TransformationMode.SmoothTransformation))
 
-        def _worker(_mt=mt, _device=device, _settings=settings, _path=self._frame_path):
-            ok, error = capture_still_frame(
-                self.capabilities, _mt, _device, _settings, _path, self.capabilities.ffmpeg_executable,
-            )
-            if ok:
-                self._frame_ready.emit(_path)
-            else:
-                self._frame_failed.emit(error)
-
-        threading.Thread(target=_worker, daemon=True, name="av-capture-preview-frame").start()
-
-    def _on_frame_ready(self, path: str) -> None:
-        pixmap = QPixmap(path)
-        if pixmap.isNull():
-            self._on_frame_error(_("The captured frame could not be loaded."))
-            return
-        self.frame_label.setPixmap(pixmap.scaledToWidth(400, Qt.TransformationMode.SmoothTransformation))
-        self.status_label.setText(_("Test frame captured."))
-        self.preview_checkbox.setEnabled(True)
-        self.preview_checkbox.setChecked(False)
-
-    def _on_frame_error(self, message: str) -> None:
+    def _on_video_error(self, message: str) -> None:
         self.status_label.setText(_("Preview unavailable: {error}").format(error=message))
-        self.preview_checkbox.setEnabled(True)
         self.preview_checkbox.setChecked(False)
 
     def _on_audio_level(self, peak: float) -> None:
@@ -481,29 +505,30 @@ class PreviewPage(QWizardPage):
             self._audio_meter.stop()
             self._audio_meter.deleteLater()
             self._audio_meter = None
+        if self._audio_monitor is not None:
+            self._audio_monitor.stop()
+            self._audio_monitor.deleteLater()
+            self._audio_monitor = None
+        if self._video_preview is not None:
+            self._video_preview.stop()
+            self._video_preview.deleteLater()
+            self._video_preview = None
         self.level_meter.setValue(0)
 
     def cleanupPage(self) -> None:
         self._teardown()
 
-    def __del__(self):
-        try:
-            if os.path.exists(self._frame_path):
-                os.remove(self._frame_path)
-        except Exception:
-            pass
-
 
 class SourceWizard(QWizard):
     def __init__(self, capabilities: CaptureCapabilities, edit_source: Optional[CaptureSource] = None,
-                 global_settings=None, parent=None):
+                 global_settings=None, existing_names: Optional[set] = None, parent=None):
         super().__init__(parent)
         self.setWindowTitle(_("Edit source") if edit_source else _("Add source"))
         self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
         self.capabilities = capabilities
         self._edit_source = edit_source
 
-        self.type_device_page = TypeDevicePage(capabilities, edit_source)
+        self.type_device_page = TypeDevicePage(capabilities, edit_source, existing_names)
         self.settings_page = SettingsPage(capabilities, self.type_device_page, global_settings)
         self.preview_page = PreviewPage(capabilities, self.type_device_page)
 
