@@ -63,6 +63,7 @@ class TagEditorUI(QWidget):
             row += 1
 
         self.lyrics_edit = QTextEdit()
+        self.lyrics_edit.setTabChangesFocus(True)
         self.lyrics_edit.setAccessibleName(_("Lyrics tag editor"))
         self.grid_layout.addWidget(QLabel(_("Lyrics:")), row, 0)
         self.grid_layout.addWidget(self.lyrics_edit, row, 1)

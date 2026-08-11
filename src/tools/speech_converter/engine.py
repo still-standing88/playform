@@ -133,38 +133,54 @@ class SpeechEngine(QObject):
         if not self.can_save_to_file():
             raise RuntimeError(_("Saving speech to a file requires the Windows SAPI5 engine."))
 
+        import pythoncom
         import win32com.client
         from win32com.client import gencache
 
-        wav_path = output_path
-        needs_transcode = not output_path.lower().endswith(".wav")
-        if needs_transcode:
-            fd, wav_path = tempfile.mkstemp(suffix=".wav")
-            os.close(fd)
-
-        stream = gencache.EnsureDispatch("SAPI.SpFileStream")
+        # This may run on a worker thread (SaveSpeechJob). self._sapi_voice was created
+        # on the main thread's STA apartment, so it can't safely be reused here — call
+        # cross-apartment without marshaling and SAPI either raises or silently misbehaves.
+        # Initialize a fresh apartment plus a fresh SpVoice local to whichever thread
+        # actually runs this method.
+        com_initialized = False
         try:
-            audio_format = gencache.EnsureDispatch("SAPI.SpAudioFormat")
-            audio_format.Type = win32com.client.constants.SAFT44kHz16BitStereo
-            stream.Format = audio_format
-            stream.Open(wav_path, win32com.client.constants.SSFMCreateForWrite, False)
+            pythoncom.CoInitialize()
+            com_initialized = True
+        except pythoncom.com_error:
+            pass
 
-            previous_output = self._sapi_voice.AudioOutputStream
-            self._sapi_voice.AudioOutputStream = stream
+        try:
+            voice = gencache.EnsureDispatch("SAPI.SpVoice")
 
-            speak_text = wrap_pitch_xml(text, pitch_middle) if use_pitch_xml else text
-            flags = 8 if use_pitch_xml else 0  # IsXML
-            self._sapi_voice.Speak(speak_text, flags)
+            wav_path = output_path
+            needs_transcode = not output_path.lower().endswith(".wav")
+            if needs_transcode:
+                fd, wav_path = tempfile.mkstemp(suffix=".wav")
+                os.close(fd)
 
-            self._sapi_voice.AudioOutputStream = previous_output
-        finally:
-            stream.Close()
-
-        if needs_transcode:
+            stream = gencache.EnsureDispatch("SAPI.SpFileStream")
             try:
-                self._transcode(wav_path, output_path)
+                audio_format = gencache.EnsureDispatch("SAPI.SpAudioFormat")
+                audio_format.Type = win32com.client.constants.SAFT44kHz16BitStereo
+                stream.Format = audio_format
+                stream.Open(wav_path, win32com.client.constants.SSFMCreateForWrite, False)
+
+                voice.AudioOutputStream = stream
+
+                speak_text = wrap_pitch_xml(text, pitch_middle) if use_pitch_xml else text
+                flags = 8 if use_pitch_xml else 0  # IsXML
+                voice.Speak(speak_text, flags)
             finally:
-                os.remove(wav_path)
+                stream.Close()
+
+            if needs_transcode:
+                try:
+                    self._transcode(wav_path, output_path)
+                finally:
+                    os.remove(wav_path)
+        finally:
+            if com_initialized:
+                pythoncom.CoUninitialize()
 
         return True
 

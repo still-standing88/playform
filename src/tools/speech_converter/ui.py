@@ -9,6 +9,8 @@ from PySide6.QtCore import Qt
 
 from tools.speech_converter.engine import SpeechEngine, IS_WINDOWS
 from tools.speech_converter.parameters_dialog import ParametersDialog
+from tools.speech_converter.job import SaveSpeechJob
+from gui_controls.job_progress_dialog import JobProgressDialog
 from utilities import signal_manager
 
 _SAVE_FILTER = "MP3 Audio (*.mp3);;WAV Audio (*.wav);;OGG Audio (*.ogg);;FLAC Audio (*.flac);;All Files (*.*)"
@@ -20,6 +22,7 @@ class SpeechTextEdit(QTextEdit):
         super().__init__(parent)
         self._open_callback = open_callback
         self._save_callback = save_callback
+        self.setTabChangesFocus(True)
 
     def contextMenuEvent(self, event):
         menu = self.createStandardContextMenu()
@@ -36,6 +39,9 @@ class SpeechConverterUI(QWidget):
         self.engine = SpeechEngine(self)
         self.engine.state_changed.connect(self._on_state_changed)
         self.engine.error_occurred.connect(self._on_error)
+
+        self.save_job = None
+        self.progress_dialog = None
 
         self.parameters = {
             "volume": 1.0, "rate": 0.0, "pitch": 0.0,
@@ -148,13 +154,34 @@ class SpeechConverterUI(QWidget):
         if not path:
             return
 
-        try:
-            self.engine.save_to_file(
-                text, path, self.parameters["use_pitch_xml"], self.parameters["pitch_xml_middle"]
+        self.save_job = SaveSpeechJob(
+            self.engine, text, path, self.parameters["use_pitch_xml"], self.parameters["pitch_xml_middle"]
+        )
+        self.save_job.finished_job.connect(lambda ok, error: self._on_save_finished(ok, error, path))
+
+        self.progress_dialog = JobProgressDialog(0, self, title=_("Saving Speech..."), supports_pause=False)
+        self.progress_dialog.cancel_requested.connect(self.progress_dialog.accept)
+        self.progress_dialog.current_file_label.setText(_("Rendering speech to {path}...").format(path=path))
+
+        self.save_button.setEnabled(False)
+        self.save_job.start()
+        self.progress_dialog.show()
+
+    def _on_save_finished(self, success: bool, error: str, path: str):
+        self.save_button.setEnabled(self.engine.can_save_to_file())
+        if self.progress_dialog:
+            self.progress_dialog.append_file_result(
+                _("Saved to {path}").format(path=path) if success
+                else _("FAILED: {error}").format(error=error or _("Unknown error"))
             )
+            self.progress_dialog.mark_finished(success)
+            self.progress_dialog = None
+
+        if success:
             signal_manager.statusbar_message.emit(_("Speech saved to {path}").format(path=path))
-        except Exception as error:
-            QMessageBox.critical(self, _("Error"), str(error))
+        else:
+            QMessageBox.critical(self, _("Error"), error or _("Unknown error"))
+        self.save_job = None
 
     def _on_state_changed(self, state: str):
         self._update_buttons(state)
