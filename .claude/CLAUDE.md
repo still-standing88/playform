@@ -160,9 +160,19 @@ matching `QAction` in `src/gui/managers/menu_manager.py`'s `setup_tools_menu()`.
 Multi-source recording (camera/monitor/window/audio-input/audio-output, N sources per
 session, pause/resume/stop). Same engine/Qt-wrapper split as the tools above:
 `media_core.av_capture` is the framework-agnostic engine (zero Qt imports), driven by a
-Qt dock panel at `src/multi_device_capture/` (not a `tools/` modal dialog — it's a dock
-like Podcasts/Radio; see `multi_device_capture/ui.py`'s docstring and
-`gui/managers/dock_manager.py::_create_multi_device_capture_dock`). This **replaced** an
+Qt tool at `src/multi_device_capture/`, opened from the Tools menu like Batch Converter/
+Tag Editor/Speech Converter — `gui/managers/tool_window_manager.py::open_multi_device_capture`
+wraps `multi_device_capture.ui.MultiDeviceCaptureUI` in the standard `ToolDialog`. It was a
+dock panel for one design pass (Toggle/Focus global hotkeys, a Panels-toolbar entry, a
+`FloatableDockWidget`) and moved back to a tool because "hidden dock, capture still running"
+didn't fit a session with a hard Start/Stop the way Podcasts/Radio's background downloads do
+— there is no dock/Panels-menu wiring for it anymore, only the dialog-scoped transport
+hotkeys (Start/Pause-Resume/Stop capture) survived that move. `ToolDialog.is_tool_active()`
+expects `tool_widget.thread` to be a real `QThread` it can call `isRunning()` on; since
+`CaptureEngine`'s work runs on its own `ThreadPoolExecutor` instead (not a `QThread` — see
+`engine.py`), `MultiDeviceCaptureUI` carries a small `_EngineActivityThread` shim (never
+started, just proxies `isRunning()` to `CaptureEngine.is_active()`) purely so the Tools
+menu's generic "still active, are you sure" close-gate can see it. This **replaced** an
 earlier QtMultimedia-based engine (`QCamera`/`QScreenCapture`/`QWindowCapture`/
 `QMediaRecorder`) that is gone from `multi_device_capture/` now; `capture_module.py` and
 `capture_module_notes.docx` at the repo root are that earlier design's prototype/notes,
