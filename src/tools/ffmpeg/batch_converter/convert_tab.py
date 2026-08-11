@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
 )
 
 from media_core.ffmpeg.format_capabilities import AUDIO_FORMATS, get_format
-from tools.ffmpeg.batch_converter.param_widgets import make_param_widget, read_param_widget
+from gui_controls.param_widgets import make_param_widget, read_param_widget
 from tools.utils import get_video_formats_map
 
 
