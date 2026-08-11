@@ -6,16 +6,26 @@ from .audio_filter import AudioFilter
 
 def escape_lavfi_path(path: str) -> str:
     """Escape a filesystem path for embedding inside an mpv `lavfi=[...]`
-    filter-graph string (e.g. `amovie='<path>'`).
+    filter-graph string (e.g. `amovie=<path>`).
 
-    ffmpeg's filtergraph parser treats `'`, `\\`, `:`, `,`, `[`, `]`, `;` as
-    structural. Wrapping the whole path in single quotes and backslash-
-    escaping any embedded `\\`/`'` is ffmpeg's own documented way to pass
-    an arbitrary path through -- this matters here specifically because
-    Windows paths carry both backslashes and a colon right after the drive
-    letter (`C:\\...`), either of which breaks the graph parser unescaped.
+    Verified empirically against a real mpv instance (python-mpv, real
+    playback, watching mpv's own log for filter-init errors) -- the
+    "obvious" approach of backslash-doubling Windows path separators and
+    wrapping in single quotes does NOT work, even though it matches
+    ffmpeg's documented filtergraph escaping rules: libavfilter's own
+    `amovie=` option parser truncates the value at the drive letter
+    regardless (`Failed to avformat_open_input 'C'`), quoted or not,
+    doubled backslashes or not. What actually works: convert backslashes
+    to forward slashes (Windows accepts both as path separators) and
+    backslash-escape only the drive-letter colon; the surrounding single
+    quotes then protect the rest (including any spaces) correctly. Do not
+    "simplify" this back to backslash escaping without re-verifying live
+    against mpv -- it silently breaks the whole filter chain, not just
+    this effect (same failure class as the MPVReverbFilter docstring
+    above describes for the raw 2-pad afir attempt).
     """
-    escaped = path.replace("\\", "\\\\").replace("'", "\\'")
+    posix_path = path.replace("\\", "/")
+    escaped = posix_path.replace(":", r"\:").replace("'", "\\'")
     return f"'{escaped}'"
 
 
@@ -848,20 +858,33 @@ class MPVConvolutionReverbFilter(MPVAudioFilter):
     *inside* this filter's own self-contained lavfi graph via `amovie=`,
     so the node still only exposes one external in/out pad to mpv:
 
-        lavfi=[amovie='<escaped_path>'[reverbir];[in][reverbir]afir=dry=D:wet=W[out]]
+        lavfi=[amovie=<escaped_path>[reverbir];[in][reverbir]afir=dry=D:wet=W[out]]
 
     `amovie=` opens its own decoder for the IR file independently of mpv's
     main playback pipeline, which is exactly the technique ffmpeg's own
     afir manual documents for multi-IR graphs (see
     archive/docs/ffmpeg-manuals/ffmpeg-filters/8-audio-filters/afir.md).
 
-    TODO(verify): this exact syntax has not yet been confirmed against a
-    real mpv instance -- do that (real playback + mpv log output) before
-    relying on it, and update this docstring with the confirmed-working
-    form once it has been. An invalid/missing IR path must never reach
-    this string (see construct() below), since a mid-graph amovie failure
-    takes the whole chain down the same way the original 2-pad afir
-    attempt did.
+    Confirmed working live (python-mpv, real playback, mpv's own log
+    checked for filter-init errors) -- two non-obvious things had to be
+    empirically discovered, not just derived from ffmpeg's documented
+    escaping rules:
+
+    1. Pad order matters and is easy to get backwards: `[in]` here is a
+       label that's never produced by anything in the graph, so it becomes
+       an open external input pad -- but it must come *first*, filling
+       afir's pad 0 (the dry/main signal slot). A single `[reverbir]afir=`
+       (no `[in]`) instead fills pad 0 with the IR file and leaves pad 1
+       (the "IR coefficients" slot) open for mpv's real audio stream --
+       which silently feeds the *entire song* into afir as if it were the
+       impulse response, hitting afir's ~30s coefficient cap and failing
+       outright ("Too big number of coefficients").
+    2. escape_lavfi_path() above does NOT use ffmpeg's textbook backslash-
+       doubling for Windows paths -- see that function's docstring for why.
+
+    An invalid/missing IR path must never reach this string (see
+    construct() below), since a mid-graph amovie failure takes the whole
+    chain down the same way the original 2-pad afir attempt did.
     """
 
     def __init__(self):
