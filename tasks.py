@@ -177,6 +177,7 @@ def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_
     _sync_translation_files(app_dist_dir)
     _copy_dir(ROOT_DIR / "bin",  app_dist_dir / "bin")
     _copy_dir(ROOT_DIR / "lib",  app_dist_dir / "lib")
+    _copy_dir(ROOT_DIR / "assets" / "IR", app_dist_dir / "assets" / "IR")
 
     build_docs(c)
     docs_build = ROOT_DIR / "docs" / "build"
@@ -217,6 +218,7 @@ def bundle(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_V
     app_dist_dir = _app_dist_dir(plat)
 
     _sync_translation_files(app_dist_dir)
+    _copy_dir(ROOT_DIR / "assets" / "IR", app_dist_dir / "assets" / "IR")
 
     if not (app_dist_dir / f"{app_name}-{version}-{plat}").exists():
         print(f"[warn] No .sig files found in {app_dist_dir}. Run 'inv release' first.")
