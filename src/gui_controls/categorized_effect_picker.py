@@ -102,7 +102,10 @@ class CategorizedEffectPickerDialog(QDialog):
             category_item = QTreeWidgetItem([_(category)])
             category_item.setFlags(category_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
             self.catalog_tree.addTopLevelItem(category_item)
-            category_item.setExpanded(True)
+            # Collapsed by default -- with dozens of effects across a
+            # dozen-plus categories, starting fully expanded means several
+            # screens of scrolling before you see a single category name.
+            category_item.setExpanded(False)
 
             for entry in self._entries:
                 if entry.category != category:
