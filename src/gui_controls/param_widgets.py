@@ -73,3 +73,24 @@ def read_param_widget(widget):
     if isinstance(widget, QLineEdit):
         return widget.text()
     return None
+
+
+def connect_param_widget_changed(widget, callback):
+    """Wire callback() to fire on every live value change of a
+    make_param_widget()-built widget -- for callers (e.g. the live player's
+    effect editor) that want real-time feedback as the user drags/types,
+    not just a final value read on dialog-accept. callback takes no
+    arguments; read the new value with read_param_widget(widget) inside it.
+    """
+    if isinstance(widget, QComboBox):
+        widget.currentIndexChanged.connect(lambda _index: callback())
+    elif isinstance(widget, QCheckBox):
+        widget.toggled.connect(lambda _checked: callback())
+    elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
+        widget.valueChanged.connect(lambda _value: callback())
+    elif hasattr(widget, "_value_edit"):
+        # "file" kind: the Browse... dialog is the primary way this value
+        # changes; editingFinished also covers manually typing/pasting a path.
+        widget._value_edit.editingFinished.connect(callback)
+    elif isinstance(widget, QLineEdit):
+        widget.editingFinished.connect(callback)
