@@ -311,7 +311,7 @@ class MPVChorusFilter(MPVAudioFilter):
 class MPVPitchShiftFilter(MPVAudioFilter):
     def __init__(self):
         mpv_param_map = {
-            "pitch-scale": ("pitch-scale", float, (1.0, 100.0, 1.0, 1.0)),
+            "pitch-scale": ("pitch-scale", float, (0.1, 100.0, 0.05, 1.0)),
             "engine": ("engine", str, ("faster", "finer"))
         }
         
@@ -392,12 +392,12 @@ class MPVBandPassFilter(MPVAudioFilter):
     def __init__(self):
         mpv_param_map = {
             "frequency": ("frequency", float, (20.0, 20000.0, 10.0, 3000.0)),
-            "width": ("width", float, (0.1, 1000.0, 0.1, 100.0)),
+            "width": ("width", float, (0.1, 10000.0, 0.1, 100.0)),
             "csg": ("csg", int, (0, 1, 1, 0)),
             "mix": ("mix", float, (0.0, 1.0, 0.1, 1.0)),
             "width_type": ("width_type", str, ())
         }
-        
+
         parameters = {
             "frequency": 3000.0,
             "width": 100.0,
@@ -876,18 +876,12 @@ class MPVConvolutionReverbFilter(MPVAudioFilter):
         }
         backend_info = {"mpv_filter_name": "afir", "mpv_param_map": mpv_param_map, "effect_syntax": "lavfi"}
         super().__init__("Convolution Reverb", parameters, backend_info)
-
-    def _validate_parameters(self):
-        # impulse_response_path is a plain string with no mpv_param_map
-        # entry (it never gets key=value interpolated -- see construct()),
-        # so the base class's numeric-range validation loop must skip it.
-        pass
-
-    def set_parameter(self, name: str, value):
-        if name == "impulse_response_path":
-            self.parameters[name] = value
-            return
-        super().set_parameter(name, value)
+        # impulse_response_path has no mpv_param_map entry on purpose: it
+        # never gets key=value interpolated by the base class's generic
+        # construct() (see the override below), so it must never go
+        # through the numeric type/range validation _validate_parameters()/
+        # set_parameter() apply to mapped params -- and it doesn't, since
+        # both already only validate params present in mpv_param_map.
 
     def construct(self) -> str:
         params = self.get_parameters()

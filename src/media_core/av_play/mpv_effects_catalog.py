@@ -80,8 +80,8 @@ MPV_EFFECTS: list[MPVEffectDefinition] = [
         filter_class=MPVEchoFilter, params=[
             _p("in_gain", "Input Gain", "float", 0.6, (0.0, 1.0)),
             _p("out_gain", "Output Gain", "float", 0.3, (0.0, 1.0)),
-            _p("delays", "Delays (ms)", "choice", "1000", choices=["500", "1000", "1500"]),
-            _p("decays", "Decays", "choice", "0.5", choices=["0.3", "0.5", "0.7"]),
+            _p("delays", "Delays (ms, pipe-separated)", "text", "1000"),
+            _p("decays", "Decays (pipe-separated)", "text", "0.5"),
         ],
     ),
     MPVEffectDefinition(
@@ -123,7 +123,7 @@ MPV_EFFECTS: list[MPVEffectDefinition] = [
         id="bandpass", label="Band Pass", category="Tone", manual_source=f"{_MANUAL_DIR}/bandpass.md",
         filter_class=MPVBandPassFilter, params=[
             _p("frequency", "Frequency", "float", 3000.0, (20.0, 20000.0), suffix=" Hz"),
-            _p("width", "Width", "float", 100.0, (0.1, 1000.0)),
+            _p("width", "Width", "float", 100.0, (0.1, 10000.0)),
             _p("csg", "Constant Skirt Gain", "int", 0, (0, 1)),
             _p("mix", "Mix", "float", 1.0, (0.0, 1.0)),
             _p("width_type", "Width Type", "choice", "h", choices=["h", "q", "o", "s", "k"]),
@@ -241,11 +241,7 @@ MPV_EFFECTS: list[MPVEffectDefinition] = [
         filter_class=MPVCompandFilter, params=[
             _p("attacks", "Attack (s)", "float", 0.3, (0.0, 2.0)),
             _p("decays", "Decay (s)", "float", 0.8, (0.0, 2.0)),
-            _p("points", "Transfer Points", "choice", "-70/-70|-60/-20|-20/-20|0/-6", choices=[
-                "-70/-70|-60/-20|-20/-20|0/-6",
-                "-80/-80|-6/-6|0/-3.8|20/3.5",
-                "-80/-80|-12.4/-12.4|-6/-8|0/-6.8|20/-2.8",
-            ]),
+            _p("points", "Transfer Points", "text", "-70/-70|-60/-20|-20/-20|0/-6"),
             _p("soft-knee", "Soft Knee", "float", 0.01, (0.0, 10.0)),
             _p("gain", "Gain", "float", 0.0, (-20.0, 20.0), suffix=" dB"),
         ],
@@ -277,10 +273,10 @@ MPV_EFFECTS: list[MPVEffectDefinition] = [
         filter_class=MPVChorusFilter, params=[
             _p("in_gain", "Input Gain", "float", 0.4, (0.0, 1.0)),
             _p("out_gain", "Output Gain", "float", 0.4, (0.0, 1.0)),
-            _p("delays", "Delays (ms)", "choice", "55", choices=["40", "55", "70"]),
-            _p("decays", "Decays", "choice", "0.4", choices=["0.3", "0.4", "0.5"]),
-            _p("speeds", "Speeds (Hz)", "choice", "0.25", choices=["0.2", "0.25", "0.3"]),
-            _p("depths", "Depths (ms)", "choice", "2", choices=["1.5", "2", "3"]),
+            _p("delays", "Delays (ms, pipe-separated)", "text", "55"),
+            _p("decays", "Decays (pipe-separated)", "text", "0.4"),
+            _p("speeds", "Speeds (Hz, pipe-separated)", "text", "0.25"),
+            _p("depths", "Depths (ms, pipe-separated)", "text", "2"),
         ],
     ),
     MPVEffectDefinition(
@@ -324,7 +320,7 @@ MPV_EFFECTS: list[MPVEffectDefinition] = [
     MPVEffectDefinition(
         id="pitch_shift", label="Pitch Shift", category="Pitch", manual_source=f"{_MANUAL_DIR}/rubberband.md",
         filter_class=MPVPitchShiftFilter, params=[
-            _p("pitch-scale", "Pitch Scale", "float", 1.0, (1.0, 100.0)),
+            _p("pitch-scale", "Pitch Scale", "float", 1.0, (0.1, 100.0)),
             _p("engine", "Engine", "choice", "finer", choices=["faster", "finer"]),
         ],
     ),
