@@ -7,22 +7,8 @@ import threading
 from typing import List, Optional, Set
 
 import media_core.av_play as av_play
-from media_core.av_play.mpv_audio_filter import (
-    MPVEqualizerFilter,
-    MPVAudioFilter,
-    MPVEchoFilter,
-    MPVReverbFilter,
-    MPVLowPassFilter,
-    MPVHighPassFilter,
-    MPVBandPassFilter,
-    MPVCompressorFilter,
-    MPVLimiterFilter,
-    MPVGateFilter,
-    MPVFlangerFilter,
-    MPVChorusFilter,
-    MPVPitchShiftFilter,
-    MPVTempoScaleFilter,
-)
+from media_core.av_play.mpv_audio_filter import MPVEqualizerFilter, MPVAudioFilter
+from media_core.av_play.mpv_effects_catalog import MPV_EFFECTS, get_mpv_effect
 from media_core.av_play.mpv_equalizer_presets import EQUALIZER_PRESETS
 from PySide6.QtCore import QObject, Signal, QThread
 
@@ -41,23 +27,14 @@ from ..util.utilities import ensure_ytdlp_available
 
 logger = logging.getLogger(__name__)
 
-# Keyed by each filter class's own AVFilter "handle" name, so the key
-# doubles as its stable (untranslated) display label. The Equalizer has
-# its own dedicated accordion section/UI already, so it's intentionally
-# not included here.
+# Derived from the mpv_effects_catalog (the one source of truth for the
+# "Add Effect" picker dialog too) and keyed by catalog id -- NOT the filter
+# class's own AVFilter "handle" (its stable, untranslated display label,
+# still used internally for af-chain ordering, see _rebuild_filter_chain).
+# The Equalizer has its own dedicated accordion section/UI already, so
+# it's intentionally excluded here.
 AUDIO_FILTER_CLASSES = {
-    "Echo": MPVEchoFilter,
-    "Reverb": MPVReverbFilter,
-    "Low Pass": MPVLowPassFilter,
-    "High Pass": MPVHighPassFilter,
-    "Band Pass": MPVBandPassFilter,
-    "Compressor": MPVCompressorFilter,
-    "Limiter": MPVLimiterFilter,
-    "Gate": MPVGateFilter,
-    "Flanger": MPVFlangerFilter,
-    "Chorus": MPVChorusFilter,
-    "Pitch Shift": MPVPitchShiftFilter,
-    "Tempo Scale": MPVTempoScaleFilter,
+    effect.id: effect.filter_class for effect in MPV_EFFECTS if effect.id != "equalizer"
 }
 
 
