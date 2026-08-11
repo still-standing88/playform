@@ -119,7 +119,7 @@ class SettingsDialog(QDialog):
         res_cap = QComboBox()
         res_cap.addItems(["Passthrough", "1920x1080", "1280x720"])
         fps = QSpinBox()
-        fps.setRange(1, 60)
+        fps.setRange(1, 240)
         fps.setValue(30)
         cursor = QCheckBox(_("Capture cursor by default (each Monitor/Window source can still override this)"))
         form.addRow(_("Resolution cap"), res_cap)

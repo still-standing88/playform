@@ -12,10 +12,22 @@ QScreenCapture/QWindowCapture, which exposed neither.
 """
 from __future__ import annotations
 
+from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import QCheckBox, QComboBox, QFormLayout, QLabel, QSpinBox, QWidget
 
 from media_core.av_capture.capabilities import CaptureCapabilities
 from media_core.av_capture.models import CaptureDevice
+
+# ffmpeg's `volume` audio filter (see command_builder.output_options_for)
+# accepts any positive multiplier, not just attenuation - values over 100%
+# are a real gain boost (200% ~= +6dB), not clamped or faked here.
+_MAX_VOLUME_PERCENT = 300
+# dshow/pulse/avfoundation will all fail to open at a rate the device
+# genuinely doesn't support (ffmpeg reports that as a per-source error same
+# as any other bad setting) - the combo stays editable with sane min/max
+# guard rails rather than a fixed preset list.
+_MIN_SAMPLE_RATE = 8000
+_MAX_SAMPLE_RATE = 192000
 
 
 class AudioSettingsForm(QWidget):
@@ -24,16 +36,19 @@ class AudioSettingsForm(QWidget):
         form = QFormLayout(self)
         self.sample_rate = QComboBox()
         self.sample_rate.setAccessibleName(_("Sample rate"))
-        self.sample_rate.addItems(["44100", "48000", "96000"])
+        self.sample_rate.setEditable(True)
+        self.sample_rate.addItems(["44100", "48000", "96000", "192000"])
         self.sample_rate.setCurrentText("48000")
+        self.sample_rate.setValidator(QIntValidator(_MIN_SAMPLE_RATE, _MAX_SAMPLE_RATE, self))
         self.channels = QComboBox()
         self.channels.setAccessibleName(_("Channels"))
         self.channels.addItems([_("Mono"), _("Stereo")])
         self.channels.setCurrentIndex(1)
         self.volume = QSpinBox()
-        self.volume.setRange(0, 100)
+        self.volume.setRange(0, _MAX_VOLUME_PERCENT)
         self.volume.setValue(100)
         self.volume.setSuffix(" %")
+        self.volume.setToolTip(_("Over 100% boosts gain (ffmpeg's volume filter, e.g. 200% ~= +6dB)."))
         form.addRow(_("Sample rate (Hz)"), self.sample_rate)
         form.addRow(_("Channels"), self.channels)
         form.addRow(_("Volume"), self.volume)
@@ -49,8 +64,12 @@ class AudioSettingsForm(QWidget):
         pass
 
     def to_settings(self) -> dict:
+        try:
+            sample_rate = int(self.sample_rate.currentText())
+        except ValueError:
+            sample_rate = 48000
         return {
-            "sample_rate": int(self.sample_rate.currentText()),
+            "sample_rate": sample_rate,
             "channels": 1 if self.channels.currentIndex() == 0 else 2,
             "volume": self.volume.value(),
         }
@@ -142,7 +161,7 @@ class _FrameCaptureSettingsForm(QWidget):
         self.device_label = QLabel("-")
         form.addRow(self._LABEL_ROW, self.device_label)
         self.fps = QSpinBox()
-        self.fps.setRange(1, 60)
+        self.fps.setRange(1, 240)
         self.fps.setValue(30)
         form.addRow(_("Frame rate"), self.fps)
         self.capture_cursor = QCheckBox(_("Capture mouse cursor"))
