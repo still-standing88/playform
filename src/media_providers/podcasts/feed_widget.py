@@ -16,6 +16,7 @@ from time import mktime
 from utilities.functions import get_app_path
 from media_core.podcasts.feed_manager import FeedManager
 from media_providers.podcasts.entry_detail_dialog import EntryDetailDialog
+from media_providers.podcasts.feed_job import FeedJob
 
 
 class FeedWidget(QWidget):
@@ -61,6 +62,9 @@ class FeedWidget(QWidget):
         self.filtered_entries = []
         self.sort_key = 'published_parsed'
         self.sort_reverse = True
+        self._active_job = None
+        self._active_progress = None
+        self._last_feed_job_error = None
         self.setup_ui()
         self.load_feeds()
 
@@ -156,17 +160,66 @@ class FeedWidget(QWidget):
         except:
             return False
 
-    def validate_feed(self, url):
-        try:
-            parsed = self.feed_mgr.refresh_feed(url, force=True)
-            if parsed and not parsed.get('bozo', 0):
-                return True, None
-            elif parsed and parsed.get('bozo', 0):
-                exception = parsed.get('bozo_exception')
-                return False, str(exception) if exception else _("Invalid feed format")
-            return False, _("Failed to parse feed")
-        except Exception as e:
-            return False, str(e)
+    def _run_feed_job(self, mode, urls, *, progress_text, maximum=0, on_finished=None):
+        """Runs a FeedManager operation on a background QThread instead of
+        blocking the GUI thread on feedparser.parse() -- see
+        media_providers.podcasts.feed_job.FeedJob. `on_finished(success)` is
+        called once the job completes (or is cancelled)."""
+        if self._active_job is not None:
+            QMessageBox.information(self, _("Busy"), _("A feed operation is already in progress."))
+            return
+
+        progress = QProgressDialog(progress_text, _("Cancel"), 0, maximum, self)
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        progress.setMinimumDuration(0)
+        progress.show()
+
+        job = FeedJob(self.feed_mgr, mode, urls)
+        self._active_job = job
+        self._active_progress = progress
+
+        job.feed_started.connect(
+            lambda url: progress.setLabelText(_("Refreshing:\n{url}...").format(url=url[:60]))
+        )
+        job.feed_updated.connect(self._on_feed_job_updated)
+        job.feed_error.connect(self._on_feed_job_error)
+        if maximum:
+            job.progress.connect(lambda done, total: progress.setValue(done))
+        progress.canceled.connect(job.stop)
+
+        def cleanup(success):
+            progress.close()
+            self._active_job = None
+            self._active_progress = None
+            if on_finished:
+                on_finished(success)
+            job.deleteLater()
+
+        job.finished_all.connect(cleanup)
+        job.start()
+
+    def _on_feed_job_updated(self, url, data):
+        self._update_feed_list_item_title(url)
+
+    def _on_feed_job_error(self, url, message):
+        self._last_feed_job_error = message
+
+    def _update_feed_list_item_title(self, url):
+        # Fixes titles that were stuck showing the raw feed URL: load_feeds()
+        # only ever set this label once, at list-build time, using whatever
+        # was already cached -- nothing rewrote it after a later successful
+        # fetch. Every FeedJob completion routes through here instead.
+        data = self.feed_mgr.get_feed_data(url)
+        if not data or not hasattr(data, 'feed'):
+            return
+        title = getattr(data.feed, 'title', None)
+        if not title:
+            return
+        for i in range(self.feed_list.count()):
+            item = self.feed_list.item(i)
+            if item.data(Qt.ItemDataRole.UserRole) == url and item.text() != title:
+                item.setText(title)
+                break
 
     def show_feed_context_menu(self, pos):
         menu = QMenu(self)
@@ -267,34 +320,31 @@ class FeedWidget(QWidget):
         url, ok = QInputDialog.getText(self, _("Add Feed"), _("Enter feed URL:"))
         if not ok or not url:
             return
-        
+
         if not self.validate_url(url):
             QMessageBox.warning(self, _("Invalid URL"), _("Please enter a valid HTTP/HTTPS URL"))
             return
-        
+
         if url in self.feed_mgr.get_feed_list():
             QMessageBox.warning(self, _("Duplicate"), _("Feed already exists"))
             return
-        
-        progress = QProgressDialog(_("Validating feed..."), _("Cancel"), 0, 0, self)
-        progress.setWindowModality(Qt.WindowModality.WindowModal)
-        progress.show()
-        
-        valid, error = self.validate_feed(url)
-        progress.close()
-        
-        if not valid:
-            QMessageBox.critical(
-                self,
-                _("Invalid Feed"),
-                _("Feed validation failed:\n{error}").format(error=error),
-            )
-            self.feed_mgr.remove_feed(url)
-            return
-        
-        self.feed_mgr.add_feed(url)
-        QMessageBox.information(self, _("Success"), _("Feed added successfully"))
-        self.load_feeds()
+
+        self._last_feed_job_error = None
+
+        def finished(success):
+            if success:
+                QMessageBox.information(self, _("Success"), _("Feed added successfully"))
+                self.load_feeds()
+            else:
+                QMessageBox.critical(
+                    self,
+                    _("Invalid Feed"),
+                    _("Feed validation failed:\n{error}").format(
+                        error=self._last_feed_job_error or _("Unknown error")
+                    ),
+                )
+
+        self._run_feed_job("validate_and_add", (url,), progress_text=_("Validating feed..."), on_finished=finished)
 
     def remove_feed(self):
         item = self.feed_list.currentItem()
@@ -317,84 +367,70 @@ class FeedWidget(QWidget):
         item = self.feed_list.currentItem()
         if not item:
             return
-        
+
         url = item.data(Qt.ItemDataRole.UserRole)
-        progress = QProgressDialog(_("Refreshing feed..."), _("Cancel"), 0, 0, self)
-        progress.setWindowModality(Qt.WindowModality.WindowModal)
-        progress.show()
-        
-        try:
-            result = self.feed_mgr.refresh_feed(url, force=True)
-            progress.close()
-            if result:
+        self._last_feed_job_error = None
+
+        def finished(success):
+            if success:
                 QMessageBox.information(self, _("Success"), _("Feed refreshed successfully"))
                 self.load_feed_entries(url)
             else:
-                QMessageBox.warning(self, _("Error"), _("Failed to refresh feed"))
-        except Exception as e:
-            progress.close()
-            QMessageBox.critical(
-                self,
-                _("Error"),
-                _("Refresh failed:\n{error}").format(error=str(e)),
-            )
+                QMessageBox.warning(
+                    self, _("Error"),
+                    self._last_feed_job_error or _("Failed to refresh feed"),
+                )
+
+        self._run_feed_job("refresh_one", (url,), progress_text=_("Refreshing feed..."), on_finished=finished)
 
     def refresh_all_feeds(self):
         feeds = self.feed_mgr.get_feed_list()
         if not feeds:
             return
-        
-        progress = QProgressDialog(_("Refreshing feeds..."), _("Cancel"), 0, len(feeds), self)
-        progress.setWindowModality(Qt.WindowModality.WindowModal)
-        
-        for i, url in enumerate(feeds):
-            if progress.wasCanceled():
-                break
-            progress.setValue(i)
-            progress.setLabelText(_("Refreshing:\n{url}...").format(url=url[:60]))
-            try:
-                self.feed_mgr.refresh_feed(url, force=True)
-            except:
-                pass
-        
-        progress.setValue(len(feeds))
-        if self.current_feed_url:
-            self.load_feed_entries(self.current_feed_url)
+
+        def finished(success):
+            if self.current_feed_url:
+                self.load_feed_entries(self.current_feed_url)
+
+        self._run_feed_job(
+            "refresh_all", None,
+            progress_text=_("Refreshing feeds..."), maximum=len(feeds), on_finished=finished,
+        )
 
     def update_feed_url(self):
         item = self.feed_list.currentItem()
         if not item:
             return
-        
+
         old_url = item.data(Qt.ItemDataRole.UserRole)
         new_url, ok = QInputDialog.getText(self, _("Update Feed URL"), _("Enter new URL:"), text=old_url)
-        
+
         if not ok or not new_url or new_url == old_url:
             return
-        
+
         if not self.validate_url(new_url):
             QMessageBox.warning(self, _("Invalid URL"), _("Please enter a valid HTTP/HTTPS URL"))
             return
-        
-        progress = QProgressDialog(_("Validating new feed URL..."), _("Cancel"), 0, 0, self)
-        progress.setWindowModality(Qt.WindowModality.WindowModal)
-        progress.show()
-        
-        valid, error = self.validate_feed(new_url)
-        progress.close()
-        
-        if not valid:
-            QMessageBox.critical(
-                self,
-                _("Invalid Feed"),
-                _("Feed validation failed:\n{error}").format(error=error),
-            )
-            self.feed_mgr.remove_feed(new_url)
-            return
-        
-        self.feed_mgr.update_feed_url(old_url, new_url)
-        QMessageBox.information(self, _("Success"), _("Feed URL updated successfully"))
-        self.load_feeds()
+
+        self._last_feed_job_error = None
+
+        def finished(success):
+            if success:
+                QMessageBox.information(self, _("Success"), _("Feed URL updated successfully"))
+                self.load_feeds()
+            else:
+                QMessageBox.critical(
+                    self,
+                    _("Invalid Feed"),
+                    _("Feed validation failed:\n{error}").format(
+                        error=self._last_feed_job_error or _("Unknown error")
+                    ),
+                )
+
+        self._run_feed_job(
+            "update_url", (old_url, new_url),
+            progress_text=_("Validating new feed URL..."), on_finished=finished,
+        )
 
     def clear_all_feeds(self):
         reply = QMessageBox.question(
@@ -441,27 +477,32 @@ class FeedWidget(QWidget):
 
     def load_feed_entries(self, url):
         data = self.feed_mgr.get_feed_data(url)
-        
-        if not data or not hasattr(data, 'entries') or not data.entries:
-            progress = QProgressDialog("Fetching feed...", "Cancel", 0, 0, self)
-            progress.setWindowModality(Qt.WindowModality.WindowModal)
-            progress.show()
-            try:
-                data = self.feed_mgr.refresh_feed(url, force=True)
-            except:
-                data = None
-            finally:
-                progress.close()
-        
-        if data and hasattr(data, 'entries'):
+
+        if data and hasattr(data, 'entries') and data.entries:
             self.all_entries = list(data.entries)
             self.filtered_entries = self.all_entries[:]
             self.sort_entries(self.sort_key, self.sort_reverse)
-        else:
-            self.all_entries = []
-            self.filtered_entries = []
-            self.update_entry_tree()
-            self.detail_text.setPlainText(_("No entries found for this feed."))
+            return
+
+        # Nothing cached yet -- fetch it on a background thread instead of
+        # blocking the GUI thread on feedparser.parse().
+        self.all_entries = []
+        self.filtered_entries = []
+        self.update_entry_tree()
+        self.detail_text.setPlainText(_("Loading entries..."))
+
+        def finished(success):
+            if self.current_feed_url != url:
+                return  # a different feed got selected while this was loading
+            fresh = self.feed_mgr.get_feed_data(url)
+            if fresh and hasattr(fresh, 'entries') and fresh.entries:
+                self.all_entries = list(fresh.entries)
+                self.filtered_entries = self.all_entries[:]
+                self.sort_entries(self.sort_key, self.sort_reverse)
+            else:
+                self.detail_text.setPlainText(_("No entries found for this feed."))
+
+        self._run_feed_job("refresh_one", (url,), progress_text=_("Fetching feed..."), on_finished=finished)
 
     def perform_search(self):
         query = self.search_box.text().strip()
