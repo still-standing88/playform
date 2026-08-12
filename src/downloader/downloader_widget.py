@@ -1,12 +1,11 @@
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
-                               QLabel, QCheckBox, QMenu, QMessageBox, QComboBox, QTreeView,
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem,
+                               QLabel, QCheckBox, QMenu, QMessageBox, QTreeView,
                                QHeaderView, QSplitter, QScrollArea, QApplication)
-from PySide6.QtCore import Qt, QTimer, Signal, QSortFilterProxyModel
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QStandardItemModel, QStandardItem
 from downloader.downloader import Downloader, DownloadStatus
 
-STATUS_FILTER_ROLE = Qt.ItemDataRole.UserRole + 1
-SOURCE_FILTER_ROLE = Qt.ItemDataRole.UserRole + 2
+CATEGORY_ROLE = Qt.ItemDataRole.UserRole + 1
 
 STATUS_LABELS = {
     DownloadStatus.QUEUED: lambda: _("Queued"),
@@ -31,29 +30,6 @@ def format_size(bytes_size):
     return f"{bytes_size:.2f} TB"
 
 
-class DownloadFilterProxyModel(QSortFilterProxyModel):
-    """Backs the secondary read-only QTreeView -- filters by status or by
-    "podcast queue" (metadata.source_kind == "podcast") without touching
-    the primary QTreeWidget's own row set."""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._filter_kind = "all"
-
-    def set_filter_kind(self, kind):
-        self._filter_kind = kind
-        self.invalidateFilter()
-
-    def filterAcceptsRow(self, source_row, source_parent):
-        if self._filter_kind == "all":
-            return True
-        model = self.sourceModel()
-        index = model.index(source_row, 0, source_parent)
-        if self._filter_kind == "podcast":
-            return model.data(index, SOURCE_FILTER_ROLE) == "podcast"
-        return model.data(index, STATUS_FILTER_ROLE) == self._filter_kind
-
-
 class DownloaderWidget(QWidget):
     closed = Signal()
 
@@ -66,8 +42,8 @@ class DownloaderWidget(QWidget):
             self.downloader = downloader
 
         self.current_item = None
+        self.category_filter = "all"
         self.tree_rows = {}    # DownloadItem -> QTreeWidgetItem
-        self.filter_rows = {}  # DownloadItem -> (name_item, size_item, status_item)
 
         self.setup_ui()
         self.connect_signals()
@@ -85,11 +61,31 @@ class DownloaderWidget(QWidget):
 
         top_splitter = QSplitter(Qt.Orientation.Horizontal)
 
-        left_widget = QWidget()
-        left_layout = QVBoxLayout(left_widget)
-        left_layout.setContentsMargins(0, 0, 0, 0)
+        category_widget = QWidget()
+        category_layout = QVBoxLayout(category_widget)
+        category_layout.setContentsMargins(0, 0, 0, 0)
 
-        left_layout.addWidget(QLabel(_("Downloads:")))
+        category_layout.addWidget(QLabel(_("Categories:")))
+        self.category_model = QStandardItemModel(self)
+        self._populate_category_model()
+
+        self.category_tree = QTreeView()
+        self.category_tree.setModel(self.category_model)
+        self.category_tree.setHeaderHidden(True)
+        self.category_tree.setRootIsDecorated(False)
+        self.category_tree.setAlternatingRowColors(True)
+        self.category_tree.setAccessibleName(_("Download categories"))
+        self.category_tree.setAccessibleDescription(_("Filter the downloads list by status or source"))
+        self.category_tree.selectionModel().currentChanged.connect(self.on_category_changed)
+        category_layout.addWidget(self.category_tree)
+
+        top_splitter.addWidget(category_widget)
+
+        middle_widget = QWidget()
+        middle_layout = QVBoxLayout(middle_widget)
+        middle_layout.setContentsMargins(0, 0, 0, 0)
+
+        middle_layout.addWidget(QLabel(_("Downloads:")))
         self.tree = QTreeWidget()
         self.tree.setColumnCount(3)
         self.tree.setHeaderLabels([_("Filename"), _("Size"), _("Status")])
@@ -101,9 +97,9 @@ class DownloaderWidget(QWidget):
         self.tree.itemDoubleClicked.connect(self.on_item_double_clicked)
         self.tree.setAccessibleName(_("Downloads list"))
         self.tree.setAccessibleDescription(_("List of current, queued, paused, and finished downloads"))
-        left_layout.addWidget(self.tree)
+        middle_layout.addWidget(self.tree)
 
-        top_splitter.addWidget(left_widget)
+        top_splitter.addWidget(middle_widget)
 
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
@@ -144,42 +140,16 @@ class DownloaderWidget(QWidget):
         right_layout.addWidget(self.more_info_scroll, 1)
 
         top_splitter.addWidget(right_widget)
-        top_splitter.setStretchFactor(0, 2)
-        top_splitter.setStretchFactor(1, 1)
+        top_splitter.setStretchFactor(0, 0)
+        top_splitter.setStretchFactor(1, 2)
+        top_splitter.setStretchFactor(2, 1)
+        top_splitter.setSizes([160, 500, 300])
 
-        main_layout.addWidget(top_splitter, 2)
-
-        filter_row = QHBoxLayout()
-        filter_row.addWidget(QLabel(_("Filter:")))
-        self.filter_combo = QComboBox()
-        self.filter_combo.addItem(_("All"), "all")
-        self.filter_combo.addItem(_("Queued"), DownloadStatus.QUEUED.value)
-        self.filter_combo.addItem(_("Downloading"), DownloadStatus.DOWNLOADING.value)
-        self.filter_combo.addItem(_("Paused"), DownloadStatus.PAUSED.value)
-        self.filter_combo.addItem(_("Completed"), DownloadStatus.COMPLETED.value)
-        self.filter_combo.addItem(_("Failed"), DownloadStatus.FAILED.value)
-        self.filter_combo.addItem(_("Podcast Queue"), "podcast")
-        self.filter_combo.setAccessibleName(_("Download filter"))
-        self.filter_combo.currentIndexChanged.connect(self._on_filter_changed)
-        filter_row.addWidget(self.filter_combo)
-        filter_row.addStretch()
-        main_layout.addLayout(filter_row)
-
-        self.filter_model = QStandardItemModel(0, 3, self)
-        self.filter_model.setHorizontalHeaderLabels([_("Filename"), _("Size"), _("Status")])
-        self.filter_proxy = DownloadFilterProxyModel(self)
-        self.filter_proxy.setSourceModel(self.filter_model)
-
-        self.filter_view = QTreeView()
-        self.filter_view.setModel(self.filter_proxy)
-        self.filter_view.setRootIsDecorated(False)
-        self.filter_view.setAlternatingRowColors(True)
-        self.filter_view.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.filter_view.setAccessibleName(_("Filtered downloads view"))
-        self.filter_view.setAccessibleDescription(_("Downloads filtered by status or podcast queue"))
-        main_layout.addWidget(self.filter_view, 1)
+        main_layout.addWidget(top_splitter, 1)
 
         self.setLayout(main_layout)
+
+        self.category_tree.setCurrentIndex(self.category_model.index(0, 0))
 
     def connect_signals(self):
         self.downloader.download_started.connect(self.on_download_started)
@@ -195,8 +165,40 @@ class DownloaderWidget(QWidget):
     def on_download_finished(self, download_item, success):
         self.refresh_list()
 
-    def _on_filter_changed(self, index):
-        self.filter_proxy.set_filter_kind(self.filter_combo.itemData(index))
+    def _populate_category_model(self):
+        self.category_model.clear()
+        root = self.category_model.invisibleRootItem()
+        categories = [
+            (_("All"), "all"),
+            (_("Queued"), DownloadStatus.QUEUED.value),
+            (_("Downloading"), DownloadStatus.DOWNLOADING.value),
+            (_("Paused"), DownloadStatus.PAUSED.value),
+            (_("Completed"), DownloadStatus.COMPLETED.value),
+            (_("Failed"), DownloadStatus.FAILED.value),
+            (_("Podcast Queue"), "podcast"),
+        ]
+        for label, kind in categories:
+            entry = QStandardItem(label)
+            entry.setEditable(False)
+            entry.setData(kind, CATEGORY_ROLE)
+            root.appendRow(entry)
+
+    def on_category_changed(self, current, previous):
+        if not current.isValid():
+            return
+        self.category_filter = self.category_model.itemFromIndex(current).data(CATEGORY_ROLE)
+        self._apply_category_filter()
+
+    def _item_matches_category(self, download_item):
+        if self.category_filter == "all":
+            return True
+        if self.category_filter == "podcast":
+            return download_item.metadata.get("source_kind") == "podcast"
+        return download_item.status.value == self.category_filter
+
+    def _apply_category_filter(self):
+        for download_item, row in self.tree_rows.items():
+            row.setHidden(not self._item_matches_category(download_item))
 
     def _all_items(self):
         buckets = self.downloader.get_all_downloads()
@@ -211,14 +213,10 @@ class DownloaderWidget(QWidget):
 
         for item in items:
             self._update_tree_row(item)
-            self._update_filter_row(item)
 
         for item in list(self.tree_rows.keys()):
             if item not in seen:
                 self._remove_tree_row(item)
-        for item in list(self.filter_rows.keys()):
-            if item not in seen:
-                self._remove_filter_row(item)
 
         if self.current_item is not None and self.current_item in seen:
             self.update_info_display()
@@ -248,6 +246,7 @@ class DownloaderWidget(QWidget):
                 row.setText(2, status)
         desc = _("{filename}, {size}, {status}").format(filename=item.filename, size=size_text, status=status)
         row.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole, desc)
+        row.setHidden(not self._item_matches_category(item))
 
     def _remove_tree_row(self, item):
         row = self.tree_rows.pop(item, None)
@@ -258,37 +257,6 @@ class DownloaderWidget(QWidget):
             self.tree.takeTopLevelItem(index)
         if self.current_item is item:
             self.current_item = None
-
-    def _update_filter_row(self, item):
-        size_text = self._size_text(item)
-        status = status_text(item.status)
-        source_kind = item.metadata.get("source_kind", "")
-        row_items = self.filter_rows.get(item)
-        if row_items is None:
-            name_item = QStandardItem(item.filename)
-            size_item = QStandardItem(size_text)
-            status_item = QStandardItem(status)
-            for cell in (name_item, size_item, status_item):
-                cell.setEditable(False)
-            self.filter_model.appendRow([name_item, size_item, status_item])
-            self.filter_rows[item] = (name_item, size_item, status_item)
-        else:
-            name_item, size_item, status_item = row_items
-            if name_item.text() != item.filename:
-                name_item.setText(item.filename)
-            if size_item.text() != size_text:
-                size_item.setText(size_text)
-            if status_item.text() != status:
-                status_item.setText(status)
-        name_item = self.filter_rows[item][0]
-        name_item.setData(item.status.value, STATUS_FILTER_ROLE)
-        name_item.setData(source_kind, SOURCE_FILTER_ROLE)
-
-    def _remove_filter_row(self, item):
-        row_items = self.filter_rows.pop(item, None)
-        if row_items is None:
-            return
-        self.filter_model.removeRow(row_items[0].row())
 
     def on_selection_changed(self, current, previous):
         item = current.data(0, Qt.ItemDataRole.UserRole) if current else None
