@@ -1,6 +1,6 @@
 """Global Audio/Video defaults for the Multi Device Capture panel -
 what a session falls back to unless it defines its own settings_override.
-Persisted as plain JSON under data/, same pattern as
+Persisted in app_settings (user.sqlite3), same pattern as
 app_config.toolbar_config.ToolbarConfig."""
 from __future__ import annotations
 
@@ -9,7 +9,9 @@ import os
 
 from utilities.functions import get_app_path
 
-SETTINGS_FILE = os.path.join(get_app_path(), "data", "multi_device_capture_settings.json")
+SETTINGS_KEY = "multi_device_capture_settings"
+# Legacy path only kept around for the one-shot migration in load().
+LEGACY_SETTINGS_FILE = os.path.join(get_app_path(), "data", "multi_device_capture_settings.json")
 
 DEFAULT_SETTINGS = {
     "audio": {
@@ -32,8 +34,7 @@ DEFAULT_SETTINGS = {
 
 
 class MultiDeviceCaptureSettings:
-    def __init__(self, store_path: str = SETTINGS_FILE) -> None:
-        self._store_path = store_path
+    def __init__(self) -> None:
         self.data: dict = json.loads(json.dumps(DEFAULT_SETTINGS))  # deep copy
         self.load()
 
@@ -59,32 +60,24 @@ class MultiDeviceCaptureSettings:
         self.save()
 
     def save(self) -> bool:
-        try:
-            os.makedirs(os.path.dirname(self._store_path), exist_ok=True)
-            with open(self._store_path, "w") as f:
-                json.dump(self.data, f, indent=2)
-            return True
-        except Exception as exc:
-            print(f"Failed to save Multi Device Capture settings: {exc}")
-            return False
+        from app_db import app_settings
+        return app_settings.set(SETTINGS_KEY, self.data)
 
     def load(self) -> None:
-        if not os.path.exists(self._store_path):
+        from app_db import app_settings
+        from app_db.settings_store import migrate_json_file
+        loaded = migrate_json_file(app_settings, LEGACY_SETTINGS_FILE, SETTINGS_KEY)
+        if not loaded:
+            self.data = json.loads(json.dumps(DEFAULT_SETTINGS))
             self.save()
             return
-        try:
-            with open(self._store_path, "r") as f:
-                loaded = json.load(f)
-            merged = json.loads(json.dumps(DEFAULT_SETTINGS))
-            for key, value in loaded.items():
-                if isinstance(value, dict) and isinstance(merged.get(key), dict):
-                    merged[key].update(value)
-                else:
-                    merged[key] = value
-            self.data = merged
-        except Exception as exc:
-            print(f"Failed to load Multi Device Capture settings, using defaults: {exc}")
-            self.data = json.loads(json.dumps(DEFAULT_SETTINGS))
+        merged = json.loads(json.dumps(DEFAULT_SETTINGS))
+        for key, value in loaded.items():
+            if isinstance(value, dict) and isinstance(merged.get(key), dict):
+                merged[key].update(value)
+            else:
+                merged[key] = value
+        self.data = merged
 
 
 multi_device_capture_settings = MultiDeviceCaptureSettings()
