@@ -240,6 +240,7 @@ class PlayerWidget(QWidget):
         self.player_controls.rotateChanged.connect(self._on_rotate_changed)
         self.player_controls.flipHorizontalToggled.connect(self._on_flip_horizontal_toggled)
         self.player_controls.flipVerticalToggled.connect(self._on_flip_vertical_toggled)
+        self.player_controls.panChanged.connect(self._on_pan_changed)
         self.player_controls.screenshotRequested.connect(self._on_screenshot)
         self.player_controls.reverseToggled.connect(self._on_reverse_toggled)
         self.player.signals.extraction_started.connect(self._on_url_extraction_started)
@@ -484,6 +485,10 @@ class PlayerWidget(QWidget):
     @Slot(bool)
     def _on_flip_vertical_toggled(self, enabled: bool):
         self.player.set_flip_vertical(enabled)
+
+    @Slot(float, float)
+    def _on_pan_changed(self, pan_x: float, pan_y: float):
+        self.player.set_video_pan(pan_x, pan_y)
 
     @Slot(bool)
     def _on_fullscreen_toggled(self, enabled):
