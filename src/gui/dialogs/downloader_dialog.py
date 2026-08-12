@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMessageBox
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 )
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QKeyEvent
@@ -54,13 +54,6 @@ class DownloaderDialog(QDialog):
 
 
         self._widget = DownloaderWidget(downloader=self._downloader)
-
-        if hasattr(self._widget, "minimize_btn"):
-            self._widget.minimize_btn.clicked.disconnect()
-            self._widget.minimize_btn.clicked.connect(self._on_minimize)
-        if hasattr(self._widget, "close_btn"):
-            self._widget.close_btn.clicked.disconnect()
-            self._widget.close_btn.clicked.connect(self._on_close_requested)
         layout.addWidget(self._widget)
 
     @property
@@ -88,23 +81,11 @@ class DownloaderDialog(QDialog):
 
     @Slot()
     def _on_close_requested(self):
-        active = self._downloader.get_all_downloads()["active"]
-        if active:
-            box = QMessageBox(self)
-            box.setWindowTitle(_("Downloads in Progress"))
-            box.setText(
-                _("{count} download(s) are still in progress.").format(count=len(active))
-            )
-            box.setInformativeText(_("Close anyway and abort all downloads?"))
-            abort_btn = box.addButton(_("Abort & Close"), QMessageBox.ButtonRole.DestructiveRole)
-            cancel_btn = box.addButton(_("Cancel"), QMessageBox.ButtonRole.RejectRole)
-            box.setDefaultButton(cancel_btn)
-            box.exec()
-            if box.clickedButton() != abort_btn:
-                return
-            for item in list(active):
-                self._downloader.cancel_download(item)
-
+        # DownloaderWidget owns the confirmation logic now -- this dialog
+        # only owns the chrome (title bar, minimize/close buttons), not a
+        # second copy of the same prompt.
+        if not self._widget.close_with_confirmation():
+            return
         self.accept()
 
     def keyPressEvent(self, event: QKeyEvent):
