@@ -1,5 +1,12 @@
 """Compile Markdown documentation under docs/source/<lang>/ to HTML under docs/build/<lang>/.
 
+The documentation for each language is a small set of cross-linked pages rather than
+a single file (e.g. documentation.md, 02-interface-tour.md, 03-customization-options.md,
+04-tools.md, 05-legal.md) — one page per top-level section, with documentation.md acting
+as the index/landing page (it's the fixed filename the app's Help/F1 action opens). Pages
+link to each other with plain relative ".md" links (so the source also reads fine as plain
+Markdown, e.g. on GitHub); compilation rewrites those to ".html" to match the compiled output.
+
 Uses:
   - Python-Markdown with:
       mdx_truly_sane_lists  (consistent indentation-tolerant lists)
@@ -11,6 +18,7 @@ Uses:
 
 import sys
 import os
+import re
 import shutil
 from pathlib import Path
 from typing import List
@@ -24,6 +32,15 @@ import nh3
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DOCS_SOURCE = ROOT_DIR / "docs" / "source"
 DOCS_BUILD  = ROOT_DIR / "docs" / "build"
+
+# Matches href="<relative-path>.md" or href="<relative-path>.md#anchor", but not
+# absolute http(s)/mailto links — those are left untouched.
+_MD_LINK_RE = re.compile(r'href="((?!https?://|mailto:)[^"]+?)\.md((?:#[^"]*)?)"')
+
+
+def _rewrite_md_links(html: str) -> str:
+    """Point same-doc-set links at the compiled .html output instead of the .md source."""
+    return _MD_LINK_RE.sub(r'href="\1.html\2"', html)
 TEMPLATE = """<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -78,12 +95,23 @@ TEMPLATE = """<!DOCTYPE html>
 
 
 def find_md_files(lang: str) -> List[Path]:
-    """Return all .md files under docs/source/<lang>/ sorted by depth then name."""
+    """Return all .md files under docs/source/<lang>/, index page first, then by depth/name.
+
+    "documentation.md" is the fixed entry-point filename the app opens (see
+    MainWindow.open_documentation), so it's treated as the index page of its directory
+    and sorted first regardless of name, ahead of the other numbered section pages.
+    """
     src_dir = DOCS_SOURCE / lang
     if not src_dir.is_dir():
         print(f"[warn] Source dir not found: {src_dir}")
         return []
-    return sorted(src_dir.rglob("*.md"), key=lambda p: (len(p.relative_to(src_dir).parts), p.name))
+
+    def sort_key(p: Path):
+        rel = p.relative_to(src_dir)
+        is_index = p.stem != "documentation"
+        return (len(rel.parts), is_index, p.name)
+
+    return sorted(src_dir.rglob("*.md"), key=sort_key)
 
 
 def compile_md(md_path: Path, lang: str) -> str:
@@ -108,7 +136,7 @@ def compile_md(md_path: Path, lang: str) -> str:
         },
         output_format="html5",
     )
-    raw_html = md.convert(text)
+    raw_html = _rewrite_md_links(md.convert(text))
     sanitised = nh3.clean(
         raw_html,
         link_rel=None,
