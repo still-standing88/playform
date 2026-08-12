@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QShortcut
 
 from app_config import key_config
+from app_constance.misc import video_rotations
 
 
 class PlayerShortcuts:
@@ -34,6 +35,22 @@ class PlayerShortcuts:
 
     def _call_if_media(self, callback: Callable[[], None]):
         if not self._has_active_media_instance():
+            return
+        try:
+            callback()
+        except Exception:
+            pass
+
+    def _call_if_video(self, callback: Callable[[], None]):
+        if not self._widget.player_controls.is_video_available:
+            return
+        try:
+            callback()
+        except Exception:
+            pass
+
+    def _call_if_reverse_available(self, callback: Callable[[], None]):
+        if not self._widget.player_controls.is_reverse_available:
             return
         try:
             callback()
@@ -81,7 +98,16 @@ class PlayerShortcuts:
             hotkeys["Mark8 position"]: lambda: widget.player_controls.jump_to_mark(7),
             hotkeys["Mark9 position"]: lambda: widget.player_controls.jump_to_mark(8),
             hotkeys["Mark10 position"]: lambda: widget.player_controls.jump_to_mark(9),
-            hotkeys["close media"]: lambda: widget.close_current_media()
+            hotkeys["Pan up"]: lambda: self._call_if_video(lambda: widget.player_controls.pan_by(0.0, -widget.player_controls.PAN_STEP)),
+            hotkeys["Pan down"]: lambda: self._call_if_video(lambda: widget.player_controls.pan_by(0.0, widget.player_controls.PAN_STEP)),
+            hotkeys["Pan left"]: lambda: self._call_if_video(lambda: widget.player_controls.pan_by(-widget.player_controls.PAN_STEP, 0.0)),
+            hotkeys["Pan right"]: lambda: self._call_if_video(lambda: widget.player_controls.pan_by(widget.player_controls.PAN_STEP, 0.0)),
+            hotkeys["Rotate video"]: lambda: self._call_if_video(self._on_rotate_shortcut),
+            hotkeys["Flip horizontal"]: lambda: self._call_if_video(lambda: widget.player_controls._on_flip_horizontal_action_toggled(not widget.player_controls.is_flip_horizontal)),
+            hotkeys["Flip vertical"]: lambda: self._call_if_video(lambda: widget.player_controls._on_flip_vertical_action_toggled(not widget.player_controls.is_flip_vertical)),
+            hotkeys["Speed up"]: lambda: widget.player_controls.step_speed(1),
+            hotkeys["Speed down"]: lambda: widget.player_controls.step_speed(-1),
+            hotkeys["Reverse playback"]: lambda: self._call_if_reverse_available(lambda: widget.player_controls._on_reverse_action_toggled(not widget.player_controls.is_reverse_active)),
         }
 
         for shortcut in widget._shortcuts.values():
@@ -106,6 +132,15 @@ class PlayerShortcuts:
             # than once per physical press.
             sh.setAutoRepeat(False)
             widget._shortcuts[shortcut] = sh
+
+    def _on_rotate_shortcut(self):
+        controls = self._widget.player_controls
+        try:
+            idx = video_rotations.index(controls.video_rotate)
+        except ValueError:
+            idx = -1
+        next_degrees = video_rotations[(idx + 1) % len(video_rotations)]
+        controls._on_rotate_action_triggered(next_degrees)
 
     def _on_repeat_start_shortcut(self):
         widget = self._widget
