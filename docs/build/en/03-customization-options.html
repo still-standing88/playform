@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3. Customization and Options</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fff;
+  }
+  h1 { font-size: 2em; border-bottom: 2px solid #e0e0e0; padding-bottom: .3em; }
+  h2 { font-size: 1.5em; border-bottom: 1px solid #e8e8e8; padding-bottom: .2em; margin-top: 1.8em; }
+  h3 { font-size: 1.25em; margin-top: 1.4em; }
+  h4 { font-size: 1.1em; }
+  code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 0.94em; }
+  pre { background: #2d2d2d; color: #f8f8f2; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 0.92em; line-height: 1.5; }
+  pre code { background: none; padding: 0; color: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+  th { background: #f5f5f5; font-weight: 600; }
+  tr:nth-child(even) { background: #fafafa; }
+  blockquote { border-left: 3px solid #ccc; margin: 1em 0; padding: 0.5em 1em; color: #555; background: #f9f9f9; }
+  a { color: #0366d6; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  img { max-width: 100%; }
+  hr { border: 0; border-top: 1px solid #e0e0e0; margin: 2em 0; }
+  ul, ol { padding-left: 1.5em; }
+  @media (prefers-color-scheme: dark) {
+    body { color: #d0d0d0; background: #1a1a1a; }
+    h1 { border-color: #444; }
+    h2 { border-color: #3a3a3a; }
+    code { background: #333; color: #e0e0e0; }
+    pre { background: #111; }
+    th { background: #2a2a2a; }
+    tr:nth-child(even) { background: #222; }
+    td, th { border-color: #444; }
+    blockquote { background: #222; border-color: #555; color: #bbb; }
+    a { color: #58a6ff; }
+  }
+</style>
+</head>
+<body>
+<p><a href="02-interface-tour.html">← 2. A Tour of the Program's User Interface</a> | <a href="documentation.html#table-of-contents">Table of Contents</a> | <a href="04-tools.html">4. Tools →</a></p>
+<hr>
+<h1 id="3-customization-and-options">3. Customization and Options</h1>
+<h2 id="31-shortcuts">3.1. Shortcuts</h2>
+<p>PlayForm has <strong>72 configurable keyboard shortcuts</strong> organized into four categories: <strong>Global</strong>, <strong>Main Interface</strong>, <strong>Explorer</strong>, and <strong>Player</strong>. All shortcuts can be remapped via the Hotkeys dialog (<strong>Options &gt; Manage Hotkeys</strong>, F4).</p>
+<blockquote>
+<p><strong>Note:</strong> Multi Device Capture's three transport hotkeys (Start/Pause-Resume/Stop capture) are dialog-scoped rather than global, and are configured separately in the same Hotkeys dialog under a <strong>Multi Device Capture</strong> section. See <a href="04-tools.html#46-multi-device-capture">Section 4.6</a>.</p>
+</blockquote>
+<h3 id="managing-shortcuts">Managing Shortcuts</h3>
+<p>Open the Hotkeys dialog via <strong>Options &gt; Manage Hotkeys</strong> or press F4. The dialog shows a tree view with the four shortcut categories at the top level and individual actions underneath. Each row displays the action name and its current key binding.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Change a shortcut</strong></td>
+<td>Click the Shortcut column for an action, then press the desired key combination. Press Enter or move focus to accept.</td>
+</tr>
+<tr>
+<td><strong>Reset to Default</strong></td>
+<td>Click the <strong>Reset to Default</strong> button. All shortcuts revert to their factory defaults after confirmation.</td>
+</tr>
+<tr>
+<td><strong>Apply</strong></td>
+<td>Click <strong>Apply</strong> to save changes and activate them immediately without closing the dialog.</td>
+</tr>
+<tr>
+<td><strong>OK</strong></td>
+<td>Saves changes and closes the dialog.</td>
+</tr>
+<tr>
+<td><strong>Cancel</strong></td>
+<td>Discards any uncommitted edits and closes the dialog.</td>
+</tr>
+</tbody>
+</table>
+<p>Shortcut settings are saved to <code>data/key_config.cfg</code>. If this file is missing or corrupted, PlayForm automatically restores the factory defaults.</p>
+<hr>
+<h3 id="default-shortcut-reference">Default Shortcut Reference</h3>
+<h4 id="global-shortcuts">Global Shortcuts</h4>
+<p>These shortcuts work regardless of which panel has focus.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Default Key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Play/Pause</td>
+<td>Ctrl+Win+P</td>
+</tr>
+<tr>
+<td>Mute/Unmute</td>
+<td>Ctrl+Win+M</td>
+</tr>
+<tr>
+<td>Volume Down</td>
+<td>Ctrl+Win+F7</td>
+</tr>
+<tr>
+<td>Volume Up</td>
+<td>Ctrl+Win+F8</td>
+</tr>
+<tr>
+<td>Previous</td>
+<td>Ctrl+Win+F9</td>
+</tr>
+<tr>
+<td>Next</td>
+<td>Ctrl+Win+F10</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> Global shortcuts work when PlayForm has the application focus.</p>
+</blockquote>
+<h4 id="main-interface-shortcuts">Main Interface Shortcuts</h4>
+<p>These shortcuts control the main window, menus, and panel visibility.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Default Key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Open file</td>
+<td>Ctrl+O</td>
+</tr>
+<tr>
+<td>Open folder</td>
+<td>Ctrl+Shift+O</td>
+</tr>
+<tr>
+<td>Open URL</td>
+<td>Ctrl+U</td>
+</tr>
+<tr>
+<td>Close Currently playing Media</td>
+<td>Ctrl+W</td>
+</tr>
+<tr>
+<td>Show/Hide explorer</td>
+<td>Ctrl+E</td>
+</tr>
+<tr>
+<td>Show/Hide player controls</td>
+<td>Ctrl+H</td>
+</tr>
+<tr>
+<td>Show/Hide playlists</td>
+<td>Ctrl+L</td>
+</tr>
+<tr>
+<td>Toggle playlists</td>
+<td>Ctrl+1</td>
+</tr>
+<tr>
+<td>Toggle podcasts</td>
+<td>Ctrl+2</td>
+</tr>
+<tr>
+<td>Toggle radio</td>
+<td>Ctrl+3</td>
+</tr>
+<tr>
+<td>Toggle recents/favorites</td>
+<td>Ctrl+4</td>
+</tr>
+<tr>
+<td>Focus playlists</td>
+<td>Alt+1</td>
+</tr>
+<tr>
+<td>Focus podcasts</td>
+<td>Alt+2</td>
+</tr>
+<tr>
+<td>Focus radio</td>
+<td>Alt+3</td>
+</tr>
+<tr>
+<td>Focus recents/favorites</td>
+<td>Alt+4</td>
+</tr>
+<tr>
+<td>Hide window</td>
+<td>Alt+H</td>
+</tr>
+<tr>
+<td>Exit</td>
+<td>Alt+X</td>
+</tr>
+<tr>
+<td>Focus explorer</td>
+<td>Alt+E</td>
+</tr>
+<tr>
+<td>Focus player</td>
+<td>Alt+P</td>
+</tr>
+<tr>
+<td>Documentation</td>
+<td>F1</td>
+</tr>
+<tr>
+<td>Hotkeys dialog</td>
+<td>F4</td>
+</tr>
+<tr>
+<td>Preferences Dialog</td>
+<td>Ctrl+P</td>
+</tr>
+</tbody>
+</table>
+<h4 id="explorer-shortcuts">Explorer Shortcuts</h4>
+<p>These shortcuts are active when the Explorer panel has focus.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Default Key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Play/Pause</td>
+<td>Space</td>
+</tr>
+<tr>
+<td>Backward</td>
+<td>Left</td>
+</tr>
+<tr>
+<td>Forward</td>
+<td>Right</td>
+</tr>
+<tr>
+<td>Stop</td>
+<td>Ctrl+Space</td>
+</tr>
+<tr>
+<td>Search files/folders</td>
+<td>F3</td>
+</tr>
+</tbody>
+</table>
+<h4 id="player-shortcuts">Player Shortcuts</h4>
+<p>These shortcuts are active when the Player panel has focus.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Default Key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Play/Pause</td>
+<td>Space</td>
+</tr>
+<tr>
+<td>Backward (seek)</td>
+<td>Left</td>
+</tr>
+<tr>
+<td>Forward (seek)</td>
+<td>Right</td>
+</tr>
+<tr>
+<td>Stop</td>
+<td>Ctrl+Space</td>
+</tr>
+<tr>
+<td>Mute/Unmute</td>
+<td>M</td>
+</tr>
+<tr>
+<td>Previous track</td>
+<td>Page Up</td>
+</tr>
+<tr>
+<td>Next track</td>
+<td>Page Down</td>
+</tr>
+<tr>
+<td>Jump to beginning</td>
+<td>Home</td>
+</tr>
+<tr>
+<td>Jump to the end</td>
+<td>End</td>
+</tr>
+<tr>
+<td>Toggle repeat mode</td>
+<td>Ctrl+R</td>
+</tr>
+<tr>
+<td>Volume up</td>
+<td>Up</td>
+</tr>
+<tr>
+<td>Volume down</td>
+<td>Down</td>
+</tr>
+<tr>
+<td>Fullscreen</td>
+<td>F11</td>
+</tr>
+<tr>
+<td>Exit fullscreen</td>
+<td>Esc</td>
+</tr>
+<tr>
+<td>Take snapshot</td>
+<td>Ctrl+S</td>
+</tr>
+<tr>
+<td>Bookmarks list</td>
+<td>Ctrl+B</td>
+</tr>
+<tr>
+<td>New mark at current position</td>
+<td>K</td>
+</tr>
+<tr>
+<td>Repeat loop start</td>
+<td>[</td>
+</tr>
+<tr>
+<td>Repeat loop end</td>
+<td>]</td>
+</tr>
+<tr>
+<td>Clear repeat loop</td>
+<td>Backspace</td>
+</tr>
+<tr>
+<td>Previous repeat loop</td>
+<td>Ctrl+[</td>
+</tr>
+<tr>
+<td>Next repeat loop</td>
+<td>Ctrl+]</td>
+</tr>
+<tr>
+<td>Delete current bookmark</td>
+<td>Delete</td>
+</tr>
+<tr>
+<td>Previous bookmark</td>
+<td>Ctrl+Left</td>
+</tr>
+<tr>
+<td>Next bookmark</td>
+<td>Ctrl+Right</td>
+</tr>
+<tr>
+<td>Mark 1 position</td>
+<td>Ctrl+1</td>
+</tr>
+<tr>
+<td>Mark 2 position</td>
+<td>Ctrl+2</td>
+</tr>
+<tr>
+<td>Mark 3 position</td>
+<td>Ctrl+3</td>
+</tr>
+<tr>
+<td>Mark 4 position</td>
+<td>Ctrl+4</td>
+</tr>
+<tr>
+<td>Mark 5 position</td>
+<td>Ctrl+5</td>
+</tr>
+<tr>
+<td>Mark 6 position</td>
+<td>Ctrl+6</td>
+</tr>
+<tr>
+<td>Mark 7 position</td>
+<td>Ctrl+7</td>
+</tr>
+<tr>
+<td>Mark 8 position</td>
+<td>Ctrl+8</td>
+</tr>
+<tr>
+<td>Mark 9 position</td>
+<td>Ctrl+9</td>
+</tr>
+<tr>
+<td>Mark 10 position</td>
+<td>Ctrl+0</td>
+</tr>
+<tr>
+<td>Close media</td>
+<td>Ctrl+W</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="32-preferences">3.2. Preferences</h2>
+<p>The Preferences dialog (<strong>Options &gt; Manage Preferences</strong>, Ctrl+P) allows you to configure PlayForm's behavior. Settings are organized into five tabs: <strong>General</strong>, <strong>Media</strong>, <strong>Accessibility</strong>, <strong>Advanced</strong>, and <strong>Database</strong>.</p>
+<p>Preferences are stored in <code>data/prefs.json</code>. If the file is missing or corrupted, PlayForm automatically restores the factory defaults. Changes to certain settings (language, MPV logging, MPV arguments, or debug level) require an application restart, which PlayForm will prompt you to perform.</p>
+<h3 id="general-tab">General Tab</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Options</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Language</strong></td>
+<td>EN, FR, AR, ES</td>
+<td>EN</td>
+<td>User interface language. Requires restart to apply.</td>
+</tr>
+<tr>
+<td><strong>Screenshot Format</strong></td>
+<td>JPG, PNG, TIFF</td>
+<td>PNG</td>
+<td>File format for screenshots taken with Ctrl+S.</td>
+</tr>
+<tr>
+<td><strong>Color Theme</strong></td>
+<td>System, Light, Dark</td>
+<td>System</td>
+<td>UI color scheme. Changes apply immediately without restart.</td>
+</tr>
+<tr>
+<td><strong>Auto Check for Updates</strong></td>
+<td>On / Off</td>
+<td>On</td>
+<td>Automatically checks for newer versions of PlayForm at startup.</td>
+</tr>
+<tr>
+<td><strong>Save URLs</strong></td>
+<td>On / Off</td>
+<td>Off</td>
+<td>Saves entered URLs across sessions for quick re-access.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="media-tab">Media Tab</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Range</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Volume Offset</strong></td>
+<td>1–20</td>
+<td>5</td>
+<td>Amount by which volume changes per step (via shortcuts or menu).</td>
+</tr>
+<tr>
+<td><strong>Seek Offset</strong></td>
+<td>1–60 seconds</td>
+<td>5</td>
+<td>Amount by which forward/backward seeking jumps per step.</td>
+</tr>
+<tr>
+<td><strong>Audio Device</strong></td>
+<td>(list)</td>
+<td>0</td>
+<td>Output audio device. Populated with all available devices on your system.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="accessibility-tab">Accessibility Tab</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Options</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Enable Speech Feedback</strong></td>
+<td>On / Off</td>
+<td>Off</td>
+<td>Master toggle for text-to-speech accessibility. When enabled, status bar messages and subtitle text are spoken aloud.</td>
+</tr>
+<tr>
+<td><strong>Interrupt Previous Speech</strong></td>
+<td>On / Off</td>
+<td>On</td>
+<td>When enabled, a new utterance stops the currently playing one. When disabled, speech is queued.</td>
+</tr>
+<tr>
+<td><strong>Voice</strong></td>
+<td>(list)</td>
+<td>(system default)</td>
+<td>TTS voice selection.</td>
+</tr>
+<tr>
+<td><strong>Volume</strong></td>
+<td>0.0–100.0</td>
+<td>80.0</td>
+<td>Speech volume.</td>
+</tr>
+<tr>
+<td><strong>Rate</strong></td>
+<td>0.1–10.0</td>
+<td>1.0</td>
+<td>Speech rate, where 1.0 is normal speed.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="advanced-tab">Advanced Tab</h3>
+<p><strong>MPV Settings:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Options</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Enable MPV Logging</strong></td>
+<td>On / Off</td>
+<td>On</td>
+<td>Enables debug logging from the media engine.</td>
+</tr>
+<tr>
+<td><strong>Debug Level</strong></td>
+<td>0–2</td>
+<td>0</td>
+<td>Debug verbosity (0 = minimal, 2 = most verbose). Only shown when logging is enabled.</td>
+</tr>
+<tr>
+<td><strong>Extra MPV Options</strong></td>
+<td>(text)</td>
+<td><em>(empty)</em></td>
+<td>Custom options passed to the media backend.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>yt-dlp Settings:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Cookies File</strong></td>
+<td>Path to a <code>cookies.txt</code> file exported from your browser, used for accessing authenticated content on YouTube and other sites. Browse to select the file.</td>
+</tr>
+<tr>
+<td><strong>yt-dlp Path</strong></td>
+<td>Directory where yt-dlp binary is located. Normally managed automatically via the utility downloader, but can be set manually.</td>
+</tr>
+<tr>
+<td><strong>Enable yt-dlp Logging</strong></td>
+<td>Toggle to enable debug output from yt-dlp. When on, a <strong>Verbose Output</strong> checkbox appears for full detail.</td>
+</tr>
+<tr>
+<td><strong>FFmpeg Path</strong></td>
+<td>Directory where FFmpeg binary is located. Normally managed automatically, but can be set manually if you have a custom FFmpeg installation.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="database-tab">Database Tab</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Options</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Catalog audio files</strong></td>
+<td>On / Off</td>
+<td>On</td>
+<td>Include audio files when a folder is cataloged for search.</td>
+</tr>
+<tr>
+<td><strong>Catalog video files</strong></td>
+<td>On / Off</td>
+<td>On</td>
+<td>Include video files when a folder is cataloged for search.</td>
+</tr>
+<tr>
+<td><strong>Remember Explorer search history</strong></td>
+<td>On / Off</td>
+<td>On</td>
+<td>Keeps a history of Explorer search terms across sessions.</td>
+</tr>
+<tr>
+<td><strong>Clear Search History</strong></td>
+<td>button</td>
+<td>—</td>
+<td>Clears the stored Explorer search history immediately.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="33-manage-database">3.3. Manage Database</h2>
+<p>The Manage Database dialog (<strong>Options &gt; Manage Database…</strong>) lists every folder cataloged for Explorer search, with its file count and last-scanned time. Folders are added here or via Explorer's <strong>Add Current Folder to Database</strong> action.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Add Folder…</strong></td>
+<td>Browse for a folder and catalog it.</td>
+</tr>
+<tr>
+<td><strong>Rescan Selected</strong></td>
+<td>Re-scans the selected folder(s) for changes.</td>
+</tr>
+<tr>
+<td><strong>Remove Selected…</strong></td>
+<td>Removes the selected folder(s) and their indexed entries (confirmation required; files on disk are untouched).</td>
+</tr>
+<tr>
+<td><strong>Clear &amp; Rebuild Catalog…</strong></td>
+<td>Wipes the entire index and re-scans every cataloged folder (confirmation required).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Index Statistics</strong> shows the total number of indexed files and how many had errors during cataloging.</p>
+<p>A cataloging scan runs in the background; progress is shown in a dialog on top of Manage Database, where it can be paused or the whole scan canceled. Minimizing either dialog leaves a restore button in the menu-bar corner (see <a href="02-interface-tour.html#211-menubar">Section 2.1.1</a>).</p>
+<hr>
+<p><strong>Previous:</strong> <a href="02-interface-tour.html">← 2. A Tour of the Program's User Interface</a> | <strong>Next:</strong> <a href="04-tools.html">4. Tools →</a></p>
+</body>
+</html>

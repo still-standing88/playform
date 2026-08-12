@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4. Tools</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fff;
+  }
+  h1 { font-size: 2em; border-bottom: 2px solid #e0e0e0; padding-bottom: .3em; }
+  h2 { font-size: 1.5em; border-bottom: 1px solid #e8e8e8; padding-bottom: .2em; margin-top: 1.8em; }
+  h3 { font-size: 1.25em; margin-top: 1.4em; }
+  h4 { font-size: 1.1em; }
+  code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 0.94em; }
+  pre { background: #2d2d2d; color: #f8f8f2; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 0.92em; line-height: 1.5; }
+  pre code { background: none; padding: 0; color: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+  th { background: #f5f5f5; font-weight: 600; }
+  tr:nth-child(even) { background: #fafafa; }
+  blockquote { border-left: 3px solid #ccc; margin: 1em 0; padding: 0.5em 1em; color: #555; background: #f9f9f9; }
+  a { color: #0366d6; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  img { max-width: 100%; }
+  hr { border: 0; border-top: 1px solid #e0e0e0; margin: 2em 0; }
+  ul, ol { padding-left: 1.5em; }
+  @media (prefers-color-scheme: dark) {
+    body { color: #d0d0d0; background: #1a1a1a; }
+    h1 { border-color: #444; }
+    h2 { border-color: #3a3a3a; }
+    code { background: #333; color: #e0e0e0; }
+    pre { background: #111; }
+    th { background: #2a2a2a; }
+    tr:nth-child(even) { background: #222; }
+    td, th { border-color: #444; }
+    blockquote { background: #222; border-color: #555; color: #bbb; }
+    a { color: #58a6ff; }
+  }
+</style>
+</head>
+<body>
+<p><a href="03-customization-options.html">← 3. Customization and Options</a> | <a href="documentation.html#table-of-contents">Table of Contents</a> | <a href="05-legal.html">5. Legal →</a></p>
+<hr>
+<h1 id="4-tools">4. Tools</h1>
+<p>PlayForm includes a suite of built-in tools accessible from the <strong>Tools</strong> menu (see <a href="02-interface-tour.html#211-menubar">Section 2.1.1</a> for the exact menu layout). Each tool opens in its own dialog window, and only one tool can be open at a time — trying to open a second tool while one is already open shows a "Tool Already Open" message until the first is closed.</p>
+<p>Tool dialogs have no native close (X) button; instead they offer <strong>Hide</strong> and <strong>Close</strong>:<br>
+- <strong>Hide</strong> leaves the tool running in the background and adds a "Show <em>Tool Name</em>" restore button to the menu-bar corner (see <a href="02-interface-tour.html#211-menubar">Section 2.1.1</a>).<br>
+- <strong>Close</strong> (or clicking Hide/Close's window-close equivalent) is blocked with a "Tool Active" warning while a job is still running in that tool — wait for it to finish or cancel it first.</p>
+<p>Most tools depend on FFmpeg (minimum version 6 required). If FFmpeg is not found, the tool will not open and a message directs you to <strong>Options &gt; Get/Update Utilities</strong> to download it. Tag Editor, Subtitle Converter, Subtitle Editor, and Speech Converter do not require FFmpeg to open — Speech Converter only calls on it when saving speech to a compressed audio format.</p>
+<hr>
+<h2 id="41-ffmpeg-tools">4.1. FFmpeg Tools</h2>
+<p>Reached via <strong>Tools &gt; FFmpeg Tools</strong>.</p>
+<h3 id="411-batch-converter">4.1.1. Batch Converter</h3>
+<p><strong>Access:</strong> Tools &gt; FFmpeg Tools &gt; Batch Converter</p>
+<p><strong>Purpose:</strong> Convert multiple audio or video files between formats in a single batch operation, with an optional chain of audio edits/filters and a saveable preset system.</p>
+<p>The dialog has a <strong>Preset</strong> row at the top (an editable name combo plus <strong>Save</strong> and <strong>Delete</strong> buttons) above four tabs — <strong>Source</strong>, <strong>Convert</strong>, <strong>Processing</strong>, <strong>Destination</strong> — and a <strong>Begin</strong> button.</p>
+<p><strong>Source tab:</strong><br>
+- <strong>Add Files...</strong> — multi-select file dialog filtered to PlayForm's known audio/video extensions.<br>
+- <strong>Add Folder...</strong> — adds a folder, with <strong>Include all subfolders</strong> and a format-scope choice (<strong>Audio formats</strong> [default], <strong>Video formats</strong>, <strong>All formats</strong>, or a <strong>Custom format</strong>); only files matching the chosen scope are picked up per folder when the job runs.<br>
+- <strong>Remove Selected</strong> / <strong>Clear All</strong>, plus the same actions via right-click and the Delete key.</p>
+<p><strong>Convert tab</strong> — a mode switch between <strong>Audio</strong> (default) and <strong>Video</strong>:<br>
+- <strong>Audio:</strong> <strong>Format</strong> (MP3, Ogg Vorbis, Opus, AAC, M4A, M4B, FLAC, WAV, AIFF, WMA, AC-3, WavPack, MP2, AMR-NB, ALAC), <strong>Sample Rate</strong> ("Keep Original" or a rate ladder appropriate to the format), <strong>Bit Rate</strong> ("Keep Original" or a kbps ladder — hidden for lossless-only formats), <strong>Use Variable Bit Rate (Quality)</strong> (where the format supports VBR), <strong>Bit Depth</strong> (for FLAC/WAV/AIFF/WavPack/ALAC), and a <strong>Codec Options</strong> panel that rebuilds itself per format (e.g. MP3's encoder quality and joint-stereo toggle, Opus's VBR mode/complexity/application/frame duration, FLAC's compression level, AC-3's dialogue normalization, and so on).<br>
+- <strong>Video:</strong> <strong>Format</strong> (MP4/H.264, MKV/H.264, WebM/VP9, AVI/MPEG-4, MOV/H.264), <strong>Resolution</strong> ("Keep Original" or 3840×2160/1920×1080/1280×720/854×480), <strong>Video Bit Rate</strong> ("Keep Original" or 500k–12000k), <strong>Frame Rate</strong> ("Keep Original" or 24/25/30/50/60).</p>
+<p><strong>Processing tab</strong> — builds an ordered effects chain applied during conversion:<br>
+- Shows the list of <strong>applied</strong> effects in order, with <strong>Add Edit...</strong>, <strong>Add Filter...</strong>, <strong>Edit Selected...</strong>, and <strong>Remove Selected</strong> (double-click also edits).<br>
+- <strong>Add Edit...</strong> / <strong>Add Filter...</strong> open a categorized picker over the built-in effects catalog:<br>
+  - <strong>Edits:</strong> Loudness (Normalize Peak, Normalize RMS, EBU R128/loudnorm, ReplayGain), Volume (increase/decrease/multiply), Silence (remove leading/trailing/all silence, trim below threshold), Fade (in/out), Trim (start/end/duration), Reverse.<br>
+  - <strong>Filters:</strong> EQ (10-band, 3-band parametric, high/low/band-pass, notch), Dynamics (compressor, limiter, expander, noise gate), Pitch (speed without pitch, pitch without speed), Time-Based (delay, echo, algorithmic reverb, chorus, flanger, phaser, and convolution reverb — the one effect that needs a secondary Impulse Response File plus dry/wet gain).<br>
+  - Each effect has its own parameter form (ranges and defaults shown per field) that appears when it's selected.</p>
+<p><strong>Destination tab:</strong><br>
+- <strong>Store all files in their original folders</strong> (default) or <strong>Store all files in this folder:</strong> (with a <strong>Preserve subfolder structure</strong> option for recursively-added folders).<br>
+- <strong>Overwrite existing files</strong>, <strong>Delete original files</strong>, and <strong>Create log file</strong> (with a log path picker) options.<br>
+- Output files keep the original base filename with the new format's extension. If a resolved output path would be identical to an input file, or an output file already exists and Overwrite is off, that file is skipped and noted in the log/progress rather than being touched.</p>
+<p><strong>Presets:</strong> <strong>Save</strong> stores the current Convert tab settings and Processing effects chain under a name (prompting for one if the combo is empty); selecting a saved preset loads both back; <strong>Delete</strong> removes the currently named preset. Presets do not capture Source or Destination tab state.</p>
+<p><strong>Running a job:</strong> Click <strong>Begin</strong>. A progress dialog shows an overall progress bar plus <strong>Progress</strong> (per-file OK/Skipped/FAILED results) and <strong>Live Log</strong> (raw FFmpeg output) tabs, a <strong>When finished:</strong> notification choice (system tray notification or stay silent), and <strong>Pause</strong>/<strong>Cancel</strong> buttons — Pause holds the job between files, Cancel finishes the current file then stops; both buttons give way to a <strong>Close</strong> button once the run ends.</p>
+<h3 id="412-media-extractor">4.1.2. Media Extractor</h3>
+<p><strong>Access:</strong> Tools &gt; FFmpeg Tools &gt; Media Extractor</p>
+<p><strong>Purpose:</strong> Extract an audio track, a video track, or image frames from a single source file. Audio and video extraction share the exact same format/quality controls as the Batch Converter's Convert tab.</p>
+<p><strong>How to use:</strong></p>
+<ol>
+<li>Browse to or type the path of a source file.</li>
+<li>Choose a mode: <strong>Audio</strong>, <strong>Video</strong>, or <strong>Images</strong>.</li>
+<li><strong>Audio mode</strong> — pick a target format and quality settings (same options as Batch Converter's Audio panel). Optionally set a <strong>Start Time</strong> (<code>HH:MM:SS</code>) and an <strong>End Time / Duration</strong> (a value with a colon is treated as an absolute end time; a plain number is treated as a duration in seconds). Output is saved as <code>{filename}_audio.{extension}</code>.</li>
+<li><strong>Video mode</strong> — pick a target format/resolution/bitrate/frame rate (same options as Batch Converter's Video panel), or check <strong>Copy video stream without re-encoding (fast, no quality loss)</strong> (checked by default) to remux the source's video without recompressing it. Output is saved as <code>{filename}_video{extension}</code>.</li>
+<li>
+<p><strong>Images mode</strong> — choose an <strong>Extraction Mode</strong>:</p>
+<ul>
+<li><strong>Extract All Frames</strong> — every frame, named <code>frame-0001.png</code>, <code>frame-0002.png</code>, …</li>
+<li><strong>Extract Range</strong> — frames within a Start Time + Duration window.</li>
+<li><strong>Extract N Images Per Second</strong> — a configurable frames-per-second rate (1–60, default 1).</li>
+<li><strong>Extract Single Frame</strong> — one frame at the Start Time, saved as <code>frame.{ext}</code>.</li>
+</ul>
+<p>Also choose an <strong>Image Format</strong> (PNG, JPEG, BMP, WebP, TIFF) and, for JPEG/WebP, a <strong>Quality</strong> value (1–100, default 90).<br>
+6. Click <strong>Extract</strong> and choose an output directory. Progress is shown with elapsed time and speed; errors are reported in a message box on completion.</p>
+</li>
+</ol>
+<h3 id="413-thumbnail-generator">4.1.3. Thumbnail Generator</h3>
+<p><strong>Access:</strong> Tools &gt; Thumbnail Generator</p>
+<p><strong>Purpose:</strong> Generate thumbnail images from a video file using three different methods. All output is PNG.</p>
+<p><strong>How to use:</strong></p>
+<ol>
+<li>Browse to or type the path of a video file.</li>
+<li>Choose a generation mode:</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Description</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Manual Frame Selection</strong></td>
+<td>Specify a timestamp (<code>HH:MM:SS</code>, default <code>00:00:15</code>). Extracts a single frame at that position.</td>
+<td><code>thumbnail.png</code></td>
+</tr>
+<tr>
+<td><strong>Automatic Thumbnail Filter</strong></td>
+<td>Uses FFmpeg's <code>thumbnail</code> filter to automatically pick the most representative frame.</td>
+<td><code>thumbnail_auto.png</code></td>
+</tr>
+<tr>
+<td><strong>Select from Scene Changes</strong></td>
+<td>Detects scene transitions and extracts a frame from each. Configurable number of images (default 5) and scene-change threshold (0.0–1.0, default 0.4).</td>
+<td><code>scene-01.png</code>, <code>scene-02.png</code>, …</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>Click <strong>Generate Thumbnail(s)</strong> and choose an output directory.</li>
+</ol>
+<hr>
+<h2 id="42-m4b-tools">4.2. M4B Tools</h2>
+<p>Reached via <strong>Tools &gt; M4B Tools</strong>. Two tools, grouped by workflow rather than one-per-operation: <strong>Audiobook Tools</strong> for single-book operations, and <strong>Audiobook Combiner</strong> for multi-book, CSV/glob-driven batch operations.</p>
+<h3 id="421-audiobook-tools-bind-split-slide-labels-cover">4.2.1. Audiobook Tools (Bind / Split / Slide / Labels / Cover)</h3>
+<p><strong>Access:</strong> Tools &gt; M4B Tools &gt; Audiobook Tools (Bind/Split/Slide/Labels/Cover)</p>
+<p><strong>Purpose:</strong> Create and manage a single <code>.m4b</code> audiobook, one book at a time, across five tabs.</p>
+<p><strong>Bind tab</strong> — combine multiple audio files into one chaptered <code>.m4b</code>:<br>
+- Source: <strong>From Folder</strong> (one chapter per file, sorted — default) or <strong>From File List</strong> (manually add/remove/reorder files to control chapter order).<br>
+- Options: <strong>Use filenames as chapter titles</strong>, <strong>Decode durations (slower, more accurate)</strong>, <strong>Keep temporary files (debugging)</strong>.<br>
+- Metadata: <strong>Author</strong>, <strong>Title</strong>, <strong>Date</strong>, <strong>Bitrate</strong> (32k–320k, default 128k), and a <strong>Cover Image</strong>.<br>
+- Choose an output <code>.m4b</code> path and click <strong>Bind Audiobook</strong>.</p>
+<p><strong>Split tab</strong> — split an existing audiobook into per-chapter/per-segment files:<br>
+- Split by <strong>Embedded Chapters</strong> (default) or <strong>Detected Silence</strong> (with a minimum silence duration, silence threshold in dB, and an option to trim silence from segment edges).<br>
+- Optional <strong>Start Time</strong>/<strong>End Time</strong> window, a minimum segment length, and end padding.<br>
+- Output format uses the same Format/Sample Rate/Bit Rate/VBR/Bit Depth/Codec Options controls as Batch Converter's Convert tab.<br>
+- A <strong>Naming Template</strong> field controls output filenames (default <code>{book_title}/{chapter_num:02d} - {chapter_title}.{ext}</code>), with placeholders for book title, chapter number/title, author, narrator, genre, year, extension, original filename, and duration. <strong>Include cover art in each segment</strong> is checked by default.<br>
+- Choose an output folder and click <strong>Split Audiobook</strong>.</p>
+<p><strong>Slide tab</strong> — shift an existing audiobook's chapter markers in time, <strong>rewriting the file in place</strong> (a confirmation prompt is shown before this happens):<br>
+- <strong>Slide Duration</strong> (positive delays chapters, negative pulls them earlier), an optional <strong>Trim Start</strong> amount, and a re-encode bitrate.<br>
+- Click <strong>Apply Slide</strong>.</p>
+<p><strong>Labels tab</strong> — exchange chapter markers with an Audacity label-track text file:<br>
+- <strong>Export Chapters → Labels</strong> writes the audiobook's current chapters to a label file you can edit in Audacity.<br>
+- <strong>Import Labels → Chapters</strong> reads an edited label file back and re-applies it as the book's new chapters, rewriting the audiobook file in place (confirmation prompt shown).</p>
+<p><strong>Cover tab</strong> — extract or apply cover art:<br>
+- <strong>Extract Cover Image</strong> saves the audiobook's embedded cover to an image file.<br>
+- <strong>Apply Cover Image</strong> embeds a chosen image into a new copy of the audiobook (the output must be a different file from the source).</p>
+<p>Bind and Split show progress in a pausable/cancelable job dialog like Batch Converter's; Slide, Labels, and Cover run as single-outcome jobs without a pause option.</p>
+<h3 id="422-audiobook-combiner-combine-metadata-dump">4.2.2. Audiobook Combiner (Combine / Metadata Dump)</h3>
+<p><strong>Access:</strong> Tools &gt; M4B Tools &gt; Audiobook Combiner (Combine/Metadata Dump)</p>
+<p><strong>Purpose:</strong> Multi-book, batch-driven operations across two tabs.</p>
+<p><strong>Combine tab</strong> — merge several audiobooks/audio files into one <code>.m4b</code>:<br>
+- Source: a <strong>CSV File</strong> (default), a <strong>Glob Pattern</strong> (e.g. <code>C:\Books\*.m4b</code>), or a manually ordered <strong>File List</strong>.<br>
+- <strong>Combined Audiobook Metadata</strong> fields (Title, Author, Narrator, Genre, Year, Description, Cover — a local path or an <code>http(s)://</code> URL) override anything specified in the CSV.<br>
+- Options: <strong>Preserve each source file's existing chapters</strong>, a combine <strong>Bitrate</strong> (32k–256k, default 64k), and <strong>Keep temporary files (debugging)</strong>.<br>
+- The <strong>CSV format</strong> supports optional <code>#key,value</code> metadata header lines (<code>title</code>, <code>author</code>, <code>narrator</code>, <code>genre</code>, <code>year</code>, <code>description</code>, <code>output_path</code>, <code>cover_path</code>) followed by a data table with a <code>file</code> column and an optional per-file <code>title</code> column; relative file paths resolve against the CSV's own folder.<br>
+- Choose (or let the CSV specify) an output path and click <strong>Combine Audiobooks</strong>.</p>
+<p><strong>Metadata Dump tab</strong> — probe a batch of audio/audiobook files and export one CSV row per chapter:<br>
+- Add files/folders the same way as Batch Converter's Source tab.<br>
+- Choose an output CSV path and click <strong>Dump Metadata to CSV</strong>.</p>
+<hr>
+<h2 id="43-subtitle-tools">4.3. Subtitle Tools</h2>
+<p>Reached via <strong>Tools &gt; Subtitle Tools</strong>.</p>
+<h3 id="431-subtitle-converter">4.3.1. Subtitle Converter</h3>
+<p><strong>Access:</strong> Tools &gt; Subtitle Tools &gt; Subtitle Converter</p>
+<p><strong>Purpose:</strong> Batch convert subtitle files between different formats with encoding control.</p>
+<p><strong>Supported input formats:</strong> ASS, JSON, SAMI, SMI, SRT, SSA, SUB, TTML, TXT, VTT.</p>
+<p><strong>Supported output formats:</strong> SRT, ASS, SSA, MicroDVD, JSON, MPL2, TMP, VTT.</p>
+<p><strong>How to use:</strong></p>
+<ol>
+<li>Click <strong>Add Files</strong> to load one or more subtitle files. Each file's encoding is auto-detected; the first file's detected encoding seeds the Input Encoding field.</li>
+<li>Set the <strong>Output Format</strong> from the dropdown.</li>
+<li>Optionally adjust <strong>Input Encoding</strong> and <strong>Output Encoding</strong> (default UTF-8; a set of common encodings is offered).</li>
+<li>Optionally check <strong>Remove miscellaneous events</strong> to strip non-dialogue subtitle events.</li>
+<li>Expand <strong>Advanced Format Options</strong> for format-specific settings — SRT: keep unknown/all HTML tags on input, keep SSA tags on output; MicroDVD: omit the FPS declaration on output.</li>
+<li>Click <strong>Convert</strong> and choose an output directory. Each file is written as <code>{original_basename}.{output_format}</code>.</li>
+</ol>
+<h3 id="432-subtitle-editor">4.3.2. Subtitle Editor</h3>
+<p><strong>Access:</strong> Tools &gt; Subtitle Tools &gt; Subtitle Editor</p>
+<p><strong>Purpose:</strong> Edit a single subtitle file's timing and text with a live preview. Unlike the Converter, the Editor never changes the file's format — output keeps the same filename and extension as the input.</p>
+<p><strong>How to use:</strong></p>
+<ol>
+<li>Click <strong>Load File</strong> to open a single subtitle file (same format list as the Converter). Encoding is auto-detected and shown in an editable <strong>Input File Encoding</strong> field.</li>
+<li>The right-hand panel shows a live preview table with four columns: <strong>No.</strong>, <strong>Start</strong>, <strong>End</strong>, <strong>Text</strong>.</li>
+<li>Use the <strong>Timing Editor</strong> tab:<ul>
+<li><strong>Shift Time:</strong> enter an offset such as <code>1.5s</code> or <code>-1m10s</code> to shift every event by that amount.</li>
+<li><strong>Enable Framerate Transformation:</strong> convert timing between a <strong>From FPS</strong> and <strong>To FPS</strong> value (defaults 23.976 → 25.000).</li>
+</ul>
+</li>
+<li>Use the <strong>Text Editor</strong> tab — pick a <strong>Text Operation</strong>: <strong>None</strong>, <strong>Find and Replace</strong> (with a Case Sensitive option), <strong>Add Prefix/Suffix</strong>, or <strong>Change Case</strong> (UPPERCASE / lowercase / Title Case). Text-operation changes are reflected live in the preview table.</li>
+<li>Click <strong>Apply Changes</strong> and choose an output directory — because the output filename matches the input, choose a different folder than the source to avoid overwriting the original file.</li>
+</ol>
+<hr>
+<h2 id="44-tag-editor">4.4. Tag Editor</h2>
+<p><strong>Access:</strong> Tools &gt; Tag Editor</p>
+<p><strong>Purpose:</strong> View and edit metadata tags on audio files.</p>
+<p><strong>Supported file formats:</strong> MP3, FLAC, M4A, AAC, AIFF, DSF, OGG, Opus, WAV, WavPack.</p>
+<p><strong>How to use:</strong></p>
+<ol>
+<li>Click <strong>Add Files</strong> to load one or more audio files. Files appear in a list on the left.</li>
+<li>Select a file to display its current metadata in the right panel.</li>
+<li>Edit any of the following fields:<ul>
+<li><strong>Track Title</strong>, <strong>Artist</strong>, <strong>Album</strong>, <strong>Album Artist</strong>, <strong>Composer</strong></li>
+<li><strong>Track Number</strong>, <strong>Total Tracks</strong>, <strong>Disc Number</strong>, <strong>Total Discs</strong></li>
+<li><strong>Genre</strong>, <strong>Year</strong>, <strong>Comment</strong>, <strong>Lyrics</strong></li>
+</ul>
+</li>
+<li>Changes are tracked per-field. Use <strong>Save Current File</strong> to save changes for the selected file, or <strong>Save All Files</strong> to bulk-save all modified files.</li>
+<li><strong>Remove File</strong> removes a file from the editing session (does not delete the file from disk).</li>
+</ol>
+<hr>
+<h2 id="45-speech-converter">4.5. Speech Converter</h2>
+<p><strong>Access:</strong> Tools &gt; Speech Converter</p>
+<p><strong>Purpose:</strong> Text-to-speech — type or load text, speak it aloud through the operating system's TTS engine, and optionally render it to an audio file.</p>
+<p><strong>How to use:</strong></p>
+<ol>
+<li>Type or paste text into the main text box, or use <strong>Open Text File...</strong> (Ctrl+O) to load a <code>.txt</code> file.</li>
+<li>Click <strong>Speak</strong> (or press F7) to have the text read aloud. <strong>Pause</strong>/<strong>Resume</strong> (F7 while speaking) and <strong>Stop</strong> (F8) are available while speaking, when the active engine supports pausing.</li>
+<li>Click <strong>Parameters...</strong> (Ctrl+F) to adjust:<ul>
+<li><strong>Volume</strong> (0–100%, default 100)</li>
+<li><strong>Speed</strong> (-100 to 100, default 0)</li>
+<li><strong>Pitch</strong> (-100 to 100, default 0)</li>
+<li>On Windows, an additional <strong>Use pitch parameter through XML tags</strong> option routes speech through SAPI5's own <code>&lt;pitch&gt;</code> markup, which gives more reliable pitch control than the normalized Pitch slider (SAPI5 otherwise ignores it).</li>
+</ul>
+</li>
+<li>Click <strong>Save...</strong> (Ctrl+S) to render the current text to an audio file (<strong>MP3</strong>, <strong>WAV</strong>, <strong>OGG</strong>, or <strong>FLAC</strong>). This requires the <strong>Windows SAPI5 engine</strong> — on other platforms, or if SAPI5 isn't available, saving to a file is disabled and speaking aloud is the only option. Non-WAV formats are transcoded from a temporary WAV via FFmpeg after SAPI renders it.</li>
+</ol>
+<p>The TTS engine itself (SAPI5 on Windows, the platform's native engine on macOS/Linux) is selected automatically — there is no manual engine picker.</p>
+<hr>
+<h2 id="46-multi-device-capture">4.6. Multi Device Capture</h2>
+<p><strong>Access:</strong> Tools &gt; Multi Device Capture</p>
+<p><strong>Purpose:</strong> Record from several cameras, monitors, windows, and audio devices at the same time, each source saved to its own output file, with pause/resume and live per-source status. Like every other tool, it opens as a single dialog (Hide/Close, one-tool-at-a-time) — it is not a dock panel, so a capture keeps running if you Hide the dialog, but the dialog's own Close is blocked while a capture is active.</p>
+<h3 id="sessions-and-sources">Sessions and Sources</h3>
+<ul>
+<li>A <strong>Session</strong> is a named group of sources that share one output folder and container format (MKV, MP4, or MOV).</li>
+<li>A <strong>Source</strong> is one capturable device — a camera, monitor, window, audio input, or audio output — that belongs to one or more sessions. Sources are managed per-session: the Sources list always shows only the sources in the currently selected session.</li>
+<li>Opening the tool with no sessions yet auto-creates and selects an in-memory "Untitled session"; it's only saved for real (as "Session N") once you add its first source, so you never have to create a session before adding a source. Use <strong>New session...</strong> (right-click the Sessions list) to create and name a session explicitly at any time.</li>
+</ul>
+<h3 id="configuring-a-session">Configuring a session</h3>
+<p>The <strong>Sessions</strong> list (left) and the session-scoped <strong>Sources</strong> list (right) sit side by side:</p>
+<ul>
+<li>Right-click a session for <strong>Edit</strong>, <strong>Duplicate</strong>, <strong>Delete</strong>, or (for the pending "Untitled" session) <strong>Save session...</strong>.</li>
+<li>Each source row shows its status (e.g. "48000 Hz - 2 ch" for audio, "1920x1080 @ 30fps" for a camera); a checkbox enables or disables it for the next capture without removing it from the session.</li>
+<li><strong>Add source</strong> opens the source wizard (below). <strong>Refresh status</strong> re-checks whether each source's device is still connected — a source whose device has disappeared is flagged in red.</li>
+<li><strong>Settings</strong> opens the settings dialog (below); <strong>Start capture</strong> begins recording using every enabled source in the selected session.</li>
+</ul>
+<h3 id="adding-or-editing-a-source">Adding or editing a source</h3>
+<p>The Add/Edit Source wizard walks through up to three pages:</p>
+<ol>
+<li><strong>Type and device</strong> — pick a <strong>Source type</strong> (<strong>Audio input</strong>, <strong>Audio output</strong>, <strong>Camera</strong>, <strong>Monitor</strong>, or <strong>Window</strong>) and a <strong>Device</strong> from a background-probed list (with a <strong>Refresh</strong> button). Likely system-audio-loopback devices (VB-Cable, Stereo Mix, VoiceMeeter, etc.) are labeled "(likely loopback)". Give the source a <strong>Friendly name</strong>.</li>
+<li><strong>Settings</strong> — shown only if the type has configurable options:<ul>
+<li><strong>Audio</strong> (input/output): <strong>Sample rate</strong> (44100/48000/96000/192000 Hz), <strong>Channels</strong> (Mono/Stereo), <strong>Volume</strong> (0–300%, where over 100% applies real gain).</li>
+<li><strong>Camera</strong>: <strong>Resolution</strong> and <strong>Frame rate</strong>, populated from the device's actual supported capture formats.</li>
+<li><strong>Monitor</strong>/<strong>Window</strong>: <strong>Frame rate</strong> (1–240, default 30) and <strong>Capture mouse cursor</strong>.</li>
+</ul>
+</li>
+<li><strong>Preview</strong> — an opt-in <strong>Enable live preview</strong> checkbox:<ul>
+<li>Camera/Monitor/Window show a live video feed.</li>
+<li>Audio input plays the microphone back through your speakers so you can actually hear it, plus a level meter.</li>
+<li>Audio output (loopback) shows a level meter only — it deliberately doesn't play the audio back, to avoid feedback.</li>
+</ul>
+</li>
+</ol>
+<h3 id="settings-dialog">Settings dialog</h3>
+<p>Opened via the <strong>Settings</strong> button on the Configure view:<br>
+- <strong>General</strong>: default output directory, default container format (MKV/MP4/MOV), a <strong>Notify when a capture finishes</strong> toggle (via the system tray), and <strong>Keep intermediate segment files after a paused session</strong> (off by default — see "How pause/resume works" below).<br>
+- <strong>Audio defaults</strong> / <strong>Video defaults</strong>: pre-fill values (sample rate/channels/volume for new audio sources; frame rate/cursor-capture for new monitor/window sources) used when you create a new source.</p>
+<h3 id="recording">Recording</h3>
+<p>Click <strong>Start capture</strong> to switch to the Capture view, which shows a status label (<strong>Idle</strong> / <strong>Starting...</strong> / <strong>Recording</strong> / <strong>Paused</strong> / <strong>Stopping...</strong>), a live per-source status list (waiting → recording, with elapsed time → stopped, or an error message if a device fails mid-capture), and <strong>Pause</strong>/<strong>Cancel</strong> buttons.</p>
+<ul>
+<li><strong>Pause</strong> (toggles to <strong>Resume</strong>) pauses every source together; the elapsed time shown keeps counting through a pause rather than resetting.</li>
+<li><strong>Cancel</strong> actually means <strong>Stop and finalize</strong> — despite the label, anything already captured is kept, not discarded.</li>
+<li>When the capture stops, the view automatically switches back to the Configure view.</li>
+</ul>
+<p>Three transport hotkeys are active only while the tool's dialog has focus (remappable in <strong>Options &gt; Manage Hotkeys</strong>, under a "Multi Device Capture" section — see <a href="03-customization-options.html#31-shortcuts">Section 3.1</a>):</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Default Key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start capture</td>
+<td>Ctrl+Alt+R</td>
+</tr>
+<tr>
+<td>Pause/Resume capture</td>
+<td>Ctrl+Alt+P</td>
+</tr>
+<tr>
+<td>Stop capture</td>
+<td>Ctrl+Alt+S</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-pauseresume-works-and-output-files">How pause/resume works, and output files</h3>
+<p>Each enabled source records through its own capture process. Pausing gracefully finalizes each source's current segment; resuming starts a new segment for the same device. When you stop, a source's segment(s) are losslessly joined into one final file named <code>{source name}_{date}_{time}.{container}</code> in the session's output folder. The intermediate segment files created by a pause/resume cycle are deleted after joining, unless <strong>Keep intermediate segment files after a paused session</strong> is enabled in Settings.</p>
+<h3 id="platform-notes">Platform notes</h3>
+<ul>
+<li><strong>Windows</strong>: camera and microphone capture use DirectShow; monitor/window capture uses GDI. There is <strong>no system-audio-output loopback</strong> — capture a virtual audio device instead (VB-Audio Cable, VoiceMeeter, Stereo Mix) added as an <strong>Audio input</strong> source; PlayForm flags such devices as likely loopback automatically.</li>
+<li><strong>macOS</strong>: camera, screen, and microphone all go through AVFoundation. There is no per-window capture (whole-screen only) and no system-audio loopback — as on Windows, install a virtual audio device (e.g. BlackHole) and add it as an Audio input.</li>
+<li><strong>Linux</strong>: camera capture uses Video4Linux2, monitor/window capture uses X11 (window capture needs the <code>wmctrl</code> utility installed). Audio uses PulseAudio/PipeWire with an ALSA fallback — Linux is the one platform with genuine "Audio output" loopback support out of the box.</li>
+</ul>
+<hr>
+<h2 id="47-other-tools">4.7. Other Tools</h2>
+<h3 id="logs-viewer">Logs Viewer</h3>
+<p><strong>Access:</strong> Tools &gt; Debug &gt; View Logs…</p>
+<p>The Logs Viewer opens a dialog showing all log files in the <code>logs/</code> directory. The left panel lists every log file; selecting one displays its contents in the right panel. Useful for troubleshooting or reviewing application activity.</p>
+<h3 id="debug-console-dock">Debug Console Dock</h3>
+<p><strong>Access:</strong> Tools &gt; Debug &gt; Show Console Dock</p>
+<p>The Debug Console is a dockable panel that displays real-time application output, including logging messages and system output. It can be docked anywhere in the main window or floated as a separate window. This tool is intended for developers and advanced troubleshooting.</p>
+<hr>
+<p><strong>Previous:</strong> <a href="03-customization-options.html">← 3. Customization and Options</a> | <strong>Next:</strong> <a href="05-legal.html">5. Legal →</a></p>
+</body>
+</html>
