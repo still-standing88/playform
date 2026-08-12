@@ -45,7 +45,12 @@ class AccessibilityPanel(QWidget):
             
         self.interrupt_check = QCheckBox(_("Interrupt previous speech"))
         speech_layout.addRow("Speech Interrupt:", self.interrupt_check)
-        
+
+        self.announcements_btn = QPushButton(_("Announcements..."))
+        self.announcements_btn.setToolTip(_("Choose which kinds of events are announced by speech"))
+        self.announcements_btn.clicked.connect(self.open_announcement_settings)
+        speech_layout.addRow(_("Spoken Events:"), self.announcements_btn)
+
         layout.addWidget(speech_group)
         layout.addStretch()
         
@@ -68,6 +73,11 @@ class AccessibilityPanel(QWidget):
     #         except:
     #             pass
                 
+    def open_announcement_settings(self):
+        from ..dialogs.announcement_settings_dialog import AnnouncementSettingsDialog
+        dialog = AnnouncementSettingsDialog(self)
+        dialog.exec()
+
     def open_voice_settings(self):
         dialog = VoiceSettingsDialog(self)
         if dialog.exec() == VoiceSettingsDialog.DialogCode.Accepted:
