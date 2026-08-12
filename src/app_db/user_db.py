@@ -20,8 +20,45 @@ class UserFiles(BaseDatabaseHandler):
     CREATE UNIQUE INDEX IF NOT EXISTS idx_path_category ON user_files(path, category);
     """
 
+    # app_settings/user_presets/download_queue hold everything that used to
+    # be scattered across independent data/*.json files (toolbar config,
+    # dock session, multi device capture config, playback state, radio
+    # favorites, playlists registry, mpv/ffmpeg presets, download queue,
+    # non-dialog runtime prefs, ...) -- see AppSettingsStore/PresetsStore in
+    # settings_store.py for the read/write helpers built on these.
+    APP_SETTINGS_SCHEMA = """
+    CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL,
+        updated_at TEXT
+    );
+    """
+
+    USER_PRESETS_SCHEMA = """
+    CREATE TABLE IF NOT EXISTS user_presets (
+        id TEXT PRIMARY KEY NOT NULL,
+        kind TEXT NOT NULL,
+        name TEXT NOT NULL,
+        data TEXT NOT NULL,
+        updated_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_presets_kind ON user_presets(kind);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_presets_kind_name ON user_presets(kind, name);
+    """
+
+    SCHEMA_VERSION = 2
+
     def __init__(self, db_path: str = os.path.join("data", "user.sqlite3"), simple_mode: bool = False):
-        super().__init__(db_path, self.USER_FILES_SCHEMA, simple_mode)
+        full_schema = self.USER_FILES_SCHEMA + self.APP_SETTINGS_SCHEMA + self.USER_PRESETS_SCHEMA
+        migrations = [
+            (2, [
+                stmt.strip() for stmt in
+                (self.APP_SETTINGS_SCHEMA + self.USER_PRESETS_SCHEMA).split(";")
+                if stmt.strip()
+            ]),
+        ]
+        super().__init__(db_path, full_schema, simple_mode,
+                          schema_version=self.SCHEMA_VERSION, migrations=migrations)
 
     def _generate_entry_id(self, path: str, category: FileCategory) -> str:
         return hashlib.md5(f"{path}_{category.value}".encode()).hexdigest()
