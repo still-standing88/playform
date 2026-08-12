@@ -129,6 +129,9 @@ class FiltersWidget(QWidget):
 		spin.setValue(value)
 		spin.blockSignals(False)
 
+	def set_media_available(self, available: bool):
+		self.setEnabled(available)
+
 	def _install_event_filter(self):
 		widgets = [
 			self.brightness_spin, self.contrast_spin, self.gamma_spin,
