@@ -7,12 +7,12 @@ from utilities.formats import formats
 from utilities.util_gui import messageBox
 from utilities import signal_manager
 from utilities.announcement_categories import AnnouncementCategory
+from playlist_manager.playlist_selection_dialog import PlaylistSelectionDialog
+from playlist_manager.playlist_create_dialog import PlaylistCreateDialog
 
 
 def _announce(text):
     signal_manager.announce(text, AnnouncementCategory.PLAYLISTS)
-from playlist_manager.playlist_selection_dialog import PlaylistSelectionDialog
-from playlist_manager.playlist_create_dialog import PlaylistCreateDialog
 
 class PlaylistHandler:
 

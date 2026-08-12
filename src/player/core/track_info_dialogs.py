@@ -3,15 +3,15 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from utilities import signal_manager
 from utilities.announcement_categories import AnnouncementCategory
-
-
-def _announce(text):
-    signal_manager.announce(text, AnnouncementCategory.PLAYBACK)
 from utilities.chapter_probe import get_media_metadata
 from utilities.functions import is_youtube_url, is_local_file
 from ..util.url import is_url_supported
 from ..util.utilities import ensure_ffprobe_available
 from .track_metadata_loader import _YtdlpInfoFetchThread, best_subtitle_format
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.PLAYBACK)
 
 
 class _SubtitleFileDownloadThread(QThread):

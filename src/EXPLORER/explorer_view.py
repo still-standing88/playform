@@ -14,13 +14,13 @@ from utilities.functions import copyText
 from utilities.util_gui import menuItem, contextMenu
 from utilities import signal_manager
 from utilities.announcement_categories import AnnouncementCategory
+from .explorer import Explorer, PathInfo, PathType, ExplorerMode
+from .search_worker import SearchWorker
+import app_db
 
 
 def _announce(text):
     signal_manager.announce(text, AnnouncementCategory.EXPLORER)
-from .explorer import Explorer, PathInfo, PathType, ExplorerMode
-from .search_worker import SearchWorker
-import app_db
 
 
 class ExplorerView(QListWidget):

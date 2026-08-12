@@ -13,11 +13,11 @@ from gui.dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
 from utilities.announcement_categories import AnnouncementCategory
+from player.util.utilities import ensure_ffmpeg_available
 
 
 def _announce(text):
     signal_manager.announce(text, AnnouncementCategory.DIALOGS)
-from player.util.utilities import ensure_ffmpeg_available
 
 class ToolWindowManager:
     def __init__(self, main_window):
