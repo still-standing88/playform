@@ -27,9 +27,34 @@ class FeedWidget(QWidget):
                  'title_detail', 'summary_detail', 'author_detail', 
                  'links', 'content']
     
+    @staticmethod
+    def _migrate_legacy_cache_dir(legacy_cache_dir, cache_dir):
+        if not os.path.isdir(legacy_cache_dir) or os.path.abspath(legacy_cache_dir) == os.path.abspath(cache_dir):
+            return
+        try:
+            os.makedirs(cache_dir, exist_ok=True)
+            for name in os.listdir(legacy_cache_dir):
+                src = os.path.join(legacy_cache_dir, name)
+                dst = os.path.join(cache_dir, name)
+                try:
+                    os.replace(src, dst)
+                except Exception:
+                    pass
+            try:
+                os.rmdir(legacy_cache_dir)
+            except Exception:
+                pass
+        except Exception:
+            pass
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        cache_dir = os.path.join(get_app_path(), 'data', 'podcast_cache')
+        # Lives under data/cache/ alongside the radio cache -- a single
+        # shared cache root under data/ instead of a top-level-of-data
+        # podcast_cache/ directory.
+        cache_dir = os.path.join(get_app_path(), 'data', 'cache', 'podcasts')
+        legacy_cache_dir = os.path.join(get_app_path(), 'data', 'podcast_cache')
+        self._migrate_legacy_cache_dir(legacy_cache_dir, cache_dir)
         self.feed_mgr = FeedManager(cache_dir=cache_dir)
         self.current_feed_url = None
         self.all_entries = []
