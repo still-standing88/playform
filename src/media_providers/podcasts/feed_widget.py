@@ -14,7 +14,7 @@ from datetime import datetime
 from time import mktime
 
 from utilities.functions import get_app_path
-from media_providers.podcasts.feed_manager import FeedManager
+from media_core.podcasts.feed_manager import FeedManager
 from media_providers.podcasts.entry_detail_dialog import EntryDetailDialog
 
 
