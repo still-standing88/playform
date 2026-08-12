@@ -1,12 +1,21 @@
 import os
 
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
 from utilities.functions import get_app_path
 from downloader.downloader import Downloader
 from app_db.catalog_worker import CatalogWorker
 from ..dialogs.downloader_dialog import DownloaderDialog
 from ..dialogs.catalog_progress_dialog import CatalogProgressDialog
 from ..dialogs.manage_database_dialog import ManageDatabaseDialog
+
+
+def _announce_downloads(text):
+    signal_manager.announce(text, AnnouncementCategory.DOWNLOADS)
+
+
+def _announce_database(text):
+    signal_manager.announce(text, AnnouncementCategory.DATABASE)
 
 
 class SingletonDialogsManager:
@@ -51,7 +60,7 @@ class SingletonDialogsManager:
             # Dialog was minimized or still alive - bring it back
             mw._downloader_dialog.show_dialog()
             mw.show_downloader_button.setVisible(False)
-            signal_manager.statusbar_message.emit(_("Download Manager opened"))
+            _announce_downloads(_("Download Manager opened"))
             return
 
         # First time (or after close) - create fresh dialog
@@ -61,20 +70,20 @@ class SingletonDialogsManager:
         mw._downloader_dialog = dlg
         dlg.show_dialog()
         mw.show_downloader_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Download Manager opened"))
+        _announce_downloads(_("Download Manager opened"))
 
     def _on_downloader_hidden(self):
         """Called when dialog hides itself (Minimize button)."""
         mw = self.main_window
         mw.show_downloader_button.setVisible(True)
-        signal_manager.statusbar_message.emit(_("Download Manager minimized"))
+        _announce_downloads(_("Download Manager minimized"))
 
     def _on_downloader_closed(self):
         """Called when dialog is fully closed so it can be re-created next time."""
         mw = self.main_window
         mw._downloader_dialog = None
         mw.show_downloader_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Download Manager closed"))
+        _announce_downloads(_("Download Manager closed"))
 
     def show_minimized_downloader(self):
         """Status-bar button: show the minimized dialog."""
@@ -82,7 +91,7 @@ class SingletonDialogsManager:
         if mw._downloader_dialog is not None:
             mw._downloader_dialog.show_dialog()
             mw.show_downloader_button.setVisible(False)
-            signal_manager.statusbar_message.emit(_("Download Manager restored"))
+            _announce_downloads(_("Download Manager restored"))
 
     # ------------------------------------------------------------------
     # Singleton catalog worker/dialog management
@@ -112,7 +121,7 @@ class SingletonDialogsManager:
         self.get_catalog_worker().enqueue_folder(path)
         self._ensure_catalog_dialog_exists()
         mw.show_catalog_button.setVisible(True)
-        signal_manager.statusbar_message.emit(
+        _announce_database(
             _("Queued {path} for cataloging").format(path=path)
         )
 
@@ -153,18 +162,18 @@ class SingletonDialogsManager:
         dlg = self._ensure_catalog_dialog_exists()
         dlg.show_dialog()
         mw.show_catalog_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Database Cataloging opened"))
+        _announce_database(_("Database Cataloging opened"))
 
     def _on_catalog_hidden(self):
         mw = self.main_window
         mw.show_catalog_button.setVisible(True)
-        signal_manager.statusbar_message.emit(_("Database Cataloging minimized"))
+        _announce_database(_("Database Cataloging minimized"))
 
     def _on_catalog_closed(self):
         mw = self.main_window
         mw._catalog_dialog = None
         mw.show_catalog_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Database Cataloging closed"))
+        _announce_database(_("Database Cataloging closed"))
 
     def show_minimized_catalog(self):
         mw = self.main_window
@@ -172,7 +181,7 @@ class SingletonDialogsManager:
             self._ensure_manage_db_dialog()
             mw._catalog_dialog.show_dialog()
             mw.show_catalog_button.setVisible(False)
-            signal_manager.statusbar_message.emit(_("Database Cataloging restored"))
+            _announce_database(_("Database Cataloging restored"))
 
     # ------------------------------------------------------------------
     # Singleton manage-database dialog management
@@ -208,7 +217,7 @@ class SingletonDialogsManager:
         dlg = self._ensure_manage_db_dialog()
         dlg.show_dialog()
         mw.show_manage_db_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Manage Database opened"))
+        _announce_database(_("Manage Database opened"))
 
         if mw._catalog_worker is not None and mw._catalog_worker.isRunning():
             self.open_catalog_dialog()
@@ -216,17 +225,17 @@ class SingletonDialogsManager:
     def _on_manage_db_hidden(self):
         mw = self.main_window
         mw.show_manage_db_button.setVisible(True)
-        signal_manager.statusbar_message.emit(_("Manage Database minimized"))
+        _announce_database(_("Manage Database minimized"))
 
     def _on_manage_db_closed(self):
         mw = self.main_window
         mw._manage_db_dialog = None
         mw.show_manage_db_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Manage Database closed"))
+        _announce_database(_("Manage Database closed"))
 
     def show_minimized_manage_database(self):
         mw = self.main_window
         if mw._manage_db_dialog is not None:
             mw._manage_db_dialog.show_dialog()
             mw.show_manage_db_button.setVisible(False)
-            signal_manager.statusbar_message.emit(_("Manage Database restored"))
+            _announce_database(_("Manage Database restored"))
