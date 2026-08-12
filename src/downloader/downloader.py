@@ -22,13 +22,19 @@ class DownloadItem(QObject):
     error_occurred = Signal(str)
     finished = Signal(bool)
     
-    def __init__(self, url, destination, filename=None):
+    def __init__(self, url, destination, filename=None, metadata=None):
         super().__init__()
         self.url = url
         self.destination = Path(destination)
         self.filename = filename or Path(QUrl(url).path()).name or "download"
         self.filepath = self.destination / self.filename
-        
+        # Arbitrary caller-supplied tags, e.g. {"source_kind": "podcast",
+        # "podcast_feed_url": ..., "episode_title": ...} -- lets callers
+        # (podcast episode downloads, yt-dlp binary fetches, ...) mark what
+        # a queued item actually is without Downloader needing to know
+        # about any of them specifically.
+        self.metadata = metadata or {}
+
         self.status = DownloadStatus.QUEUED
         self.downloaded_size = 0
         self.total_size = 0
@@ -112,9 +118,9 @@ class Downloader(QObject):
             manager = QNetworkAccessManager()
             self._network_managers.append(manager)
     
-    def add_download(self, url, destination=None, filename=None, progress_callback=None, finished_callback=None):
+    def add_download(self, url, destination=None, filename=None, progress_callback=None, finished_callback=None, metadata=None):
         dest = Path(destination) if destination else self.destination
-        item = DownloadItem(url, dest, filename)
+        item = DownloadItem(url, dest, filename, metadata=metadata)
         
         if progress_callback:
             item.progress_changed.connect(progress_callback)
