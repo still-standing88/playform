@@ -37,6 +37,7 @@ class PlayerControls(QWidget):
     rotateChanged = Signal(int)
     flipHorizontalToggled = Signal(bool)
     flipVerticalToggled = Signal(bool)
+    panChanged = Signal(float, float)
     playPauseClicked = Signal()
     muteUnmuteClicked = Signal()
     forwardClicked = Signal()
@@ -81,6 +82,14 @@ class PlayerControls(QWidget):
         self.video_rotate = 0
         self.is_flip_horizontal = False
         self.is_flip_vertical = False
+        self.pan_x = 0.0
+        self.pan_y = 0.0
+        self.current_speed = 1.0
+        # Keeps current_speed accurate no matter which caller emitted
+        # speedChanged (menu click or an f/d hotkey step) so the "More
+        # Options" menu's speed group can show the real checked entry
+        # instead of always defaulting to 1.0x.
+        self.speedChanged.connect(self._track_current_speed)
 
         self._current_file: Optional[str] = None
         self._source_url: Optional[str] = None
@@ -401,6 +410,10 @@ class PlayerControls(QWidget):
             if self.is_flip_vertical:
                 self.is_flip_vertical = False
                 self.flipVerticalToggled.emit(False)
+            if self.pan_x != 0.0 or self.pan_y != 0.0:
+                self.pan_x = 0.0
+                self.pan_y = 0.0
+                self.panChanged.emit(0.0, 0.0)
 
     def _on_rotate_action_triggered(self, degrees: int):
         self.video_rotate = degrees
@@ -413,6 +426,24 @@ class PlayerControls(QWidget):
     def _on_flip_vertical_action_toggled(self, checked: bool):
         self.is_flip_vertical = checked
         self.flipVerticalToggled.emit(checked)
+
+    PAN_STEP = 0.05
+
+    def pan_by(self, dx: float, dy: float):
+        self.pan_x = max(-1.0, min(1.0, self.pan_x + dx))
+        self.pan_y = max(-1.0, min(1.0, self.pan_y + dy))
+        self.panChanged.emit(self.pan_x, self.pan_y)
+
+    def _track_current_speed(self, speed: float):
+        self.current_speed = speed
+
+    def step_speed(self, direction: int):
+        try:
+            idx = video_speeds.index(self.current_speed)
+        except ValueError:
+            idx = min(range(len(video_speeds)), key=lambda i: abs(video_speeds[i] - self.current_speed))
+        new_idx = max(0, min(len(video_speeds) - 1, idx + direction))
+        self.speedChanged.emit(video_speeds[new_idx])
 
     def set_play_pause_state(self, is_playing):
         if self.is_playing == is_playing: return
