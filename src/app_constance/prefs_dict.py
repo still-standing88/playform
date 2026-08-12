@@ -53,3 +53,19 @@ prefs = {
 "search_history": [],
 "audio_effects_chain": []
 }
+
+# Keys actually surfaced in the Preferences dialog (general_panel.py,
+# media_panel.py, accessibility_panel.py, advanced_panel.py,
+# database_panel.py) -- these, and only these, persist to prefs.json.
+# Everything else in `prefs` above is pure runtime/app state that used to
+# ride along in the same file; it now persists in app_settings
+# (user.sqlite3, key "runtime_prefs") instead. See app_config/prefs.py.
+DIALOG_PREFS_KEYS = frozenset({
+    "language", "image_format", "color_theme", "auto_check_for_updates",
+    "save_urls", "offset", "device", "device_name",
+    "accessibility_feedback", "tts_speech_interrupt", "tts_voice",
+    "tts_volume", "tts_rate", "mpv_logging", "debug_level",
+    "mpv_extra_options", "youtube_cookies", "yt-dlp_path", "ffmpeg_path",
+    "yt-dlp_logging", "yt-dlp_verbose_output", "catalog_extensions",
+    "store_search_history",
+})
