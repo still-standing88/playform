@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 from typing import Dict, Any, List
 from datetime import datetime
@@ -6,33 +5,30 @@ from utilities.functions import get_app_path
 
 
 class FavoritesManager:
+
+    SETTINGS_KEY = "radio_stations"
+
     def __init__(self):
-        self.data_dir = Path(get_app_path()) / "data"
-        self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.favorites_file = self.data_dir / "radio_stations.json"
+        # Legacy path only kept around for the one-shot migration in
+        # _load() -- radio favorites now live in app_settings (user.sqlite3).
+        self._legacy_favorites_file = Path(get_app_path()) / "data" / "radio_stations.json"
         self.favorites: Dict[str, Dict[str, Any]] = self._load()
 
     def _load(self) -> Dict[str, Dict[str, Any]]:
-        if self.favorites_file.exists():
-            try:
-                with open(self.favorites_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except Exception:
-                return {}
-        return {}
+        from app_db import app_settings
+        from app_db.settings_store import migrate_json_file
+        data = migrate_json_file(app_settings, str(self._legacy_favorites_file), self.SETTINGS_KEY, default={})
+        return data if isinstance(data, dict) else {}
 
     def _save(self) -> None:
-        try:
-            with open(self.favorites_file, 'w', encoding='utf-8') as f:
-                json.dump(self.favorites, f, indent=2, ensure_ascii=False)
-        except Exception:
-            pass
+        from app_db import app_settings
+        app_settings.set(self.SETTINGS_KEY, self.favorites)
 
     def add(self, station_data: Dict[str, Any]) -> None:
         uuid = station_data.get("uuid")
         if not uuid:
             return
-        
+
         self.favorites[uuid] = {
             "uuid": uuid,
             "name": station_data.get("name", "Unknown"),
