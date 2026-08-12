@@ -27,6 +27,7 @@ from .dialogs.prefs_dialog import PreferencesDialog
 from utilities.util_gui import menuItem
 from utilities.speech import speech_manager
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
 import utilities.mpv_bootstrap
 from media_core.av_play import Playlist, PlaylistEntry
 from gui_controls.key_event_filter import ShortcutManager
@@ -60,6 +61,18 @@ from app_db.catalog_worker import CatalogWorker
 from utilities.functions import get_restart_flag
 
 
+
+
+def _announce_playback(text):
+    signal_manager.announce(text, AnnouncementCategory.PLAYBACK)
+
+
+def _announce_dialogs(text):
+    signal_manager.announce(text, AnnouncementCategory.DIALOGS)
+
+
+def _announce_downloads(text):
+    signal_manager.announce(text, AnnouncementCategory.DOWNLOADS)
 
 
 class MainWindow(QMainWindow):
@@ -242,6 +255,7 @@ class MainWindow(QMainWindow):
         self.status_bar.show()
 
         signal_manager.statusbar_message.connect(self._update_status_message)
+        signal_manager.statusbar_message_categorized.connect(self._on_categorized_message)
         signal_manager.media_info_message.connect(self.media_info_label.setText)
 
     def setup_menubar_indicators(self):
@@ -354,7 +368,7 @@ class MainWindow(QMainWindow):
 
 
     def play_file(self, file_path: str):
-        signal_manager.statusbar_message.emit(f"{_("Loading:")} {os.path.basename(file_path)}")
+        _announce_playback(f"{_("Loading:")} {os.path.basename(file_path)}")
         signal_manager.media_info_message.emit(file_path)
         self.add_to_recents(file_path)
         self.menu_manager.update_recent_files_menu()
@@ -369,7 +383,7 @@ class MainWindow(QMainWindow):
             start_index = 0
 
         entry = playlist[start_index]
-        signal_manager.statusbar_message.emit(
+        _announce_playback(
             _("Loading playlist: {title}").format(
                 title=playlist.title or _("Untitled")
             )
@@ -381,7 +395,7 @@ class MainWindow(QMainWindow):
         self.close_media_action.setEnabled(True)
         
     def play_url(self, url: str):
-        signal_manager.statusbar_message.emit(f"{_('Loading URL:')} {url}")
+        _announce_playback(f"{_('Loading URL:')} {url}")
         signal_manager.media_info_message.emit(url)
         self.urlOpened.emit(url)
         self.close_media_action.setEnabled(True)
@@ -417,13 +431,25 @@ class MainWindow(QMainWindow):
 
     def _update_status_message(self, message: str):
         self.status_label.setText(message)
-        
-        if prefs.prefs["accessibility_feedback"]:
-            # The following is a conditional check to disable Sapi onWindows until a solution is found for GUI freezing when Sapi speaks.
-            if sys.platform == "win32" and speech_manager.current_driver() == "Sapi5":
-                return
 
-            speech_manager.output(message, prefs.prefs["tts_speech_interrupt"])
+    def _on_categorized_message(self, message: str, category_value: str):
+        # Status bar text already got set via the plain statusbar_message
+        # signal (announce() always emits both) -- this is speech-only,
+        # gated by both the existing accessibility toggle and the
+        # per-category enabled/disabled setting from Preferences ->
+        # Accessibility (see announcement_settings.is_category_enabled).
+        if not prefs.prefs["accessibility_feedback"]:
+            return
+
+        from utilities.announcement_settings import is_category_enabled
+        if not is_category_enabled(category_value):
+            return
+
+        # The following is a conditional check to disable Sapi onWindows until a solution is found for GUI freezing when Sapi speaks.
+        if sys.platform == "win32" and speech_manager.current_driver() == "Sapi5":
+            return
+
+        speech_manager.output(message, prefs.prefs["tts_speech_interrupt"])
 
     def toggle_play_pause(self):
         self.global_actions.toggle_play_pause()
@@ -478,7 +504,7 @@ class MainWindow(QMainWindow):
             dialog = self.tool_dialogs[self.active_tool_name]
             dialog.show_dialog()
             self.show_tool_button.setVisible(False)
-            signal_manager.statusbar_message.emit(
+            _announce_dialogs(
                 _("Showing {title}").format(title=dialog.title)
             )
         
@@ -564,7 +590,7 @@ class MainWindow(QMainWindow):
         dialog = PreferencesDialog(self, audio_devices, self.apply_audio_device)
         dialog.finished.connect(lambda: setattr(self, '_dialog_open', False))
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            signal_manager.statusbar_message.emit(_("Preferences saved"))
+            _announce_dialogs(_("Preferences saved"))
             
     def open_hotkeys(self):
         if self._dialog_open:
@@ -573,7 +599,7 @@ class MainWindow(QMainWindow):
         dialog = HotkeysDialog(self, reset_callback=self.reset_shortcuts_callback)
         dialog.finished.connect(lambda: setattr(self, '_dialog_open', False))
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            signal_manager.statusbar_message.emit(_("Hotkeys updated"))
+            _announce_dialogs(_("Hotkeys updated"))
 
     # ------------------------------------------------------------------
     # About & Options menu actions
@@ -638,16 +664,16 @@ class MainWindow(QMainWindow):
             return
         item = manager.queue_episode(feed_url, entry)
         if item:
-            signal_manager.statusbar_message.emit(_("Queued episode for download: {title}").format(title=item.filename))
+            _announce_downloads(_("Queued episode for download: {title}").format(title=item.filename))
         else:
-            signal_manager.statusbar_message.emit(_("Could not find a downloadable media link for this episode"))
+            _announce_downloads(_("Could not find a downloadable media link for this episode"))
 
     def queue_podcast_batch_download(self, feed_url: str, count: int):
         manager = self._get_podcast_download_manager()
         if manager is None:
             return
         items = manager.queue_next_unqueued(feed_url, count)
-        signal_manager.statusbar_message.emit(
+        _announce_downloads(
             _("Queued {count} episode(s) for download").format(count=len(items))
         )
 
@@ -892,4 +918,4 @@ class MainWindow(QMainWindow):
         elif os.path.isfile(path):
             self.play_file(path)
         else:
-            signal_manager.statusbar_message.emit(_("Unrecognized path: {path}").format(path=path))
+            _announce_playback(_("Unrecognized path: {path}").format(path=path))
