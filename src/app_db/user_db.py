@@ -46,19 +46,88 @@ class UserFiles(BaseDatabaseHandler):
     CREATE UNIQUE INDEX IF NOT EXISTS idx_presets_kind_name ON user_presets(kind, name);
     """
 
-    SCHEMA_VERSION = 2
+    # Persists Downloader's non-terminal queue (queued/paused; active items
+    # are saved as paused, since a mid-flight HTTP transfer can't resume
+    # across a process restart) so the Download Manager -- including
+    # podcast episode downloads -- survives an app restart instead of
+    # living only in memory. See downloader.Downloader.persist()/restore().
+    DOWNLOAD_QUEUE_SCHEMA = """
+    CREATE TABLE IF NOT EXISTS download_queue (
+        id TEXT PRIMARY KEY NOT NULL,
+        url TEXT NOT NULL,
+        destination TEXT NOT NULL,
+        filename TEXT NOT NULL,
+        status TEXT NOT NULL,
+        downloaded_size INTEGER NOT NULL DEFAULT 0,
+        total_size INTEGER NOT NULL DEFAULT 0,
+        metadata TEXT,
+        added_at TEXT,
+        updated_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_download_queue_status ON download_queue(status);
+    """
+
+    SCHEMA_VERSION = 3
 
     def __init__(self, db_path: str = os.path.join("data", "user.sqlite3"), simple_mode: bool = False):
-        full_schema = self.USER_FILES_SCHEMA + self.APP_SETTINGS_SCHEMA + self.USER_PRESETS_SCHEMA
+        full_schema = (self.USER_FILES_SCHEMA + self.APP_SETTINGS_SCHEMA
+                        + self.USER_PRESETS_SCHEMA + self.DOWNLOAD_QUEUE_SCHEMA)
         migrations = [
             (2, [
                 stmt.strip() for stmt in
                 (self.APP_SETTINGS_SCHEMA + self.USER_PRESETS_SCHEMA).split(";")
                 if stmt.strip()
             ]),
+            (3, [
+                stmt.strip() for stmt in self.DOWNLOAD_QUEUE_SCHEMA.split(";")
+                if stmt.strip()
+            ]),
         ]
         super().__init__(db_path, full_schema, simple_mode,
                           schema_version=self.SCHEMA_VERSION, migrations=migrations)
+
+    def save_download_queue_row(self, row: dict) -> bool:
+        try:
+            self._db.execute_sql(
+                "INSERT INTO download_queue "
+                "(id, url, destination, filename, status, downloaded_size, total_size, metadata, added_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET url=excluded.url, destination=excluded.destination, "
+                "filename=excluded.filename, status=excluded.status, downloaded_size=excluded.downloaded_size, "
+                "total_size=excluded.total_size, metadata=excluded.metadata, updated_at=excluded.updated_at",
+                (
+                    row["id"], row["url"], row["destination"], row["filename"], row["status"],
+                    row.get("downloaded_size", 0), row.get("total_size", 0), row.get("metadata"),
+                    row.get("added_at"), row.get("updated_at"),
+                ),
+            )
+            return True
+        except Exception:
+            import logging
+            logging.exception("save_download_queue_row failed")
+            return False
+
+    def delete_download_queue_row(self, item_id: str) -> bool:
+        try:
+            self._db.execute_sql("DELETE FROM download_queue WHERE id = ?", (item_id,))
+            return True
+        except Exception:
+            import logging
+            logging.exception("delete_download_queue_row failed")
+            return False
+
+    def load_download_queue_rows(self) -> List[dict]:
+        try:
+            cursor = self._db.execute_sql(
+                "SELECT id, url, destination, filename, status, downloaded_size, total_size, metadata, added_at, updated_at "
+                "FROM download_queue"
+            )
+            columns = ["id", "url", "destination", "filename", "status", "downloaded_size", "total_size", "metadata", "added_at", "updated_at"]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+        except Exception:
+            import logging
+            logging.exception("load_download_queue_rows failed; returning empty queue")
+            return []
 
     def _generate_entry_id(self, path: str, category: FileCategory) -> str:
         return hashlib.md5(f"{path}_{category.value}".encode()).hexdigest()
