@@ -68,3 +68,6 @@ class VideoEffectsWidget(QWidget):
 
 	def _install_event_filter(self):
 		self._key_event_filter.install_on_widgets([self.deinterlace_check, self.deband_check])
+
+	def set_media_available(self, available: bool):
+		self.setEnabled(available)
