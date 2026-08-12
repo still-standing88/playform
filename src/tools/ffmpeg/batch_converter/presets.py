@@ -1,42 +1,65 @@
 import json
+import logging
 import os
 
 from utilities.functions import get_app_path
 
-PRESETS_DIR = os.path.join(get_app_path(), "data", "presets", "batch_converter")
+KIND = "ffmpeg_batch"
+# Legacy directory, only kept around for the one-shot migration below --
+# presets themselves now live in the user_presets table (user.sqlite3).
+LEGACY_PRESETS_DIR = os.path.join(get_app_path(), "data", "presets", "batch_converter")
+_migrated_legacy = False
 
 
-def _ensure_presets_dir():
-    os.makedirs(PRESETS_DIR, exist_ok=True)
-
-
-def _preset_path(name: str) -> str:
-    safe_name = "".join(c for c in name if c.isalnum() or c in (" ", "-", "_")).strip() or "preset"
-    return os.path.join(PRESETS_DIR, f"{safe_name}.json")
+def _migrate_legacy_presets():
+    global _migrated_legacy
+    if _migrated_legacy:
+        return
+    _migrated_legacy = True
+    if not os.path.isdir(LEGACY_PRESETS_DIR):
+        return
+    try:
+        from app_db import user_presets
+        for filename in os.listdir(LEGACY_PRESETS_DIR):
+            if not filename.endswith(".json"):
+                continue
+            name = os.path.splitext(filename)[0]
+            path = os.path.join(LEGACY_PRESETS_DIR, filename)
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    payload = json.load(handle)
+                user_presets.set(KIND, name, payload)
+                os.remove(path)
+            except Exception:
+                logging.exception("Failed to migrate legacy ffmpeg batch preset %r", path)
+        try:
+            os.rmdir(LEGACY_PRESETS_DIR)
+        except Exception:
+            pass
+    except Exception:
+        logging.exception("Failed to migrate legacy ffmpeg batch presets")
 
 
 def list_presets() -> list:
-    _ensure_presets_dir()
-    return sorted(
-        os.path.splitext(filename)[0]
-        for filename in os.listdir(PRESETS_DIR)
-        if filename.endswith(".json")
-    )
+    _migrate_legacy_presets()
+    from app_db import user_presets
+    return sorted(user_presets.list_names(KIND))
 
 
 def save_preset(name: str, convert_state: dict, processing_state: list):
-    _ensure_presets_dir()
+    from app_db import user_presets
     payload = {"convert": convert_state, "processing": processing_state}
-    with open(_preset_path(name), "w", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2)
+    user_presets.set(KIND, name, payload)
 
 
 def load_preset(name: str) -> dict:
-    with open(_preset_path(name), "r", encoding="utf-8") as handle:
-        return json.load(handle)
+    from app_db import user_presets
+    data = user_presets.get(KIND, name)
+    if data is None:
+        raise FileNotFoundError(f"Preset {name!r} not found")
+    return data
 
 
 def delete_preset(name: str):
-    path = _preset_path(name)
-    if os.path.exists(path):
-        os.remove(path)
+    from app_db import user_presets
+    user_presets.delete(KIND, name)
