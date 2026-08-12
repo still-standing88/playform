@@ -21,7 +21,11 @@ from media_providers.podcasts.feed_job import FeedJob
 
 class FeedWidget(QWidget):
     play_requested = Signal(str)
-    
+    episode_download_requested = Signal(str, object)
+    episode_batch_download_requested = Signal(str, int)
+
+    BATCH_DOWNLOAD_COUNT = 3
+
     COMMON_FIELDS = ['title', 'published', 'link']
     LONG_TEXT_FIELDS = ['summary', 'description', 'content']
     BLACKLIST = ['published_parsed', 'updated_parsed', 'guidislink', 
@@ -243,10 +247,20 @@ class FeedWidget(QWidget):
             remove_action = QAction(_("Remove Feed"), self)
             remove_action.triggered.connect(self.remove_feed)
             menu.addAction(remove_action)
-        
+
+            download_batch_action = QAction(
+                _("Download Next {count} Episodes").format(count=self.BATCH_DOWNLOAD_COUNT), self
+            )
+            download_batch_action.triggered.connect(
+                lambda: self.episode_batch_download_requested.emit(
+                    item.data(Qt.ItemDataRole.UserRole), self.BATCH_DOWNLOAD_COUNT
+                )
+            )
+            menu.addAction(download_batch_action)
+
         if self.feed_list.count() > 0:
             menu.addSeparator()
-            
+
             refresh_all_action = QAction(_("Refresh All Feeds"), self)
             refresh_all_action.triggered.connect(self.refresh_all_feeds)
             menu.addAction(refresh_all_action)
@@ -305,6 +319,10 @@ class FeedWidget(QWidget):
         play_entry_action = QAction(_("Play Entry"), self)
         play_entry_action.triggered.connect(lambda: self.play_entry(item))
         menu.addAction(play_entry_action)
+
+        download_entry_action = QAction(_("Download Episode"), self)
+        download_entry_action.triggered.connect(lambda: self.download_entry(item))
+        menu.addAction(download_entry_action)
 
         full_entry_action = QAction(_("View Full Entry Dump"), self)
         full_entry_action.triggered.connect(lambda: self.show_full_entry(item))
@@ -691,6 +709,12 @@ class FeedWidget(QWidget):
             self.play_requested.emit(media_url)
         else:
             QMessageBox.warning(self, _("No Media"), _("No direct media link found for this entry."))
+
+    def download_entry(self, item):
+        entry = item.data(0, Qt.ItemDataRole.UserRole)
+        if not entry or not self.current_feed_url:
+            return
+        self.episode_download_requested.emit(self.current_feed_url, entry)
 
     def copy_entry_field(self, item, field):
         entry = item.data(0, Qt.ItemDataRole.UserRole)
