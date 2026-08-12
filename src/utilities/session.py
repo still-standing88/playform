@@ -1,13 +1,16 @@
-import json
 import os
 from typing import Optional
 from utilities.functions import get_app_path
 
 
 class DockPanelSession:
-    
+
+    SETTINGS_KEY = "dock_session"
+
     def __init__(self):
-        self.session_file = os.path.join(get_app_path(), 'data', 'dock_session.json')
+        # Legacy path only kept around for the one-shot migration below --
+        # dock session state itself now lives in app_settings (user.sqlite3).
+        self._legacy_session_file = os.path.join(get_app_path(), 'data', 'dock_session.json')
         self.default_config = {
             'recents_favorites': True,
             'explorer': False,
@@ -19,27 +22,19 @@ class DockPanelSession:
             'sidebar_hidden': False,
             'controls_minimized': False
         }
-    
+
     def save_session(self, dock_states: dict[str, bool]) -> bool:
-        try:
-            os.makedirs(os.path.dirname(self.session_file), exist_ok=True)
-            with open(self.session_file, 'w') as f:
-                json.dump(dock_states, f, indent=2)
-            return True
-        except Exception as e:
-            print(f"Failed to save dock session: {e}")
-            return False
-    
+        from app_db import app_settings
+        return app_settings.set(self.SETTINGS_KEY, dock_states)
+
     def load_session(self) -> dict[str, bool]:
-        if os.path.exists(self.session_file):
-            try:
-                with open(self.session_file, 'r') as f:
-                    return json.load(f)
-            except Exception as e:
-                print(f"Failed to load dock session: {e}")
-                return self.default_config.copy()
-        return self.default_config.copy()
-    
+        from app_db import app_settings
+        from app_db.settings_store import migrate_json_file
+        data = migrate_json_file(app_settings, self._legacy_session_file, self.SETTINGS_KEY)
+        if not data:
+            return self.default_config.copy()
+        return data
+
     def get_default_config(self) -> dict[str, bool]:
         return self.default_config.copy()
 
