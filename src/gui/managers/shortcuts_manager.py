@@ -16,6 +16,7 @@ class MainWindowShortcuts:
             hotkeys["Open file"]: mw.open_file_dialog,
             hotkeys["Open folder"]: mw.open_folder_dialog,
             hotkeys["Open URL"]: mw.open_url_dialog,
+            hotkeys["Close Currently playing Media"]: self.close_current_media,
             hotkeys["Show/Hide explorer"]: self.toggle_explorer_shortcut,
             hotkeys["Show/Hide player controls"]: self.toggle_player_shortcut,
             hotkeys["Toggle playlists"]: self.toggle_playlists_shortcut,
@@ -68,6 +69,14 @@ class MainWindowShortcuts:
 
     def uninstall_shortcuts(self):
         self.main_window._shortcut_manager.uninstall_from_application()
+
+    def close_current_media(self):
+        mw = self.main_window
+        if mw.player_widget:
+            try:
+                mw.player_widget.close_current_media()
+            except Exception:
+                pass
 
     def focus_explorer(self):
         mw = self.main_window
