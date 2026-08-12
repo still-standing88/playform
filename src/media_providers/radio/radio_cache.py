@@ -9,8 +9,14 @@ from utilities.functions import get_app_path
 
 class RadioCache:
     def __init__(self):
-        self.cache_dir = Path(get_app_path()) / "cache" / "radio"
+        # Lives under data/cache/ alongside the podcast cache -- a single
+        # shared cache root under data/ instead of scattered per-feature
+        # top-level cache/ directories.
+        self.cache_dir = Path(get_app_path()) / "data" / "cache" / "radio"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        legacy_cache_dir = Path(get_app_path()) / "cache" / "radio"
+        if legacy_cache_dir.exists() and legacy_cache_dir != self.cache_dir:
+            self._migrate_legacy_cache_dir(legacy_cache_dir)
         
         self.cache_expiry = {
             "stats": 24,
@@ -20,6 +26,20 @@ class RadioCache:
             "search": 1,
             "filter": 1,
         }
+
+    def _migrate_legacy_cache_dir(self, legacy_cache_dir: Path) -> None:
+        try:
+            for cache_file in legacy_cache_dir.glob("*.pkl"):
+                try:
+                    cache_file.replace(self.cache_dir / cache_file.name)
+                except Exception:
+                    pass
+            try:
+                legacy_cache_dir.rmdir()
+            except Exception:
+                pass
+        except Exception:
+            pass
 
     def _get_hash(self, key: str) -> str:
         return hashlib.md5(key.encode('utf-8')).hexdigest()
