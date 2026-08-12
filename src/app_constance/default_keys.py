@@ -75,7 +75,16 @@ key_dict = {
 "Mark8 position": "Ctrl+8",
 "Mark9 position": "Ctrl+9",
 "Mark10 position": "Ctrl+0",
-"close media": "Ctrl+W"
+"Pan up": "Shift+Up",
+"Pan down": "Shift+Down",
+"Pan left": "Shift+Left",
+"Pan right": "Shift+Right",
+"Rotate video": "T",
+"Flip horizontal": "H",
+"Flip vertical": "V",
+"Speed up": "F",
+"Speed down": "D",
+"Reverse playback": "R"
 },
 "Multi Device Capture": {
 "Start capture": "Ctrl+Alt+R",
