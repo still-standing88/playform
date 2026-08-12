@@ -15,7 +15,9 @@ class DockPanelSession:
             'playlists': False,
             'radio': False,
             'podcast': False,
-            'debug_console': False
+            'debug_console': False,
+            'sidebar_hidden': False,
+            'controls_minimized': False
         }
     
     def save_session(self, dock_states: dict[str, bool]) -> bool:
