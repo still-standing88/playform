@@ -1,8 +1,38 @@
 import json
 import logging
+import os
 import uuid
 from datetime import datetime
 from typing import Any, Optional, List
+
+
+def migrate_json_file(store: "AppSettingsStore", json_path: str, key: str, default: Any = None) -> Any:
+    """One-shot migration helper: if `key` isn't in the DB yet but the
+    legacy `json_path` file is still on disk, load it, write it into the
+    store under `key`, and delete the old file -- same one-shot pattern as
+    player/core/playback_state_manager.py's _migrate_from_separate_files.
+    Returns whatever ends up under `key` (existing DB value, freshly
+    migrated JSON, or `default` if neither exists / the JSON is corrupt).
+    """
+    existing = store.get(key)
+    if existing is not None:
+        return existing
+
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, "r") as f:
+                data = json.load(f)
+        except Exception:
+            logging.exception("migrate_json_file: %r is corrupt; falling back to default", json_path)
+            return default
+        store.set(key, data)
+        try:
+            os.remove(json_path)
+        except Exception:
+            logging.exception("migrate_json_file: failed to remove legacy file %r after migrating", json_path)
+        return data
+
+    return default
 
 
 class AppSettingsStore:
