@@ -264,6 +264,8 @@ class DockManager:
         if self.main_window.podcast_dock is None:
             self.main_window.podcast_widget = FeedWidget(self.main_window)
             self.main_window.podcast_widget.play_requested.connect(self.main_window.urlOpened.emit)
+            self.main_window.podcast_widget.episode_download_requested.connect(self.main_window.queue_podcast_episode_download)
+            self.main_window.podcast_widget.episode_batch_download_requested.connect(self.main_window.queue_podcast_batch_download)
             self.main_window.podcast_dock = FloatableDockWidget(_("Podcasts"), self.main_window)
             self.main_window.podcast_dock.setObjectName("podcastDock")
             self.main_window.podcast_dock.setWidget(self.main_window.podcast_widget)
