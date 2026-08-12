@@ -623,6 +623,34 @@ class MainWindow(QMainWindow):
     def _get_shared_downloader(self) -> Downloader:
         return self.singleton_dialogs.get_shared_downloader()
 
+    def _get_podcast_download_manager(self):
+        from media_providers.podcasts.download_manager import PodcastDownloadManager
+        from utilities.functions import get_app_path
+        import os
+        if self.podcast_widget is None:
+            return None
+        dest = os.path.join(get_app_path(), "downloads", "podcasts")
+        return PodcastDownloadManager(self.podcast_widget.feed_mgr, self._get_shared_downloader(), dest)
+
+    def queue_podcast_episode_download(self, feed_url: str, entry):
+        manager = self._get_podcast_download_manager()
+        if manager is None:
+            return
+        item = manager.queue_episode(feed_url, entry)
+        if item:
+            signal_manager.statusbar_message.emit(_("Queued episode for download: {title}").format(title=item.filename))
+        else:
+            signal_manager.statusbar_message.emit(_("Could not find a downloadable media link for this episode"))
+
+    def queue_podcast_batch_download(self, feed_url: str, count: int):
+        manager = self._get_podcast_download_manager()
+        if manager is None:
+            return
+        items = manager.queue_next_unqueued(feed_url, count)
+        signal_manager.statusbar_message.emit(
+            _("Queued {count} episode(s) for download").format(count=len(items))
+        )
+
     def open_downloader(self):
         self.singleton_dialogs.open_downloader()
 
