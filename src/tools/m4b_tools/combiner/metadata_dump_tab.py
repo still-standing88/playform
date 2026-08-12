@@ -10,6 +10,11 @@ from gui_controls.job_progress_dialog import JobProgressDialog
 from tools.ffmpeg_handler import FFmpegHandler
 from tools.m4b_tools.combiner.job import MetadataDumpJob
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 
 class MetadataDumpTab(QWidget):
@@ -106,7 +111,7 @@ class MetadataDumpTab(QWidget):
         self.begin_button.setEnabled(False)
         self.job.start()
         self.progress_dialog.show()
-        signal_manager.statusbar_message.emit(_("Dumping audiobook metadata..."))
+        _announce(_("Dumping audiobook metadata..."))
 
     def _on_cancel(self):
         if self.job:
@@ -127,6 +132,6 @@ class MetadataDumpTab(QWidget):
                 _("OK: wrote {count} row(s).").format(count=row_count) if success else _("FAILED or cancelled.")
             )
             self.progress_dialog.mark_finished(success)
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Metadata dump finished ({count} rows)").format(count=row_count) if success else _("Metadata dump failed")
         )

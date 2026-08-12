@@ -12,6 +12,11 @@ from multi_device_capture.ui import MultiDeviceCaptureUI
 from gui.dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.DIALOGS)
 from player.util.utilities import ensure_ffmpeg_available
 
 class ToolWindowManager:
@@ -85,12 +90,12 @@ class ToolWindowManager:
             dialog.show_dialog()
         
         self.main_window.active_tool_name = tool_name
-        signal_manager.statusbar_message.emit(f"{_('Opened')} {title}")
+        _announce(f"{_('Opened')} {title}")
 
     def on_tool_hidden(self, tool_name, title):
         self.main_window.show_tool_button.setText(f"{_('Show')} {title}")
         self.main_window.show_tool_button.setVisible(True)
-        signal_manager.statusbar_message.emit(f"{title} {_('hidden')}")
+        _announce(f"{title} {_('hidden')}")
 
     def on_tool_closed(self, tool_name):
         if tool_name in self.main_window.tool_dialogs:
@@ -98,4 +103,4 @@ class ToolWindowManager:
         if self.main_window.active_tool_name == tool_name:
             self.main_window.active_tool_name = None
         self.main_window.show_tool_button.setVisible(False)
-        signal_manager.statusbar_message.emit(_("Tool closed"))
+        _announce(_("Tool closed"))

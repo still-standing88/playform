@@ -6,6 +6,11 @@ from media_core.av_play import Playlist, PlaylistEntry
 from utilities.formats import formats
 from utilities.util_gui import messageBox
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.PLAYLISTS)
 from playlist_manager.playlist_selection_dialog import PlaylistSelectionDialog
 from playlist_manager.playlist_create_dialog import PlaylistCreateDialog
 
@@ -84,7 +89,7 @@ class PlaylistHandler:
         
         self.main_window.player_widget.load_playlist(playlist, start_index=0, auto_play=True)
         
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Created and loaded playlist '{playlist_name}' with {track_count} tracks").format(
                 playlist_name=playlist_name,
                 track_count=len(media_files),
@@ -99,7 +104,7 @@ class PlaylistHandler:
             self.main_window.playlists_widget.save_playlists_data()
             
             filename = os.path.basename(file_path)
-            signal_manager.statusbar_message.emit(
+            _announce(
                 _("Added '{filename}' to playlist '{playlist_name}'").format(
                     filename=filename,
                     playlist_name=playlist_name,
@@ -122,4 +127,4 @@ class PlaylistHandler:
         self.main_window.playlists_widget.playlist_manager.playlists[name] = playlist
         self.main_window.playlists_widget.add_playlist_to_list(name)
         self.main_window.playlists_widget.save_playlists_data()
-        signal_manager.statusbar_message.emit(f"{_('Created new playlist')} '{name}'")
+        _announce(f"{_('Created new playlist')} '{name}'")

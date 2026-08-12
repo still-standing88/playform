@@ -13,6 +13,11 @@ from tools.ffmpeg.batch_converter.convert_tab import AudioConvertPanel, VideoCon
 from media_core.ffmpeg.format_capabilities import build_ffmpeg_output_options
 from tools.ffmpeg.media_extractor.image_panel import ImageExtractPanel
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 
 class ExtractionThread(QThread):
@@ -211,7 +216,7 @@ class ExtractorUI(QWidget):
 
         ffmpeg.input(input_path, **input_options).output(output_path, **output_kwargs)
         self._run_task(ffmpeg, _("Extracting..."))
-        signal_manager.statusbar_message.emit(_("Starting extraction"))
+        _announce(_("Starting extraction"))
 
     def _apply_end_time(self, output_kwargs: dict):
         end_time = self.end_time_edit.text().strip()
@@ -249,10 +254,10 @@ class ExtractorUI(QWidget):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
             QMessageBox.information(self, _("Success"), _("Extraction completed successfully."))
-            signal_manager.statusbar_message.emit(_("Extraction completed successfully"))
+            _announce(_("Extraction completed successfully"))
 
     def _on_error(self, message: str):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
             QMessageBox.critical(self, _("Error"), _("An error occurred: {message}").format(message=message))
-            signal_manager.statusbar_message.emit(_("Extraction failed"))
+            _announce(_("Extraction failed"))

@@ -11,6 +11,11 @@ from gui_controls.job_progress_dialog import JobProgressDialog
 from tools.ffmpeg_handler import FFmpegHandler
 from tools.m4b_tools.combiner.job import CombineJob
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 _BITRATES = ["32k", "48k", "64k", "96k", "128k", "160k", "192k", "256k"]
 
@@ -196,7 +201,7 @@ class CombineTab(QWidget):
         self.begin_button.setEnabled(False)
         self.job.start()
         self.progress_dialog.show()
-        signal_manager.statusbar_message.emit(_("Combining audiobooks..."))
+        _announce(_("Combining audiobooks..."))
 
     def _on_cancel(self):
         if self.job:
@@ -222,6 +227,6 @@ class CombineTab(QWidget):
                 _("OK: combine completed.") if success else _("FAILED: combine did not complete.")
             )
             self.progress_dialog.mark_finished(success)
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Audiobooks combined successfully") if success else _("Combine failed or was cancelled")
         )

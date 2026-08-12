@@ -17,6 +17,11 @@ import re
 
 from utilities.functions import get_app_path
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.PLAYLISTS)
 
 
 class PlaylistsWidget(QWidget):
@@ -159,7 +164,7 @@ class PlaylistsWidget(QWidget):
             self.playlist_view.set_playlist(None)
 
         self.save_playlists_data()
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Deleted playlist '{name}'").format(name=name)
         )
 
@@ -200,7 +205,7 @@ class PlaylistsWidget(QWidget):
             return
 
         self.save_playlists_data()
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Split '{name}' into {count} playlists").format(
                 name=source_name, count=len(added_names)
             )
@@ -286,7 +291,7 @@ class PlaylistsWidget(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             self._remove_playlist_entry(name)
             self.save_playlists_data()
-            signal_manager.statusbar_message.emit(
+            _announce(
                 _("Removed missing playlist '{name}'").format(name=name)
             )
             return True
@@ -441,7 +446,7 @@ class PlaylistsWidget(QWidget):
             return
 
         self.save_playlists_data()
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Imported playlist '{name}'").format(name=name)
         )
 
@@ -470,7 +475,7 @@ class PlaylistsWidget(QWidget):
         self.playlist_paths[name] = self._default_playlist_path(name)
         self.add_playlist_to_list(name)
         self.save_playlists_data()
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Playlist '{name}' created").format(name=name)
         )
         
@@ -526,7 +531,7 @@ class PlaylistsWidget(QWidget):
                 self._update_playlist_list_item(new_name)
                         
         self.save_playlists_data()
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Playlist '{new_name}' updated").format(new_name=new_name)
         )
         

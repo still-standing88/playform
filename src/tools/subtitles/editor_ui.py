@@ -11,6 +11,11 @@ from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QFont
 from .handler import detect_encoding, read_subtitle_file, process_subtitles
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.SUBTITLES)
 
 COMMON_ENCODINGS = ['utf-8', 'utf-16', 'windows-1252', 'latin-1', 'iso-8859-1', 'gbk', 'shift_jis']
 
@@ -340,7 +345,7 @@ class SubtitleEditorUI(QWidget):
         self.thread.error.connect(self.on_error)
         self.thread.start()
         
-        signal_manager.statusbar_message.emit(_("Processing subtitle file"))
+        _announce(_("Processing subtitle file"))
 
     def on_progress(self, message):
         self.status_label.setText(message)
@@ -348,10 +353,10 @@ class SubtitleEditorUI(QWidget):
     def on_finished(self):
         QMessageBox.information(self, _("Success"), _("Subtitle processing completed successfully."))
         self.apply_button.setEnabled(True)
-        signal_manager.statusbar_message.emit(_("Subtitle processing completed"))
+        _announce(_("Subtitle processing completed"))
 
     def on_error(self, error_message):
         self.status_label.setText(_("Error occurred"))
         QMessageBox.warning(self, _("Processing Error"), error_message)
         self.apply_button.setEnabled(True)
-        signal_manager.statusbar_message.emit(_("Subtitle processing failed"))
+        _announce(_("Subtitle processing failed"))

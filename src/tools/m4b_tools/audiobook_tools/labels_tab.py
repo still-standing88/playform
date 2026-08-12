@@ -11,6 +11,11 @@ from media_core.m4b_tools.labels import read_label_file, write_label_file, apply
 from media_core.m4b_tools.finders import find_chapters
 from tools.m4b_tools.audiobook_tools.job import SimpleM4BTask
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 
 def _export_chapters(book_path, labels_path, ffprobe_executable="ffprobe", on_log_line=None):
@@ -167,4 +172,4 @@ class LabelsTab(QWidget):
                 _("OK.") if success else _("FAILED: {error}").format(error=error)
             )
             self.progress_dialog.mark_finished(success)
-        signal_manager.statusbar_message.emit(_("Done") if success else _("Labels operation failed"))
+        _announce(_("Done") if success else _("Labels operation failed"))

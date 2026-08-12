@@ -13,6 +13,11 @@ from app_config import prefs
 from utilities.functions import copyText
 from utilities.util_gui import menuItem, contextMenu
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.EXPLORER)
 from .explorer import Explorer, PathInfo, PathType, ExplorerMode
 from .search_worker import SearchWorker
 import app_db
@@ -141,7 +146,7 @@ class ExplorerView(QListWidget):
         # interrupting them with a modal dialog for a routine error.
         error = self._explorer.last_navigation_error
         if error:
-            signal_manager.statusbar_message.emit(_("Couldn't open {error}").format(error=error))
+            _announce(_("Couldn't open {error}").format(error=error))
 
     def change_path(self, path:str):
         self._explorer.set_current_path(path)
@@ -216,7 +221,7 @@ class ExplorerView(QListWidget):
 
     def perform_search(self, query: str):
         root_path, use_db = self._explorer.begin_search(query, media_db=app_db.media_db)
-        signal_manager.statusbar_message.emit(_("Searching..."))
+        _announce(_("Searching..."))
         self._search_worker.start_search(root_path, query, self._explorer.file_extensions, use_db)
 
     @Slot(str, str, list)
@@ -225,11 +230,11 @@ class ExplorerView(QListWidget):
         self.relist_contents()
         self.update_path()
         self.set_last_path(self._explorer.current_path)
-        signal_manager.statusbar_message.emit(_("Search complete: {count} result(s)").format(count=len(paths)))
+        _announce(_("Search complete: {count} result(s)").format(count=len(paths)))
 
     @Slot(str, str)
     def _on_search_error(self, root_path, message):
-        signal_manager.statusbar_message.emit(_("Search failed: {error}").format(error=message))
+        _announce(_("Search failed: {error}").format(error=message))
 
     def refresh(self):
         if self._explorer.mode == ExplorerMode.SEARCH_RESULTS and self._explorer.search_query:

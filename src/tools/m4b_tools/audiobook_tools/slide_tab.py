@@ -10,6 +10,11 @@ from tools.ffmpeg_handler import FFmpegHandler
 from media_core.m4b_tools.slide import run_slide
 from tools.m4b_tools.audiobook_tools.job import SimpleM4BTask
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 _BITRATES = ["32k", "48k", "64k", "96k", "128k", "160k", "192k", "256k", "320k"]
 
@@ -110,7 +115,7 @@ class SlideTab(QWidget):
         self.begin_button.setEnabled(False)
         self.job.start()
         self.progress_dialog.show()
-        signal_manager.statusbar_message.emit(_("Sliding audiobook chapters..."))
+        _announce(_("Sliding audiobook chapters..."))
 
     def _on_log_line(self, line: str):
         if self.progress_dialog:
@@ -123,6 +128,6 @@ class SlideTab(QWidget):
                 _("OK: chapters shifted.") if success else _("FAILED: {error}").format(error=error)
             )
             self.progress_dialog.mark_finished(success)
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Chapters shifted successfully") if success else _("Slide failed")
         )

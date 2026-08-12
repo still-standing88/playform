@@ -7,6 +7,11 @@ from PySide6.QtCore import Qt, QThread, Signal
 from tools.ffmpeg_handler import FFmpegHandler
 from media_core.ffmpeg import FFmpegError, Progress
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 class FFmpegTaskThread(QThread):
     progress = Signal(Progress)
@@ -148,11 +153,11 @@ class ThumbnailGeneratorUI(QWidget):
             self.progress_dialog.canceled.connect(self.thread.terminate)
             self.thread.start()
             self.progress_dialog.show()
-            signal_manager.statusbar_message.emit(_("Starting thumbnail generation"))
+            _announce(_("Starting thumbnail generation"))
 
         except Exception as e:
             QMessageBox.critical(self, _("Error"), _("Failed to start process: {error}").format(error=e))
-            signal_manager.statusbar_message.emit(_("Failed to start thumbnail generation"))
+            _announce(_("Failed to start thumbnail generation"))
 
     def update_progress(self, progress: Progress):
         if self.progress_dialog:
@@ -168,13 +173,13 @@ class ThumbnailGeneratorUI(QWidget):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
             QMessageBox.information(self, _("Success"), _("Thumbnail generation completed successfully."))
-            signal_manager.statusbar_message.emit(_("Thumbnail generation completed"))
+            _announce(_("Thumbnail generation completed"))
 
     def on_error(self, message):
         if self.progress_dialog and not self.progress_dialog.wasCanceled():
             self.progress_dialog.close()
             QMessageBox.critical(self, _("Error"), _("An error occurred: {message}").format(message=message))
-            signal_manager.statusbar_message.emit(_("Thumbnail generation failed"))
+            _announce(_("Thumbnail generation failed"))
 
     def update_action_buttons(self):
         path = self.input_path.text()

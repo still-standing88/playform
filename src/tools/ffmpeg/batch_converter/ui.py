@@ -13,6 +13,11 @@ from tools.ffmpeg.batch_converter.job import BatchConverterJob, resolve_files_fr
 from gui_controls.job_progress_dialog import JobProgressDialog, NOTIFY_SYSTEM
 from tools.ffmpeg.batch_converter import presets
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 
 class BatchConverterUI(QWidget):
@@ -127,7 +132,7 @@ class BatchConverterUI(QWidget):
         self.begin_button.setEnabled(False)
         self.job.start()
         self.progress_dialog.show()
-        signal_manager.statusbar_message.emit(_("Batch conversion started"))
+        _announce(_("Batch conversion started"))
 
     def _on_cancel(self):
         if self.job:
@@ -153,7 +158,7 @@ class BatchConverterUI(QWidget):
         if self.progress_dialog:
             self.progress_dialog.append_file_result(message)
         if not success:
-            signal_manager.statusbar_message.emit(
+            _announce(
                 _("Failed: {filename} — {message}").format(filename=os.path.basename(path), message=message)
             )
 
@@ -168,7 +173,7 @@ class BatchConverterUI(QWidget):
             if completed:
                 self._notify_finished()
 
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Batch conversion finished") if completed else _("Batch conversion cancelled")
         )
 

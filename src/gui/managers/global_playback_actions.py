@@ -1,6 +1,11 @@
 import media_core.av_play as av_play
 from app_config import prefs
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.PLAYBACK)
 
 
 class GlobalPlaybackActions:
@@ -18,12 +23,12 @@ class GlobalPlaybackActions:
                     state = mw.player_widget.player.primary_instance.get_playback_state()
                     if state == av_play.AVPlaybackState.AV_STATE_PLAYING:
                         mw.player_widget.player.primary_instance.pause()
-                        signal_manager.statusbar_message.emit(_("Paused"))
+                        _announce(_("Paused"))
                     else:
                         mw.player_widget.player.primary_instance.play()
-                        signal_manager.statusbar_message.emit(_("Playing"))
+                        _announce(_("Playing"))
             except Exception as e:
-                signal_manager.statusbar_message.emit(_("No media loaded"))
+                _announce(_("No media loaded"))
 
     def stop_playback(self):
         mw = self.main_window
@@ -31,9 +36,9 @@ class GlobalPlaybackActions:
             try:
                 if mw.player_widget.player.primary_instance:
                     mw.player_widget.player.primary_instance.stop()
-                    signal_manager.statusbar_message.emit(_("Stopped"))
+                    _announce(_("Stopped"))
             except Exception as e:
-                signal_manager.statusbar_message.emit(_("No media loaded"))
+                _announce(_("No media loaded"))
 
     def toggle_mute(self):
         mw = self.main_window
@@ -45,9 +50,9 @@ class GlobalPlaybackActions:
                         instance.mute()
                     else:
                         instance.unmute()
-                    signal_manager.statusbar_message.emit(_("Mute toggled"))
+                    _announce(_("Mute toggled"))
             except Exception as e:
-                signal_manager.statusbar_message.emit(_("No media loaded"))
+                _announce(_("No media loaded"))
 
     def seek_forward(self):
         mw = self.main_window
@@ -75,9 +80,9 @@ class GlobalPlaybackActions:
             try:
                 if mw.player_widget.player.primary_instance:
                     mw.player_widget.player.previous()
-                    signal_manager.statusbar_message.emit(_("Previous track"))
+                    _announce(_("Previous track"))
             except Exception:
-                signal_manager.statusbar_message.emit(_("No media loaded"))
+                _announce(_("No media loaded"))
 
     def next_track(self):
         mw = self.main_window
@@ -85,9 +90,9 @@ class GlobalPlaybackActions:
             try:
                 if mw.player_widget.player.primary_instance:
                     mw.player_widget.player.next()
-                    signal_manager.statusbar_message.emit(_("Next track"))
+                    _announce(_("Next track"))
             except Exception:
-                signal_manager.statusbar_message.emit(_("No media loaded"))
+                _announce(_("No media loaded"))
 
     def volume_down(self):
         mw = self.main_window

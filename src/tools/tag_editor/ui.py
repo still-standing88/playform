@@ -6,6 +6,11 @@ from PySide6.QtWidgets import (
     QFileDialog, QListWidget, QGridLayout, QMessageBox, QTextEdit
 )
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 class TagEditorUI(QWidget):
     def __init__(self):
@@ -89,7 +94,7 @@ class TagEditorUI(QWidget):
                     QMessageBox.warning(self, _("Error"), _("Could not load {file}: {error}").format(file=file_path, error=e))
         self.update_buttons_state()
         if files:
-            signal_manager.statusbar_message.emit(
+            _announce(
                 _("Loaded {count} file(s) for tag editing").format(count=len(files))
             )
 
@@ -176,12 +181,12 @@ class TagEditorUI(QWidget):
             self.current_file.save()
             self.dirty_flags[self.current_path] = False
             QMessageBox.information(self, _("Success"), _("Tags saved successfully."))
-            signal_manager.statusbar_message.emit(
+            _announce(
                 _("Tags saved for {filename}").format(filename=os.path.basename(self.current_path))
             )
         except Exception as e:
             QMessageBox.critical(self, _("Error"), _("Failed to save tags: {error}").format(error=e))
-            signal_manager.statusbar_message.emit(_("Failed to save tags"))
+            _announce(_("Failed to save tags"))
 
     def save_all(self):
         try:
@@ -196,12 +201,12 @@ class TagEditorUI(QWidget):
                 QMessageBox.information(self, _("Success"), _("1 file saved."))
             else:
                 QMessageBox.information(self, _("Success"), _("{count} files saved.").format(count=len(to_save)))
-            signal_manager.statusbar_message.emit(
+            _announce(
                 _("Tags saved for {count} file(s)").format(count=len(to_save))
             )
         except Exception as e:
             QMessageBox.critical(self, _("Error"), _("An error occurred while saving all files: {error}").format(error=e))
-            signal_manager.statusbar_message.emit(_("Failed to save tags"))
+            _announce(_("Failed to save tags"))
 
     def update_buttons_state(self):
         has_files = self.file_list.count() > 0

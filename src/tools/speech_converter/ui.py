@@ -12,6 +12,11 @@ from tools.speech_converter.parameters_dialog import ParametersDialog
 from tools.speech_converter.job import SaveSpeechJob
 from gui_controls.job_progress_dialog import JobProgressDialog
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 _SAVE_FILTER = "MP3 Audio (*.mp3);;WAV Audio (*.wav);;OGG Audio (*.ogg);;FLAC Audio (*.flac);;All Files (*.*)"
 
@@ -178,7 +183,7 @@ class SpeechConverterUI(QWidget):
             self.progress_dialog = None
 
         if success:
-            signal_manager.statusbar_message.emit(_("Speech saved to {path}").format(path=path))
+            _announce(_("Speech saved to {path}").format(path=path))
         else:
             QMessageBox.critical(self, _("Error"), error or _("Unknown error"))
         self.save_job = None
@@ -187,7 +192,7 @@ class SpeechConverterUI(QWidget):
         self._update_buttons(state)
 
     def _on_error(self, message: str):
-        signal_manager.statusbar_message.emit(_("Speech error: {message}").format(message=message))
+        _announce(_("Speech error: {message}").format(message=message))
 
     def _update_buttons(self, state: str):
         speaking = state == "speaking"

@@ -12,6 +12,11 @@ from tools.ffmpeg_handler import FFmpegHandler
 from media_core.m4b_tools.naming import DEFAULT_CHAPTER_TEMPLATE
 from tools.m4b_tools.audiobook_tools.job import SplitJob
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 _TEMPLATE_HELP = (
     "{book_title} {chapter_num} {chapter_title} {author} {narrator} {genre} {year} "
@@ -185,7 +190,7 @@ class SplitTab(QWidget):
         self.begin_button.setEnabled(False)
         self.job.start()
         self.progress_dialog.show()
-        signal_manager.statusbar_message.emit(_("Splitting audiobook..."))
+        _announce(_("Splitting audiobook..."))
 
     def _on_cancel(self):
         if self.job:
@@ -213,6 +218,6 @@ class SplitTab(QWidget):
         self.begin_button.setEnabled(True)
         if self.progress_dialog:
             self.progress_dialog.mark_finished(success)
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Audiobook split finished") if success else _("Audiobook split failed, incomplete, or cancelled")
         )

@@ -10,6 +10,11 @@ import utilities.mpv_bootstrap
 from media_core.av_play import Playlist, PlaylistEntry
 from gui_controls.list_ctrl import ListCtrl
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.PLAYLISTS)
 
 
 class PlaylistListCtrl(ListCtrl):
@@ -234,7 +239,7 @@ class PlaylistView(QWidget):
 
         self.current_playlist.entries = ordered_entries
         self._save_playlist_changes()
-        signal_manager.statusbar_message.emit(_("Playlist order updated"))
+        _announce(_("Playlist order updated"))
 
     @Slot(int)
     def on_row_activated(self, row):
@@ -270,7 +275,7 @@ class PlaylistView(QWidget):
         if added_count:
             self.refresh_view()
             self._save_playlist_changes()
-            signal_manager.statusbar_message.emit(
+            _announce(
                 _("Added {count} track(s) to playlist").format(count=added_count)
             )
 
@@ -302,7 +307,7 @@ class PlaylistView(QWidget):
 
         self.refresh_view()
         self._save_playlist_changes()
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Removed {count} track(s) from playlist").format(count=len(indexes))
         )
 
@@ -324,7 +329,7 @@ class PlaylistView(QWidget):
         self.current_playlist.clear()
         self.refresh_view()
         self._save_playlist_changes()
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Removed {count} track(s) from playlist").format(count=removed_count)
         )
 
@@ -343,4 +348,4 @@ class PlaylistView(QWidget):
 
         self.refresh_view()
         self._save_playlist_changes()
-        signal_manager.statusbar_message.emit(_("Playlist sorted"))
+        _announce(_("Playlist sorted"))

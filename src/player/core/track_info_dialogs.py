@@ -2,6 +2,11 @@ from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.PLAYBACK)
 from utilities.chapter_probe import get_media_metadata
 from utilities.functions import is_youtube_url, is_local_file
 from ..util.url import is_url_supported
@@ -95,11 +100,11 @@ class TrackInfoDialogs:
         thread.finished_ok.connect(self._on_subtitle_download_finished)
         thread.error_occurred.connect(self._on_subtitle_download_error)
         self._subtitle_download_thread = thread
-        signal_manager.statusbar_message.emit(_("Downloading subtitle..."))
+        _announce(_("Downloading subtitle..."))
         thread.start()
 
     def _on_subtitle_download_finished(self, save_path: str):
-        signal_manager.statusbar_message.emit(_("Subtitle saved to {path}").format(path=save_path))
+        _announce(_("Subtitle saved to {path}").format(path=save_path))
 
     def _on_subtitle_download_error(self, error_msg: str):
         QMessageBox.warning(self._widget, _("Download Failed"), error_msg)
@@ -150,7 +155,7 @@ class TrackInfoDialogs:
         thread.result_ready.connect(self._on_metadata_dialog_info_ready)
         thread.error_occurred.connect(self._on_metadata_dialog_info_error)
         self._metadata_dialog_thread = thread
-        signal_manager.statusbar_message.emit(_("Fetching media metadata..."))
+        _announce(_("Fetching media metadata..."))
         thread.start()
 
     def _on_metadata_dialog_info_ready(self, source: str, info: dict):

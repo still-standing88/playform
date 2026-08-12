@@ -11,6 +11,11 @@ from gui_controls.job_progress_dialog import JobProgressDialog
 from tools.ffmpeg_handler import FFmpegHandler
 from tools.m4b_tools.audiobook_tools.job import BindJob
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 _BITRATES = ["32k", "48k", "64k", "96k", "128k", "160k", "192k", "256k", "320k"]
 
@@ -174,7 +179,7 @@ class BindTab(QWidget):
         self.begin_button.setEnabled(False)
         self.job.start()
         self.progress_dialog.show()
-        signal_manager.statusbar_message.emit(_("Binding audiobook..."))
+        _announce(_("Binding audiobook..."))
 
     def _on_cancel(self):
         if self.job:
@@ -198,6 +203,6 @@ class BindTab(QWidget):
         if self.progress_dialog:
             self.progress_dialog.append_file_result(_("OK: bind completed.") if success else _("FAILED: bind did not complete."))
             self.progress_dialog.mark_finished(success)
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Audiobook bound successfully") if success else _("Audiobook bind failed or was cancelled")
         )

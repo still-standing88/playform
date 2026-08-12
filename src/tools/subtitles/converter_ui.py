@@ -8,6 +8,11 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QThread, Signal
 from .handler import detect_encoding, convert_and_clean_subtitles
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.SUBTITLES)
 
 COMMON_ENCODINGS = ['utf-8', 'utf-16', 'windows-1252', 'latin-1', 'iso-8859-1', 'gbk', 'shift_jis']
 
@@ -168,7 +173,7 @@ class SubtitleConverterUI(QWidget):
         self.thread.error.connect(self.on_error)
         self.thread.start()
         
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Converting {count} subtitle file(s)").format(count=len(self.file_paths))
         )
 
@@ -178,10 +183,10 @@ class SubtitleConverterUI(QWidget):
     def on_finished(self):
         QMessageBox.information(self, _("Success"), _("Subtitle conversion completed successfully."))
         self.convert_button.setEnabled(True)
-        signal_manager.statusbar_message.emit(_("Subtitle conversion completed"))
+        _announce(_("Subtitle conversion completed"))
 
     def on_error(self, error_message):
         self.status_label.setText(_("Error occurred"))
         QMessageBox.warning(self, _("Conversion Error"), error_message)
         self.convert_button.setEnabled(True)
-        signal_manager.statusbar_message.emit(_("Subtitle conversion failed"))
+        _announce(_("Subtitle conversion failed"))

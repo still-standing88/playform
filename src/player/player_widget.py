@@ -38,6 +38,11 @@ from utilities.functions import get_app_path, get_parent_dir
 from utilities.media_utils import format_time, seconds_to_microseconds, get_media_files_from_directory
 from utilities.formats import formats as media_formats
 from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
+
+
+def _announce(text):
+    signal_manager.announce(text, AnnouncementCategory.PLAYBACK)
 
 
 LayoutType = QVBoxLayout | QHBoxLayout
@@ -537,13 +542,13 @@ class PlayerWidget(QWidget):
             file_date = str(dt.datetime.now().strftime("%y-%d-%m-%I-%M-%S%p"))
             image_path = os.path.join(get_app_path(), "Screenshots", f"screenshot-{file_date}.{image_format}")
             self.player.take_screenshot(image_path)
-            signal_manager.statusbar_message.emit(
+            _announce(
                 _("Screenshot saved: {filename}").format(
                     filename=os.path.basename(image_path)
                 )
             )
         except Exception:
-            signal_manager.statusbar_message.emit(_("Failed to take screenshot"))
+            _announce(_("Failed to take screenshot"))
 
     def close_current_media(self):
         try:
@@ -715,7 +720,7 @@ class PlayerWidget(QWidget):
         self.chapters_widget.clear_chapters()
 
     def load_file(self, file_path: str):
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Loading: {filename}").format(filename=os.path.basename(file_path))
         )
         self.player_controls._source_url = None
@@ -743,7 +748,7 @@ class PlayerWidget(QWidget):
             self._reset_ui_to_default()
 
     def load_url(self, url: str):
-        signal_manager.statusbar_message.emit(_("Loading URL: {url}").format(url=url))
+        _announce(_("Loading URL: {url}").format(url=url))
         self.player_controls._source_url = url
         try:
             self.player.load_url(url)
@@ -755,7 +760,7 @@ class PlayerWidget(QWidget):
         if playlist is None or len(playlist) == 0:
             self._reset_ui_to_default()
             return
-        signal_manager.statusbar_message.emit(
+        _announce(
             _("Loading playlist: {title}").format(
                 title=playlist.title or _("Untitled")
             )
@@ -849,7 +854,7 @@ class PlayerWidget(QWidget):
     def _on_url_extraction_started(self):
         self.video_display.show_loading(_("Extracting URL..."))
         self.player_controls.set_controls_enabled(False)
-        signal_manager.statusbar_message.emit(_("Extracting URL..."))
+        _announce(_("Extracting URL..."))
 
     @Slot(object)
     def _on_url_extraction_complete(self, _result):
@@ -865,7 +870,7 @@ class PlayerWidget(QWidget):
         self.video_display.hide_loading()
         self.player_controls.set_controls_enabled(True)
         self._reset_ui_to_default()
-        signal_manager.statusbar_message.emit(_("URL extraction failed"))
+        _announce(_("URL extraction failed"))
 
         msg = QMessageBox(self)
         msg.setWindowTitle(_("URL Extraction Failed"))
