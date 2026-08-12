@@ -123,7 +123,9 @@ class DockManager:
             'playlists': self.main_window.playlists_dock.isVisible(),
             'radio': self.main_window.radio_dock.isVisible() if self.main_window.radio_dock else False,
             'podcast': self.main_window.podcast_dock.isVisible() if self.main_window.podcast_dock else False,
-            'debug_console': self.main_window.debug_console_dock.isVisible() if hasattr(self.main_window, 'debug_console_dock') else False
+            'debug_console': self.main_window.debug_console_dock.isVisible() if hasattr(self.main_window, 'debug_console_dock') else False,
+            'sidebar_hidden': self.main_window.player_widget.toggle_accordion_btn.isActuated() if self.main_window.player_widget else False,
+            'controls_minimized': self.main_window.player_widget.player_controls.toggle_controls_btn.isActuated() if self.main_window.player_widget else False
         }
         dock_session.save_session(dock_states)
 
@@ -158,6 +160,10 @@ class DockManager:
             self.main_window.debug_console_dock.setVisible(True)
             if hasattr(self.main_window, 'show_console_dock_action'):
                 self.main_window.show_console_dock_action.setChecked(True)
+
+        if self.main_window.player_widget:
+            self.main_window.player_widget.toggle_accordion_btn.setActuated(dock_states.get('sidebar_hidden', False))
+            self.main_window.player_widget.player_controls.toggle_controls_btn.setActuated(dock_states.get('controls_minimized', False))
 
         self.update_focusable_widgets()
 
