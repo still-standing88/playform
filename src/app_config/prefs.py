@@ -11,6 +11,16 @@ data_path = f"{current_path}/data/"
 playlist_path = f"{data_path}/playlists"
 prefs_file = os.path.join(data_path, "prefs.json")
 
+RUNTIME_PREFS_KEY = "runtime_prefs"
+
+
+def _dialog_subset(data: dict) -> dict:
+    return {k: v for k, v in data.items() if k in prefs_dict.DIALOG_PREFS_KEYS}
+
+
+def _runtime_subset(data: dict) -> dict:
+    return {k: v for k, v in data.items() if k not in prefs_dict.DIALOG_PREFS_KEYS}
+
 
 def processData(path,mode,data="", target=""):
     if mode == "read":
@@ -21,20 +31,55 @@ def processData(path,mode,data="", target=""):
                 if tstrS[line]: tstr.append(dehexify(tstrS[line]))
 
         dstr = ""
+        pstr = {}
         for line in tstr:
             dstr += line+"\n"
             pstr = json.loads(dstr)
-            global prefs
-            prefs = pstr
+        global prefs
+        # prefs.json only ever holds the dialog-exposed subset now -- merge
+        # it over the in-memory dict rather than replacing it outright, so
+        # whatever runtime/non-dialog keys are already loaded (from
+        # app_settings, see load_runtime_prefs()) survive this read.
+        prefs.update(pstr)
 
     elif mode == "write":
         with open(path,"w") as file:
-            tstr = hexify(json.dumps(data))
+            tstr = hexify(json.dumps(_dialog_subset(data)))
             file.write(tstr)
 
     elif mode == "delete":
         with open(path,"w") as file:
             file.write("")
+
+def load_runtime_prefs():
+    """Loads the non-dialog subset of `prefs` from app_settings
+    (user.sqlite3), migrating it out of a legacy all-in-one prefs.json on
+    first run after upgrade. Missing/corrupt data falls back to defaults
+    already present in `prefs` (prefs_dict.prefs.copy()) rather than
+    raising, per the "handled silently and gracefully" requirement."""
+    global prefs
+    try:
+        from app_db import app_settings
+        data = app_settings.get(RUNTIME_PREFS_KEY)
+        if data is None:
+            # First run after upgrading from a version where prefs.json
+            # held everything -- whatever non-dialog keys processData just
+            # loaded into `prefs` from the old file become the initial
+            # runtime_prefs row, then get pruned back out of prefs.json on
+            # the next save().
+            data = _runtime_subset(prefs)
+            app_settings.set(RUNTIME_PREFS_KEY, data)
+        if isinstance(data, dict):
+            prefs.update(data)
+    except Exception:
+        pass
+
+def save_runtime_prefs():
+    try:
+        from app_db import app_settings
+        app_settings.set(RUNTIME_PREFS_KEY, _runtime_subset(prefs))
+    except Exception:
+        pass
 
 def ensure_prefs_schema():
     global prefs
@@ -47,8 +92,9 @@ def ensure_prefs_schema():
 
     return updated
 
-def save():        
+def save():
     processData(prefs_file, "write", prefs) # type: ignore
+    save_runtime_prefs()
 
 def reset():
     global prefs
@@ -58,7 +104,7 @@ def reset():
 def is_prefs_dict_valid():
     if set(list(prefs.keys())) == set(list(prefs_dict.prefs.keys())):
         return True
-    return False    
+    return False
 
 
 def initialize():
@@ -68,10 +114,13 @@ def initialize():
     if os.path.exists(prefs_file):
         try:
             processData(prefs_file, "read")
+            load_runtime_prefs()
             if ensure_prefs_schema():
                 save()
         except:
             reset()
-    elif not os.path.exists(prefs_file):
+    else:
+        load_runtime_prefs()
+        if ensure_prefs_schema():
+            pass
         save()
-
