@@ -117,6 +117,13 @@ class PlayerWidget(QWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_path_context_menu)
 
+        # No media loaded yet at construction time -- start these disabled
+        # rather than waiting for the first mediaAvailable(False) emission,
+        # which only ever fires on a True->False edge.
+        self.filters_widget.set_media_available(False)
+        self.video_effects_widget.set_media_available(False)
+        self.audio_filters_widget.set_media_available(False)
+
     def layout_widgets(self):
         self.main_layout = QHBoxLayout(self)
         self.main_layout.setContentsMargins(5, 5, 5, 5)
@@ -241,6 +248,9 @@ class PlayerWidget(QWidget):
         self.player_controls.flipHorizontalToggled.connect(self._on_flip_horizontal_toggled)
         self.player_controls.flipVerticalToggled.connect(self._on_flip_vertical_toggled)
         self.player_controls.panChanged.connect(self._on_pan_changed)
+        self.mediaAvailable.connect(self.filters_widget.set_media_available)
+        self.mediaAvailable.connect(self.video_effects_widget.set_media_available)
+        self.mediaAvailable.connect(self.audio_filters_widget.set_media_available)
         self.player_controls.screenshotRequested.connect(self._on_screenshot)
         self.player_controls.reverseToggled.connect(self._on_reverse_toggled)
         self.player.signals.extraction_started.connect(self._on_url_extraction_started)
