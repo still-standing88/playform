@@ -1,8 +1,9 @@
 from PySide6.QtWidgets import (
     QDialog, QHBoxLayout, QVBoxLayout, QFormLayout, QWidget, QLabel,
-    QTreeWidget, QTreeWidgetItem, QPushButton
+    QTreeView, QPushButton
 )
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QStandardItemModel, QStandardItem
 
 from gui_controls.param_widgets import make_param_widget, read_param_widget
 
@@ -58,18 +59,21 @@ class CategorizedEffectPickerDialog(QDialog):
             left_widget = QWidget(self)
             left_layout = QVBoxLayout(left_widget)
             left_layout.addWidget(QLabel(_(list_title), self))
-            self.catalog_tree = QTreeWidget(self)
+            self.catalog_model = QStandardItemModel(self)
+            self.catalog_tree = QTreeView(self)
+            self.catalog_tree.setModel(self.catalog_model)
             self.catalog_tree.setHeaderHidden(True)
             self.catalog_tree.setAccessibleName(_(list_title))
             self.catalog_tree.setAccessibleDescription(
                 _("Select an effect to configure its parameters on the right, then choose OK to add it.")
             )
             self._populate_catalog()
-            self.catalog_tree.currentItemChanged.connect(self._on_selection_changed)
+            self.catalog_tree.selectionModel().currentChanged.connect(self._on_selection_changed)
             left_layout.addWidget(self.catalog_tree)
             layout.addWidget(left_widget, stretch=1)
         else:
             self.catalog_tree = None
+            self.catalog_model = None
 
         right_widget = QWidget(self)
         right_layout = QVBoxLayout(right_widget)
@@ -98,21 +102,23 @@ class CategorizedEffectPickerDialog(QDialog):
         layout.addWidget(right_widget, stretch=1)
 
     def _populate_catalog(self):
+        root = self.catalog_model.invisibleRootItem()
         for category in self._categories_fn():
-            category_item = QTreeWidgetItem([_(category)])
-            category_item.setFlags(category_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
-            self.catalog_tree.addTopLevelItem(category_item)
+            category_item = QStandardItem(_(category))
+            category_item.setEditable(False)
+            category_item.setSelectable(False)
+            root.appendRow(category_item)
             # Collapsed by default -- with dozens of effects across a
             # dozen-plus categories, starting fully expanded means several
             # screens of scrolling before you see a single category name.
-            category_item.setExpanded(False)
 
             for entry in self._entries:
                 if entry.category != category:
                     continue
-                leaf = QTreeWidgetItem([entry.label])
-                leaf.setData(0, EFFECT_ID_ROLE, entry.id)
-                category_item.addChild(leaf)
+                leaf = QStandardItem(entry.label)
+                leaf.setEditable(False)
+                leaf.setData(entry.id, EFFECT_ID_ROLE)
+                category_item.appendRow(leaf)
 
     def _select_entry(self, entry_id: str):
         if self.catalog_tree is None:
@@ -123,23 +129,24 @@ class CategorizedEffectPickerDialog(QDialog):
                 self._rebuild_param_form()
             return
 
-        for i in range(self.catalog_tree.topLevelItemCount()):
-            category_item = self.catalog_tree.topLevelItem(i)
-            for j in range(category_item.childCount()):
+        for i in range(self.catalog_model.rowCount()):
+            category_item = self.catalog_model.item(i)
+            for j in range(category_item.rowCount()):
                 child = category_item.child(j)
-                if child.data(0, EFFECT_ID_ROLE) == entry_id:
-                    self.catalog_tree.setCurrentItem(child)
+                if child.data(EFFECT_ID_ROLE) == entry_id:
+                    self.catalog_tree.expand(category_item.index())
+                    self.catalog_tree.setCurrentIndex(child.index())
                     return
 
     def _select_first_available(self):
-        for i in range(self.catalog_tree.topLevelItemCount()):
-            category_item = self.catalog_tree.topLevelItem(i)
-            if category_item.childCount() > 0:
-                self.catalog_tree.setCurrentItem(category_item.child(0))
+        for i in range(self.catalog_model.rowCount()):
+            category_item = self.catalog_model.item(i)
+            if category_item.rowCount() > 0:
+                self.catalog_tree.setCurrentIndex(category_item.child(0).index())
                 return
 
     def _on_selection_changed(self, current, _previous):
-        entry_id = current.data(0, EFFECT_ID_ROLE) if current else None
+        entry_id = current.data(EFFECT_ID_ROLE) if current.isValid() else None
         if not entry_id:
             self._current_entry = None
             self.ok_button.setEnabled(False)
