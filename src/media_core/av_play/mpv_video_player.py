@@ -760,6 +760,16 @@ class MPVVideoPlayer(AVPlayer):
     def set_video_rotate(self, degrees: int):
         self.__mpv_interface.run_on_mpv(lambda m, d=degrees: setattr(m, 'video_rotate', d), wait=False)
 
+    def set_video_pan(self, pan_x: float, pan_y: float):
+        # mpv's native pan properties translate the visible image within its
+        # bounding box (revealing letterbox on the opposite side) rather than
+        # cropping into it, unlike an lavfi crop filter -- deliberate choice
+        # to keep panning non-destructive, same spirit as rotate/flip.
+        def apply(m):
+            m.video_pan_x = pan_x
+            m.video_pan_y = pan_y
+        self.__mpv_interface.run_on_mpv(apply, wait=False)
+
     def set_deinterlace(self, enabled: bool):
         self.__mpv_interface.run_on_mpv(lambda m, e=enabled: setattr(m, 'deinterlace', e), wait=False)
 
