@@ -16,7 +16,7 @@ def build_more_options_menu(controls) -> QMenu:
         speed_text = f"{speed}x"
         action = speed_menu.addAction(speed_text)
         action.setCheckable(True)
-        if float(speed) == 1.0:
+        if float(speed) == controls.current_speed:
             action.setChecked(True)
         action.triggered.connect(_make_speed_handler(controls, speed))
         speed_group.addAction(action)
