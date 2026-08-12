@@ -231,6 +231,9 @@ class AudioFiltersWidget(QWidget):
         self.player = player
         self._populate()
 
+    def set_media_available(self, available: bool):
+        self.setEnabled(available)
+
     def _populate(self, select_effect_id: str = None):
         if not self.player:
             return
