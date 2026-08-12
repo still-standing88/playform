@@ -156,8 +156,11 @@ class UtilityDownloadDialog(QDialog):
 
         dl = self._shared_downloader
         if dl is None:
+            # A private, throwaway downloader for installer-tool binaries --
+            # not the user-facing Download Manager, so it shouldn't leave
+            # entries behind in the persisted download_queue table.
             self._local_downloader = Downloader(
-                destination=self._temp_dir, max_concurrent=2
+                destination=self._temp_dir, max_concurrent=2, persist=False
             )
             dl = self._local_downloader
 
