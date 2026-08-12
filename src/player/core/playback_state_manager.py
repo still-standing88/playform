@@ -4,6 +4,9 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 
 
 class PlaybackStateManager:
+
+    SETTINGS_KEY = "playback_state"
+
     def __init__(self, data_dir: str):
         self._data_dir = data_dir
         os.makedirs(self._data_dir, exist_ok=True)
@@ -12,6 +15,9 @@ class PlaybackStateManager:
         self.last_positions: Dict[str, float] = {}
         self.repeat_loops: Dict[str, List[Tuple[Optional[float], Optional[float]]]] = {}
 
+    # Legacy paths, only kept around for the one-shot migrations in
+    # load_all() -- playback state itself now lives in app_settings
+    # (user.sqlite3).
     @property
     def playback_state_path(self) -> str:
         return os.path.join(self._data_dir, "playback_state.json")
@@ -29,18 +35,23 @@ class PlaybackStateManager:
         return os.path.join(self._data_dir, "last_positions.json")
 
     def load_all(self) -> None:
-        if os.path.exists(self.playback_state_path):
-            self._load_consolidated()
-        else:
-            self._migrate_from_separate_files()
+        from app_db import app_settings
+        from app_db.settings_store import migrate_json_file
 
-    def _load_consolidated(self) -> None:
-        data = self._load_json(self.playback_state_path, default={})
-        
+        # First a DB row, then the newer single consolidated json file,
+        # then (oldest) the three-separate-files scheme -- each step is a
+        # one-shot migration into the next.
+        data = migrate_json_file(app_settings, self.playback_state_path, self.SETTINGS_KEY)
+        if data is None:
+            self._migrate_from_separate_files()
+            return
+        self._apply_consolidated(data)
+
+    def _apply_consolidated(self, data: dict) -> None:
         self.bookmarks = {}
         self.last_positions = {}
         self.repeat_loops = {}
-        
+
         for file_path, state in data.items():
             if isinstance(state, dict):
                 if "bookmarks" in state and isinstance(state["bookmarks"], list):
@@ -57,13 +68,13 @@ class PlaybackStateManager:
             Dict[str, List[Tuple[Optional[float], Optional[float]]]],
             self._load_json(self.repeat_loops_path, default={}),
         )
-        
+
         self.bookmarks = old_bookmarks
         self.last_positions = old_positions
         self.repeat_loops = old_loops
-        
+
         self._save_consolidated()
-        
+
         try:
             if os.path.exists(self.bookmarks_path):
                 os.remove(self.bookmarks_path)
@@ -76,24 +87,25 @@ class PlaybackStateManager:
 
     def _save_consolidated(self) -> None:
         all_files = set(self.bookmarks.keys()) | set(self.last_positions.keys()) | set(self.repeat_loops.keys())
-        
+
         data = {}
         for file_path in all_files:
             state = {}
-            
+
             if file_path in self.last_positions:
                 state["last_position"] = self.last_positions[file_path]
-            
+
             if file_path in self.bookmarks:
                 state["bookmarks"] = self.bookmarks[file_path]
-            
+
             if file_path in self.repeat_loops:
                 state["loops"] = self.repeat_loops[file_path]
-            
+
             if state:
                 data[file_path] = state
-        
-        self._save_json(self.playback_state_path, data)
+
+        from app_db import app_settings
+        app_settings.set(self.SETTINGS_KEY, data)
 
     def save_bookmarks(self) -> None:
         self._save_consolidated()
