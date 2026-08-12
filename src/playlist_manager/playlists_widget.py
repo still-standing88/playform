@@ -295,11 +295,16 @@ class PlaylistsWidget(QWidget):
     def load_playlists_data(self):
         loaded_paths = set()
 
-        if os.path.exists(self.playlists_json_path):
+        try:
+            from app_db import app_settings
+            from app_db.settings_store import migrate_json_file
+            data = migrate_json_file(app_settings, self.playlists_json_path, "playlists_registry", default={})
+        except Exception as e:
+            print(f"Error loading playlists registry: {e}")
+            data = {}
+
+        if data:
             try:
-                with open(self.playlists_json_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    
                 for playlist_info in data.get("playlists", []):
                     name = playlist_info.get("name")
                     file_path = playlist_info.get("file_path")
@@ -376,10 +381,10 @@ class PlaylistsWidget(QWidget):
                     playlists_data.append(playlist_info)
                     
             data = {"playlists": playlists_data}
-            
-            with open(self.playlists_json_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
-                
+
+            from app_db import app_settings
+            app_settings.set("playlists_registry", data)
+
         except Exception as e:
             print(f"Error saving playlists data: {e}")
 
