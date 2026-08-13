@@ -74,6 +74,17 @@ class PlayerWidget(QWidget):
         self._shortcuts:Dict[str, QShortcut] = {}
         self._key_event_filter = KeyEventFilter(self)
         self._last_subtitle_text: Optional[str] = None
+        # Resume-from-last-position should only apply to a file the user
+        # explicitly opened (menu/toolbar "Open File", the built-in Explorer,
+        # or Recents/Favorites) -- not to playlist entries mpv advances into
+        # on its own, and not to a repeat-loop reloading the same file.
+        # load_file() (the single-file-open entry point shared by all of
+        # those) stamps the path it's about to open here; seek_to_last()
+        # (fired off every mpv file-loaded event, including track-advance
+        # and repeat) only resumes when the just-loaded file matches, then
+        # clears it so later file-loaded events for that same session don't
+        # resume again.
+        self._resume_pending_path: Optional[str] = None
 
         self._shortcuts_ctrl = PlayerShortcuts(self)
         self._timeline_sync = TimelineSyncController(self)
@@ -700,6 +711,11 @@ class PlayerWidget(QWidget):
         if not instance:
             return
 
+        pending = self._resume_pending_path
+        self._resume_pending_path = None
+        if not pending or os.path.normpath(instance.file_path) != os.path.normpath(pending):
+            return
+
         try:
             self.player_controls.load_last_position()
             if self.player_controls.last_position and self.player_controls.last_position > 0:
@@ -724,6 +740,7 @@ class PlayerWidget(QWidget):
             _("Loading: {filename}").format(filename=os.path.basename(file_path))
         )
         self.player_controls._source_url = None
+        self._resume_pending_path = file_path
         #if self.loading: return
         #self.loading = True
         try:
