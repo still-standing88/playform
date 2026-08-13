@@ -669,10 +669,14 @@ class MainWindow(QMainWindow):
             _announce_downloads(_("Could not find a downloadable media link for this episode"))
 
     def queue_podcast_batch_download(self, feed_url: str, count: int):
+        from media_providers.podcasts.feed_widget import FeedWidget
         manager = self._get_podcast_download_manager()
         if manager is None:
             return
-        items = manager.queue_next_unqueued(feed_url, count)
+        if count == FeedWidget.BATCH_DOWNLOAD_ALL:
+            items = manager.queue_all_unqueued(feed_url)
+        else:
+            items = manager.queue_next_unqueued(feed_url, count)
         _announce_downloads(
             _("Queued {count} episode(s) for download").format(count=len(items))
         )

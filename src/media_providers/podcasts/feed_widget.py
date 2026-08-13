@@ -25,6 +25,11 @@ class FeedWidget(QWidget):
     episode_batch_download_requested = Signal(str, int)
 
     BATCH_DOWNLOAD_COUNT = 3
+    # Sentinel passed as `count` to mean "queue every not-yet-queued
+    # episode" -- the signal is typed (str, int) so a negative count is used
+    # instead of a second signal/None, and unpacked back in
+    # MainWindow.queue_podcast_batch_download.
+    BATCH_DOWNLOAD_ALL = -1
 
     COMMON_FIELDS = ['title', 'published', 'link']
     LONG_TEXT_FIELDS = ['summary', 'description', 'content']
@@ -257,6 +262,14 @@ class FeedWidget(QWidget):
                 )
             )
             menu.addAction(download_batch_action)
+
+            download_all_action = QAction(_("Download All Episodes"), self)
+            download_all_action.triggered.connect(
+                lambda: self.episode_batch_download_requested.emit(
+                    item.data(Qt.ItemDataRole.UserRole), self.BATCH_DOWNLOAD_ALL
+                )
+            )
+            menu.addAction(download_all_action)
 
         if self.feed_list.count() > 0:
             menu.addSeparator()

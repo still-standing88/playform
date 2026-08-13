@@ -44,7 +44,8 @@ class PodcastDownloadManager:
         """Appends up to `count` not-yet-queued episodes from a feed to the
         shared downloader -- "a few episodes each time" per the user's
         request, rather than queuing an entire feed's back-catalog at once.
-        Call this again later to append the next batch."""
+        Call this again later to append the next batch. `count=None` queues
+        every not-yet-queued episode (see queue_all_unqueued)."""
         data = self.feed_manager.get_feed_data(feed_url)
         if not data or not hasattr(data, 'entries'):
             return []
@@ -52,7 +53,7 @@ class PodcastDownloadManager:
         already_queued = self._queued_media_urls()
         queued = []
         for entry in data.entries:
-            if len(queued) >= count:
+            if count is not None and len(queued) >= count:
                 break
             media_url = self.feed_manager.get_direct_media_url(entry)
             if not media_url or media_url in already_queued:
@@ -62,6 +63,14 @@ class PodcastDownloadManager:
                 queued.append(item)
                 already_queued.add(media_url)
         return queued
+
+    def queue_all_unqueued(self, feed_url: str):
+        """Queues every not-yet-queued episode in the feed. The queued items
+        land in the same shared Downloader as any other download, so the
+        Download Manager's existing pause/resume/cancel controls apply to
+        them individually and to the queue as a whole -- no separate
+        batch-download engine needed."""
+        return self.queue_next_unqueued(feed_url, count=None)
 
     def _queued_media_urls(self):
         urls = set()
