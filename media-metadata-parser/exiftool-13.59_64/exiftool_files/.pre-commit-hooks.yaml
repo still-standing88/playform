@@ -1,6 +1,0 @@
-- language: script
-  id: exiftool
-  name: exiftool
-  entry: ./exiftool
-  types:
-    - image
