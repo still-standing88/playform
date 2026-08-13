@@ -23,6 +23,19 @@ class PodcastDownloadManager:
         self.downloader = downloader
         self.destination_dir = destination_dir
 
+    def _feed_destination(self, feed_url: str) -> str:
+        """Each podcast gets its own subfolder under destination_dir, named
+        after the feed title -- e.g. downloads/podcasts/My Show/ -- instead
+        of dumping every feed's episodes into one flat folder."""
+        data = self.feed_manager.get_feed_data(feed_url)
+        title = None
+        if data and hasattr(data, 'feed'):
+            title = getattr(data.feed, 'title', None)
+        safe_title = self._safe_component(title or feed_url)
+        dest = os.path.join(self.destination_dir, safe_title)
+        os.makedirs(dest, exist_ok=True)
+        return dest
+
     def queue_episode(self, feed_url: str, entry):
         media_url = self.feed_manager.get_direct_media_url(entry)
         if not media_url:
@@ -31,7 +44,7 @@ class PodcastDownloadManager:
         filename = self._safe_filename(title, media_url)
         return self.downloader.add_download(
             media_url,
-            destination=self.destination_dir,
+            destination=self._feed_destination(feed_url),
             filename=filename,
             metadata={
                 "source_kind": "podcast",
@@ -40,12 +53,12 @@ class PodcastDownloadManager:
             },
         )
 
-    def queue_next_unqueued(self, feed_url: str, count: int = 3):
-        """Appends up to `count` not-yet-queued episodes from a feed to the
-        shared downloader -- "a few episodes each time" per the user's
-        request, rather than queuing an entire feed's back-catalog at once.
-        Call this again later to append the next batch. `count=None` queues
-        every not-yet-queued episode (see queue_all_unqueued)."""
+    def queue_all_unqueued(self, feed_url: str):
+        """Queues every not-yet-queued episode in the feed. The queued items
+        land in the same shared Downloader as any other download, so the
+        Download Manager's existing pause/resume/cancel controls apply to
+        them individually and to the queue as a whole -- no separate
+        batch-download engine needed."""
         data = self.feed_manager.get_feed_data(feed_url)
         if not data or not hasattr(data, 'entries'):
             return []
@@ -53,8 +66,6 @@ class PodcastDownloadManager:
         already_queued = self._queued_media_urls()
         queued = []
         for entry in data.entries:
-            if count is not None and len(queued) >= count:
-                break
             media_url = self.feed_manager.get_direct_media_url(entry)
             if not media_url or media_url in already_queued:
                 continue
@@ -64,20 +75,17 @@ class PodcastDownloadManager:
                 already_queued.add(media_url)
         return queued
 
-    def queue_all_unqueued(self, feed_url: str):
-        """Queues every not-yet-queued episode in the feed. The queued items
-        land in the same shared Downloader as any other download, so the
-        Download Manager's existing pause/resume/cancel controls apply to
-        them individually and to the queue as a whole -- no separate
-        batch-download engine needed."""
-        return self.queue_next_unqueued(feed_url, count=None)
-
     def _queued_media_urls(self):
         urls = set()
         for bucket in self.downloader.get_all_downloads().values():
             for item in bucket:
                 urls.add(item.url)
         return urls
+
+    @staticmethod
+    def _safe_component(name: str) -> str:
+        safe = re.sub(r'[\\/*?:"<>|]', '_', name).strip()
+        return safe.rstrip('. ') or 'podcast'
 
     @staticmethod
     def _safe_filename(title: str, url: str) -> str:

@@ -22,14 +22,7 @@ from media_providers.podcasts.feed_job import FeedJob
 class FeedWidget(QWidget):
     play_requested = Signal(str)
     episode_download_requested = Signal(str, object)
-    episode_batch_download_requested = Signal(str, int)
-
-    BATCH_DOWNLOAD_COUNT = 3
-    # Sentinel passed as `count` to mean "queue every not-yet-queued
-    # episode" -- the signal is typed (str, int) so a negative count is used
-    # instead of a second signal/None, and unpacked back in
-    # MainWindow.queue_podcast_batch_download.
-    BATCH_DOWNLOAD_ALL = -1
+    episode_download_all_requested = Signal(str)
 
     COMMON_FIELDS = ['title', 'published', 'link']
     LONG_TEXT_FIELDS = ['summary', 'description', 'content']
@@ -253,20 +246,10 @@ class FeedWidget(QWidget):
             remove_action.triggered.connect(self.remove_feed)
             menu.addAction(remove_action)
 
-            download_batch_action = QAction(
-                _("Download Next {count} Episodes").format(count=self.BATCH_DOWNLOAD_COUNT), self
-            )
-            download_batch_action.triggered.connect(
-                lambda: self.episode_batch_download_requested.emit(
-                    item.data(Qt.ItemDataRole.UserRole), self.BATCH_DOWNLOAD_COUNT
-                )
-            )
-            menu.addAction(download_batch_action)
-
             download_all_action = QAction(_("Download All Episodes"), self)
             download_all_action.triggered.connect(
-                lambda: self.episode_batch_download_requested.emit(
-                    item.data(Qt.ItemDataRole.UserRole), self.BATCH_DOWNLOAD_ALL
+                lambda: self.episode_download_all_requested.emit(
+                    item.data(Qt.ItemDataRole.UserRole)
                 )
             )
             menu.addAction(download_all_action)
