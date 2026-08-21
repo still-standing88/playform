@@ -2,8 +2,6 @@ from PySide6.QtWidgets import QDockWidget
 from PySide6.QtCore import Qt, QTimer
 from app_config import prefs
 from tools.debug_console_dock import DebugConsoleDock
-from media_providers.radio import RadioBrowserWidget
-from media_providers.podcasts.feed_widget import FeedWidget
 from utilities.session import dock_session
 from gui_controls.floatable_dock_widget import FloatableDockWidget
 
@@ -247,6 +245,7 @@ class DockManager:
 
     def _create_radio_dock(self):
         if self.main_window.radio_dock is None:
+            from media_providers.radio import RadioBrowserWidget
             self.main_window.radio_widget = RadioBrowserWidget(self.main_window)
             self.main_window.radio_widget.play_requested.connect(self.main_window.urlOpened.emit)
             self.main_window.radio_dock = FloatableDockWidget(_("Radio Browser"), self.main_window)
@@ -262,6 +261,7 @@ class DockManager:
 
     def _create_podcast_dock(self):
         if self.main_window.podcast_dock is None:
+            from media_providers.podcasts.feed_widget import FeedWidget
             self.main_window.podcast_widget = FeedWidget(self.main_window)
             self.main_window.podcast_widget.play_requested.connect(self.main_window.urlOpened.emit)
             self.main_window.podcast_widget.episode_download_requested.connect(self.main_window.queue_podcast_episode_download)
