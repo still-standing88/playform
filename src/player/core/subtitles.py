@@ -1,7 +1,5 @@
 import os
 import cchardet
-from pycaption import detect_format, CaptionNode
-from pycaption.base import CaptionList
 from typing import List, Optional
 
 class SubtitleEntry:
@@ -72,6 +70,8 @@ class SubtitleManager:
         return self.load_from_content(content, language)
 
     def load_from_content(self, content: str, language: str = 'en-US') -> bool:
+        from pycaption import detect_format, CaptionNode
+        from pycaption.base import CaptionList
         try:
             reader_class = detect_format(content)
             if not reader_class:
