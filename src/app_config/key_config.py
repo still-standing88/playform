@@ -1,6 +1,5 @@
 import os
 import re
-import keyboard
 import configparser as cfgp
 
 from utilities.functions import get_app_path
@@ -14,6 +13,7 @@ key_config.optionxform = str
 
 
 def modifyKey(section, hotkey, sequence):
+    import keyboard
     key_config[section][hotkey] = sequence
     if section.lower() == "global":
         old_id = hotkeys.pop(hotkey, None)
@@ -78,6 +78,7 @@ def load_keys():
 
 
 def apply_global_hotkeys():
+    import keyboard
     for hid in list(hotkeys.values()):
         try:
             keyboard.remove_hotkey(hid)
