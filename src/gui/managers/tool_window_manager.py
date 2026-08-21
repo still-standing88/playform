@@ -1,14 +1,4 @@
 from PySide6.QtWidgets import QMessageBox
-from tools.ffmpeg.batch_converter.ui import BatchConverterUI
-from tools.ffmpeg.media_extractor.ui import ExtractorUI
-from tools.tag_editor.ui import TagEditorUI
-from tools.ffmpeg.thumbnail_generator.ui import ThumbnailGeneratorUI
-from tools.subtitles.converter_ui import SubtitleConverterUI
-from tools.subtitles.editor_ui import SubtitleEditorUI
-from tools.speech_converter.ui import SpeechConverterUI
-from tools.m4b_tools.audiobook_tools.ui import AudiobookToolsUI
-from tools.m4b_tools.combiner.ui import AudiobookCombinerUI
-from multi_device_capture.ui import MultiDeviceCaptureUI
 from gui.dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
@@ -24,43 +14,53 @@ class ToolWindowManager:
         self.main_window = main_window
         
     def open_batch_converter(self):
+        from tools.ffmpeg.batch_converter.ui import BatchConverterUI
         if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
             return
         self.open_tool_dialog("batch_converter", BatchConverterUI(), _("Batch Converter"))
         
     def open_extractor(self):
+        from tools.ffmpeg.media_extractor.ui import ExtractorUI
         if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
             return
         self.open_tool_dialog("extractor", ExtractorUI(), _("Media Extractor"))
         
     def open_tag_editor(self):
+        from tools.tag_editor.ui import TagEditorUI
         self.open_tool_dialog("tag_editor", TagEditorUI(), _("Tag Editor"))
         
     def open_thumbnail_generator(self):
+        from tools.ffmpeg.thumbnail_generator.ui import ThumbnailGeneratorUI
         if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
             return
         self.open_tool_dialog("thumbnail_generator", ThumbnailGeneratorUI(), _("Thumbnail Generator"))
     
     def open_subtitle_converter(self):
+        from tools.subtitles.converter_ui import SubtitleConverterUI
         self.open_tool_dialog("subtitle_converter", SubtitleConverterUI(), _("Subtitle Converter"))
     
     def open_subtitle_editor(self):
+        from tools.subtitles.editor_ui import SubtitleEditorUI
         self.open_tool_dialog("subtitle_editor", SubtitleEditorUI(), _("Subtitle Editor"))
 
     def open_speech_converter(self):
+        from tools.speech_converter.ui import SpeechConverterUI
         self.open_tool_dialog("speech_converter", SpeechConverterUI(), _("Speech Converter"))
 
     def open_audiobook_tools(self):
+        from tools.m4b_tools.audiobook_tools.ui import AudiobookToolsUI
         if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
             return
         self.open_tool_dialog("audiobook_tools", AudiobookToolsUI(), _("Audiobook Tools"))
 
     def open_audiobook_combiner(self):
+        from tools.m4b_tools.combiner.ui import AudiobookCombinerUI
         if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
             return
         self.open_tool_dialog("audiobook_combiner", AudiobookCombinerUI(), _("Audiobook Combiner"))
 
     def open_multi_device_capture(self):
+        from multi_device_capture.ui import MultiDeviceCaptureUI
         if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
             return
         self.open_tool_dialog("multi_device_capture", MultiDeviceCaptureUI(), _("Multi Device Capture"))
