@@ -34,8 +34,6 @@ from gui_controls.key_event_filter import ShortcutManager
 from app_constance.file_filter import file_filter
 from tools.logs_viewer_dialog import LogsViewerDialog
 from tools.debug_console_dock import DebugConsoleDock
-from media_providers.radio import RadioBrowserWidget
-from media_providers.podcasts.feed_widget import FeedWidget
 from app_constance.styles import SECTION_LABEL_STYLE
 from utilities.session import dock_session
 from app_config.toolbar_config import toolbar_config
