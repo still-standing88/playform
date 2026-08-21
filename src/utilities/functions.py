@@ -3,10 +3,7 @@ import ctypes
 import binascii
 import os, sys
 import time, datetime as dt
-import py_youtube, httpx
 import subprocess as sp
-import validators as vl
-import pyperclip
 import shlex
 import tempfile
 
@@ -22,6 +19,7 @@ _dll_dir_handles = []
 
 
 def copyText(text):
+    import pyperclip
     if text != "":
         pyperclip.copy(text)
 
@@ -130,14 +128,17 @@ def numberList(minx,maxx,mode):
 
 
 def media_url(url):
+    import httpx
     #return str(urllib.request.urlopen(urllib.request.Request(url)).info().get_filename)
     link = httpx.head(url,follow_redirects=True)
     return QUrl(str(link.url)).fileName()
 
 def youtube_url(url):
+    import py_youtube
     return py_youtube.Data(url).data()["title"]
 
 def isValidURL(url):
+    import validators as vl
     return vl.url(url) == True
 
 def network_check():
