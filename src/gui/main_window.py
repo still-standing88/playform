@@ -138,7 +138,6 @@ class MainWindow(QMainWindow):
         }
 
 
-        self.user_db.connect_to_database()
         self.setWindowTitle("PlayForm")
         # A flat 1200x800 floor is bigger than plenty of real screens (e.g.
         # 1366x768 laptops, ~720px tall after the taskbar), and Qt then
