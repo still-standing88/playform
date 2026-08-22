@@ -43,6 +43,7 @@ class PlaylistHandler:
             self.main_window.play_file(media_files[0])
             
     def add_to_playlist(self, file_path: str):
+        self.main_window._ensure_playlists_widget()
         playlist_manager = self.main_window.playlists_widget.playlist_manager
         
         if not playlist_manager.list_playlists():
@@ -62,6 +63,7 @@ class PlaylistHandler:
         dialog.exec()
         
     def create_playlist_from_folder(self, folder_path: str):
+        self.main_window._ensure_playlists_widget()
         if not os.path.isdir(folder_path):
             messageBox(_("Error"), _("Selected path is not a directory"))
             return
@@ -97,6 +99,7 @@ class PlaylistHandler:
         )
         
     def add_file_to_playlist(self, file_path: str, playlist_name: str):
+        self.main_window._ensure_playlists_widget()
         playlist = self.main_window.playlists_widget.playlist_manager.get_playlist(playlist_name)
         if playlist is not None:
             entry = PlaylistEntry(location=file_path)
@@ -124,6 +127,7 @@ class PlaylistHandler:
         dialog.exec()
         
     def handle_new_playlist_created(self, name: str, playlist: Playlist):
+        self.main_window._ensure_playlists_widget()
         self.main_window.playlists_widget.playlist_manager.playlists[name] = playlist
         self.main_window.playlists_widget.add_playlist_to_list(name)
         self.main_window.playlists_widget.save_playlists_data()

@@ -18,7 +18,6 @@ from app_config import prefs
 import app_db
 import media_core.av_play as av_play
 from player.player_widget import PlayerWidget
-from playlist_manager.playlists_widget import PlaylistsWidget
 from .recents_favorites import RecentsAndFavoritesWidget
 from .dialogs.hotkeys_dialog import HotkeysDialog
 from .dialogs.url_dialog import URLDialog
@@ -209,11 +208,7 @@ class MainWindow(QMainWindow):
         self.player_widget = PlayerWidget(self)
         self.player_widget.setObjectName("playerWidget")
 
-        self.playlists_widget = PlaylistsWidget(
-            parent=self,
-            play_callback=self.play_playlist_track
-        )
-        self.playlists_widget.setObjectName("playlistsWidget")
+        self.playlists_widget = None
 
     def _ensure_explorer_widget(self):
         if self.explorer_widget is not None:
@@ -231,6 +226,19 @@ class MainWindow(QMainWindow):
         )
         self.explorer_widget.setObjectName("explorerWidget")
         self.explorer_dock.setWidget(self.explorer_widget)
+
+    def _ensure_playlists_widget(self):
+        if self.playlists_widget is not None:
+            return
+        from playlist_manager.playlists_widget import PlaylistsWidget
+        self.playlists_widget = PlaylistsWidget(
+            parent=self,
+            play_callback=self.play_playlist_track
+        )
+        self.playlists_widget.setObjectName("playlistsWidget")
+        self.playlists_dock.setWidget(self.playlists_widget)
+        self.playlists_widget.playlist_selected.connect(lambda _p: self._apply_now_playing_highlight())
+        self._apply_now_playing_highlight()
 
     def setup_statusbar(self):
         self.status_bar = QStatusBar()
@@ -320,7 +328,6 @@ class MainWindow(QMainWindow):
         self.player_widget.mediaAvailable.connect(self.menu_manager.update_media_available)
         self.player_widget.repeatModeChanged.connect(self.menu_manager.update_media_repeat_mode)
         self.player_widget.currentTrackIndexChanged.connect(self._on_current_track_index_changed)
-        self.playlists_widget.playlist_selected.connect(lambda _p: self._apply_now_playing_highlight())
             
     def open_file_dialog(self):
         file_path, selected_filter = QFileDialog.getOpenFileName(
@@ -480,6 +487,8 @@ class MainWindow(QMainWindow):
         self._apply_now_playing_highlight(index)
 
     def _apply_now_playing_highlight(self, index: Optional[int] = None):
+        if self.playlists_widget is None:
+            return
         if index is None and hasattr(self.player_widget, 'player') and self.player_widget.player:
             index = self.player_widget.player.get_current_track_index()
 

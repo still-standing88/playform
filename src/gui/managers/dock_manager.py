@@ -65,7 +65,6 @@ class DockManager:
 
         self.playlists_dock = FloatableDockWidget(_("Playlists"), self.main_window)
         self.playlists_dock.setObjectName("playlistsDock")
-        self.playlists_dock.setWidget(self.main_window.playlists_widget)
         self.playlists_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
         self.playlists_dock.setFeatures(self._floatable_features())
         self._make_float_a_real_window(self.playlists_dock)
@@ -140,6 +139,8 @@ class DockManager:
         self.player_dock.setVisible(dock_states.get('player', True))
         self.main_window.minimize_player_action.setChecked(not dock_states.get('player', True))
 
+        if dock_states.get('playlists', False):
+            self.main_window._ensure_playlists_widget()
         self.main_window.playlists_dock.setVisible(dock_states.get('playlists', False))
         self.main_window.show_playlists_action.setChecked(dock_states.get('playlists', False))
 
@@ -192,6 +193,8 @@ class DockManager:
 
     def toggle_playlists(self, checked):
         if self.main_window.playlists_dock:
+            if checked:
+                self.main_window._ensure_playlists_widget()
             self.main_window.playlists_dock.setVisible(checked)
             if checked and self.main_window.playlists_widget:
                 self.main_window.playlists_widget.setFocus()
@@ -330,6 +333,9 @@ class DockManager:
 
         if mw.explorer_dock and mw.explorer_dock.isVisible() and mw.explorer_widget is None:
             mw._ensure_explorer_widget()
+
+        if mw.playlists_dock and mw.playlists_dock.isVisible() and mw.playlists_widget is None:
+            mw._ensure_playlists_widget()
 
         self._schedule_clamp_to_screen()
 
