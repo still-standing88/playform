@@ -86,6 +86,7 @@ class MainWindow(QMainWindow):
         self.current_player_instance = None
         self.is_player_ready = False
         self._player_warmup_started = False
+        self._pending_external_path = None
         self._dialog_open = False
         self.tool_dialogs = {}
         self.active_tool_name = None
@@ -185,6 +186,7 @@ class MainWindow(QMainWindow):
         self.toolbar_manager.ensure_panels_toolbar_break()
 
         self._mpvWarmupDone.connect(self._on_player_warmup_done)
+        self.playerReady.connect(self._replay_pending_external_path)
 
     def set_shortcuts(self):
         self.shortcuts.setup()
@@ -962,6 +964,9 @@ class MainWindow(QMainWindow):
             self.load_external_path(path)
 
     def load_external_path(self, path: str):
+        if not self.is_player_ready:
+            self._pending_external_path = path
+            return
         import media_core.av_play as av_play
         if av_play.is_url(path):
             self.play_url(path)
@@ -971,3 +976,10 @@ class MainWindow(QMainWindow):
             self.play_file(path)
         else:
             _announce_playback(_("Unrecognized path: {path}").format(path=path))
+
+    def _replay_pending_external_path(self):
+        path = self._pending_external_path
+        if path is None:
+            return
+        self._pending_external_path = None
+        self.load_external_path(path)
