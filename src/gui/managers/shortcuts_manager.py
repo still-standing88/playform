@@ -86,7 +86,7 @@ class MainWindowShortcuts:
 
     def focus_player(self):
         mw = self.main_window
-        if mw.player_dock and mw.player_dock.isVisible():
+        if mw.player_dock and mw.player_dock.isVisible() and mw.player_widget:
             mw.player_widget.setFocus()
 
     def focus_playlists(self):

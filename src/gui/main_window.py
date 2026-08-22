@@ -87,6 +87,7 @@ class MainWindow(QMainWindow):
         self.is_player_ready = False
         self._player_warmup_started = False
         self._pending_external_path = None
+        self._pending_player_actions = []
         self._dialog_open = False
         self.tool_dialogs = {}
         self.active_tool_name = None
@@ -187,6 +188,7 @@ class MainWindow(QMainWindow):
 
         self._mpvWarmupDone.connect(self._on_player_warmup_done)
         self.playerReady.connect(self._replay_pending_external_path)
+        self.playerReady.connect(self._run_pending_player_actions)
 
     def set_shortcuts(self):
         self.shortcuts.setup()
@@ -420,6 +422,9 @@ class MainWindow(QMainWindow):
 
 
     def play_file(self, file_path: str):
+        if not self.is_player_ready:
+            self._run_when_player_ready(lambda: self.play_file(file_path))
+            return
         _announce_playback(f"{_("Loading:")} {os.path.basename(file_path)}")
         signal_manager.media_info_message.emit(file_path)
         self.add_to_recents(file_path)
@@ -434,6 +439,10 @@ class MainWindow(QMainWindow):
         if start_index < 0 or start_index >= len(playlist):
             start_index = 0
 
+        if not self.is_player_ready:
+            self._run_when_player_ready(lambda: self.play_playlist_track(playlist, start_index))
+            return
+
         entry = playlist[start_index]
         _announce_playback(
             _("Loading playlist: {title}").format(
@@ -447,6 +456,9 @@ class MainWindow(QMainWindow):
         self.close_media_action.setEnabled(True)
         
     def play_url(self, url: str):
+        if not self.is_player_ready:
+            self._run_when_player_ready(lambda: self.play_url(url))
+            return
         _announce_playback(f"{_('Loading URL:')} {url}")
         signal_manager.media_info_message.emit(url)
         self.urlOpened.emit(url)
@@ -983,3 +995,15 @@ class MainWindow(QMainWindow):
             return
         self._pending_external_path = None
         self.load_external_path(path)
+
+    def _run_when_player_ready(self, callback):
+        if self.is_player_ready:
+            callback()
+        else:
+            self._pending_player_actions.append(callback)
+
+    def _run_pending_player_actions(self):
+        actions = self._pending_player_actions
+        self._pending_player_actions = []
+        for callback in actions:
+            callback()

@@ -39,8 +39,13 @@ class PlaylistHandler:
             playlist.add_entry(PlaylistEntry(location=media_file, title=os.path.basename(media_file)))
         
         if media_files:
-            self.main_window.player_widget.load_playlist(playlist, start_index=0)
-            self.main_window.play_file(media_files[0])
+            mw = self.main_window
+
+            def _start():
+                mw.player_widget.load_playlist(playlist, start_index=0)
+                mw.play_file(media_files[0])
+
+            mw._run_when_player_ready(_start)
             
     def add_to_playlist(self, file_path: str):
         self.main_window._ensure_playlists_widget()
@@ -88,8 +93,11 @@ class PlaylistHandler:
         self.main_window.playlists_widget.playlist_manager.playlists[playlist_name] = playlist
         self.main_window.playlists_widget.add_playlist_to_list(playlist_name)
         self.main_window.playlists_widget.save_playlists_data()
-        
-        self.main_window.player_widget.load_playlist(playlist, start_index=0, auto_play=True)
+
+        mw = self.main_window
+        mw._run_when_player_ready(
+            lambda: mw.player_widget.load_playlist(playlist, start_index=0, auto_play=True)
+        )
         
         _announce(
             _("Created and loaded playlist '{playlist_name}' with {track_count} tracks").format(
