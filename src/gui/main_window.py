@@ -343,6 +343,7 @@ class MainWindow(QMainWindow):
             self.load_folder_as_playlist(folder_path)
 
     def open_playlist_dialog(self):
+        from playlist_manager.playlists_widget import PlaylistsWidget
         file_path, selected_filter = QFileDialog.getOpenFileName(
             self,
             _("Open Playlist"),
