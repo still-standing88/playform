@@ -141,8 +141,6 @@ class DockManager:
         self.main_window.recents_favorites_dock.setVisible(dock_states.get('recents_favorites', True))
         self.main_window.show_recents_favorites_action.setChecked(dock_states.get('recents_favorites', True))
 
-        if dock_states.get('explorer', False):
-            self.main_window._ensure_explorer_widget()
         self.main_window.explorer_dock.setVisible(dock_states.get('explorer', False))
         self.main_window.show_explorer_action.setChecked(dock_states.get('explorer', False))
 
@@ -348,9 +346,6 @@ class DockManager:
         # for the player dock specifically (no other dock had this override).
         if mw.minimize_player_action:
             mw.minimize_player_action.setChecked(not (self.player_dock.isVisible() if self.player_dock else True))
-
-        if mw.explorer_dock and mw.explorer_dock.isVisible() and mw.explorer_widget is None:
-            mw._ensure_explorer_widget()
 
         if mw.playlists_dock and mw.playlists_dock.isVisible() and mw.playlists_widget is None:
             mw._ensure_playlists_widget()

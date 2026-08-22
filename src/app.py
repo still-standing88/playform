@@ -68,6 +68,7 @@ def main():
         splash.update_message(_("Starting application..."))
         splash.finish(window)
         window.show_or_maximize()
+        window.start_player_warmup()
         if len(cli_args) > 1 and app_instance:
             app_instance.focus_window("PlayForm")
         

@@ -1,6 +1,7 @@
 import os
 import platform
 import sys
+import threading
 import app_guard
 
 from typing import Optional
@@ -74,6 +75,7 @@ class MainWindow(QMainWindow):
     fileOpened = Signal(str)
     urlOpened = Signal(str)
     playerReady = Signal()
+    _mpvWarmupDone = Signal()
 
     def __init__(self):
         super().__init__()
@@ -83,6 +85,7 @@ class MainWindow(QMainWindow):
         self.user_db = app_db.user_db
         self.current_player_instance = None
         self.is_player_ready = False
+        self._player_warmup_started = False
         self._dialog_open = False
         self.tool_dialogs = {}
         self.active_tool_name = None
@@ -181,7 +184,7 @@ class MainWindow(QMainWindow):
         self.restore_window_state()
         self.toolbar_manager.ensure_panels_toolbar_break()
 
-        self._build_player_widget()
+        self._mpvWarmupDone.connect(self._on_player_warmup_done)
 
     def set_shortcuts(self):
         self.shortcuts.setup()
@@ -262,6 +265,26 @@ class MainWindow(QMainWindow):
         self.player_widget.mediaAvailable.connect(self.menu_manager.update_media_available)
         self.player_widget.repeatModeChanged.connect(self.menu_manager.update_media_repeat_mode)
         self.player_widget.currentTrackIndexChanged.connect(self._on_current_track_index_changed)
+
+    def start_player_warmup(self):
+        if self.is_player_ready or self._player_warmup_started:
+            return
+        self._player_warmup_started = True
+        threading.Thread(target=self._warmup_player_backend, daemon=True).start()
+
+    def _warmup_player_backend(self):
+        try:
+            _ = av_play.VideoPlayer
+        except Exception:
+            pass
+        self._mpvWarmupDone.emit()
+
+    def _on_player_warmup_done(self):
+        self._build_player_widget()
+        if (self.explorer_dock is not None and self.explorer_dock.isVisible()
+                and self.explorer_widget is None):
+            self._ensure_explorer_widget()
+        self.dock_manager._schedule_clamp_to_screen()
 
     def setup_statusbar(self):
         self.status_bar = QStatusBar()
