@@ -5,7 +5,6 @@ from typing import Union, Any
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
-from validators import url, ValidationError
 
 
 ParameterValue = Union[int, float, bool, str]
@@ -178,6 +177,7 @@ def is_url(url_string: str, default_scheme: str = "https") -> bool:
             else:
                  return False
 
+    from validators import url, ValidationError
     try:
         result = url(url_to_validate)
         return bool(result)
