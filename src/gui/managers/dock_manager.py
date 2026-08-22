@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDockWidget
+from PySide6.QtWidgets import QDockWidget, QLabel
 from PySide6.QtCore import Qt, QTimer
 from app_config import prefs
 from tools.debug_console_dock import DebugConsoleDock
@@ -41,6 +41,12 @@ class DockManager:
             | QDockWidget.DockWidgetFeature.DockWidgetFloatable
             | QDockWidget.DockWidgetFeature.DockWidgetClosable
         )
+
+    def _make_player_placeholder(self):
+        placeholder = QLabel(_("Initializing player…"))
+        placeholder.setObjectName("playerPlaceholder")
+        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        return placeholder
 
     def setup_dock_widgets(self):
         self.recents_favorites_dock = FloatableDockWidget(_("Recents && Favorites"), self.main_window)
@@ -86,7 +92,10 @@ class DockManager:
 
         self.player_dock = FloatableDockWidget(_("Player"), self.main_window)
         self.player_dock.setObjectName("playerDock")
-        self.player_dock.setWidget(self.main_window.player_widget)
+        if self.main_window.player_widget is not None:
+            self.player_dock.setWidget(self.main_window.player_widget)
+        else:
+            self.player_dock.setWidget(self._make_player_placeholder())
         self.player_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
         self.player_dock.setFeatures(self._floatable_features())
         self._make_float_a_real_window(self.player_dock)
@@ -127,6 +136,7 @@ class DockManager:
 
     def restore_dock_session(self):
         dock_states = dock_session.load_session()
+        self._loaded_dock_states = dock_states
 
         self.main_window.recents_favorites_dock.setVisible(dock_states.get('recents_favorites', True))
         self.main_window.show_recents_favorites_action.setChecked(dock_states.get('recents_favorites', True))
@@ -166,6 +176,14 @@ class DockManager:
             self.main_window.player_widget.player_controls.toggle_controls_btn.setActuated(dock_states.get('controls_minimized', False))
 
         self.update_focusable_widgets()
+
+    def apply_player_controls_state(self):
+        states = getattr(self, '_loaded_dock_states', None)
+        player = self.main_window.player_widget
+        if states is None or player is None:
+            return
+        player.toggle_accordion_btn.setActuated(states.get('sidebar_hidden', False))
+        player.player_controls.toggle_controls_btn.setActuated(states.get('controls_minimized', False))
 
     def toggle_recents_favorites(self, checked):
         if self.main_window.recents_favorites_dock:
@@ -613,7 +631,7 @@ class DockManager:
             if dock.isVisible() and widget:
                 self.main_window.focusable_widgets.append(widget)
 
-        if self.player_dock.isVisible():
+        if self.player_dock.isVisible() and self.main_window.player_widget:
             self.main_window.focusable_widgets.append(self.main_window.player_widget)
 
         if hasattr(self.main_window, 'status_bar') and self.main_window.status_bar.isVisible():

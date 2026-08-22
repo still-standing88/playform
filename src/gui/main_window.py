@@ -17,7 +17,6 @@ from app_db import UserFiles
 from app_config import prefs
 import app_db
 import media_core.av_play as av_play
-from player.player_widget import PlayerWidget
 from .recents_favorites import RecentsAndFavoritesWidget
 from .dialogs.hotkeys_dialog import HotkeysDialog
 from .dialogs.url_dialog import URLDialog
@@ -74,7 +73,8 @@ def _announce_downloads(text):
 class MainWindow(QMainWindow):
     fileOpened = Signal(str)
     urlOpened = Signal(str)
-    
+    playerReady = Signal()
+
     def __init__(self):
         super().__init__()
         
@@ -82,6 +82,7 @@ class MainWindow(QMainWindow):
         
         self.user_db = app_db.user_db
         self.current_player_instance = None
+        self.is_player_ready = False
         self._dialog_open = False
         self.tool_dialogs = {}
         self.active_tool_name = None
@@ -180,6 +181,8 @@ class MainWindow(QMainWindow):
         self.restore_window_state()
         self.toolbar_manager.ensure_panels_toolbar_break()
 
+        self._build_player_widget()
+
     def set_shortcuts(self):
         self.shortcuts.setup()
 
@@ -204,8 +207,7 @@ class MainWindow(QMainWindow):
 
         self.explorer_widget = None
 
-        self.player_widget = PlayerWidget(self)
-        self.player_widget.setObjectName("playerWidget")
+        self.player_widget = None
 
         self.playlists_widget = None
 
@@ -238,6 +240,28 @@ class MainWindow(QMainWindow):
         self.playlists_dock.setWidget(self.playlists_widget)
         self.playlists_widget.playlist_selected.connect(lambda _p: self._apply_now_playing_highlight())
         self._apply_now_playing_highlight()
+
+    def _build_player_widget(self):
+        if self.player_widget is not None:
+            return
+        from player.player_widget import PlayerWidget
+        self.player_widget = PlayerWidget(self)
+        self.player_widget.setObjectName("playerWidget")
+        self.player_dock.setWidget(self.player_widget)
+        self._wire_player_signals()
+        self.dock_manager.apply_player_controls_state()
+        self.dock_manager.update_focusable_widgets()
+        self.is_player_ready = True
+        self.playerReady.emit()
+
+    def _wire_player_signals(self):
+        self.urlOpened.connect(self.player_widget.change_path)
+        self.fileOpened.connect(self.player_widget.change_path)
+        self.player_widget.playbackStateChanged.connect(self.menu_manager.update_media_playback_state)
+        self.player_widget.muteStateChanged.connect(self.menu_manager.update_media_mute_state)
+        self.player_widget.mediaAvailable.connect(self.menu_manager.update_media_available)
+        self.player_widget.repeatModeChanged.connect(self.menu_manager.update_media_repeat_mode)
+        self.player_widget.currentTrackIndexChanged.connect(self._on_current_track_index_changed)
 
     def setup_statusbar(self):
         self.status_bar = QStatusBar()
@@ -315,18 +339,10 @@ class MainWindow(QMainWindow):
     def connect_signals(self):
         self.recents_and_favorites_widget.itemRequested.connect(self.play_file)
 
-        self.urlOpened.connect(self.player_widget.change_path)
-        self.fileOpened.connect(self.player_widget.change_path)
         if self.explorer_dock and hasattr(self.explorer_dock, 'visibilityChanged'):
             self.explorer_dock.visibilityChanged.connect(self.menu_manager.update_explorer_menu)
         if self.playlists_dock and hasattr(self.playlists_dock, 'visibilityChanged'):
             self.playlists_dock.visibilityChanged.connect(self.menu_manager.update_playlists_menu)
-
-        self.player_widget.playbackStateChanged.connect(self.menu_manager.update_media_playback_state)
-        self.player_widget.muteStateChanged.connect(self.menu_manager.update_media_mute_state)
-        self.player_widget.mediaAvailable.connect(self.menu_manager.update_media_available)
-        self.player_widget.repeatModeChanged.connect(self.menu_manager.update_media_repeat_mode)
-        self.player_widget.currentTrackIndexChanged.connect(self._on_current_track_index_changed)
             
     def open_file_dialog(self):
         file_path, selected_filter = QFileDialog.getOpenFileName(
