@@ -55,7 +55,6 @@ class DockManager:
 
         self.explorer_dock = FloatableDockWidget(_("Explorer"), self.main_window)
         self.explorer_dock.setObjectName("explorerDock")
-        self.explorer_dock.setWidget(self.main_window.explorer_widget)
         self.explorer_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
         self.explorer_dock.setFeatures(self._floatable_features())
         self._make_float_a_real_window(self.explorer_dock)
@@ -133,6 +132,8 @@ class DockManager:
         self.main_window.recents_favorites_dock.setVisible(dock_states.get('recents_favorites', True))
         self.main_window.show_recents_favorites_action.setChecked(dock_states.get('recents_favorites', True))
 
+        if dock_states.get('explorer', False):
+            self.main_window._ensure_explorer_widget()
         self.main_window.explorer_dock.setVisible(dock_states.get('explorer', False))
         self.main_window.show_explorer_action.setChecked(dock_states.get('explorer', False))
 
@@ -174,6 +175,8 @@ class DockManager:
 
     def toggle_explorer(self, checked):
         if self.main_window.explorer_dock:
+            if checked:
+                self.main_window._ensure_explorer_widget()
             self.main_window.explorer_dock.setVisible(checked)
             if checked and self.main_window.explorer_widget:
                 self.main_window.explorer_widget.setFocus()
@@ -324,6 +327,9 @@ class DockManager:
         # for the player dock specifically (no other dock had this override).
         if mw.minimize_player_action:
             mw.minimize_player_action.setChecked(not (self.player_dock.isVisible() if self.player_dock else True))
+
+        if mw.explorer_dock and mw.explorer_dock.isVisible() and mw.explorer_widget is None:
+            mw._ensure_explorer_widget()
 
         self._schedule_clamp_to_screen()
 

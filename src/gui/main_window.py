@@ -15,7 +15,6 @@ from PySide6.QtGui import QAction, QIcon, QKeySequence
 
 from app_db import UserFiles
 from app_config import prefs
-from EXPLORER.explorer_widget import ExplorerWidget
 import app_db
 import media_core.av_play as av_play
 from player.player_widget import PlayerWidget
@@ -204,7 +203,22 @@ class MainWindow(QMainWindow):
 
         self.recents_and_favorites_widget = RecentsAndFavoritesWidget(self.user_db)
         self.recents_and_favorites_widget.setObjectName("recentsAndFavoritesWidget")
-        
+
+        self.explorer_widget = None
+
+        self.player_widget = PlayerWidget(self)
+        self.player_widget.setObjectName("playerWidget")
+
+        self.playlists_widget = PlaylistsWidget(
+            parent=self,
+            play_callback=self.play_playlist_track
+        )
+        self.playlists_widget.setObjectName("playlistsWidget")
+
+    def _ensure_explorer_widget(self):
+        if self.explorer_widget is not None:
+            return
+        from EXPLORER.explorer_widget import ExplorerWidget
         self.explorer_widget = ExplorerWidget(
             self.user_db,
             parent=self,
@@ -216,16 +230,8 @@ class MainWindow(QMainWindow):
             catalog_folder_callback=self.queue_folder_for_catalog
         )
         self.explorer_widget.setObjectName("explorerWidget")
-        
-        self.player_widget = PlayerWidget(self)
-        self.player_widget.setObjectName("playerWidget")
-        
-        self.playlists_widget = PlaylistsWidget(
-            parent=self,
-            play_callback=self.play_playlist_track
-        )
-        self.playlists_widget.setObjectName("playlistsWidget")
-        
+        self.explorer_dock.setWidget(self.explorer_widget)
+
     def setup_statusbar(self):
         self.status_bar = QStatusBar()
         self.status_bar.setObjectName("statusBar")
