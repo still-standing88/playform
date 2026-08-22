@@ -45,9 +45,6 @@ def _send_via_local_socket(path: str) -> bool:
 
 
 def setup_environment():
-    import app_info
-    app_info.setup_env()
-
     from utilities.functions import get_parent_dir
 
     bin_dir = os.path.join(get_parent_dir(), "bin")
