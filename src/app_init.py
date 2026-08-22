@@ -116,9 +116,13 @@ def initialize_modules(splash):
     locale.setlocale(locale.LC_NUMERIC, 'C')
     key_config.load_keys()
     from utilities.speech import speech_manager
-    threading.Thread(target=speech_manager.init, daemon=True).start()
     from app_config import load_speech_config
-    load_speech_config()
+
+    def _init_speech():
+        speech_manager.init()
+        load_speech_config()
+
+    threading.Thread(target=_init_speech, daemon=True).start()
     return app_db, key_config
 
 
