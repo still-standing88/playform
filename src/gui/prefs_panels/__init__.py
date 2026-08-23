@@ -10,6 +10,7 @@ from .media_panel import MediaPanel
 from .accessibility_panel import AccessibilityPanel
 from .advanced_panel import AdvancedPanel
 from .database_panel import DatabasePanel
+from .downloads_panel import DownloadsPanel
 
 class PreferencesDialog(QDialog):
     preferences_saved = Signal(dict)
@@ -48,6 +49,9 @@ class PreferencesDialog(QDialog):
         self.database_panel = DatabasePanel(self, main_window=self._main_window)
         self.tab_widget.addTab(self.database_panel, _("Database"))
 
+        self.downloads_panel = DownloadsPanel(self)
+        self.tab_widget.addTab(self.downloads_panel, _("Downloads"))
+
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
@@ -61,6 +65,7 @@ class PreferencesDialog(QDialog):
         self.accessibility_panel.load_settings(current_prefs)
         self.advanced_panel.load_settings(current_prefs)
         self.database_panel.load_settings(current_prefs)
+        self.downloads_panel.load_settings(current_prefs)
             
     def save_preferences(self) -> bool:
         from PySide6.QtWidgets import QMessageBox
@@ -78,6 +83,7 @@ class PreferencesDialog(QDialog):
         self.accessibility_panel.save_settings(prefs.prefs)
         self.advanced_panel.save_settings(prefs.prefs)
         self.database_panel.save_settings(prefs.prefs)
+        self.downloads_panel.save_settings(prefs.prefs)
 
         prefs.save()
         
