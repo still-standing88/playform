@@ -12,6 +12,10 @@ class VideoEffectsWidget(QWidget):
 		super().__init__(parent)
 		self.player: Optional[av_play.VideoPlayer] = player
 		self._building = False
+		# See FiltersWidget._applied -- deinterlace/deband are likewise
+		# global mpv properties, and reset_effects() is likewise called on
+		# every tick of the 700ms position timer while no media is loaded.
+		self._applied: dict[str, bool] = {}
 		self._key_event_filter = KeyEventFilter(self)
 		self.setup_ui()
 		self.connect_signals()
@@ -38,16 +42,22 @@ class VideoEffectsWidget(QWidget):
 
 	def set_player(self, player: av_play.VideoPlayer):
 		self.player = player
+		self._applied.clear()
 		self.reset_effects()
 
 	def _on_toggled(self, name: str, enabled: bool):
 		if self._building or not self.player:
+			return
+		if self._applied.get(name) == enabled:
 			return
 		try:
 			if name == "deinterlace":
 				self.player.set_deinterlace(enabled)
 			elif name == "deband":
 				self.player.set_deband(enabled)
+			else:
+				return
+			self._applied[name] = enabled
 		except Exception:
 			pass
 
@@ -58,13 +68,8 @@ class VideoEffectsWidget(QWidget):
 			self.deband_check.setChecked(False)
 		finally:
 			self._building = False
-		if not self.player:
-			return
-		try:
-			self.player.set_deinterlace(False)
-			self.player.set_deband(False)
-		except Exception:
-			pass
+		self._on_toggled("deinterlace", False)
+		self._on_toggled("deband", False)
 
 	def _install_event_filter(self):
 		self._key_event_filter.install_on_widgets([self.deinterlace_check, self.deband_check])
