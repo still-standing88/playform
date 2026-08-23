@@ -640,6 +640,37 @@ class MainWindow(QMainWindow):
     def zoom_out(self):
         self._adjust_ui_zoom(-1)
 
+    def toggle_toolbar_visibility(self):
+        visible = not self.toolbar.isVisible()
+        self.toolbar.setVisible(visible)
+        prefs.prefs["show_toolbar"] = visible
+        prefs.save()
+
+    def toggle_statusbar_visibility(self):
+        visible = not self.status_bar.isVisible()
+        self.status_bar.setVisible(visible)
+        prefs.prefs["show_statusbar"] = visible
+        prefs.save()
+
+    def toggle_panels_bar_visibility(self):
+        visible = not self.panels_toolbar.isVisible()
+        self.panels_toolbar.setVisible(visible)
+        prefs.prefs["show_panels_bar"] = visible
+        prefs.save()
+
+    def open_add_download_dialog(self):
+        from downloader.add_download_dialog import AddDownloadDialog
+        dialog = AddDownloadDialog(self)
+        if dialog.exec() != dialog.DialogCode.Accepted:
+            return
+        url, destination, filename = dialog.get_values()
+        downloader = self._get_shared_downloader()
+        if destination:
+            downloader.add_download(url, destination=destination, filename=filename)
+        else:
+            downloader.add_download(url, filename=filename)
+        self.open_downloader()
+
     def _adjust_ui_zoom(self, delta):
         import app_init
         current = prefs.prefs.get("ui_zoom_level", 0)
@@ -914,6 +945,19 @@ class MainWindow(QMainWindow):
 
     def restore_window_state(self):
         self.dock_manager.restore_window_state()
+        self._restore_bar_visibility()
+
+    def _restore_bar_visibility(self):
+        # Runs after restoreState() so Qt's own toolbar/dock restoration
+        # doesn't override the saved bar visibility prefs. The status bar
+        # isn't part of QMainWindow saveState() at all, so it needs this
+        # regardless of ordering.
+        if not prefs.prefs.get("show_toolbar", True):
+            self.toolbar.setVisible(False)
+        if not prefs.prefs.get("show_statusbar", True):
+            self.status_bar.setVisible(False)
+        if not prefs.prefs.get("show_panels_bar", True):
+            self.panels_toolbar.setVisible(False)
 
     def show_or_maximize(self):
         # A totally fresh install has no saved window_geometry to restore,
