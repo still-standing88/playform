@@ -51,7 +51,24 @@ prefs = {
 "explorer_sort_mode": "name_asc",
 "store_search_history": True,
 "search_history": [],
-"audio_effects_chain": []
+"audio_effects_chain": [],
+"explorer_filter_mode": "all",
+"explorer_filter_format": "",
+"show_toolbar": True,
+"show_statusbar": True,
+"show_panels_bar": True,
+"download_max_parallel": 2,
+"download_speed_limit_kbps": 0,
+"download_retry_count": 3,
+"download_retry_delay_ms": 2000,
+"download_dir": "",
+"download_podcast_dir": "",
+"proxy_enabled": False,
+"proxy_type": "http",
+"proxy_host": "",
+"proxy_port": 8080,
+"proxy_user": "",
+"proxy_pass": ""
 }
 
 # Keys actually surfaced in the Preferences dialog (general_panel.py,
@@ -68,4 +85,9 @@ DIALOG_PREFS_KEYS = frozenset({
     "mpv_extra_options", "youtube_cookies", "yt-dlp_path", "ffmpeg_path",
     "yt-dlp_logging", "yt-dlp_verbose_output", "catalog_extensions",
     "store_search_history",
+    "download_max_parallel", "download_speed_limit_kbps",
+    "download_retry_count", "download_retry_delay_ms",
+    "download_dir", "download_podcast_dir",
+    "proxy_enabled", "proxy_type", "proxy_host", "proxy_port",
+    "proxy_user", "proxy_pass",
 })
