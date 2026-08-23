@@ -230,7 +230,8 @@ class MainWindow(QMainWindow):
             recent_callback=self.add_to_recents,
             playlist_callback=self.add_to_playlist,
             create_playlist_callback=self.create_playlist_from_folder,
-            catalog_folder_callback=self.queue_folder_for_catalog
+            catalog_folder_callback=self.queue_folder_for_catalog,
+            enqueue_files_callback=self.enqueue_files
         )
         self.explorer_widget.setObjectName("explorerWidget")
         self.explorer_dock.setWidget(self.explorer_widget)
@@ -431,6 +432,17 @@ class MainWindow(QMainWindow):
         self.menu_manager.update_recent_files_menu()
         self.fileOpened.emit(file_path)
         self.close_media_action.setEnabled(True)
+
+    def enqueue_files(self, paths):
+        if not paths:
+            return
+        if not self.is_player_ready:
+            self._run_when_player_ready(lambda: self.enqueue_files(paths))
+            return
+        player_widget = getattr(self, "player_widget", None)
+        if player_widget is None:
+            return
+        player_widget.enqueue_files(paths)
 
     def play_playlist_track(self, playlist: Playlist, start_index: int = 0):
         if playlist is None or len(playlist) == 0:
