@@ -186,9 +186,12 @@ class EqualizerWidget(QWidget):
     def _on_value_changed(self, _value: float):
         if self._building:
             return
-        self.preset_combo.blockSignals(True)
-        self.preset_combo.setCurrentIndex(0)
-        self.preset_combo.blockSignals(False)
+        # Deliberately leaves the preset combo on whatever the user picked
+        # instead of snapping it to "Custom". Tweaking a band used to reset
+        # the combo's selection out from under the user mid-edit, which reads
+        # as the panel throwing the chosen preset away; the tweaked amps are
+        # what actually get applied and persisted either way (see
+        # LazyPlaylistPlayer.set_equalizer -- band_amps win over preset).
         if self.enabled_checkbox.isChecked():
             self._apply()
 
