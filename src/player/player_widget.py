@@ -57,7 +57,9 @@ class PlayerWidget(QWidget):
     mediaAvailable = Signal(bool)
     repeatModeChanged = Signal(int)
     currentTrackIndexChanged = Signal(int)
+    queueChanged = Signal()
     _trackEndedFromMonitor = Signal(int)
+    _queueChangedFromMonitor = Signal()
     _reverseStoppedFromMonitor = Signal()
     _fileLoadedFromMpv = Signal()
 
@@ -224,8 +226,11 @@ class PlayerWidget(QWidget):
         # calling _update_current_track directly marshals the widget updates
         # onto the GUI thread via Qt's queued cross-thread delivery.
         self._trackEndedFromMonitor.connect(self._update_current_track)
+        self._queueChangedFromMonitor.connect(self.queueChanged)
         self._reverseStoppedFromMonitor.connect(self._on_reverse_stopped_from_monitor)
         self._fileLoadedFromMpv.connect(self.seek_to_last)
+
+        self.player.set_queue_changed_callback(self._queueChangedFromMonitor.emit)
 
         self.toggle_accordion_btn.actuated.connect(self._on_accordion_panel_toggled)
         self.player_controls.playPauseClicked.connect(self._on_play_pause_clicked)
@@ -803,6 +808,39 @@ class PlayerWidget(QWidget):
             self._reset_ui_to_default()
         finally:
             self._loading = False
+
+    def enqueue_files(self, paths, autoplay_if_idle: bool = True):
+        paths = [os.path.normpath(p) for p in paths if p]
+        if not paths:
+            return
+        instance = self.player.primary_instance if self.player else None
+        idle = True
+        if instance is not None:
+            try:
+                state = instance.get_playback_state()
+                idle = state in (av_play.AVPlaybackState.AV_STATE_STOPPED,
+                                 av_play.AVPlaybackState.AV_STATE_NOTHING)
+            except av_play.AVError:
+                idle = False
+        if idle and autoplay_if_idle and os.path.isfile(paths[0]):
+            rest = paths[1:]
+            if rest:
+                self.player.queue_tracks(rest)
+            self.load_file(paths[0])
+        else:
+            self.player.queue_tracks(paths)
+        self.queueChanged.emit()
+
+    def get_queue(self):
+        return self.player.get_queue() if self.player else []
+
+    def remove_from_queue(self, index: int) -> bool:
+        return self.player.remove_from_queue(index) if self.player else False
+
+    def clear_queue(self):
+        if self.player:
+            self.player.clear_queue()
+        self.queueChanged.emit()
 
     def _resolve_playlist_choice(self, url: str) -> Optional[str]:
         """If url carries both a video id and a playlist/Mix id, asks the
