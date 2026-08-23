@@ -1,8 +1,9 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, QPushButton, QDialog
 from PySide6.QtCore import Qt
 
 from media_core.ffmpeg.effects_catalog import get_effect
 from tools.ffmpeg.batch_converter.effect_picker_dialog import EffectPickerDialog
+from gui_controls.effect_dialogs import EffectEditDialog
 
 EFFECT_ID_ROLE = Qt.ItemDataRole.UserRole
 EFFECT_VALUES_ROLE = Qt.ItemDataRole.UserRole + 1
@@ -77,14 +78,10 @@ class ProcessingTab(QWidget):
 
         effect_id = item.data(EFFECT_ID_ROLE)
         values = item.data(EFFECT_VALUES_ROLE)
-        branch = get_effect(effect_id).branch
-        dialog = EffectPickerDialog(branch, self, initial_effect_id=effect_id, initial_values=values)
-        if dialog.exec() == dialog.DialogCode.Accepted:
-            new_effect_id, new_values = dialog.result_effect()
-            if new_effect_id:
-                item.setText(get_effect(new_effect_id).label)
-                item.setData(EFFECT_ID_ROLE, new_effect_id)
-                item.setData(EFFECT_VALUES_ROLE, new_values)
+        effect = get_effect(effect_id)
+        dialog = EffectEditDialog(effect, values, parent=self, title=_("Edit {effect}").format(effect=effect.label))
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            item.setData(EFFECT_VALUES_ROLE, dialog.current_values())
 
     def _on_remove_selected(self):
         for item in self.applied_list.selectedItems():
