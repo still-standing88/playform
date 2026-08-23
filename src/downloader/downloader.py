@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import time
 import uuid
 from datetime import datetime
@@ -7,7 +8,7 @@ from enum import Enum
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal, QUrl, QFile, QIODevice, QTimer
-from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply, QNetworkProxy
 
 
 class DownloadStatus(Enum):
@@ -59,6 +60,9 @@ class DownloadItem(QObject):
         # Range-resume bookkeeping -- see Downloader._start_download/_on_ready_read.
         self._resume_offset = 0
         self._resume_confirmed = True
+        # Token-bucket state for speed limiting -- see Downloader._apply_speed_limit.
+        self._throttle_bucket = 0.0
+        self._throttle_last = 0.0
 
     def get_info(self):
         return {
@@ -125,6 +129,9 @@ class Downloader(QObject):
         self._network_managers = []
         self._is_paused = False
         self._persist_enabled = persist
+        self._speed_limit_kbps = 0
+        self._retry_count = 3
+        self._retry_delay_ms = 2000
 
         for _ in range(max_concurrent):
             manager = QNetworkAccessManager()
@@ -133,9 +140,51 @@ class Downloader(QObject):
         if self._persist_enabled:
             self.restore()
 
+    def apply_settings(self, max_parallel=None, speed_limit_kbps=None,
+                       retry_count=None, retry_delay_ms=None):
+        """Live-apply download settings (from the Downloads prefs panel).
+        Only max_parallel requires structural change; the rest take effect
+        on the next transfer tick/retry."""
+        if speed_limit_kbps is not None:
+            self._speed_limit_kbps = max(0, int(speed_limit_kbps))
+        if retry_count is not None:
+            self._retry_count = max(0, int(retry_count))
+        if retry_delay_ms is not None:
+            self._retry_delay_ms = max(250, int(retry_delay_ms))
+        if max_parallel is not None and int(max_parallel) != self.max_concurrent:
+            self.max_concurrent = max(1, int(max_parallel))
+            while len(self._network_managers) < self.max_concurrent:
+                manager = QNetworkAccessManager()
+                self._apply_proxy_to_manager(manager)
+                self._network_managers.append(manager)
+
+    def apply_proxy(self, enabled=False, proxy_type="http", host="", port=0,
+                    user="", password=""):
+        """Configure a QNetworkProxy for every managed network access
+        manager. Passing enabled=False clears any previously set proxy."""
+        from PySide6.QtNetwork import QNetworkProxy as _QP
+        type_map = {
+            "http": _QP.HttpProxy,
+            "socks5": _QP.Socks5Proxy,
+        }
+        if not enabled or not host:
+            proxy = _QP(_QP.DefaultProxy)
+        else:
+            proxy = _QP(type_map.get(proxy_type, _QP.HttpProxy), host, int(port))
+            if user:
+                proxy.setUser(user)
+            if password:
+                proxy.setPassword(password)
+        for manager in self._network_managers:
+            manager.setProxy(proxy)
+
+    def _apply_proxy_to_manager(self, manager):
+        pass
+
     def add_download(self, url, destination=None, filename=None, progress_callback=None, finished_callback=None, metadata=None):
         dest = Path(destination) if destination else self.destination
         item = DownloadItem(url, dest, filename, metadata=metadata)
+        self._dedupe_filename(item)
 
         if progress_callback:
             item.progress_changed.connect(progress_callback)
@@ -150,6 +199,20 @@ class Downloader(QObject):
             self._process_queue()
 
         return item
+
+    def _dedupe_filename(self, item):
+        """Avoid clobbering an existing file (or another queued item's
+        target) by appending " (n)" before the extension."""
+        candidate = item.filename
+        base, ext = os.path.splitext(candidate)
+        n = 1
+        taken = {other.filename for other in
+                 self.queue + self.active_downloads + self.paused_downloads}
+        while (item.destination / candidate).exists() or candidate in taken:
+            candidate = f"{base} ({n}){ext}"
+            n += 1
+        item.filename = candidate
+        item.filepath = item.destination / candidate
 
     def pause_queue(self):
         self._is_paused = True
@@ -196,20 +259,34 @@ class Downloader(QObject):
             item.set_status(DownloadStatus.CANCELLED)
             self.active_downloads.remove(item)
             self.failed_downloads.append(item)
+            self._remove_part_file(item)
+            self._record_history(item)
             self._forget_item(item)
             self._process_queue()
         elif item in self.paused_downloads:
             item.set_status(DownloadStatus.CANCELLED)
             self.paused_downloads.remove(item)
             self.failed_downloads.append(item)
+            self._remove_part_file(item)
+            self._record_history(item)
             self._forget_item(item)
             self.queue_changed.emit()
         elif item in self.queue:
             item.set_status(DownloadStatus.CANCELLED)
             self.queue.remove(item)
             self.failed_downloads.append(item)
+            self._remove_part_file(item)
+            self._record_history(item)
             self._forget_item(item)
             self.queue_changed.emit()
+
+    def _remove_part_file(self, item):
+        part_path = item.filepath.with_name(item.filepath.name + ".part")
+        try:
+            if part_path.exists():
+                part_path.unlink()
+        except OSError:
+            logging.exception("Downloader: failed to remove .part file for %r", getattr(item, "id", None))
 
     def retry_download(self, item):
         if item in self.failed_downloads:
@@ -307,6 +384,36 @@ class Downloader(QObject):
         if self.paused_downloads:
             self.queue_changed.emit()
 
+        self._restore_history()
+
+    def _restore_history(self):
+        try:
+            from app_db import user_db
+            rows = user_db.load_download_history_rows()
+        except Exception:
+            logging.exception("Downloader: failed to load persisted download history")
+            return
+        for row in rows:
+            try:
+                status = row.get("status")
+                if status not in (DownloadStatus.COMPLETED.value, DownloadStatus.FAILED.value):
+                    continue
+                metadata = {}
+                if row.get("metadata"):
+                    try:
+                        metadata = json.loads(row["metadata"])
+                    except Exception:
+                        metadata = {}
+                item = DownloadItem(row["url"], row["destination"], row["filename"], metadata=metadata, item_id=row["id"])
+                item.downloaded_size = row.get("downloaded_size") or 0
+                item.total_size = row.get("total_size") or 0
+                item._added_at = row.get("added_at")
+                item.status = DownloadStatus(status)
+                bucket = self.completed_downloads if item.status == DownloadStatus.COMPLETED else self.failed_downloads
+                bucket.append(item)
+            except Exception:
+                logging.exception("Downloader: failed to restore a persisted history row; skipping")
+
     def _process_queue(self):
         if self._is_paused:
             return
@@ -322,9 +429,14 @@ class Downloader(QObject):
 
         item.destination.mkdir(parents=True, exist_ok=True)
 
+        # All bytes land in a .part sibling and are atomically renamed on
+        # completion -- a crash mid-download then leaves only a .part file,
+        # never a playable-looking but truncated final file.
+        part_path = item.filepath.with_name(item.filepath.name + ".part")
+
         resume_offset = 0
-        if item.downloaded_size > 0 and item.filepath.exists():
-            on_disk_size = item.filepath.stat().st_size
+        if item.downloaded_size > 0 and part_path.exists():
+            on_disk_size = part_path.stat().st_size
             if on_disk_size == item.downloaded_size:
                 resume_offset = item.downloaded_size
             else:
@@ -333,11 +445,13 @@ class Downloader(QObject):
 
         item._resume_offset = resume_offset
         item._resume_confirmed = resume_offset == 0
+        item._throttle_bucket = 0.0
+        item._throttle_last = time.monotonic()
 
         open_mode = QIODevice.WriteOnly | QIODevice.Append if resume_offset else QIODevice.WriteOnly
-        item._file = QFile(str(item.filepath))
+        item._file = QFile(str(part_path))
         if not item._file.open(open_mode):
-            item.error_message = f"{_("Cannot open file for writing")}: {item.filepath}"
+            item.error_message = f"{_("Cannot open file for writing")}: {part_path}"
             item.set_status(DownloadStatus.FAILED)
             item.error_occurred.emit(item.error_message)
             self.failed_downloads.append(item)
@@ -393,7 +507,28 @@ class Downloader(QObject):
                     logging.exception("Downloader: failed to truncate file for restarted download")
                 item._resume_confirmed = True
 
-        item._file.write(item._reply.readAll())
+        data = bytes(item._reply.readAll())
+        item._file.write(data)
+        self._apply_speed_limit(item, len(data))
+
+    def _apply_speed_limit(self, item, byte_count):
+        """Token-bucket pacing: if a speed limit is configured and this
+        chunk arrived faster than the limit allows, sleep the difference.
+        Called on the GUI thread -- deliberately bounded (never more than
+        ~0.5s per tick) so the event loop isn't starved."""
+        if self._speed_limit_kbps <= 0:
+            return
+        now = time.monotonic()
+        elapsed = now - item._throttle_last if item._throttle_last else 0.0
+        item._throttle_last = now
+        item._throttle_bucket += elapsed * self._speed_limit_kbps * 1024
+        item._throttle_bucket = min(item._throttle_bucket, self._speed_limit_kbps * 1024)
+        item._throttle_bucket -= byte_count
+        if item._throttle_bucket < 0:
+            delay = min(-item._throttle_bucket / (self._speed_limit_kbps * 1024), 0.5)
+            time.sleep(delay)
+            item._throttle_last = time.monotonic()
+            item._throttle_bucket = 0.0
 
     def _on_error(self, item, error):
         if error == QNetworkReply.OperationCanceledError:
@@ -461,14 +596,51 @@ class Downloader(QObject):
             self._handle_retry(item)
         else:
             if item.status not in (DownloadStatus.CANCELLED, DownloadStatus.PAUSED):
-                item.set_status(DownloadStatus.COMPLETED)
-                item.finished.emit(True)
+                # Completion validation: when the server told us the total
+                # size, verify the on-disk .part actually matches before
+                # promoting it -- a truncated-but-clean-close transfer
+                # would otherwise count as COMPLETED.
+                part_path = item.filepath.with_name(item.filepath.name + ".part")
+                expected = item.total_size or (item._resume_offset if not item._resume_confirmed else 0)
+                on_disk = part_path.stat().st_size if part_path.exists() else 0
+                if item.total_size and on_disk != item.total_size:
+                    item.error_message = (
+                        _("Size mismatch") + f": {on_disk}/{item.total_size}"
+                    )
+                    item.set_status(DownloadStatus.FAILED)
+                    item.finished.emit(False)
+                    if item in self.active_downloads:
+                        self.active_downloads.remove(item)
+                    self.failed_downloads.append(item)
+                    self._forget_item(item)
+                    self.download_finished.emit(item, False)
+                    self._handle_retry(item)
+                else:
+                    try:
+                        if item.filepath.exists():
+                            item.filepath.unlink()
+                        if part_path.exists():
+                            os.replace(str(part_path), str(item.filepath))
+                    except OSError as e:
+                        item.error_message = _("Rename failed") + f": {e}"
+                        item.set_status(DownloadStatus.FAILED)
+                        item.finished.emit(False)
+                        if item in self.active_downloads:
+                            self.active_downloads.remove(item)
+                        self.failed_downloads.append(item)
+                        self._forget_item(item)
+                        self.download_finished.emit(item, False)
+                    else:
+                        item.downloaded_size = on_disk
+                        item.set_status(DownloadStatus.COMPLETED)
+                        item.finished.emit(True)
 
-                if item in self.active_downloads:
-                    self.active_downloads.remove(item)
-                self.completed_downloads.append(item)
-                self._forget_item(item)
-                self.download_finished.emit(item, True)
+                        if item in self.active_downloads:
+                            self.active_downloads.remove(item)
+                        self.completed_downloads.append(item)
+                        self._record_history(item)
+                        self._forget_item(item)
+                        self.download_finished.emit(item, True)
 
         item._reply.deleteLater()
         item._reply = None
@@ -479,19 +651,46 @@ class Downloader(QObject):
             self.all_finished.emit()
 
     def _handle_retry(self, item):
-        if item.retry_count < item.max_retries:
+        max_retries = self._retry_count if self._persist_enabled else item.max_retries
+        if item.retry_count < max_retries:
             item.retry_count += 1
-            item.error_message += f" ({_("Retry")} {item.retry_count}/{item.max_retries})"
+            item.error_message += f" ({_("Retry")} {item.retry_count}/{max_retries})"
 
-            QTimer.singleShot(2000, lambda: self._retry_download_internal(item))
+            # Exponential backoff from the configured base delay; retries
+            # resume from downloaded_size (Range request) instead of
+            # restarting from zero, so progress is kept.
+            delay = self._retry_delay_ms * (2 ** (item.retry_count - 1))
+            QTimer.singleShot(delay, lambda: self._retry_download_internal(item))
         else:
             item.error_message += _(" (Max retries reached)")
+            self._record_history(item)
+
+    def _record_history(self, item):
+        """Persist a terminal-state row (completed/failed) to the
+        download_history table so history survives restarts."""
+        if not self._persist_enabled:
+            return
+        try:
+            from app_db import user_db
+            user_db.save_download_history_row({
+                "id": item.id,
+                "url": item.url,
+                "destination": str(item.destination),
+                "filename": item.filename,
+                "status": item.status.value,
+                "downloaded_size": item.downloaded_size,
+                "total_size": item.total_size,
+                "metadata": json.dumps(item.metadata),
+                "added_at": getattr(item, "_added_at", None) or datetime.now().isoformat(),
+                "updated_at": datetime.now().isoformat(),
+            })
+        except Exception:
+            logging.exception("Downloader: failed to record history for %r", getattr(item, "id", None))
 
     def _retry_download_internal(self, item):
         if item in self.failed_downloads:
             self.failed_downloads.remove(item)
         item.set_status(DownloadStatus.QUEUED)
-        item.downloaded_size = 0
         item._redirect_count = 0
         self.queue.insert(0, item)
         self.queue_changed.emit()
