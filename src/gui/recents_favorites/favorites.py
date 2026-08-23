@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QListWidget, QMenu, QMessageBox
 from PySide6.QtCore import Signal, Qt, Slot
 from PySide6.QtGui import QAction
 from app_db import UserFiles
+from app_db.user_db import FileCategory
 from utilities.util_gui import contextMenu, messageBox
 
 
@@ -78,19 +79,33 @@ class FavoritesWidget(QListWidget):
             except Exception as e:
                 messageBox(_("Error"), _("Failed to clear favorites: {error}").format(error=e))
 
+    @Slot()
+    def clear_nonexistent_favorites(self):
+        try:
+            removed = self.user_db.prune_missing(FileCategory.FAVORITE)
+            self.load_favorites()
+            messageBox(_("Clear Nonexistent"), _("{count} missing entr(y/ies) removed.").format(count=removed))
+        except Exception as e:
+            messageBox(_("Error"), _("Failed to prune favorites: {error}").format(error=e))
+
     def show_context_menu(self, position):
         menu = QMenu(self)
-        
+
+        remove_action = QAction(_("Remove from Favorites"), self)
+        remove_action.setEnabled(self.currentItem() is not None)
+        remove_action.triggered.connect(self.remove_current_favorite)
+        menu.addAction(remove_action)
+
+        clear_missing_action = QAction(_("Clear Nonexistent Tracks"), self)
+        clear_missing_action.triggered.connect(self.clear_nonexistent_favorites)
+        menu.addAction(clear_missing_action)
+
+        menu.addSeparator()
+
         clear_action = QAction(_("Clear All Favorites"), self)
         clear_action.triggered.connect(self.clear_favorites)
         menu.addAction(clear_action)
-        
-        if self.itemAt(position):
-            menu.addSeparator()
-            remove_action = QAction(_("Remove from Favorites"), self)
-            remove_action.triggered.connect(self.remove_current_favorite)
-            menu.addAction(remove_action)
-        
+
         menu.exec(self.mapToGlobal(position))
     
     @Slot()
