@@ -85,6 +85,17 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
         self._preload_stop_event = threading.Event()
         self._preload_thread: Optional[threading.Thread] = None
 
+        # Navigation to a not-yet-resolved entry is handed to this worker
+        # rather than resolved inline -- see _play_playlist_track. Only the
+        # newest request matters (each next()/previous() press supersedes the
+        # last), so it's a single slot plus an Event, not a queue: a queue
+        # would make the track you actually want wait behind every stale
+        # request you already skipped past.
+        self._play_request_index: Optional[int] = None
+        self._play_request_event = threading.Event()
+        self._play_request_pending = False
+        self._play_request_thread: Optional[threading.Thread] = None
+
         self._extract_worker: Optional[_UrlExtractThread] = None
         self._pending_url: Optional[str] = None
 
@@ -304,6 +315,11 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
                 target=self._preload_worker, daemon=True, name="LazyPlaylistPreload"
             )
             self._preload_thread.start()
+        if self._play_request_thread is None or not self._play_request_thread.is_alive():
+            self._play_request_thread = threading.Thread(
+                target=self._play_request_worker, daemon=True, name="LazyPlaylistPlayRequest"
+            )
+            self._play_request_thread.start()
         self._apply_saved_equalizer()
         self._apply_saved_audio_effects()
 
@@ -322,6 +338,8 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             self._preload_queue.put_nowait(-1)
         except Exception:
             pass
+        self._play_request_pending = False
+        self._play_request_event.set()
         if self._extract_worker and self._extract_worker.isRunning():
             self._extract_worker.quit()
         super().release()
@@ -448,15 +466,89 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             return
 
         idx = self._current_playlist_index
-        if 0 <= idx < len(self._current_playlist):
-            if self._ensure_resolved_blocking(idx):
-                with self._resolve_lock:
-                    streaming = self._resolved.get(idx)
-                if streaming:
-                    self._current_playlist.entries[idx].location = streaming
+        if 0 <= idx < len(self._current_playlist) and not self.is_loaded(idx):
+            # Resolving here would run yt-dlp on whatever thread navigated,
+            # and next()/previous()/jump_to_track() all navigate from the GUI
+            # thread while holding _advance_lock -- freezing the window (and
+            # blocking the monitor thread) for the length of a network
+            # extraction. Hand it off and let the worker start playback.
+            self._request_async_play(idx)
+            return
+
+        self._start_resolved_track()
+
+    def _start_resolved_track(self):
+        idx = self._current_playlist_index
+        if self._current_playlist is not None and 0 <= idx < len(self._current_playlist):
+            with self._resolve_lock:
+                streaming = self._resolved.get(idx)
+            if streaming:
+                self._current_playlist.entries[idx].location = streaming
 
         super()._play_playlist_track()
         self._schedule_preload_ahead(self._current_playlist_index)
+
+    def _request_async_play(self, index: int):
+        with self._resolve_lock:
+            self._play_request_index = index
+        # Covers the resolve window for the monitor thread: mpv is
+        # legitimately idle while yt-dlp works, and without this the monitor
+        # reads that idle state as "track ended" and advances straight past
+        # the track being loaded.
+        self._play_request_pending = True
+        self._track_loading = True
+        self._play_request_event.set()
+
+    def _is_track_loading(self) -> bool:
+        if self._play_request_pending:
+            return True
+        return super()._is_track_loading()
+
+    def _play_request_worker(self):
+        while not self._preload_stop_event.is_set():
+            if not self._play_request_event.wait(timeout=0.5):
+                continue
+            self._play_request_event.clear()
+            if self._preload_stop_event.is_set():
+                break
+
+            with self._resolve_lock:
+                index = self._play_request_index
+                self._play_request_index = None
+            if index is None:
+                self._play_request_pending = False
+                continue
+
+            try:
+                resolved = self._ensure_resolved_blocking(index)
+            except Exception as e:
+                logger.error(f"Async resolution failed for index {index}: {e}")
+                resolved = False
+
+            # A newer press may have superseded this request while the
+            # extraction was in flight; don't yank playback back to a track
+            # the user has already skipped past. Whoever owns the pending
+            # flag has to clear it, or _is_track_loading() stays stuck True
+            # and the monitor never auto-advances again.
+            if self._play_request_index is not None:
+                continue
+            if index != self._current_playlist_index:
+                self._play_request_pending = False
+                continue
+
+            if not resolved:
+                self._play_request_pending = False
+                logger.error(f"Failed to resolve playlist entry at index {index}")
+                continue
+            try:
+                # Clears the pending flag only after this has handed mpv the
+                # file and refreshed the base class's own load timestamp, so
+                # the monitor never sees a gap with neither guard active.
+                self._start_resolved_track()
+            except Exception as e:
+                logger.error(f"Failed to start track at index {index}: {e}")
+            finally:
+                self._play_request_pending = False
 
     def _ensure_resolved_blocking(self, index: int) -> bool:
         with self._resolve_lock:
@@ -547,6 +639,8 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             self._webpage_urls = []
             self._resolved = {}
             self._resolving = set()
+            self._play_request_index = None
+        self._play_request_pending = False
         while True:
             try:
                 self._preload_queue.get_nowait()
