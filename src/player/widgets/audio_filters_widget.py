@@ -75,7 +75,7 @@ class AudioFiltersWidget(QWidget):
         self.effects_list.itemActivated.connect(self._on_item_clicked)
         self.effects_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.effects_list.customContextMenuRequested.connect(self._show_context_menu)
-        self._key_event_filter.install_on_widgets([self.effects_list])
+        self._key_event_filter.install_on_widgets([self.effects_list, self.add_effect_button])
 
     def set_player(self, player):
         self.player = player
