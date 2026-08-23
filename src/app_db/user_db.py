@@ -205,6 +205,22 @@ class UserFiles(BaseDatabaseHandler):
             (FileCategory.LIBRARY.value,),
         )
 
+    def prune_missing(self, category) -> int:
+        """Delete entries in `category` whose file no longer exists on disk.
+        Returns the number of rows removed."""
+        value = category.value if hasattr(category, "value") else category
+        cursor = self._db.execute_sql(
+            "SELECT path FROM user_files WHERE category = ?",
+            (value,),
+        )
+        missing = [row[0] for row in cursor.fetchall() if not os.path.isfile(row[0])]
+        for path in missing:
+            self._db.execute_sql(
+                "DELETE FROM user_files WHERE path = ? AND category = ?",
+                (path, value),
+            )
+        return len(missing)
+
     def get_favorites(self, limit: Optional[int] = None) -> List[str]:
         if limit:
             cursor = self._db.execute_sql(
