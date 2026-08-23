@@ -81,6 +81,7 @@ class ExplorerWidget(QWidget):
         self._key_event_filter = KeyEventFilter(self)
         self._install_key_event_filter()
         self.set_shortcuts()
+        self._setup_tab_order()
 
         self._player.init(config=config)
         self._player.set_window(self.video_widget.winId())
@@ -420,16 +421,14 @@ class ExplorerWidget(QWidget):
                 return
         self.image_preview_label.hide()
 
+    def _setup_tab_order(self):
+        # Search field must come before the library treeview in the tab
+        # chain; path edit and files list follow.
+        QWidget.setTabOrder(self.path_edit, self.search_edit)
+        QWidget.setTabOrder(self.search_edit, self.library_view)
+        QWidget.setTabOrder(self.library_view, self.explorer_view)
+
     def _install_key_event_filter(self):
-        # Installed across the rest of the panel - prevents the QShortcuts
-        # below from stealing keys meant for a focused input (arrow keys on
-        # the volume spinbox, etc.). explorer_view is deliberately excluded:
-        # it's a plain QListWidget with no checkable items, so the filter's
-        # Space handling never had anything to toggle there, and installing
-        # it anyway still intercepted the ShortcutOverride event and stopped
-        # Space from ever reaching the Play/Pause QShortcut above. Leaving
-        # explorer_view unfiltered lets Qt's own shortcut resolution see
-        # Space directly.
         self._key_event_filter.install_on_widgets([
             self.library_view,
             self.path_edit,
