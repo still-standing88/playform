@@ -74,6 +74,7 @@ class PlayerWidget(QWidget):
         self._last_known_state = av_play.AVPlaybackState.AV_STATE_NOTHING
         self._last_muted: Optional[bool] = None
         self._had_media = False
+        self._ui_reset_done = False
         self._shortcuts:Dict[str, QShortcut] = {}
         self._key_event_filter = KeyEventFilter(self)
         self._last_subtitle_text: Optional[str] = None
@@ -626,9 +627,16 @@ class PlayerWidget(QWidget):
             if self._had_media:
                 self._had_media = False
                 self.mediaAvailable.emit(False)
-            self._reset_ui_to_default()
+            # Entering the no-media state is a transition, not a per-tick
+            # condition: this slot runs every 700ms off the position timer,
+            # and _reset_ui_to_default() re-clears the subtitle/chapter
+            # lists and re-pushes every video adjustment each time.
+            if not self._ui_reset_done:
+                self._ui_reset_done = True
+                self._reset_ui_to_default()
             return
 
+        self._ui_reset_done = False
         try:
             state = instance.get_playback_state()
             pos = instance.get_position()
