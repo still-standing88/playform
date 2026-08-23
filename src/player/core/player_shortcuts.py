@@ -180,6 +180,7 @@ class PlayerShortcuts:
             widget.player_controls.bookmarks_btn, widget.player_controls.goto_btn, widget.player_controls.screenshot_btn,
             widget.player_controls.seek_slider, widget.player_controls.mute_btn, widget.player_controls.volume_slider,
             widget.player_controls.time_label, widget.player_controls.current_track_label, widget.player_controls.more_btn,
+            widget.player_controls.playlist_view_btn, widget.player_controls.queue_view_btn,
             widget.player_controls.toggle_controls_btn, widget.toggle_accordion_btn
         ]
         widget._key_event_filter.install_on_widgets(widgets)
