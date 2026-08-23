@@ -11,6 +11,13 @@ from typing import List, Optional, Callable
 
 class AVPlayer(ABC):
 
+    # The backend reports AV_STATE_NOTHING both for "this file reached EOF"
+    # (the case _monitor_playback wants to act on) and, transiently, for "a
+    # new file was just requested but mpv hasn't started it yet" (loadfile is
+    # fire-and-forget). Without this grace window, that transient loading
+    # state looks identical to "track ended" and triggers a second, spurious
+    # _advance_track() on top of whatever navigation just happened.
+    LOAD_GRACE_PERIOD = 3.0
 
     def __init__(self, media_type:AVMediaType, media_backend:AVMediaBackend, interface:AVMediaInterface) -> None:
         super().__init__()
@@ -340,16 +347,16 @@ class AVPlayer(ABC):
         # backend.
         self._monitor_running = False
 
+    def _is_track_loading(self) -> bool:
+        """Whether a track request is still in flight, so the monitor should
+        read an idle backend as "not started yet" rather than "ended".
+        Subclasses that add their own pre-playback work (e.g. resolving a
+        stream URL before the file even reaches mpv) override this to cover
+        that window too."""
+        return (self._track_loading and
+                (time.monotonic() - self._track_load_started_at) < self.LOAD_GRACE_PERIOD)
+
     def _monitor_playback(self):
-        # The backend reports AV_STATE_NOTHING both for "this file reached
-        # EOF" (the case we want to act on) and, transiently, for "a new
-        # file was just requested but mpv hasn't started it yet" (loadfile
-        # is fire-and-forget). Without this grace window, that transient
-        # loading state looks identical to "track ended" and triggers a
-        # second, spurious _advance_track() call on top of whatever
-        # navigation (previous()/next()/jump_to_track()/auto-advance) just
-        # happened.
-        LOAD_GRACE_PERIOD = 3.0
         while self._monitor_running and self._auto_play_enabled:
             try:
                 if self._primary_instance:
@@ -360,8 +367,7 @@ class AVPlayer(ABC):
                         self._track_loading = False
 
                     elif state in [AVPlaybackState.AV_STATE_STOPPED, AVPlaybackState.AV_STATE_NOTHING]:
-                        still_loading = (self._track_loading and
-                            (time.monotonic() - self._track_load_started_at) < LOAD_GRACE_PERIOD)
+                        still_loading = self._is_track_loading()
                         if self._playlist_state == AVPlaylistState.PLAYING and not still_loading:
                             if self._reverse_playback_active:
                                 # Idle here means playing backward ran off
