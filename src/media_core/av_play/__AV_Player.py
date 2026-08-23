@@ -14,7 +14,16 @@ class AVPlayer(ABC):
 
     def __init__(self, media_type:AVMediaType, media_backend:AVMediaBackend, interface:AVMediaInterface) -> None:
         super().__init__()
-        self._advance_lock = threading.Lock()
+        # Reentrant on purpose: the public navigation entry points
+        # (next/previous/jump_to_track) and the monitor thread's
+        # auto-advance all take this lock and then call _advance_track(),
+        # which reaches _consume_queue_head() -- which takes it again.
+        # With a plain Lock that second acquire never returns, so the
+        # caller's thread hangs forever still holding it: next() froze the
+        # GUI thread outright, and the monitor thread deadlocking on the
+        # first track end left the lock permanently held, so every later
+        # previous()/next()/queue call froze the GUI too.
+        self._advance_lock = threading.RLock()
         self._device:AVDevice | None = None
         self._media_type = media_type
         self._media_backend = media_backend
