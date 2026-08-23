@@ -9,6 +9,8 @@
     <file alias="pause.svg">icons/pause.svg</file>
     <file alias="play.svg">icons/play.svg</file>
     <file alias="previous.svg">icons/previous.svg</file>
+    <file alias="playlist.svg">icons/playlist.svg</file>
+    <file alias="queue.svg">icons/queue.svg</file>
     <file alias="repeat.svg">icons/repeat.svg</file>
     <file alias="rewind.svg">icons/rewind.svg</file>
     <file alias="screenshot.svg">icons/screenshot.svg</file>
