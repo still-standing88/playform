@@ -75,6 +75,31 @@ def read_param_widget(widget):
     return None
 
 
+def write_param_widget(widget, value):
+    """Push value into an existing make_param_widget()-built widget, the
+    inverse of read_param_widget. Lets a caller re-point a whole form at a
+    new set of values (e.g. loading an effect preset) *without* tearing the
+    widgets down and rebuilding them -- a rebuild destroys whatever widget
+    currently has focus, which bounces keyboard/screen-reader focus out of
+    the control the user was working in."""
+    if isinstance(widget, QComboBox):
+        index = widget.findData(value)
+        if index < 0:
+            index = widget.findText(str(value))
+        if index >= 0:
+            widget.setCurrentIndex(index)
+    elif isinstance(widget, QCheckBox):
+        widget.setChecked(bool(value))
+    elif isinstance(widget, QSpinBox):
+        widget.setValue(int(value) if value is not None else widget.minimum())
+    elif isinstance(widget, QDoubleSpinBox):
+        widget.setValue(float(value) if value is not None else widget.minimum())
+    elif hasattr(widget, "_value_edit"):
+        widget._value_edit.setText(str(value or ""))
+    elif isinstance(widget, QLineEdit):
+        widget.setText(str(value) if value is not None else "")
+
+
 def connect_param_widget_changed(widget, callback):
     """Wire callback() to fire on every live value change of a
     make_param_widget()-built widget -- for callers (e.g. the live player's
