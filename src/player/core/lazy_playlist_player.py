@@ -115,7 +115,13 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
 
     def set_equalizer(self, band_amps: List[float], preamp: float = 0.0, preset: Optional[int] = None,
                        persist: bool = True) -> None:
-        if preset is not None and 0 <= preset < len(EQUALIZER_PRESETS):
+        # band_amps wins over preset: preset is only the label recorded for
+        # the UI to restore its combo selection. Letting preset re-source the
+        # amps here meant tweaking one band after picking a preset silently
+        # snapped every band back to that preset's stock curve, so the edit
+        # never took. Only fall back to the preset table when the caller
+        # gave no amps at all.
+        if not band_amps and preset is not None and 0 <= preset < len(EQUALIZER_PRESETS):
             band_amps = list(EQUALIZER_PRESETS[preset][1])
 
         instance = self.primary_instance
