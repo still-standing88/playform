@@ -73,6 +73,8 @@ class Explorer:
     def __init__(self, file_extensions=None, sort_mode: str = "name_asc"):
         self._file_extensions = [ext.lower() for ext in file_extensions] if file_extensions is not None else []
         self._sort_mode = sort_mode
+        self._filter_mode = "all"
+        self._filter_format = ""
         self._current_path = self.get_current()
         self._root_path = self.get_root(self._current_path)
         self._prev_path = self._current_path
@@ -115,6 +117,36 @@ class Explorer:
     def set_sort(self, mode: str):
         self._sort_mode = mode
         self.__retrieve_listing()
+
+    def set_filter(self, mode: str, fmt: str = ""):
+        self._filter_mode = mode
+        self._filter_format = (fmt or "").lower().lstrip(".")
+        self.__retrieve_listing()
+
+    @property
+    def filter_mode(self) -> str:
+        return self._filter_mode
+
+    @property
+    def filter_format(self) -> str:
+        return self._filter_format
+
+    def _file_passes_filter(self, path: str) -> bool:
+        if self._filter_mode == "all":
+            return True
+        ext = os.path.splitext(path)[1].lower().lstrip(".")
+        if not ext:
+            return False
+        if self._filter_mode == "custom":
+            return ext == self._filter_format
+        from utilities.formats import formats as media_formats, image_extensions
+        if self._filter_mode == "audio":
+            return ext in media_formats["audio"]
+        if self._filter_mode == "video":
+            return ext in media_formats["video"]
+        if self._filter_mode == "image":
+            return ext in image_extensions
+        return True
 
     def get_current_path(self): return self._current_path
 
@@ -218,6 +250,8 @@ class Explorer:
         produced its raw file-path results."""
         results = []
         for path in paths:
+            if not self._file_passes_filter(path):
+                continue
             try:
                 results.append(PathItem(path=path, type=PathType.FILE, info=PathInfo(path)))
             except (OSError, ValueError):
@@ -261,6 +295,8 @@ class Explorer:
                         self.items[item] = PathItem(path=item_path, type=PathType.FOLDER, info=PathInfo(item_path))
                         self.folders.append(item)
                     elif os.path.isfile(item_path) and os.path.splitext(item_path)[1].lower() in self._file_extensions:
+                        if not self._file_passes_filter(item_path):
+                            continue
                         self.items[item] = PathItem(path=item_path, type=PathType.FILE, info=PathInfo(item_path))
                         self.files.append(item)
                 except (PermissionError, OSError):
