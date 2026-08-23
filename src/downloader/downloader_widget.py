@@ -1,3 +1,7 @@
+import os
+import subprocess
+import sys
+
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem,
                                QLabel, QCheckBox, QMenu, QMessageBox, QTreeView,
                                QHeaderView, QSplitter, QScrollArea, QApplication)
@@ -358,6 +362,30 @@ class DownloaderWidget(QWidget):
 
         menu = QMenu(self)
 
+        if download_item.status == DownloadStatus.COMPLETED and os.path.isfile(str(download_item.filepath)):
+            play_action = QAction(_("Play"), self)
+            play_action.triggered.connect(lambda: self._play_item(download_item))
+            menu.addAction(play_action)
+
+            enqueue_action = QAction(_("Add to Player Queue"), self)
+            enqueue_action.triggered.connect(lambda: self._enqueue_item(download_item))
+            menu.addAction(enqueue_action)
+            menu.addSeparator()
+
+        open_location_action = QAction(_("Open File Location"), self)
+        open_location_action.triggered.connect(lambda: self._open_file_location(download_item))
+        menu.addAction(open_location_action)
+
+        properties_action = QAction(_("Properties..."), self)
+        properties_action.triggered.connect(lambda: self._show_properties(download_item))
+        menu.addAction(properties_action)
+
+        remove_action = QAction(_("Remove"), self)
+        remove_action.triggered.connect(lambda: self._remove_item(download_item, current))
+        menu.addAction(remove_action)
+
+        menu.addSeparator()
+
         copy_url_action = QAction(_("Copy URL"), self)
         copy_url_action.triggered.connect(lambda: self.copy_to_clipboard(download_item.url))
         menu.addAction(copy_url_action)
@@ -395,6 +423,71 @@ class DownloaderWidget(QWidget):
 
     def copy_to_clipboard(self, text):
         QApplication.clipboard().setText(text)
+
+    def _play_item(self, item):
+        if not os.path.isfile(str(item.filepath)):
+            return
+        main_window = self.window()
+        play = getattr(main_window, "play_file", None)
+        if callable(play):
+            play(str(item.filepath))
+
+    def _enqueue_item(self, item):
+        if not os.path.isfile(str(item.filepath)):
+            return
+        main_window = self.window()
+        enqueue = getattr(main_window, "enqueue_files", None)
+        if callable(enqueue):
+            enqueue([str(item.filepath)])
+
+    def _open_file_location(self, item):
+        folder = str(item.destination)
+        if not os.path.isdir(folder):
+            return
+        if sys.platform == "win32":
+            os.startfile(folder)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", folder])
+        else:
+            subprocess.Popen(["xdg-open", folder])
+
+    def _show_properties(self, item):
+        info = item.get_info()
+        QMessageBox.information(
+            self, _("Download Properties"),
+            "\n".join([
+                f"{_('Filename')}: {info['filename']}",
+                f"{_('URL')}: {info['url']}",
+                f"{_('Destination')}: {info['destination']}",
+                f"{_('Status')}: {info['status']}",
+                f"{_('Downloaded')}: {info['downloaded_size']} / {info['total_size']} bytes",
+                f"{_('Speed')}: {info['speed']:.0f} B/s",
+                f"{_('Retry Count')}: {info['retry_count']}",
+                f"{_('Error')}: {info['error'] or '-'}",
+            ])
+        )
+
+    def _remove_item(self, item, tree_item):
+        if item in self.downloader.active_downloads:
+            self.downloader.cancel_download(item)
+        elif item in self.downloader.queue:
+            self.downloader.queue.remove(item)
+            self.downloader._record_history(item)
+            self.downloader._forget_item(item)
+            self.downloader.queue_changed.emit()
+        elif item in self.downloader.paused_downloads:
+            self.downloader.paused_downloads.remove(item)
+            self.downloader._record_history(item)
+            self.downloader._forget_item(item)
+            self.downloader.queue_changed.emit()
+        elif item in self.downloader.completed_downloads:
+            self.downloader.completed_downloads.remove(item)
+            self.downloader._forget_history(item)
+        elif item in self.downloader.failed_downloads:
+            self.downloader.failed_downloads.remove(item)
+            self.downloader._forget_history(item)
+        if tree_item is not None:
+            self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(tree_item))
 
     def close_with_confirmation(self) -> bool:
         """Returns True if it's OK for the caller (DownloaderDialog) to
