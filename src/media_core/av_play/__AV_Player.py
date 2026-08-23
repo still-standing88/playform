@@ -37,6 +37,9 @@ class AVPlayer(ABC):
         self._track_load_started_at = 0.0
         self._reverse_playback_active = False
         self._reverse_stopped_callback:Optional[Callable[[], None]] = None
+        self._playback_queue:List[str] = []
+        self._queue_changed_callback:Optional[Callable[[], None]] = None
+        self._queue_track_active = False
 
 
     @property
@@ -120,6 +123,73 @@ class AVPlayer(ABC):
     def set_track_end_callback(self, callback:Optional[Callable[[int], None]]):
         self._track_end_callback = callback
 
+    def set_queue_changed_callback(self, callback:Optional[Callable[[], None]]):
+        self._queue_changed_callback = callback
+
+    def queue_tracks(self, locations:List[str]) -> int:
+        added = 0
+        with self._advance_lock:
+            for location in locations:
+                if location:
+                    self._playback_queue.append(location)
+                    added += 1
+        if added and self._queue_changed_callback:
+            self._queue_changed_callback()
+        return added
+
+    def insert_queue_next(self, location:str) -> bool:
+        if not location:
+            return False
+        with self._advance_lock:
+            self._playback_queue.insert(0, location)
+        if self._queue_changed_callback:
+            self._queue_changed_callback()
+        return True
+
+    def get_queue(self) -> List[str]:
+        with self._advance_lock:
+            return list(self._playback_queue)
+
+    def remove_from_queue(self, index:int) -> bool:
+        with self._advance_lock:
+            if 0 <= index < len(self._playback_queue):
+                del self._playback_queue[index]
+                removed = True
+            else:
+                removed = False
+        if removed and self._queue_changed_callback:
+            self._queue_changed_callback()
+        return removed
+
+    def clear_queue(self):
+        with self._advance_lock:
+            had_items = len(self._playback_queue) > 0
+            self._playback_queue.clear()
+        if had_items and self._queue_changed_callback:
+            self._queue_changed_callback()
+
+    def is_queue_track_active(self) -> bool:
+        return self._queue_track_active
+
+    def _consume_queue_head(self) -> Optional[str]:
+        with self._advance_lock:
+            if self._playback_queue:
+                return self._playback_queue.pop(0)
+        return None
+
+    def _play_queue_track(self, location:str):
+        if self._primary_instance is None:
+            self._primary_instance = AVMediaInstance(self._controler)
+        self._track_loading = True
+        self._track_load_started_at = time.monotonic()
+        self._queue_track_active = True
+        if is_path(location):
+            self._primary_instance.load_file(location)
+        else:
+            self._primary_instance.load_url(location)
+        self._primary_instance.play()
+        self._playlist_state = AVPlaylistState.PLAYING
+
     def set_reverse_stopped_callback(self, callback:Optional[Callable[[], None]]):
         self._reverse_stopped_callback = callback
 
@@ -192,6 +262,12 @@ class AVPlayer(ABC):
             random.shuffle(self._shuffle_order)
 
     def _advance_track(self):
+        queued = self._consume_queue_head()
+        if queued is not None:
+            self._play_queue_track(queued)
+            return
+
+        self._queue_track_active = False
         if not self._current_playlist or len(self._current_playlist) == 0:
             return
 
@@ -299,8 +375,12 @@ class AVPlayer(ABC):
                                     # not the one that just ended -- and only if it's
                                     # still a valid track (advancing past the end of a
                                     # non-repeating playlist leaves no "now playing"
-                                    # track to report).
-                                    if (self._track_end_callback and self._current_playlist is not None
+                                    # track to report). A queue-sourced advance leaves
+                                    # the playlist index untouched, so the callback is
+                                    # suppressed there and PlayerWidget learns of the
+                                    # change through its queue signal instead.
+                                    if (self._track_end_callback and not self._queue_track_active
+                                            and self._current_playlist is not None
                                             and 0 <= self._current_playlist_index < len(self._current_playlist)):
                                         self._track_end_callback(self._current_playlist_index)
 
