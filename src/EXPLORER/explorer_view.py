@@ -2,12 +2,14 @@ from genericpath import isfile
 import os
 
 from typing import Optional, Callable
-from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel
+from PySide6.QtGui import QKeyEvent, QActionGroup, QAction
+from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel, QDialog, QComboBox, QVBoxLayout, QDialogButtonBox
 from PySide6.QtCore import Qt as qt, Slot, QSize
 import utilities.mpv_bootstrap
 from media_core.av_play import AVMediaInstance, VideoPlayer, AVPlaybackState
-from utilities.formats import image_extensions
+from utilities.formats import image_extensions, formats as media_formats
+
+media_file_extensions = set(media_formats["audio"]) | set(media_formats["video"])
 
 from app_config import prefs
 from utilities.functions import copyText
@@ -327,6 +329,8 @@ class ExplorerView(QListWidget):
             menuItem(menu, _("Add to playlist"), self.add_to_playlist, self)
             menuItem(menu, _("Add to favorites"), self.add_to_favorites, self)
             menu.addSeparator()
+            self._add_view_and_filter_submenus(menu)
+            menu.addSeparator()
             menuItem(menu, _("Refresh"), self.refresh, self)
             menu.exec()
             return
@@ -362,11 +366,103 @@ class ExplorerView(QListWidget):
         elif item_info.type == PathType.FILE:
                 menuItem(menu, _("Add to playlist"), self.add_to_playlist, self)
                 menuItem(menu, _("Add to favorites"), self.add_to_favorites, self)
+                if os.path.splitext(self._focused_item_path or "")[1].lower() in media_file_extensions:
+                    menuItem(menu, _("Add to Queue"), self.add_selection_to_queue, self)
 
+        menu.addSeparator()
+        self._add_view_and_filter_submenus(menu)
         menu.addSeparator()
         menuItem(menu, _("Refresh"), self.refresh, self)
 
         menu.exec()
+
+    def _add_view_and_filter_submenus(self, menu):
+        view_menu = menu.addMenu(_("View"))
+        view_group = QActionGroup(view_menu)
+        view_group.setExclusive(True)
+        saved_view_mode = prefs.prefs.get("explorer_view_mode", "list")
+        list_action = QAction(_("Detail View"), view_menu)
+        list_action.setCheckable(True)
+        list_action.setChecked(saved_view_mode != "icon")
+        list_action.triggered.connect(lambda: self._set_view_mode(True))
+        icon_action = QAction(_("Icon View"), view_menu)
+        icon_action.setCheckable(True)
+        icon_action.setChecked(saved_view_mode == "icon")
+        icon_action.triggered.connect(lambda: self._set_view_mode(False))
+        view_group.addAction(list_action)
+        view_group.addAction(icon_action)
+        view_menu.addAction(list_action)
+        view_menu.addAction(icon_action)
+
+        filter_menu = menu.addMenu(_("Filter"))
+        filter_group = QActionGroup(filter_menu)
+        filter_group.setExclusive(True)
+        current_mode = prefs.prefs.get("explorer_filter_mode", "all")
+        for mode_value, label in (
+            ("all", _("All Files")),
+            ("audio", _("Audio")),
+            ("video", _("Video")),
+            ("image", _("Images")),
+        ):
+            action = QAction(label, filter_menu)
+            action.setCheckable(True)
+            action.setChecked(current_mode == mode_value)
+            action.triggered.connect(lambda _c=False, m=mode_value: self._set_filter(m))
+            filter_group.addAction(action)
+            filter_menu.addAction(action)
+        custom_values = prefs.prefs.get("explorer_filter_format", "")
+        custom_mode = "custom" if current_mode == "custom" else ""
+        custom_action = QAction(_("Custom Format..."), filter_menu)
+        custom_action.setCheckable(True)
+        custom_action.setChecked(bool(custom_mode))
+        custom_action.triggered.connect(self._on_custom_filter)
+        filter_group.addAction(custom_action)
+        filter_menu.addAction(custom_action)
+
+    def _set_view_mode(self, list_mode: bool):
+        self.set_view_mode(list_mode=list_mode)
+        prefs.prefs["explorer_view_mode"] = "list" if list_mode else "icon"
+        prefs.save()
+
+    def _set_filter(self, mode: str, fmt: str = ""):
+        self._explorer.set_filter(mode, fmt)
+        prefs.prefs["explorer_filter_mode"] = mode
+        prefs.prefs["explorer_filter_format"] = fmt
+        prefs.save()
+        self.relist_contents()
+
+    def _on_custom_filter(self):
+        dialog = FilterFormatDialog(self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        fmt = dialog.selected_format()
+        if not fmt:
+            return
+        self._set_filter("custom", fmt)
+
+    def add_selection_to_queue(self):
+        paths = self._selected_media_paths()
+        if not paths:
+            return
+        self._execute_callback("queue_callback", paths, with_param=True)
+
+    def _selected_media_paths(self):
+        paths = []
+        items = self.selectedItems() if self.selectedItems() else (
+            [self.currentItem()] if self.currentItem() is not None else [])
+        for item in items:
+            if item is None:
+                continue
+            name = item.text()
+            if self._explorer.mode == ExplorerMode.SEARCH_RESULTS:
+                path = self._search_item_paths.get(name)
+            elif name in self._explorer.items:
+                path = self._explorer.items[name].path
+            else:
+                path = os.path.join(self._explorer.current_path, name)
+            if path and os.path.isfile(path) and os.path.splitext(path)[1].lower().lstrip(".") in media_file_extensions:
+                paths.append(path)
+        return paths
 
 
     @Slot(object, object)
@@ -418,3 +514,38 @@ class ExplorerView(QListWidget):
             self.backward()
         else:
             super().keyPressEvent(event)
+
+
+class FilterFormatDialog(QDialog):
+    """Editable combo box of every format the Explorer supports (image,
+    video, and audio extensions) for custom file filtering."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(_("Filter by Format"))
+        self.setMinimumWidth(320)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel(_("Format (extension):"), self))
+
+        self.format_combo = QComboBox(self)
+        self.format_combo.setEditable(True)
+        all_exts = sorted(
+            set(media_formats["audio"]) | set(media_formats["video"]) | set(image_extensions)
+        )
+        for ext in all_exts:
+            self.format_combo.addItem(ext)
+        current = prefs.prefs.get("explorer_filter_format", "")
+        if current:
+            self.format_combo.setCurrentText(current)
+        layout.addWidget(self.format_combo)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def selected_format(self) -> str:
+        return self.format_combo.currentText().strip().lstrip(".").lower()
