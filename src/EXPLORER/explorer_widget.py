@@ -56,6 +56,7 @@ class ExplorerWidget(QWidget):
         "path_change_callback": self.update_path,
         "library_callback": lambda path: self.add_to_library(path),
         "image_preview_callback": self._on_image_preview,
+        "queue_callback": self._on_queue_requested,
         }
         config: dict = {}
         # See player_init.py: mpv clamps set_volume() at its own default
@@ -360,6 +361,11 @@ class ExplorerWidget(QWidget):
 
     def add_to_library(self, path):
         self.library_view.add_path(path)
+
+    def _on_queue_requested(self, paths):
+        callback = self._callbacks.get("enqueue_files_callback")
+        if callable(callback):
+            callback(paths)
 
     def _on_view_mode_selected(self, list_mode: bool):
         self.explorer_view.set_view_mode(list_mode=list_mode)
