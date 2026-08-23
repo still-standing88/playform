@@ -32,6 +32,7 @@ from .core.player_shortcuts import PlayerShortcuts
 from .core.timeline_sync import TimelineSyncController
 from .core.track_metadata_loader import TrackMetadataLoader
 from .core.track_info_dialogs import TrackInfoDialogs
+from .dialogs.playback_views_dialog import PlaybackQueueDialog, PlaylistViewDialog
 from app_constance.styles import PLAYER_WIDGET_STYLE
 
 from utilities.functions import get_app_path, get_parent_dir
@@ -274,6 +275,9 @@ class PlayerWidget(QWidget):
         self.mediaAvailable.connect(self.audio_filters_widget.set_media_available)
         self.player_controls.screenshotRequested.connect(self._on_screenshot)
         self.player_controls.reverseToggled.connect(self._on_reverse_toggled)
+        self.player_controls.playlistViewClicked.connect(self.show_playlist_dialog)
+        self.player_controls.queueViewClicked.connect(self.show_queue_dialog)
+        self.queueChanged.connect(self._on_queue_changed)
         self.player.signals.extraction_started.connect(self._on_url_extraction_started)
         self.player.signals.extraction_complete.connect(self._on_url_extraction_complete)
         self.player.signals.extraction_failed.connect(self._on_url_extraction_failed)
@@ -841,6 +845,48 @@ class PlayerWidget(QWidget):
         if self.player:
             self.player.clear_queue()
         self.queueChanged.emit()
+
+    def show_queue_dialog(self):
+        dialog = getattr(self, "_queue_dialog", None)
+        if dialog is None:
+            dialog = PlaybackQueueDialog(self, self)
+            dialog.queueRemoveRequested.connect(self._on_queue_remove_requested)
+            dialog.queueClearRequested.connect(self.clear_queue)
+            dialog.queueJumpRequested.connect(self._on_queue_jump_requested)
+            self._queue_dialog = dialog
+        dialog.refresh_queue()
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
+
+    def show_playlist_dialog(self):
+        dialog = getattr(self, "_playlist_dialog", None)
+        if dialog is None:
+            dialog = PlaylistViewDialog(self, self)
+            self._playlist_dialog = dialog
+        dialog.refresh_playlist()
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
+
+    @Slot(int)
+    def _on_queue_remove_requested(self, index):
+        self.remove_from_queue(index)
+
+    @Slot(int)
+    def _on_queue_jump_requested(self, index):
+        queue = self.get_queue()
+        if 0 <= index < len(queue):
+            location = queue[index]
+            self.remove_from_queue(index)
+            if os.path.isfile(location):
+                self.load_file(location)
+
+    @Slot()
+    def _on_queue_changed(self):
+        dialog = getattr(self, "_queue_dialog", None)
+        if dialog is not None and dialog.isVisible():
+            dialog.refresh_queue()
 
     def _resolve_playlist_choice(self, url: str) -> Optional[str]:
         """If url carries both a video id and a playlist/Mix id, asks the
