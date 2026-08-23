@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QListWidget, QMenu, QMessageBox
 from PySide6.QtCore import Signal, Qt, Slot
 from PySide6.QtGui import QAction
 from app_db import UserFiles
+from app_db.user_db import FileCategory
 from utilities.util_gui import contextMenu, messageBox
 
 
@@ -21,7 +22,11 @@ class RecentsWidget(QListWidget):
         
         self.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self.setToolTip(_("Double-click or press Enter on a file to open it"))
-        
+
+        contextMenu(self, self.show_context_menu)
+        self.itemDoubleClicked.connect(self.on_item_activated)
+        self.itemActivated.connect(self.on_item_activated)
+
         self.load_recents()
         
     def load_recents(self):
@@ -61,7 +66,7 @@ class RecentsWidget(QListWidget):
 
     @Slot()
     def clear_recents(self):
-        reply = QMessageBox.question(self, _("Clear Recent Files"), 
+        reply = QMessageBox.question(self, _("Clear Recent Files"),
                                    _("Are you sure you want to clear all recent files?"),
                                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if reply == QMessageBox.StandardButton.Yes:
@@ -72,13 +77,49 @@ class RecentsWidget(QListWidget):
             except Exception as e:
                 messageBox(_("Error"), _("Failed to clear recent files: {error}").format(error=e))
 
+    @Slot()
+    def remove_current_recent(self):
+        item = self.currentItem()
+        if item is None:
+            return
+        path = self.path_mapping.get(item.text())
+        if not path:
+            return
+        try:
+            self.user_db.remove_recent(path)
+            self.takeItem(self.row(item))
+            if item.text() in self.path_mapping:
+                del self.path_mapping[item.text()]
+        except Exception as e:
+            messageBox(_("Error"), _("Failed to remove recent file: {error}").format(error=e))
+
+    @Slot()
+    def clear_nonexistent_recents(self):
+        try:
+            removed = self.user_db.prune_missing(FileCategory.RECENT)
+            self.load_recents()
+            messageBox(_("Clear Nonexistent"), _("{count} missing entr(y/ies) removed.").format(count=removed))
+        except Exception as e:
+            messageBox(_("Error"), _("Failed to prune recents: {error}").format(error=e))
+
     def show_context_menu(self, position):
         menu = QMenu(self)
-        
+
+        remove_action = QAction(_("Remove This Track"), self)
+        remove_action.setEnabled(self.currentItem() is not None)
+        remove_action.triggered.connect(self.remove_current_recent)
+        menu.addAction(remove_action)
+
+        clear_missing_action = QAction(_("Clear Nonexistent Tracks"), self)
+        clear_missing_action.triggered.connect(self.clear_nonexistent_recents)
+        menu.addAction(clear_missing_action)
+
+        menu.addSeparator()
+
         clear_action = QAction(_("Clear All Recent Files"), self)
         clear_action.triggered.connect(self.clear_recents)
         menu.addAction(clear_action)
-        
+
         menu.exec(self.mapToGlobal(position))
     
     @Slot(object)
