@@ -14,6 +14,13 @@ class FiltersWidget(QWidget):
 		super().__init__(parent)
 		self.player: Optional[av_play.VideoPlayer] = player
 		self._building = False
+		# Last value actually pushed to the backend, per adjustment. mpv's
+		# brightness/contrast/gamma/saturation/hue are global player
+		# properties that survive file changes, so re-sending an unchanged
+		# value is pure overhead -- and reset_filters() is called from the
+		# 700ms position timer's no-media branch, which turned this widget
+		# into a steady stream of redundant property writes.
+		self._applied: dict[str, float] = {}
 		self._key_event_filter = KeyEventFilter(self)
 		self.setup_ui()
 		self.connect_signals()
@@ -96,6 +103,9 @@ class FiltersWidget(QWidget):
 
 	def set_player(self, player: av_play.VideoPlayer):
 		self.player = player
+		# A different backend hasn't seen any of these writes, so the cache
+		# of already-applied values no longer describes it.
+		self._applied.clear()
 		self.reset_filters()
 
 	def _on_value_changed(self, name: str, value: float):
@@ -103,8 +113,11 @@ class FiltersWidget(QWidget):
 			return
 		if not self.player:
 			return
+		if self._applied.get(name) == value:
+			return
 		try:
 			self.player.set_video_adjust_float(name, float(value))
+			self._applied[name] = value
 		except Exception:
 			pass
 
