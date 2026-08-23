@@ -244,14 +244,25 @@ class AudioFiltersWidget(QWidget):
             return
         spec = self.player.get_audio_filter_param_spec(effect_id)
         values = spec[1] if spec else {}
+        original = dict(values)
+
+        def _apply_live(key, value):
+            self.player.set_audio_filter_parameter(effect_id, key, value, persist=False)
 
         dialog = EffectEditDialog(
             effect, values, parent=self,
             preset_backend=mpv_effect_presets,
             default_file_dir=get_ir_dir(),
+            on_param_changed=_apply_live,
         )
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            for key, value in dialog.current_values().items():
-                self.player.set_audio_filter_parameter(effect_id, key, value, persist=False)
+        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        # Every edit was already pushed to the live filter as it was made, so
+        # OK only needs to persist the chain -- while Cancel has to actively
+        # put the pre-dialog values back, since "not saved" no longer implies
+        # "never applied".
+        final_values = dialog.current_values() if accepted else original
+        for key, value in final_values.items():
+            self.player.set_audio_filter_parameter(effect_id, key, value, persist=False)
+        if accepted:
             self.player.persist_audio_effects_chain()
         self._refresh_row(effect_id)
