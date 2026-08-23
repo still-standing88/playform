@@ -29,6 +29,10 @@ class MenuManager:
         self.main_window.tools_menu = menubar.addMenu(_("&Tools"))
         self.main_window.tools_menu.setObjectName("toolsMenu")
         self.setup_tools_menu()
+
+        self.main_window.downloads_menu = menubar.addMenu(_("&Downloads"))
+        self.main_window.downloads_menu.setObjectName("downloadsMenu")
+        self.setup_downloads_menu()
         
         self.main_window.options_menu = menubar.addMenu(_("&Options"))
         self.main_window.options_menu.setObjectName("optionsMenu")
@@ -229,6 +233,36 @@ class MenuManager:
         self.main_window.show_podcast_action.triggered.connect(self.main_window.dock_manager.toggle_podcast)
         self.main_window.panels_menu.addAction(self.main_window.show_podcast_action)
 
+        self.main_window.view_menu.addSeparator()
+
+        window_menu = self.main_window.view_menu.addMenu(_("&Window"))
+        window_menu.setObjectName("windowMenu")
+        from PySide6.QtGui import QActionGroup
+        bar_group = QActionGroup(window_menu)
+        bar_group.setExclusive(False)
+
+        from app_config import prefs as _prefs
+        self.main_window.toggle_toolbar_action = QAction(_("&Toolbar"), window_menu)
+        self.main_window.toggle_toolbar_action.setCheckable(True)
+        self.main_window.toggle_toolbar_action.setChecked(_prefs.prefs.get("show_toolbar", True))
+        self.main_window.toggle_toolbar_action.triggered.connect(self.main_window.toggle_toolbar_visibility)
+        bar_group.addAction(self.main_window.toggle_toolbar_action)
+        window_menu.addAction(self.main_window.toggle_toolbar_action)
+
+        self.main_window.toggle_statusbar_action = QAction(_("&Status Bar"), window_menu)
+        self.main_window.toggle_statusbar_action.setCheckable(True)
+        self.main_window.toggle_statusbar_action.setChecked(_prefs.prefs.get("show_statusbar", True))
+        self.main_window.toggle_statusbar_action.triggered.connect(self.main_window.toggle_statusbar_visibility)
+        bar_group.addAction(self.main_window.toggle_statusbar_action)
+        window_menu.addAction(self.main_window.toggle_statusbar_action)
+
+        self.main_window.toggle_panels_bar_action = QAction(_("&Panels Bar"), window_menu)
+        self.main_window.toggle_panels_bar_action.setCheckable(True)
+        self.main_window.toggle_panels_bar_action.setChecked(_prefs.prefs.get("show_panels_bar", True))
+        self.main_window.toggle_panels_bar_action.triggered.connect(self.main_window.toggle_panels_bar_visibility)
+        bar_group.addAction(self.main_window.toggle_panels_bar_action)
+        window_menu.addAction(self.main_window.toggle_panels_bar_action)
+
     def setup_tools_menu(self):
         self.main_window.ffmpeg_tools_menu = self.main_window.tools_menu.addMenu(_("&FFmpeg Tools"))
 
@@ -279,10 +313,6 @@ class MenuManager:
 
         self.main_window.tools_menu.addSeparator()
 
-        self.main_window.show_downloader_action = QAction(_("&Download Manager"), self.main_window)
-        self.main_window.show_downloader_action.triggered.connect(self.main_window.open_downloader)
-        self.main_window.tools_menu.addAction(self.main_window.show_downloader_action)
-
         self.main_window.debug_menu = self.main_window.tools_menu.addMenu(_("&Debug"))
         self.main_window.view_logs_action = QAction(_("&View Logs…"), self.main_window)
         self.main_window.view_logs_action.triggered.connect(self.main_window.open_logs_viewer)
@@ -293,6 +323,17 @@ class MenuManager:
         self.main_window.show_console_dock_action.setChecked(False)
         self.main_window.show_console_dock_action.triggered.connect(self.main_window.dock_manager.toggle_console_dock)
         self.main_window.debug_menu.addAction(self.main_window.show_console_dock_action)
+
+    def setup_downloads_menu(self):
+        self.main_window.add_download_action = QAction(_("Add &Download..."), self.main_window)
+        self.main_window.add_download_action.triggered.connect(self.main_window.open_add_download_dialog)
+        self.main_window.downloads_menu.addAction(self.main_window.add_download_action)
+
+        self.main_window.downloads_menu.addSeparator()
+
+        self.main_window.download_center_action = QAction(_("&Download Center"), self.main_window)
+        self.main_window.download_center_action.triggered.connect(self.main_window.open_downloader)
+        self.main_window.downloads_menu.addAction(self.main_window.download_center_action)
         
     def setup_options_menu(self):
         self.main_window.preferences_action = QAction(_("&Manage Preferences"), self.main_window)
