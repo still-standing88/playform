@@ -4,7 +4,8 @@ from PySide6.QtWidgets import (QDialog, QHBoxLayout, QVBoxLayout, QFormLayout, Q
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 
-from gui_controls.param_widgets import make_param_widget, read_param_widget
+from gui_controls.param_widgets import (make_param_widget, read_param_widget,
+                                         write_param_widget, connect_param_widget_changed)
 
 EFFECT_ID_ROLE = Qt.ItemDataRole.UserRole
 
@@ -95,16 +96,22 @@ class EffectEditDialog(QDialog):
 
     `preset_backend` is an object exposing list_presets(effect_id),
     load_preset(effect_id, name), save_preset(effect_id, name, values) and
-    delete_preset(effect_id, name); pass None to hide the preset row."""
+    delete_preset(effect_id, name); pass None to hide the preset row.
+
+    `on_param_changed` is an optional callback(param_key, value) fired on
+    every live edit (and once per parameter when a preset is loaded), for
+    callers driving a live audio graph that should hear the change as it's
+    made rather than only on OK."""
 
     def __init__(self, effect, values: dict, parent=None, title: str = "",
-                 preset_backend=None, default_file_dir: str = ""):
+                 preset_backend=None, default_file_dir: str = "", on_param_changed=None):
         super().__init__(parent)
         self._effect = effect
         self._preset_backend = preset_backend
         self._param_inputs: dict = {}
         self._building = False
         self._default_file_dir = default_file_dir
+        self._on_param_changed = on_param_changed
 
         self.setWindowTitle(title or _("Edit {effect}").format(effect=effect.label))
         self.setMinimumWidth(420)
@@ -164,9 +171,41 @@ class EffectEditDialog(QDialog):
                     default_dir=self._default_file_dir,
                 )
                 self._param_inputs[param.key] = widget
+                connect_param_widget_changed(
+                    widget, lambda key=param.key: self._on_param_edited(key)
+                )
                 self.param_form.addRow(param.label, widget)
         finally:
             self._building = False
+
+    def _on_param_edited(self, key: str):
+        if self._building or self._on_param_changed is None:
+            return
+        widget = self._param_inputs.get(key)
+        if widget is None:
+            return
+        self._on_param_changed(key, read_param_widget(widget))
+
+    def _load_values_into_form(self, values: dict):
+        """Re-point the existing widgets at `values` instead of rebuilding
+        the form. Rebuilding deletes every widget, which throws keyboard and
+        screen-reader focus out of whatever the user was in -- selecting a
+        preset from the combo would drop focus off the combo, so arrowing
+        through presets was unusable. Writes are batched behind _building so
+        each widget's own change signal stays quiet, then the whole set is
+        pushed to the live graph once."""
+        self._building = True
+        try:
+            for key, widget in self._param_inputs.items():
+                if key in values:
+                    write_param_widget(widget, values[key])
+        finally:
+            self._building = False
+
+        if self._on_param_changed is not None:
+            for key, widget in self._param_inputs.items():
+                if key in values:
+                    self._on_param_changed(key, read_param_widget(widget))
 
     def _reload_presets(self, select: str = None):
         self.preset_combo.blockSignals(True)
@@ -193,7 +232,7 @@ class EffectEditDialog(QDialog):
             values = self._preset_backend.load_preset(self._effect.id, name)
         except OSError:
             return
-        self._build_param_form(values)
+        self._load_values_into_form(values)
 
     def _on_new_preset(self):
         name, ok = QInputDialog.getText(self, _("New Preset"), _("Preset name:"))
