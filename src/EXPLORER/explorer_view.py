@@ -180,6 +180,9 @@ class ExplorerView(QListWidget):
     def onItemActivate(self):
         if self._focused_item_path is not None:
             if os.path.isfile(self._focused_item_path):
+                if os.path.splitext(self._focused_item_path)[1].lower() in image_extensions:
+                    self._execute_callback("image_preview_dialog_callback", self._focused_item_path)
+                    return
                 self.open_file()
             elif os.path.isdir(self._focused_item_path):
                 self.forward()
