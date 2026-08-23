@@ -46,6 +46,8 @@ class PlayerControls(QWidget):
     nextClicked = Signal()
     repeatClicked = Signal()
     shuffleClicked = Signal()
+    playlistViewClicked = Signal()
+    queueViewClicked = Signal()
 
     seekChanged = Signal(int)
     seekPressed = Signal()
@@ -159,6 +161,12 @@ class PlayerControls(QWidget):
         self.screenshot_btn = QToolButton(self)
         self.screenshot_btn.setIcon(load_icon("screenshot.svg"))
 
+        self.playlist_view_btn = QToolButton(self)
+        self.playlist_view_btn.setIcon(load_icon("playlist.svg"))
+
+        self.queue_view_btn = QToolButton(self)
+        self.queue_view_btn.setIcon(load_icon("queue.svg"))
+
         # Icon-only at a predictable, uniform size, not the previous
         # per-button icon+text at 90-130px wide each - those ten buttons
         # alone summed to ~1110px, and the whole controls row to ~1660px,
@@ -178,6 +186,8 @@ class PlayerControls(QWidget):
             (self.bookmarks_btn, _("Bookmarks list")),
             (self.goto_btn, _("Go to time")),
             (self.screenshot_btn, _("Take screenshot")),
+            (self.playlist_view_btn, _("Show playlist")),
+            (self.queue_view_btn, _("Show queue")),
         ]
 
         for btn, tooltip in button_specs:
@@ -283,6 +293,7 @@ class PlayerControls(QWidget):
             self.seek_icon_label, self.seek_slider, self.separator2, self.mute_btn,
             self.volume_icon_label,
             self.volume_slider, self.time_label, self.current_track_label, self.shuffle_btn, self.bookmarks_btn, self.goto_btn, self.screenshot_btn,
+            self.playlist_view_btn, self.queue_view_btn,
             self.more_btn
         ]
 
@@ -298,6 +309,8 @@ class PlayerControls(QWidget):
         self.bookmarks_btn.clicked.connect(self.show_bookmarks_dialog)
         self.goto_btn.clicked.connect(self.show_goto_dialog)
         self.screenshot_btn.clicked.connect(self.screenshotRequested.emit)
+        self.playlist_view_btn.clicked.connect(self.playlistViewClicked.emit)
+        self.queue_view_btn.clicked.connect(self.queueViewClicked.emit)
 
         self.seek_slider.valueChanged.connect(self._on_seek_value_changed)
         self.seek_slider.sliderPressed.connect(self.seekPressed.emit)
