@@ -1,5 +1,5 @@
 from media_core.ffmpeg.effects_catalog import effects_for_branch, categories_for_branch, get_effect
-from gui_controls.categorized_effect_picker import CategorizedEffectPickerDialog
+from gui_controls.effect_dialogs import EffectSelectionDialog
 
 _BRANCH_TITLES = {
     "edits": ("Add Edit", "Available Edits"),
@@ -7,11 +7,11 @@ _BRANCH_TITLES = {
 }
 
 
-class EffectPickerDialog(CategorizedEffectPickerDialog):
+class EffectPickerDialog(EffectSelectionDialog):
     """Batch Converter's category-tree effect picker -- a thin wrapper
-    around the shared gui_controls.categorized_effect_picker dialog,
+    around the shared gui_controls.effect_dialogs.EffectSelectionDialog,
     bound to media_core.ffmpeg.effects_catalog's branch-scoped catalog.
-    """
+    Parameter configuration happens in EffectEditDialog, not here."""
 
     def __init__(self, branch: str, parent=None, initial_effect_id: str = None, initial_values: dict = None):
         self.branch = branch
@@ -21,8 +21,6 @@ class EffectPickerDialog(CategorizedEffectPickerDialog):
             categories_fn=lambda: categories_for_branch(branch),
             get_entry_fn=get_effect,
             parent=parent,
-            initial_id=initial_effect_id,
-            initial_values=initial_values,
             title=_(dialog_title),
             list_title=_(list_title),
         )
