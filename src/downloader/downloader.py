@@ -687,6 +687,15 @@ class Downloader(QObject):
         except Exception:
             logging.exception("Downloader: failed to record history for %r", getattr(item, "id", None))
 
+    def _forget_history(self, item):
+        if not self._persist_enabled:
+            return
+        try:
+            from app_db import user_db
+            user_db.delete_download_history_row(item.id)
+        except Exception:
+            logging.exception("Downloader: failed to remove history for %r", getattr(item, "id", None))
+
     def _retry_download_internal(self, item):
         if item in self.failed_downloads:
             self.failed_downloads.remove(item)
