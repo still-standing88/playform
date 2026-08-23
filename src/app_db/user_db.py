@@ -67,11 +67,27 @@ class UserFiles(BaseDatabaseHandler):
     CREATE INDEX IF NOT EXISTS idx_download_queue_status ON download_queue(status);
     """
 
-    SCHEMA_VERSION = 3
+    DOWNLOAD_HISTORY_SCHEMA = """
+    CREATE TABLE IF NOT EXISTS download_history (
+        id TEXT PRIMARY KEY NOT NULL,
+        url TEXT NOT NULL,
+        destination TEXT NOT NULL,
+        filename TEXT NOT NULL,
+        status TEXT NOT NULL,
+        downloaded_size INTEGER NOT NULL DEFAULT 0,
+        total_size INTEGER NOT NULL DEFAULT 0,
+        metadata TEXT,
+        added_at TEXT,
+        updated_at TEXT
+    );
+    """
+
+    SCHEMA_VERSION = 4
 
     def __init__(self, db_path: str = os.path.join("data", "user.sqlite3"), simple_mode: bool = False):
         full_schema = (self.USER_FILES_SCHEMA + self.APP_SETTINGS_SCHEMA
-                        + self.USER_PRESETS_SCHEMA + self.DOWNLOAD_QUEUE_SCHEMA)
+                        + self.USER_PRESETS_SCHEMA + self.DOWNLOAD_QUEUE_SCHEMA
+                        + self.DOWNLOAD_HISTORY_SCHEMA)
         migrations = [
             (2, [
                 stmt.strip() for stmt in
@@ -80,6 +96,10 @@ class UserFiles(BaseDatabaseHandler):
             ]),
             (3, [
                 stmt.strip() for stmt in self.DOWNLOAD_QUEUE_SCHEMA.split(";")
+                if stmt.strip()
+            ]),
+            (4, [
+                stmt.strip() for stmt in self.DOWNLOAD_HISTORY_SCHEMA.split(";")
                 if stmt.strip()
             ]),
         ]
@@ -127,6 +147,49 @@ class UserFiles(BaseDatabaseHandler):
         except Exception:
             import logging
             logging.exception("load_download_queue_rows failed; returning empty queue")
+            return []
+
+    def save_download_history_row(self, row: dict) -> bool:
+        try:
+            self._db.execute_sql(
+                "INSERT INTO download_history "
+                "(id, url, destination, filename, status, downloaded_size, total_size, metadata, added_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET url=excluded.url, status=excluded.status, "
+                "downloaded_size=excluded.downloaded_size, total_size=excluded.total_size, "
+                "metadata=excluded.metadata, updated_at=excluded.updated_at",
+                (
+                    row["id"], row["url"], row["destination"], row["filename"], row["status"],
+                    row.get("downloaded_size", 0), row.get("total_size", 0), row.get("metadata"),
+                    row.get("added_at"), row.get("updated_at"),
+                ),
+            )
+            return True
+        except Exception:
+            import logging
+            logging.exception("save_download_history_row failed")
+            return False
+
+    def delete_download_history_row(self, item_id: str) -> bool:
+        try:
+            self._db.execute_sql("DELETE FROM download_history WHERE id = ?", (item_id,))
+            return True
+        except Exception:
+            import logging
+            logging.exception("delete_download_history_row failed")
+            return False
+
+    def load_download_history_rows(self) -> List[dict]:
+        try:
+            cursor = self._db.execute_sql(
+                "SELECT id, url, destination, filename, status, downloaded_size, total_size, metadata, added_at, updated_at "
+                "FROM download_history ORDER BY updated_at DESC"
+            )
+            columns = ["id", "url", "destination", "filename", "status", "downloaded_size", "total_size", "metadata", "added_at", "updated_at"]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
+        except Exception:
+            import logging
+            logging.exception("load_download_history_rows failed; returning empty list")
             return []
 
     def _generate_entry_id(self, path: str, category: FileCategory) -> str:
