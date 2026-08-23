@@ -56,6 +56,7 @@ class ExplorerWidget(QWidget):
         "path_change_callback": self.update_path,
         "library_callback": lambda path: self.add_to_library(path),
         "image_preview_callback": self._on_image_preview,
+        "image_preview_dialog_callback": self.show_image_preview_dialog,
         "queue_callback": self._on_queue_requested,
         }
         config: dict = {}
@@ -366,6 +367,22 @@ class ExplorerWidget(QWidget):
         callback = self._callbacks.get("enqueue_files_callback")
         if callable(callback):
             callback(paths)
+
+    def show_image_preview_dialog(self, path: str):
+        if not path:
+            return
+        from EXPLORER.image_preview_dialog import ImagePreviewDialog
+        dialog = getattr(self, "_image_preview_dialog", None)
+        if dialog is None:
+            dialog = ImagePreviewDialog(path, self)
+            self._image_preview_dialog = dialog
+        else:
+            dialog.close()
+            dialog = ImagePreviewDialog(path, self)
+            self._image_preview_dialog = dialog
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
 
     def _on_view_mode_selected(self, list_mode: bool):
         self.explorer_view.set_view_mode(list_mode=list_mode)
