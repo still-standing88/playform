@@ -37,6 +37,7 @@ class ExplorerWidget(QWidget):
         self._shortcuts: Dict[str, QShortcut] = {}
         self._video_preview_active = False
         self._video_preview_applied: Optional[bool] = None
+        self._files_splitter: Optional[QSplitter] = None
 
         super().__init__(kw.get("parent", None))
         self.setWindowTitle(_("Explorer"))
@@ -201,6 +202,7 @@ class ExplorerWidget(QWidget):
         files_splitter.setStretchFactor(0, 3)
         files_splitter.setStretchFactor(1, 2)
         files_splitter.setCollapsible(1, True)
+        self._files_splitter = files_splitter
 
         explorer_layout.addWidget(files_splitter)
 
@@ -440,6 +442,7 @@ class ExplorerWidget(QWidget):
         if path:
             pixmap = QPixmap(path)
             if not pixmap.isNull():
+                self._give_image_preview_width()
                 target = max(self.IMAGE_PREVIEW_MIN_WIDTH, self.image_preview_label.width())
                 scaled = pixmap.scaled(
                     target,
@@ -452,7 +455,25 @@ class ExplorerWidget(QWidget):
                 return
         self.image_preview_label.hide()
 
+    def _give_image_preview_width(self):
+        # The label starts hidden, so the splitter has it recorded at 0 and
+        # show() alone leaves it clamped to its 80px minimum however wide the
+        # dock is. Stretch factors only govern resize distribution, not this,
+        # so the pane needs explicit width the first time it appears.
+        if self.image_preview_label.width() >= self.IMAGE_PREVIEW_WIDTH:
+            return
+        if self._files_splitter is None:
+            return
+        total = self._files_splitter.width()
+        if total <= 0:
+            return
+        files_floor = self.explorer_view.minimumSizeHint().width()
+        width = min(self.IMAGE_PREVIEW_WIDTH,
+                    max(self.IMAGE_PREVIEW_MIN_WIDTH, total - files_floor))
+        self._files_splitter.setSizes([max(0, total - width), width])
+
     VIDEO_PREVIEW_HEIGHT = 160
+    IMAGE_PREVIEW_WIDTH = 200
     IMAGE_PREVIEW_MIN_WIDTH = 80
 
     def _on_media_preview(self, path: str):
