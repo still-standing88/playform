@@ -233,8 +233,9 @@ class ExplorerWidget(QWidget):
         content_splitter.addWidget(preview_group)
         main_splitter.addWidget(right_panel)
         
-        media_group = QGroupBox(_("Media"))
-        controls_layout = QHBoxLayout(media_group)
+        media_row = QWidget()
+        controls_layout = QHBoxLayout(media_row)
+        controls_layout.setContentsMargins(0, 0, 0, 0)
         self.autoplay_cb = QCheckBox(_("Auto Play"))
         self.autoplay_cb.stateChanged.connect(self.autoplayState)
         self.autoplay_cb.setChecked(prefs.prefs["autoplay"])
@@ -263,26 +264,27 @@ class ExplorerWidget(QWidget):
         # dock, which has the exact same problem (already fixed) - both
         # competing for one shared vertical budget means every pixel of
         # always-visible chrome on either side directly steals from the
-        # other. media_group moves inside the scroll area with the
-        # splitter instead of staying pinned below it (it's a settings
-        # row, not primary navigation), leaving only the toolbar always
-        # visible - and the floor drops from an earlier, more generous
-        # 250px to 150px, the same reasoning as the Player accordion's
-        # floor: guarantee *something* is always reachable without
-        # scrolling, not the whole panel at once.
+        # other. So the splitter scrolls, and the floor is a modest 150px
+        # for the same reason as the Player accordion's floor: guarantee
+        # *something* is always reachable without scrolling, not the whole
+        # panel at once. Auto Play/Loop/Volume stay pinned below it as a
+        # frameless row - inside the scroll area they were the last child
+        # and so the first thing to disappear, which is exactly the
+        # "volume isn't on screen" bug; frameless costs ~30px against the
+        # 61px the QGroupBox version cost.
         splitter_index = main_layout.indexOf(main_splitter)
         main_layout.removeWidget(main_splitter)
         scroll_content = QWidget()
         scroll_layout = QVBoxLayout(scroll_content)
         scroll_layout.setContentsMargins(0, 0, 0, 0)
         scroll_layout.addWidget(main_splitter, 1)
-        scroll_layout.addWidget(media_group)
         self.splitter_scroll = QScrollArea(self)
         self.splitter_scroll.setWidget(scroll_content)
         self.splitter_scroll.setWidgetResizable(True)
         self.splitter_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.splitter_scroll.setMinimumHeight(self.IDEAL_CONTENT_FLOOR)
         main_layout.insertWidget(splitter_index, self.splitter_scroll, 1)
+        main_layout.addWidget(media_row)
 
     # Recomputed fresh on every clamp_to_screen() pass (see DockManager) -
     # never mutated cumulatively, so plugging into a bigger screen restores
