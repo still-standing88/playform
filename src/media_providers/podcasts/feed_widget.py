@@ -616,14 +616,18 @@ class FeedWidget(QWidget):
             self.display_entry_detail(entry)
 
     def display_entry_detail(self, entry):
+        palette = self.detail_text.palette()
+        heading_color = palette.text().color().name()
+        rule_color = palette.mid().color().name()
+
         html_parts = []
         html_parts.append("<div style='font-family: Arial, sans-serif; padding: 10px; line-height: 1.6;'>")
-        
+
         for field in self.LONG_TEXT_FIELDS:
             val = self.get_entry_value(entry, field)
             if val:
                 field_title = field.replace('_', ' ').title()
-                html_parts.append(f"<h3 style='color: #2c3e50; border-bottom: 1px solid #ccc; margin-top: 15px;'>{field_title}</h3>")
+                html_parts.append(f"<h3 style='color: {heading_color}; border-bottom: 1px solid {rule_color}; margin-top: 15px;'>{field_title}</h3>")
                 
                 content_html = ""
                 if isinstance(val, list) and val:
