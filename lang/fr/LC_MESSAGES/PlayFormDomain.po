@@ -211,22 +211,9 @@ msgstr "<b>Étiquettes :</b> {tags}"
 msgid "<b>Votes:</b> {votes}"
 msgstr "<b>Votes :</b> {votes}"
 
-msgid "<em style='color: #999;'>Empty</em>"
-msgstr "<em style='color: #999;'>Vide</em>"
-
-msgid "<em style='color: #999;'>None</em>"
-msgstr "<em style='color: #999;'>Aucun</em>"
-
 #, python-brace-format
 msgid "<em>... and {count} more</em>"
 msgstr "<em>... et {count} plus</em>"
-
-msgid ""
-"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry "
-"Data</h2>"
-msgstr ""
-"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Données complètes"
-" d'entrée</h2>"
 
 msgid "<p><em>No summary or description available.</em></p>"
 msgstr "<p><em>Aucun résumé ou description disponible.</em></p>"
@@ -3149,6 +3136,9 @@ msgstr "{label} (Décroissant)"
 #, python-brace-format
 msgid "{percent} percent"
 msgstr "{percent} %"
+
+msgid "Full Entry Data"
+msgstr "Données complètes d'entrée"
 
 #~ msgid "Filters"
 #~ msgstr "Filtres"

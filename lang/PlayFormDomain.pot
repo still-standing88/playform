@@ -154,8 +154,8 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"<b>A new version of {app} is available!</b><br>Your version: <b>{current}</"
-"b> -> New version: <b>{new}</b>"
+"<b>A new version of {app} is available!</b><br>Your version: "
+"<b>{current}</b> -> New version: <b>{new}</b>"
 msgstr ""
 
 #, python-brace-format
@@ -212,19 +212,8 @@ msgstr ""
 msgid "<b>Votes:</b> {votes}"
 msgstr ""
 
-msgid "<em style='color: #999;'>Empty</em>"
-msgstr ""
-
-msgid "<em style='color: #999;'>None</em>"
-msgstr ""
-
 #, python-brace-format
 msgid "<em>... and {count} more</em>"
-msgstr ""
-
-msgid ""
-"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry Data</"
-"h2>"
 msgstr ""
 
 msgid "<p><em>No summary or description available.</em></p>"
@@ -725,7 +714,8 @@ msgid "Create playlist from folder"
 msgstr ""
 
 #, python-brace-format
-msgid "Created and loaded playlist '{playlist_name}' with {track_count} tracks"
+msgid ""
+"Created and loaded playlist '{playlist_name}' with {track_count} tracks"
 msgstr ""
 
 msgid "Created new playlist"
@@ -3036,4 +3026,7 @@ msgstr ""
 
 #, python-brace-format
 msgid "{percent} percent"
+msgstr ""
+
+msgid "Full Entry Data"
 msgstr ""

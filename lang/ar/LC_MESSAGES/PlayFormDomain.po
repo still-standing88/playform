@@ -212,22 +212,9 @@ msgstr "<b>العلامات:</b> {tags}"
 msgid "<b>Votes:</b> {votes}"
 msgstr "<b>التصويتات:</b> {votes}"
 
-msgid "<em style='color: #999;'>Empty</em>"
-msgstr "<em style='color: #999;'>فارغ</em>"
-
-msgid "<em style='color: #999;'>None</em>"
-msgstr "<em style='color: #999;'>لا شيء</em>"
-
 #, python-brace-format
 msgid "<em>... and {count} more</em>"
 msgstr "<em>... و{count} المزيد</em>"
-
-msgid ""
-"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry "
-"Data</h2>"
-msgstr ""
-"<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>بيانات الإدخال "
-"الكاملة</h2>"
 
 msgid "<p><em>No summary or description available.</em></p>"
 msgstr "<p><em>لا يتوفر ملخص أو وصف.</em></p>"
@@ -3131,6 +3118,9 @@ msgstr "{label} (تنازلي)"
 #, python-brace-format
 msgid "{percent} percent"
 msgstr "{percent}%"
+
+msgid "Full Entry Data"
+msgstr "بيانات الإدخال الكاملة"
 
 #~ msgid "Filters"
 #~ msgstr "عوامل التصفية"
