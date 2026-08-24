@@ -44,19 +44,25 @@ class SplitTab(QWidget):
         source_row.addWidget(self.input_browse_button)
         layout.addWidget(source_group)
 
+        # Six stacked group boxes needed 938px of vertical minimum - more than
+        # a maximised dialog can show on a 768p screen. The tab is only ~420px
+        # wide at its minimum, so the settings go in two columns instead.
+        columns = QHBoxLayout()
+        left_column = QVBoxLayout()
+        right_column = QVBoxLayout()
+        columns.addLayout(left_column)
+        columns.addLayout(right_column)
+
         mode_group = QGroupBox(_("Split Mode"), self)
         mode_layout = QVBoxLayout(mode_group)
-        mode_row = QHBoxLayout()
         self.chapters_radio = QRadioButton(_("By Embedded Chapters"), self)
         self.silence_radio = QRadioButton(_("By Detected Silence"), self)
         self.chapters_radio.setChecked(True)
         self.mode_button_group = QButtonGroup(self)
         self.mode_button_group.addButton(self.chapters_radio, 0)
         self.mode_button_group.addButton(self.silence_radio, 1)
-        mode_row.addWidget(self.chapters_radio)
-        mode_row.addWidget(self.silence_radio)
-        mode_row.addStretch()
-        mode_layout.addLayout(mode_row)
+        mode_layout.addWidget(self.chapters_radio)
+        mode_layout.addWidget(self.silence_radio)
 
         self.silence_options_group = QGroupBox(_("Silence Detection Options"), self)
         silence_form = QFormLayout(self.silence_options_group)
@@ -71,9 +77,9 @@ class SplitTab(QWidget):
         self.trim_silence_check = QCheckBox(_("Trim silence from segment edges"), self)
         silence_form.addRow(_("Minimum Silence Duration"), self.silence_duration_spin)
         silence_form.addRow(_("Silence Threshold"), self.silence_threshold_spin)
-        silence_form.addRow("", self.trim_silence_check)
+        silence_form.addRow(self.trim_silence_check)
         mode_layout.addWidget(self.silence_options_group)
-        layout.addWidget(mode_group)
+        left_column.addWidget(mode_group)
 
         window_group = QGroupBox(_("Time Window && Segment Filtering"), self)
         window_form = QFormLayout(window_group)
@@ -92,13 +98,14 @@ class SplitTab(QWidget):
         window_form.addRow(_("End Time"), self.end_time_edit)
         window_form.addRow(_("Minimum Segment Length"), self.min_segment_spin)
         window_form.addRow(_("End Padding (silence)"), self.padding_spin)
-        layout.addWidget(window_group)
+        left_column.addWidget(window_group)
+        left_column.addStretch()
 
         format_group = QGroupBox(_("Output Format"), self)
         format_layout = QVBoxLayout(format_group)
         self.format_panel = AudioConvertPanel(self)
         format_layout.addWidget(self.format_panel)
-        layout.addWidget(format_group)
+        right_column.addWidget(format_group)
 
         naming_group = QGroupBox(_("Naming && Destination"), self)
         naming_form = QFormLayout(naming_group)
@@ -116,10 +123,13 @@ class SplitTab(QWidget):
         output_row.addWidget(self.output_browse_button)
 
         naming_form.addRow(_("Naming Template"), self.template_edit)
-        naming_form.addRow("", template_help)
-        naming_form.addRow("", self.include_cover_check)
+        naming_form.addRow(template_help)
+        naming_form.addRow(self.include_cover_check)
         naming_form.addRow(_("Output Folder"), output_row)
-        layout.addWidget(naming_group)
+        right_column.addWidget(naming_group)
+        right_column.addStretch()
+
+        layout.addLayout(columns)
 
         self.begin_button = QPushButton(_("Split Audiobook"), self)
         layout.addWidget(self.begin_button)
