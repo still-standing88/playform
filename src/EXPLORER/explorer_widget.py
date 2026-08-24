@@ -1,11 +1,11 @@
 import os
 from PySide6.QtWidgets import (
     QWidget, QFrame, QVBoxLayout, QHBoxLayout, QTreeView, QPushButton,
-    QTextEdit, QListWidget, QCheckBox, QSpinBox, QLabel,
+    QLineEdit, QListWidget, QCheckBox, QSpinBox, QLabel,
     QSplitter, QGroupBox, QToolBar, QComboBox, QScrollArea
 )
 from PySide6.QtCore import Qt as qt, QTimer, Slot
-from PySide6.QtGui import QKeyEvent, QPalette, QColor, QPixmap, QAction, QActionGroup, QShortcut, QKeySequence
+from PySide6.QtGui import QPalette, QColor, QPixmap, QAction, QActionGroup, QShortcut, QKeySequence
 
 from typing import Optional, Callable, Dict
 import utilities.mpv_bootstrap
@@ -23,20 +23,6 @@ from utilities.functions import get_mpvlog_file, get_debug_level, initialize_com
 
 
 extensions = list(map(lambda ext: f".{ext}", formats["audio"] + formats["video"])) + list(image_extensions)
-
-class PathEdit(QTextEdit):
-
-
-    def __init__(self, callback:Callable, parent = None):
-        super().__init__(parent)
-        self._callback = callback
-        self.setTabChangesFocus(True)
-
-    def keyPressEvent(self, e: QKeyEvent) -> None:
-        if e.key() in [qt.Key.Key_Enter, qt.Key.Key_Return]:
-            self._callback()
-        else:
-            return super().keyPressEvent(e)
 
 
 class ExplorerWidget(QWidget):
@@ -124,7 +110,9 @@ class ExplorerWidget(QWidget):
         self.parent_btn.clicked.connect(self.backward)
         path_layout.addWidget(self.parent_btn)
 
-        self.path_edit = PathEdit(self.set_path)
+        self.path_edit = QLineEdit()
+        self.path_edit.setAccessibleName(_("Current path"))
+        self.path_edit.returnPressed.connect(self.set_path)
 
         path_layout.addWidget(self.path_edit)
         right_layout.addWidget(path_group)
@@ -353,7 +341,7 @@ class ExplorerWidget(QWidget):
         self.path_edit.setText(self._explorer.current_path)
 
     def set_path(self):
-        new_path = self.path_edit.toPlainText()
+        new_path = self.path_edit.text()
         self.explorer_view.change_path(new_path)
 
     @Slot()
