@@ -104,21 +104,20 @@ class ExplorerWidget(QWidget):
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
 
-        path_group = QGroupBox(_("Path"))
-        path_layout = QVBoxLayout(path_group)
+        location_group = QGroupBox(_("Path && Search"))
+        location_layout = QVBoxLayout(location_group)
+
+        path_row = QHBoxLayout()
         self.parent_btn = QPushButton(_("Parent Directory"))
         self.parent_btn.clicked.connect(self.backward)
-        path_layout.addWidget(self.parent_btn)
+        path_row.addWidget(self.parent_btn)
 
         self.path_edit = QLineEdit()
         self.path_edit.setAccessibleName(_("Current path"))
         self.path_edit.returnPressed.connect(self.set_path)
+        path_row.addWidget(self.path_edit, 1)
+        location_layout.addLayout(path_row)
 
-        path_layout.addWidget(self.path_edit)
-        right_layout.addWidget(path_group)
-
-        search_group = QGroupBox(_("Search"))
-        search_layout = QHBoxLayout(search_group)
         self.search_edit = QComboBox()
         self.search_edit.setEditable(True)
         self.search_edit.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
@@ -128,8 +127,8 @@ class ExplorerWidget(QWidget):
             self.search_edit.addItems(prefs.prefs.get("search_history", []))
         self.search_edit.setCurrentText("")
         self.search_edit.lineEdit().returnPressed.connect(self._on_search_submitted)
-        search_layout.addWidget(self.search_edit)
-        right_layout.addWidget(search_group)
+        location_layout.addWidget(self.search_edit)
+        right_layout.addWidget(location_group)
 
         content_splitter = QSplitter(qt.Orientation.Vertical)
         right_layout.addWidget(content_splitter)
