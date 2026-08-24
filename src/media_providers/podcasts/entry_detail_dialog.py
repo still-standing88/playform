@@ -13,13 +13,22 @@ class EntryDetailDialog(QDialog):
     def __init__(self, entry, parent=None):
         super().__init__(parent)
         self.entry = entry
+        self._rendered = False
         self.setWindowTitle(_("Full Entry Details"))
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(700, 500)
         self.setMinimumSize(600, 400)
 
         self.setup_ui()
-        self.display_entry()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # The HTML takes its colors from the browser's palette, which only
+        # reflects the active theme's stylesheet once the widget is polished --
+        # rendering from __init__ baked black text onto the dark theme.
+        if not self._rendered:
+            self._rendered = True
+            self.display_entry()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -50,9 +59,18 @@ class EntryDetailDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def display_entry(self):
+        palette = self.browser.palette()
+        heading_color = palette.text().color().name()
+        value_color = palette.windowText().color().name()
+        muted_color = palette.placeholderText().color().name()
+        rule_color = palette.mid().color().name()
+
         html_parts = []
         html_parts.append("<div style='font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;'>")
-        html_parts.append(_("<h2 style='color: #2c3e50; border-bottom: 2px solid #ccc;'>Full Entry Data</h2>"))
+        html_parts.append(
+            f"<h2 style='color: {heading_color}; border-bottom: 2px solid {rule_color};'>"
+            f"{html.escape(_('Full Entry Data'))}</h2>"
+        )
         
         attrs = {}
 
@@ -75,40 +93,39 @@ class EntryDetailDialog(QDialog):
         for key, value in sorted(attrs.items()):
             if key.startswith('_'):
                 continue
-            
+
             display_key = key.replace('_', ' ').title()
             html_parts.append(f"<div style='margin: 15px 0;'>")
-            html_parts.append(f"<strong style='color: #2c3e50;'>{display_key}:</strong><br>")
-            
-            formatted_value = self.format_value(value)
-            html_parts.append(f"<div style='margin-left: 20px; color: #34495e;'>{formatted_value}</div>")
+            html_parts.append(f"<strong style='color: {heading_color};'>{display_key}:</strong><br>")
+
+            formatted_value = self.format_value(value, muted_color)
+            html_parts.append(f"<div style='margin-left: 20px; color: {value_color};'>{formatted_value}</div>")
             html_parts.append("</div>")
-        
+
         html_parts.append("</div>")
         self.browser.setHtml(''.join(html_parts))
 
-    def format_value(self, value):
+    def format_value(self, value, muted_color="#999"):
         if value is None:
-            return _("<em style='color: #999;'>None</em>")
-        
+            return f"<em style='color: {muted_color};'>{html.escape(_('None'))}</em>"
+
         if isinstance(value, str):
             if value.startswith('http://') or value.startswith('https://'):
                 return f"<a href='{value}'>{value}</a>"
-            import html
             escaped = html.escape(value)
             return escaped.replace('\n', '<br>')
-        
+
         if isinstance(value, dict):
             if 'value' in value:
-                return self.format_value(value['value'])
+                return self.format_value(value['value'], muted_color)
             parts = []
             for k, v in value.items():
-                parts.append(f"<strong>{k}:</strong> {self.format_value(v)}")
+                parts.append(f"<strong>{k}:</strong> {self.format_value(v, muted_color)}")
             return "<br>".join(parts)
-        
+
         if isinstance(value, (list, tuple)):
             if not value:
-                return _("<em style='color: #999;'>Empty</em>")
+                return f"<em style='color: {muted_color};'>{html.escape(_('Empty'))}</em>"
             items = [str(item) for item in value[:10]]
             if len(value) > 10:
                 items.append(
