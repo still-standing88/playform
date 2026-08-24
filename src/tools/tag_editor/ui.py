@@ -1,6 +1,7 @@
 import os
 import music_tag
 from gettext import gettext as _
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit,
     QFileDialog, QListWidget, QGridLayout, QMessageBox, QTextEdit
@@ -70,7 +71,11 @@ class TagEditorUI(QWidget):
         self.lyrics_edit = QTextEdit()
         self.lyrics_edit.setTabChangesFocus(True)
         self.lyrics_edit.setAccessibleName(_("Lyrics tag editor"))
-        self.grid_layout.addWidget(QLabel(_("Lyrics:")), row, 0)
+        lyrics_label = QLabel(_("Lyrics:"))
+        # The box is the only row that grows, so a default-aligned label ends up
+        # centred against a 275px field instead of beside its first line.
+        lyrics_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.grid_layout.addWidget(lyrics_label, row, 0)
         self.grid_layout.addWidget(self.lyrics_edit, row, 1)
         self.tag_widgets['lyrics'] = self.lyrics_edit
         self.lyrics_edit.textChanged.connect(self.update_tag_data)
