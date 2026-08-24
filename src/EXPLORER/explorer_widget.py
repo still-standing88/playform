@@ -191,12 +191,16 @@ class ExplorerWidget(QWidget):
 
         self.image_preview_label = QLabel()
         self.image_preview_label.setAlignment(qt.AlignmentFlag.AlignCenter)
-        self.image_preview_label.setMinimumWidth(200)
+        # 80, not 200: this label plus the files list's own minimum width was
+        # enough to force horizontal scrolling as soon as an image preview
+        # appeared in a narrow dock.
+        self.image_preview_label.setMinimumWidth(self.IMAGE_PREVIEW_MIN_WIDTH)
         self.image_preview_label.hide()
         files_splitter.addWidget(self.image_preview_label)
 
         files_splitter.setStretchFactor(0, 3)
         files_splitter.setStretchFactor(1, 2)
+        files_splitter.setCollapsible(1, True)
 
         explorer_layout.addWidget(files_splitter)
 
@@ -436,9 +440,10 @@ class ExplorerWidget(QWidget):
         if path:
             pixmap = QPixmap(path)
             if not pixmap.isNull():
+                target = max(self.IMAGE_PREVIEW_MIN_WIDTH, self.image_preview_label.width())
                 scaled = pixmap.scaled(
-                    self.image_preview_label.width() or 400,
-                    self.image_preview_label.height() or 400,
+                    target,
+                    max(self.IMAGE_PREVIEW_MIN_WIDTH, self.image_preview_label.height()),
                     qt.AspectRatioMode.KeepAspectRatio,
                     qt.TransformationMode.SmoothTransformation,
                 )
@@ -448,6 +453,7 @@ class ExplorerWidget(QWidget):
         self.image_preview_label.hide()
 
     VIDEO_PREVIEW_HEIGHT = 160
+    IMAGE_PREVIEW_MIN_WIDTH = 80
 
     def _on_media_preview(self, path: str):
         is_video = bool(path) and os.path.splitext(path)[1].lower().lstrip(".") in video_extensions
