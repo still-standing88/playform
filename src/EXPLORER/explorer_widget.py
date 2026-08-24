@@ -23,6 +23,7 @@ from utilities.functions import get_mpvlog_file, get_debug_level, initialize_com
 
 
 extensions = list(map(lambda ext: f".{ext}", formats["audio"] + formats["video"])) + list(image_extensions)
+video_extensions = set(formats["video"])
 
 
 class ExplorerWidget(QWidget):
@@ -34,6 +35,8 @@ class ExplorerWidget(QWidget):
         self._instance:Optional[AVMediaInstance] = None
         self._explorer = Explorer(extensions, sort_mode=prefs.prefs.get("explorer_sort_mode", "name_asc"))
         self._shortcuts: Dict[str, QShortcut] = {}
+        self._video_preview_active = False
+        self._video_preview_applied: Optional[bool] = None
 
         super().__init__(kw.get("parent", None))
         self.setWindowTitle(_("Explorer"))
@@ -43,6 +46,7 @@ class ExplorerWidget(QWidget):
         "library_callback": lambda path: self.add_to_library(path),
         "image_preview_callback": self._on_image_preview,
         "image_preview_dialog_callback": self.show_image_preview_dialog,
+        "media_preview_callback": self._on_media_preview,
         "queue_callback": self._on_queue_requested,
         }
         config: dict = {}
@@ -131,6 +135,7 @@ class ExplorerWidget(QWidget):
         right_layout.addWidget(location_group)
 
         content_splitter = QSplitter(qt.Orientation.Vertical)
+        self._content_splitter = content_splitter
         right_layout.addWidget(content_splitter)
         explorer_group = QGroupBox(_("Files"))
         explorer_layout = QVBoxLayout(explorer_group)
@@ -203,6 +208,7 @@ class ExplorerWidget(QWidget):
         content_splitter.addWidget(explorer_group)
         
         preview_group = QGroupBox(_("Media Preview"))
+        self._preview_group = preview_group
         preview_layout = QVBoxLayout(preview_group)
         self.video_widget = QFrame(self)
         self.vid_palette = self.video_widget.palette()
@@ -231,6 +237,14 @@ class ExplorerWidget(QWidget):
         self.explorer_view.set_player_bar(self.player_bar)
         
         content_splitter.addWidget(preview_group)
+        # QFrame's sizeHint is (-1, -1), so without stretch factors the
+        # preview pane was handed exactly its own sizeHint (the player bar
+        # alone) and video_widget sat at 0px height forever - the Media
+        # Preview group never actually showed picture. Stretch alone isn't
+        # enough either, which is what _set_video_preview_active handles.
+        content_splitter.setStretchFactor(0, 3)
+        content_splitter.setStretchFactor(1, 2)
+        content_splitter.setCollapsible(1, False)
         main_splitter.addWidget(right_panel)
         
         media_row = QWidget()
@@ -432,6 +446,42 @@ class ExplorerWidget(QWidget):
                 self.image_preview_label.show()
                 return
         self.image_preview_label.hide()
+
+    VIDEO_PREVIEW_HEIGHT = 160
+
+    def _on_media_preview(self, path: str):
+        is_video = bool(path) and os.path.splitext(path)[1].lower().lstrip(".") in video_extensions
+        self._set_video_preview_active(is_video)
+
+    def _set_video_preview_active(self, active: bool):
+        self._video_preview_active = active
+        self._apply_video_preview_sizes()
+
+    def _apply_video_preview_sizes(self):
+        # Only redistributes the vertical splitter - deliberately never
+        # touches video_widget's minimumHeight, so an idle Explorer keeps the
+        # same small minimum height and no new scrolling appears inside
+        # splitter_scroll. Qt takes the extra pixels from the Files pane down
+        # to its own minimum and no further. _video_preview_applied tracks
+        # what was actually written, so switching dock tabs (or focusing a
+        # second video) doesn't undo a manual splitter drag.
+        if self._video_preview_applied == self._video_preview_active:
+            return
+        if not self.isVisible():
+            return
+        total = self._content_splitter.height()
+        if total <= 0:
+            return
+        if self._video_preview_active:
+            preview = max(self.VIDEO_PREVIEW_HEIGHT, int(total * 0.4))
+        else:
+            preview = self._preview_group.minimumSizeHint().height()
+        self._content_splitter.setSizes([max(0, total - preview), preview])
+        self._video_preview_applied = self._video_preview_active
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        QTimer.singleShot(0, self._apply_video_preview_sizes)
 
     def _setup_tab_order(self):
         # Search field must come before the library treeview in the tab

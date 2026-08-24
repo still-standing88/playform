@@ -486,6 +486,7 @@ class ExplorerView(QListWidget):
 
             img_path = full_path if os.path.splitext(full_path)[1].lower() in image_extensions else ""
             self._execute_callback("image_preview_callback", img_path)
+            self._execute_callback("media_preview_callback", full_path)
             self._pending_media_path = full_path
             self._delayed_media_load()
             if self._just_launched: self._just_launched = False
@@ -505,10 +506,12 @@ class ExplorerView(QListWidget):
         if item_info.type == PathType.FILE and self._focused_item_path is not None:
             img_path = self._focused_item_path if os.path.splitext(self._focused_item_path)[1].lower() in image_extensions else ""
             self._execute_callback("image_preview_callback", img_path)
+            self._execute_callback("media_preview_callback", self._focused_item_path)
             self._pending_media_path = self._focused_item_path
             self._delayed_media_load()
         else:
             self._execute_callback("image_preview_callback", "")
+            self._execute_callback("media_preview_callback", "")
 
         if self._just_launched: self._just_launched = False
 
