@@ -20,6 +20,7 @@ class AudioConvertPanel(QWidget):
     def _build_ui(self):
         layout = QVBoxLayout(self)
         form = QFormLayout()
+        self._form = form
         layout.addLayout(form)
 
         self.format_combo = QComboBox(self)
@@ -61,8 +62,8 @@ class AudioConvertPanel(QWidget):
         self.sample_rate_combo.setCurrentIndex(0)
 
         has_bitrate = bool(fmt.bitrates_kbps)
-        self.bit_rate_combo.setVisible(has_bitrate)
-        self.vbr_check.setVisible(has_bitrate and bool(fmt.vbr_quality_range))
+        self._form.setRowVisible(self.bit_rate_combo, has_bitrate)
+        self._form.setRowVisible(self.vbr_check, has_bitrate and bool(fmt.vbr_quality_range))
         self.bit_rate_combo.clear()
         if has_bitrate:
             self.bit_rate_combo.addItem(_("Keep Original (Encoder Default)"), 0)
@@ -71,7 +72,9 @@ class AudioConvertPanel(QWidget):
             self.bit_rate_combo.setCurrentIndex(0)
 
         has_bit_depth = bool(fmt.bit_depths)
-        self.bit_depth_combo.setVisible(has_bit_depth)
+        # setRowVisible, not the combo's own setVisible: hiding only the field
+        # leaves its form label orphaned (MP3 showed a bare "Bit Depth").
+        self._form.setRowVisible(self.bit_depth_combo, has_bit_depth)
         self.bit_depth_combo.clear()
         if has_bit_depth:
             self.bit_depth_combo.addItem(_("Keep Original"), 0)
