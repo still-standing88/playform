@@ -97,7 +97,6 @@ class CombineTab(QWidget):
         metadata_form.addRow(_("Year"), self.year_edit)
         metadata_form.addRow(_("Description"), self.description_edit)
         metadata_form.addRow(_("Cover"), cover_row)
-        layout.addWidget(metadata_group)
 
         options_group = QGroupBox(_("Options"), self)
         options_form = QFormLayout(options_group)
@@ -106,10 +105,20 @@ class CombineTab(QWidget):
         self.bitrate_combo.addItems(_BITRATES)
         self.bitrate_combo.setCurrentText("64k")
         self.keep_temp_check = QCheckBox(_("Keep temporary files (debugging)"), self)
-        options_form.addRow("", self.preserve_chapters_check)
+        options_form.addRow(self.preserve_chapters_check)
         options_form.addRow(_("Bitrate"), self.bitrate_combo)
-        options_form.addRow("", self.keep_temp_check)
-        layout.addWidget(options_group)
+        options_form.addRow(self.keep_temp_check)
+
+        # Side by side rather than stacked: the tab needed 690px of height,
+        # more than a maximised dialog gets on a 768p screen, while leaving
+        # most of its width unused.
+        columns = QHBoxLayout()
+        options_column = QVBoxLayout()
+        options_column.addWidget(options_group)
+        options_column.addStretch()
+        columns.addLayout(options_column)
+        columns.addWidget(metadata_group)
+        layout.addLayout(columns)
 
         output_group = QGroupBox(_("Output"), self)
         output_row = QHBoxLayout(output_group)
