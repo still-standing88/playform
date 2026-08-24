@@ -228,7 +228,7 @@ class ExplorerWidget(QWidget):
         self.video_widget.setAttribute(qt.WidgetAttribute.WA_DontCreateNativeAncestors)
         self.video_widget.setAttribute(qt.WidgetAttribute.WA_NativeWindow)
 
-        preview_layout.addWidget(self.video_widget)
+        preview_layout.addWidget(self.video_widget, 1)
         
         self.player_bar = PlayerBar(self)
         preview_layout.addWidget(self.player_bar)
@@ -478,10 +478,15 @@ class ExplorerWidget(QWidget):
         total = self._content_splitter.height()
         if total <= 0:
             return
+        # The group box's own minimum is chrome plus the player bar with the
+        # video frame at zero, so it doubles as the overhead to add on top of
+        # a target video height.
+        overhead = self._preview_group.minimumSizeHint().height()
         if self._video_preview_active:
-            preview = max(self.VIDEO_PREVIEW_HEIGHT, int(total * 0.4))
+            files_floor = self._content_splitter.widget(0).minimumSizeHint().height()
+            preview = min(overhead + self.VIDEO_PREVIEW_HEIGHT, max(overhead, total - files_floor))
         else:
-            preview = self._preview_group.minimumSizeHint().height()
+            preview = overhead
         self._content_splitter.setSizes([max(0, total - preview), preview])
         self._video_preview_applied = self._video_preview_active
 
