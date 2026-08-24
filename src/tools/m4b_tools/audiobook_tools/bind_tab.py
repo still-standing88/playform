@@ -72,7 +72,7 @@ class BindTab(QWidget):
         options_layout.addWidget(self.use_filenames_check)
         options_layout.addWidget(self.decode_durations_check)
         options_layout.addWidget(self.keep_temp_check)
-        layout.addWidget(options_group)
+        options_layout.addStretch()
 
         metadata_group = QGroupBox(_("Audiobook Metadata"), self)
         metadata_form = QFormLayout(metadata_group)
@@ -96,7 +96,14 @@ class BindTab(QWidget):
         metadata_form.addRow(_("Date"), self.date_edit)
         metadata_form.addRow(_("Bitrate"), self.bitrate_combo)
         metadata_form.addRow(_("Cover Image"), cover_row)
-        layout.addWidget(metadata_group)
+
+        # Side by side rather than stacked: the tab needed 698px of height,
+        # more than a maximised dialog gets on a 768p screen, while leaving
+        # ~300px of its width unused.
+        columns = QHBoxLayout()
+        columns.addWidget(options_group)
+        columns.addWidget(metadata_group)
+        layout.addLayout(columns)
 
         output_group = QGroupBox(_("Output"), self)
         output_row = QHBoxLayout(output_group)
