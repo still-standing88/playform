@@ -315,6 +315,11 @@ class YtDlpDownloaderDialog(QDialog):
         item = self.category_tree.currentItem()
         if item is None:
             return
+        # The menu is self-aware: top-level category rows (Videos, Other,
+        # and the Playlists/Channels roots) offer nothing -- actions only
+        # make sense on a concrete playlist/channel entry under them.
+        if item.parent() is None:
+            return
         entries = self._entries_under_node()
         menu = QMenu(self)
         any_downloading = any(e.status == STATUS_DOWNLOADING for e in entries)
