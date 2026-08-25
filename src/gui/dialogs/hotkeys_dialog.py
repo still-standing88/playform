@@ -34,8 +34,28 @@ class HotkeyCaptureEdit(QLineEdit):
         self._captured_key = None
         self._captured_modifiers = Qt.KeyboardModifier.NoModifier
         self._finalized = False
+        self._context_action = ""
+        self._context_category = ""
         if initial_sequence:
             self.setText(initial_sequence)
+
+    def set_capture_context(self, action, category):
+        # Screen readers announce this editor by its own Name/Description
+        # while it holds focus -- without these it reads as a bare
+        # "Ctrl+Win+F7 edit" with no hint of which hotkey is being edited
+        # (the reported "info confusion"). Same pattern as the tree rows:
+        # "{action} in {category}, current shortcut: {seq}".
+        self._context_action = action
+        self._context_category = category
+        self._refresh_accessible_text(self.text())
+
+    def _refresh_accessible_text(self, sequence):
+        shortcut_display = sequence if sequence else _("none")
+        self.setAccessibleName(_("{action} in {category}").format(
+            action=self._context_action, category=self._context_category))
+        self.setAccessibleDescription(
+            _("current shortcut: {shortcut}. Press the desired key combination; releasing it accepts. Escape cancels.").format(
+                shortcut=shortcut_display))
 
     def keyPressEvent(self, event):
         if self._finalized:
@@ -45,11 +65,15 @@ class HotkeyCaptureEdit(QLineEdit):
             self.cancelled.emit()
             return
         if key in self._MODIFIER_KEYS or key == Qt.Key.Key_unknown:
-            self.setText(self._preview_text(event.modifiers(), None))
+            preview = self._preview_text(event.modifiers(), None)
+            self.setText(preview)
+            self._refresh_accessible_text(preview)
             return
         self._captured_key = key
         self._captured_modifiers = event.modifiers()
-        self.setText(self._preview_text(event.modifiers(), key))
+        preview = self._preview_text(event.modifiers(), key)
+        self.setText(preview)
+        self._refresh_accessible_text(preview)
 
     def keyReleaseEvent(self, event):
         key = event.key()
@@ -75,6 +99,22 @@ class HotkeyCaptureEdit(QLineEdit):
         return QKeySequence(seq_int).toString(QKeySequence.SequenceFormat.PortableText) or ""
 
 
+class HotkeysTree(QTreeWidget):
+    """QTreeWidget subclass so Enter-on-a-row starts editing reliably --
+    assigning tree.keyPressEvent on the instance never overrides Qt's C++
+    virtual dispatch, so the old monkey-patch was dead code."""
+
+    enter_pressed = Signal(object)
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            current_item = self.currentItem()
+            if current_item is not None and current_item.parent() is not None:
+                self.enter_pressed.emit(current_item)
+                return
+        super().keyPressEvent(event)
+
+
 class HotkeysDialog(QDialog):
     def __init__(self, parent=None, reset_callback=None):
         super().__init__(parent)
@@ -90,7 +130,7 @@ class HotkeysDialog(QDialog):
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
-        self.tree = QTreeWidget()
+        self.tree = HotkeysTree()
         self.tree.setColumnCount(2)
         self.tree.setHeaderLabels([_("Action"), _("Shortcut")])
         self.tree.setAlternatingRowColors(True)
@@ -98,7 +138,7 @@ class HotkeysDialog(QDialog):
         self.tree.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.tree.itemClicked.connect(self.on_item_clicked)
         self.tree.itemDoubleClicked.connect(self.on_item_double_clicked)
-        self.tree.keyPressEvent = self.tree_key_press_event
+        self.tree.enter_pressed.connect(self.start_editing)
         self.tree.setEditTriggers(QTreeWidget.EditTrigger.NoEditTriggers)
         self.tree.header().setSectionsMovable(False)
         self.tree.header().setSectionsClickable(False)
@@ -120,36 +160,31 @@ class HotkeysDialog(QDialog):
         button_layout.addWidget(self.ok_button)
         layout.addLayout(button_layout)
 
-    def tree_key_press_event(self, event):
-        if event.key() == Qt.Key.Key_Return or event.key() == Qt.Key.Key_Enter:
-            current_item = self.tree.currentItem()
-            if current_item and current_item.parent() is not None:
-                self.start_editing(current_item, 1)
-                return
-        QTreeWidget.keyPressEvent(self.tree, event)
-
     def _set_action_item_text(self, item, action, category, shortcut):
-        # Column 0's accessible Name is the action text (e.g. "Play/Pause")
-        # -- its description can safely restate the shortcut since it isn't
-        # already saying it. Column 1's accessible Name IS the shortcut
-        # text itself, so its description must NOT restate the shortcut too
-        # -- doing so is exactly what produced the reported artifact
-        # ("Q, Return  Play/Pause in Explorer, current shortcut: Q, Return
-        # level 1": Name + Description both carrying the shortcut).
+        # Both columns announce with the same "{action} in {category},
+        # current shortcut: {seq}" description so every row reads
+        # consistently ("Open file  Open file in Main interface, current
+        # shortcut: Ctrl+O"). Column 1's Name is the shortcut text itself,
+        # but its Description restating the full context (rather than a
+        # different "Shortcut for ..." phrasing) is what keeps the
+        # announcement uniform across the two cells.
         shortcut_display = shortcut if shortcut else _("none")
+        description = _("{action} in {category}, current shortcut: {shortcut}").format(
+            action=action, category=category, shortcut=shortcut_display)
         item.setText(1, shortcut)
-        item.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole,
-                     _("{action} in {category}, current shortcut: {shortcut}").format(
-                         action=action, category=category, shortcut=shortcut_display))
-        item.setData(1, Qt.ItemDataRole.AccessibleDescriptionRole,
-                     _("Shortcut for {action} in {category}").format(action=action, category=category))
+        item.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole, description)
+        item.setData(1, Qt.ItemDataRole.AccessibleDescriptionRole, description)
 
     def populate_tree(self):
         self.tree.clear()
         for category_name in key_config.key_dict.keys():
             category_item = QTreeWidgetItem(self.tree, [category_name, ""])
-            category_item.setFlags(category_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
-            category_item.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole, f"Category: {category_name}")
+            # Selectable so screen-reader/keyboard users can actually reach
+            # and read category rows -- stripping ItemIsSelectable made
+            # arrow-key navigation skip them entirely (unreadable).
+            category_item.setFlags(category_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            category_item.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole,
+                                  _("Category: {category}").format(category=category_name))
             if category_name in key_config.key_config:
                 for action, shortcut in key_config.key_config[category_name].items():
                     action_item = QTreeWidgetItem(category_item, [action, shortcut])
@@ -180,8 +215,8 @@ class HotkeysDialog(QDialog):
 
         existing_text = item.text(1)
         editor = HotkeyCaptureEdit(existing_text)
+        editor.set_capture_context(item.text(0), item.parent().text(0))
         editor_tooltip = _("Shortcut editor. Press the desired key combination; releasing it accepts the shortcut. Press Escape to cancel.")
-        editor.setAccessibleDescription(editor_tooltip)
         editor.setToolTip(editor_tooltip)
         editor.sequenceCaptured.connect(self.finish_editing)
         editor.cancelled.connect(self.cancel_editing)
