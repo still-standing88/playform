@@ -12,7 +12,7 @@ from PySide6.QtCore import Qt, Signal, QThread
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QTreeWidget, QTreeWidgetItem,
     QPushButton, QLabel, QLineEdit, QRadioButton, QCheckBox, QPlainTextEdit,
-    QTabWidget, QFileDialog, QMenu, QDialogButtonBox, QMessageBox,
+    QTabWidget, QFileDialog, QMenu, QDialogButtonBox, QMessageBox, QWidget,
 )
 
 from media_core.ytdlp_download.engine import fetch_flat_entries
