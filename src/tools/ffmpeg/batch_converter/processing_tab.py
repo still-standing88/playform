@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, QPushButton, QDialog
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem, QPushButton, QDialog, QMenu
 from PySide6.QtCore import Qt
 
 from media_core.ffmpeg.effects_catalog import get_effect
@@ -13,8 +13,9 @@ class ProcessingTab(QWidget):
     """Shows only the effects actually applied to this conversion, in application order.
 
     Browsing the catalog and configuring parameters both happen in `EffectPickerDialog`,
-    opened via the Add Edit/Add Filter buttons (or Edit Selected, to reconfigure an
-    already-applied entry) — this list is the resulting chain, not a catalog browser.
+    opened via the Add Edit/Add Filter buttons; editing and removing entries happens in
+    the list's context menu (or double-click / Delete) -- this list is the resulting
+    chain, not a catalog browser.
     """
 
     def __init__(self, parent=None):
@@ -28,34 +29,68 @@ class ProcessingTab(QWidget):
         self.applied_list.setAccessibleName(_("Applied edits and filters"))
         self.applied_list.setAccessibleDescription(
             _("Effects that will be applied to this conversion, in order. Use Add Edit or "
-              "Add Filter to add more; select an entry to edit or remove it.")
+              "Add Filter to add more; open the context menu on an entry to edit, remove, "
+              "reorder it, or press Delete to remove it.")
         )
-        self.applied_list.itemSelectionChanged.connect(self._update_button_state)
+        self.applied_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.applied_list.customContextMenuRequested.connect(self._show_context_menu)
         self.applied_list.itemDoubleClicked.connect(lambda _item: self._on_edit_selected())
         layout.addWidget(self.applied_list)
 
         button_row = QHBoxLayout()
         self.add_edit_button = QPushButton(_("Add Edit..."), self)
         self.add_filter_button = QPushButton(_("Add Filter..."), self)
-        self.edit_selected_button = QPushButton(_("Edit Selected..."), self)
-        self.remove_button = QPushButton(_("Remove Selected"), self)
         self.add_edit_button.clicked.connect(lambda: self._open_picker("edits"))
         self.add_filter_button.clicked.connect(lambda: self._open_picker("filters"))
-        self.edit_selected_button.clicked.connect(self._on_edit_selected)
-        self.remove_button.clicked.connect(self._on_remove_selected)
         button_row.addWidget(self.add_edit_button)
         button_row.addWidget(self.add_filter_button)
         button_row.addStretch()
-        button_row.addWidget(self.edit_selected_button)
-        button_row.addWidget(self.remove_button)
         layout.addLayout(button_row)
 
-        self._update_button_state()
-
-    def _update_button_state(self):
+    def _show_context_menu(self, position):
+        menu = QMenu(self)
         has_selection = self.applied_list.currentItem() is not None
-        self.edit_selected_button.setEnabled(has_selection)
-        self.remove_button.setEnabled(has_selection)
+
+        edit_action = menu.addAction(_("Edit..."))
+        edit_action.setEnabled(has_selection)
+        edit_action.triggered.connect(self._on_edit_selected)
+
+        remove_action = menu.addAction(_("Remove"))
+        remove_action.setEnabled(has_selection)
+        remove_action.triggered.connect(self._on_remove_selected)
+
+        move_up_action = menu.addAction(_("Move Up"))
+        move_up_action.setEnabled(self._can_move(-1))
+        move_up_action.triggered.connect(lambda: self._move_selected(-1))
+
+        move_down_action = menu.addAction(_("Move Down"))
+        move_down_action.setEnabled(self._can_move(1))
+        move_down_action.triggered.connect(lambda: self._move_selected(1))
+
+        menu.addSeparator()
+        clear_action = menu.addAction(_("Clear All"))
+        clear_action.setEnabled(self.applied_list.count() > 0)
+        clear_action.triggered.connect(self.clear_all)
+
+        menu.exec(self.applied_list.mapToGlobal(position))
+
+    def _can_move(self, direction: int) -> bool:
+        row = self.applied_list.currentRow()
+        return 0 <= row < self.applied_list.count() and 0 <= row + direction < self.applied_list.count()
+
+    def _move_selected(self, direction: int):
+        row = self.applied_list.currentRow()
+        if not self._can_move(direction):
+            return
+        item = self.applied_list.takeItem(row)
+        self.applied_list.insertItem(row + direction, item)
+        self.applied_list.setCurrentItem(item)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Delete:
+            self._on_remove_selected()
+            return
+        super().keyPressEvent(event)
 
     def _make_item(self, effect_id: str, values: dict) -> QListWidgetItem:
         item = QListWidgetItem(get_effect(effect_id).label)
@@ -69,7 +104,6 @@ class ProcessingTab(QWidget):
             effect_id, values = dialog.result_effect()
             if effect_id:
                 self.applied_list.addItem(self._make_item(effect_id, values))
-                self._update_button_state()
 
     def _on_edit_selected(self):
         item = self.applied_list.currentItem()
@@ -86,11 +120,9 @@ class ProcessingTab(QWidget):
     def _on_remove_selected(self):
         for item in self.applied_list.selectedItems():
             self.applied_list.takeItem(self.applied_list.row(item))
-        self._update_button_state()
 
     def clear_all(self):
         self.applied_list.clear()
-        self._update_button_state()
 
     def applied_effects(self) -> list:
         return [
@@ -102,4 +134,3 @@ class ProcessingTab(QWidget):
         self.clear_all()
         for effect_id, values in entries:
             self.applied_list.addItem(self._make_item(effect_id, values))
-        self._update_button_state()

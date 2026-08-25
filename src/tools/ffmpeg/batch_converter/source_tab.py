@@ -12,16 +12,15 @@ class SourceTab(QWidget):
     def _build_ui(self):
         layout = QVBoxLayout(self)
 
+        # Remove/Clear live only in the tree's context menu now -- with two
+        # add buttons on the left and destructive actions one right-click
+        # away, the button row stays readable without losing any action.
         button_row = QHBoxLayout()
         self.add_files_button = QPushButton(_("Add Files..."), self)
         self.add_folder_button = QPushButton(_("Add Folder..."), self)
-        self.remove_button = QPushButton(_("Remove Selected"), self)
-        self.clear_button = QPushButton(_("Clear All"), self)
         button_row.addWidget(self.add_files_button)
         button_row.addWidget(self.add_folder_button)
         button_row.addStretch()
-        button_row.addWidget(self.remove_button)
-        button_row.addWidget(self.clear_button)
         layout.addLayout(button_row)
 
         self.tree = PathTreeWidget(self)
@@ -29,8 +28,6 @@ class SourceTab(QWidget):
 
         self.add_files_button.clicked.connect(self.tree.add_file_dialog)
         self.add_folder_button.clicked.connect(self.tree.add_folder_dialog)
-        self.remove_button.clicked.connect(self.tree.remove_selected)
-        self.clear_button.clicked.connect(self.tree.clear_paths)
 
     def has_sources(self) -> bool:
         return self.tree.topLevelItemCount() > 0
