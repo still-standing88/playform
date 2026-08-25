@@ -147,61 +147,95 @@ def _ffmpeg_location_args() -> list:
     return args
 
 
+def _entry_from_raw(raw: dict) -> Optional[dict]:
+    entry_url = raw.get("url") or raw.get("webpage_url") or ""
+    entry_id = raw.get("id") or ""
+    if entry_url and not entry_url.startswith("http"):
+        entry_url = f"https://www.youtube.com/watch?v={entry_id}"
+    if not entry_url and not entry_id:
+        return None
+    return {
+        "id": entry_id,
+        "title": raw.get("title") or entry_id or "Untitled",
+        "url": entry_url,
+        "duration": raw.get("duration") or 0,
+        "date": raw.get("upload_date") or raw.get("release_timestamp") or "",
+    }
+
+
 def fetch_flat_entries(url: str, on_log: Optional[Callable[[str], None]] = None,
                        cancel_event: Optional[threading.Event] = None) -> list:
     """List a playlist/channel's videos without downloading (--flat-playlist
-    --dump-json). Returns [{id, title, url, duration}, ...]. Runs its caller's
-    thread; intended to be invoked from a worker thread."""
+    --dump-json; stdout carries one JSON object per entry, the same shape
+    the player's own flat listing relies on). Returns [{id, title, url,
+    duration, date}, ...]. Runs on its caller's thread."""
     binary = find_ytdlp_binary()
     if not binary:
         raise RuntimeError("yt-dlp executable was not found.")
 
-    cmd = [binary, "--flat-playlist", "--dump-single-json", "--no-warnings", "--quiet",
-           "--progress"] + _deno_args() + _cookies_args()
+    cmd = [binary, "--flat-playlist", "--dump-json", "--no-warnings"] \
+        + _deno_args() + _cookies_args()
     cmd.append(url)
 
     if on_log:
         on_log(f"$ {' '.join(cmd)}")
 
     process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, encoding="utf-8", errors="replace", **_NO_WINDOW,
     )
     entries = []
-    try:
-        assert process.stdout is not None
-        buffer = []
-        for line in process.stdout:
-            if cancel_event is not None and cancel_event.is_set():
-                process.terminate()
-                raise InterruptedError("Listing cancelled")
+    stderr_tail: list = []
+
+    def _drain_stderr():
+        assert process.stderr is not None
+        for line in process.stderr:
             line = line.strip()
             if not line:
                 continue
+            stderr_tail.append(line)
+            if len(stderr_tail) > 50:
+                stderr_tail.pop(0)
             if on_log:
                 on_log(line)
-            if line.startswith("{"):
-                buffer.append(line)
-            elif line.startswith("[") and buffer:
-                buffer.append(line)
-        payload = "\n".join(buffer)
-        if payload:
-            data = json.loads(payload)
-            raw_entries = data.get("entries") or []
-            for entry in raw_entries:
-                entry_url = entry.get("url") or entry.get("webpage_url") or ""
-                if entry_url and not entry_url.startswith("http"):
-                    entry_url = f"https://www.youtube.com/watch?v={entry.get('id')}"
-                entries.append({
-                    "id": entry.get("id") or "",
-                    "title": entry.get("title") or entry.get("id") or "Untitled",
-                    "url": entry_url,
-                    "duration": entry.get("duration") or 0,
-                    "date": entry.get("upload_date") or entry.get("release_timestamp") or "",
-                })
+
+    reader = threading.Thread(target=_drain_stderr, daemon=True)
+    reader.start()
+
+    cancelled = False
+    try:
+        assert process.stdout is not None
+        for line in process.stdout:
+            if cancel_event is not None and cancel_event.is_set():
+                cancelled = True
+                break
+            line = line.strip()
+            if not line.startswith("{"):
+                continue
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(data.get("entries"), list):
+                for raw in data["entries"]:
+                    entry = _entry_from_raw(raw)
+                    if entry is not None:
+                        entries.append(entry)
+            else:
+                entry = _entry_from_raw(data)
+                if entry is not None:
+                    entries.append(entry)
+        returncode = process.wait()
     finally:
         if process.poll() is None:
             process.terminate()
+
+    if cancelled:
+        raise InterruptedError("Listing cancelled")
+    if returncode != 0 and not entries:
+        raise RuntimeError(
+            "yt-dlp listing failed (code {}): {}".format(returncode, " ".join(stderr_tail[-3:]))
+        )
 
     return entries
 
