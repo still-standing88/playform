@@ -98,6 +98,11 @@ class MainWindow(QMainWindow):
         self._downloader_dialog: Optional[DownloaderDialog] = None
         self.show_downloader_button: QPushButton
 
+        # yt-dlp downloader singleton
+        self._ytdlp_engine = None
+        self._ytdlp_dialog = None
+        self.show_ytdlp_button: QPushButton
+
         # Catalog worker singleton
         self._catalog_worker: Optional[CatalogWorker] = None
         self._catalog_dialog: Optional[CatalogProgressDialog] = None
@@ -348,6 +353,13 @@ class MainWindow(QMainWindow):
         self.show_downloader_button.setVisible(False)
         indicators_layout.addWidget(self.show_downloader_button)
 
+        self.show_ytdlp_button = QPushButton(_("Show yt-dlp Downloader"))
+        self.show_ytdlp_button.setObjectName("showYtdlpButton")
+        self.show_ytdlp_button.clicked.connect(self._show_minimized_ytdlp)
+        self.show_ytdlp_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self.show_ytdlp_button.setVisible(False)
+        indicators_layout.addWidget(self.show_ytdlp_button)
+
         self.show_catalog_button = QPushButton(_("Show Cataloging"))
         self.show_catalog_button.setObjectName("showCatalogButton")
         self.show_catalog_button.clicked.connect(self._show_minimized_catalog)
@@ -407,11 +419,7 @@ class MainWindow(QMainWindow):
         from player.util.url import is_url_supported
 
         if is_url_supported(url):
-            QMessageBox.warning(
-                self,
-                _("Unsupported Download"),
-                _("Downloading from this type of link isn't supported yet."),
-            )
+            self.open_ytdlp_downloader_with_url(url)
             return
 
         downloader = self._get_shared_downloader()
@@ -664,6 +672,14 @@ class MainWindow(QMainWindow):
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
         url, destination, filename = dialog.get_values()
+        from utilities.formats import formats
+        extension = os.path.splitext(filename)[1].lower().lstrip(".")
+        supported = set(formats["audio"]) | set(formats["video"])
+        if extension not in supported:
+            # Not a direct-downloadable media file -- route through the
+            # yt-dlp downloader, which handles streaming-site URLs.
+            self.open_ytdlp_downloader_with_url(url)
+            return
         downloader = self._get_shared_downloader()
         if destination:
             downloader.add_download(url, destination=destination, filename=filename)
@@ -791,6 +807,15 @@ class MainWindow(QMainWindow):
 
     def _show_minimized_downloader(self):
         self.singleton_dialogs.show_minimized_downloader()
+
+    def open_ytdlp_downloader(self):
+        self.singleton_dialogs.open_ytdlp_downloader()
+
+    def open_ytdlp_downloader_with_url(self, url: str):
+        self.singleton_dialogs.open_ytdlp_downloader(url=url)
+
+    def _show_minimized_ytdlp(self):
+        self.singleton_dialogs.show_minimized_ytdlp()
 
     def catalog_folder(self, path: str):
         self.singleton_dialogs.catalog_folder(path)
