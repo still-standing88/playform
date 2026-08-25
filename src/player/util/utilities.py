@@ -206,9 +206,31 @@ def update_prefs_with_found_binaries(prefs: dict) -> dict:
     return prefs
 
 
-def check_ytdlp() -> BinaryCheckResult:
-    path = resolve_ytdlp_binary_path()
+_YTDLP_CHECK_CACHE: dict = {}
 
+
+def check_ytdlp() -> BinaryCheckResult:
+    # Runs two yt-dlp subprocesses (--version, --help); load_url() calls
+    # this on the GUI thread for every opened URL, so the result is cached
+    # per resolved binary path + file mtime -- a slow cold start (AV
+    # scanner, cold disk) used to freeze the interface for seconds each
+    # time a stream was opened.
+    path = resolve_ytdlp_binary_path()
+    cache_key = path or ""
+    try:
+        mtime = os.path.getmtime(path) if path else None
+    except OSError:
+        mtime = None
+    cached = _YTDLP_CHECK_CACHE.get(cache_key)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+
+    result = _check_ytdlp_uncached(path)
+    _YTDLP_CHECK_CACHE[cache_key] = (mtime, result)
+    return result
+
+
+def _check_ytdlp_uncached(path: str) -> BinaryCheckResult:
     if not path:
         return BinaryCheckResult(
             name="yt-dlp",
