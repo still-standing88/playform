@@ -197,6 +197,7 @@ def fetch_flat_entries(url: str, on_log: Optional[Callable[[str], None]] = None,
                     "title": entry.get("title") or entry.get("id") or "Untitled",
                     "url": entry_url,
                     "duration": entry.get("duration") or 0,
+                    "date": entry.get("upload_date") or entry.get("release_timestamp") or "",
                 })
     finally:
         if process.poll() is None:
@@ -317,6 +318,16 @@ class YtDlpDownloadEngine:
         self.on_queue_changed()
         self._wake.set()
         return entry
+
+    def set_title(self, entry_id: str, title: str):
+        with self._lock:
+            entry = self._entries.get(entry_id)
+            if entry is None:
+                return
+            entry.title = title
+            self._persist()
+        self.on_entry_updated(entry)
+        self.on_queue_changed()
 
     def pause(self, entry_id: str):
         with self._lock:
