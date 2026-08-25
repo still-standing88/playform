@@ -76,11 +76,8 @@ class AddDownloadDialog(QDialog):
         parsed = urlparse(url)
         if parsed.scheme not in ("http", "https") or not parsed.netloc:
             return _("Enter a valid http(s) URL.")
-        filename = self.filename_edit.text().strip() or os.path.basename(parsed.path)
-        ext = os.path.splitext(filename)[1].lower().lstrip(".")
-        if ext not in SUPPORTED_EXTENSIONS:
-            return _("Unsupported format. Supported: {formats}").format(
-                formats=", ".join(sorted(SUPPORTED_EXTENSIONS)))
+        # Non-media URLs are allowed through: main_window routes them to
+        # the yt-dlp downloader instead of the direct downloader.
         return ""
 
     def get_values(self):
