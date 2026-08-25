@@ -94,6 +94,56 @@ class SingletonDialogsManager:
             _announce_downloads(_("Download Manager restored"))
 
     # ------------------------------------------------------------------
+    # Singleton yt-dlp downloader dialog management
+    # ------------------------------------------------------------------
+    def get_ytdlp_engine(self):
+        """Return the singleton yt-dlp download engine, creating it on first
+        call. The queue persists under data/ so downloads survive restarts."""
+        from media_core.ytdlp_download.engine import YtDlpDownloadEngine
+        mw = self.main_window
+        if mw._ytdlp_engine is None:
+            persist_path = os.path.join(get_app_path(), "data", "ytdlp_downloads.json")
+            mw._ytdlp_engine = YtDlpDownloadEngine(persist_path=persist_path)
+            mw._ytdlp_engine.start()
+        return mw._ytdlp_engine
+
+    def open_ytdlp_downloader(self, url: str = ""):
+        """Open (or raise) the singleton yt-dlp Download Manager dialog,
+        optionally routing a URL straight into its detection flow."""
+        from ..dialogs.ytdlp_downloader_dialog import YtDlpDownloaderDialog
+        mw = self.main_window
+        if mw._ytdlp_dialog is None:
+            dlg = YtDlpDownloaderDialog(self.get_ytdlp_engine(), parent=mw)
+            dlg.dialog_hidden.connect(self._on_ytdlp_hidden)
+            dlg.dialog_closed.connect(self._on_ytdlp_closed)
+            dlg.play_requested.connect(mw.play_file)
+            mw._ytdlp_dialog = dlg
+        mw.show_ytdlp_button.setVisible(False)
+        mw._ytdlp_dialog.show_dialog()
+        if url:
+            mw._ytdlp_dialog.handle_url(url)
+        else:
+            _announce_downloads(_("yt-dlp Download Manager opened"))
+
+    def _on_ytdlp_hidden(self):
+        mw = self.main_window
+        mw.show_ytdlp_button.setVisible(True)
+        _announce_downloads(_("yt-dlp Download Manager minimized"))
+
+    def _on_ytdlp_closed(self):
+        mw = self.main_window
+        mw._ytdlp_dialog = None
+        mw.show_ytdlp_button.setVisible(False)
+        _announce_downloads(_("yt-dlp Download Manager closed"))
+
+    def show_minimized_ytdlp(self):
+        mw = self.main_window
+        if mw._ytdlp_dialog is not None:
+            mw._ytdlp_dialog.show_dialog()
+            mw.show_ytdlp_button.setVisible(False)
+            _announce_downloads(_("yt-dlp Download Manager restored"))
+
+    # ------------------------------------------------------------------
     # Singleton catalog worker/dialog management
     # ------------------------------------------------------------------
     def get_catalog_worker(self) -> CatalogWorker:
