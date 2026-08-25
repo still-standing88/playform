@@ -8,7 +8,7 @@ import media_core.av_play as av_play
 
 from PySide6.QtWidgets import (QWidget, QLayout, QVBoxLayout, QHBoxLayout, QSplitter,
                                QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox,
-                               QScrollArea, QFrame)
+                               QScrollArea, QFrame, QApplication)
 from PySide6.QtGui import QCloseEvent, QFont, QPalette, QColor, QShortcut
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, Slot
 
@@ -403,7 +403,11 @@ class PlayerWidget(QWidget):
     @Slot(int)
     def _on_seek_changed(self, position):
         if self.player.primary_instance is not None:
-            self.player_controls.set_time_text(f"{format_time(position)} / {format_time(self.player.primary_instance.get_length())}")
+            # Slider maximum already tracks the duration (set_seek_range
+            # each tick); a blocking get_length() round-trip per drag tick
+            # queued extra mpv commands behind the seeks themselves.
+            length = self.player_controls.seek_slider.maximum()
+            self.player_controls.set_time_text(f"{format_time(position)} / {format_time(length)}")
             self.is_seeking = True
             self.set_position()
             self.is_seeking = False
@@ -639,8 +643,18 @@ class PlayerWidget(QWidget):
         self._ui_reset_done = False
         try:
             state = instance.get_playback_state()
-            pos = instance.get_position()
-            length = instance.get_length()
+
+            if state == av_play.AVPlaybackState.AV_STATE_UNKNOWN:
+                # Transient mpv read stall -- skip this tick rather than
+                # acting on missing data (or tearing down media UI).
+                return
+
+            snapshot = self.player.get_state_snapshot()
+            if not snapshot.get('ok'):
+                return
+
+            pos = int(snapshot.get('time_pos') or 0)
+            length = int(snapshot.get('duration') or 0)
 
             if not self._had_media:
                 self._had_media = True
@@ -657,7 +671,7 @@ class PlayerWidget(QWidget):
             self._last_known_state = state
 
             is_playing = state == av_play.AVPlaybackState.AV_STATE_PLAYING
-            is_muted = instance.get_mute_state() == av_play.AVMuteState.AV_AUDIO_MUTED
+            is_muted = bool(snapshot.get('mute'))
 
             self.playbackStateChanged.emit(is_playing)
             if is_muted != self._last_muted:
@@ -666,9 +680,9 @@ class PlayerWidget(QWidget):
 
             self.player_controls.set_play_pause_state(is_playing)
             self.player_controls.set_mute_state(is_muted)
-            self.player_controls.set_volume(int(instance.get_volume()))
+            self.player_controls.set_volume(int(float(snapshot.get('volume') or 0)))
             try:
-                audio_only = self.player.is_audio_only()
+                audio_only = self.player.vid_is_audio_only(snapshot.get('vid'))
                 self.player_controls.set_reverse_available(audio_only)
                 self.player_controls.set_video_available(not audio_only)
             except Exception:
@@ -686,6 +700,14 @@ class PlayerWidget(QWidget):
             if length > 0:
                 self.player_controls.set_controls_enabled(True)
                 self.player_controls.set_seek_range(0, length)
+
+                # Qt can drop the slider's release event when a drag is
+                # interrupted (window switch, grab loss); without this
+                # recovery the stale flag suppressed position follow for
+                # the rest of the session.
+                if self.is_seeking and not (QApplication.mouseButtons() & Qt.MouseButton.LeftButton):
+                    self.is_seeking = False
+                    self.player_controls._is_user_seeking = False
 
                 if not self.is_seeking:
                     self.player_controls.set_seek_position(pos)
@@ -709,7 +731,10 @@ class PlayerWidget(QWidget):
                 self._last_subtitle_text = None
 
         except (av_play.AVError, Exception):
-            pass
+            # One failed property read must not silently kill the whole
+            # tick (slider, time label, play state all froze with zero
+            # logging until restart) -- log it and let the next tick retry.
+            logging.getLogger(__name__).debug("Player state tick failed", exc_info=True)
 
     def _update_current_file(self):
         instance = self.player.primary_instance

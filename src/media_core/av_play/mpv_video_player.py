@@ -110,6 +110,14 @@ class _MPVWorker(threading.Thread):
             if item is _SHUTDOWN:
                 break
             func, future = item
+            if future is not None and future.cancelled():
+                # The submitting caller timed out waiting and cancelled this
+                # job. Executing it anyway would run stale work (an old
+                # position read, a superseded seek) at the head of the queue
+                # during exactly the congested periods that caused the
+                # timeout -- the compounding backlog behind "seeking and
+                # state updates become intermittent until restart".
+                continue
             try:
                 result = handle_mpv_error(func)
                 if future is not None:
@@ -169,6 +177,9 @@ class _MPVWorker(threading.Thread):
         try:
             return future.result(timeout=timeout)
         except FutureTimeoutError:
+            # Cancel the abandoned job if it's still queued (no-op if
+            # already running) so late execution can't compound latency.
+            future.cancel()
             raise AVError(AVErrorInfo.INVALID_HANDLE, "MPV command timed out")
 
     def shutdown(self, timeout: float = 5.0) -> None:
@@ -534,9 +545,18 @@ class MPVMediaInterface(AVMediaInterface):
                 'idle_active': bool(mpv_instance.idle_active),
             }
 
-        state_info = self._submit(get_state_info, wait=True, timeout=0.5)
+        state_info = None
+        try:
+            state_info = self._submit(get_state_info, wait=True, timeout=0.5, record_only=False)
+        except AVError:
+            pass
         if state_info is None:
-            return AVPlaybackState.AV_STATE_NOTHING
+            # A stalled/timed-out read must not be conflated with genuine
+            # idle: consumers treat NOTHING as end-of-track (playlist
+            # advance, filter/subtitle resets), so a slow mpv round-trip
+            # used to look exactly like "the track just ended". UNKNOWN
+            # tells callers to hold state and retry next tick.
+            return AVPlaybackState.AV_STATE_UNKNOWN
 
         # idle-active is mpv's "nothing is loaded/playing right now" signal.
         # eof-reached was tried here first, but per mpv's own docs it's only
@@ -802,8 +822,8 @@ class MPVVideoPlayer(AVPlayer):
         None/"no") when there is no video track -- i.e. audio-only media."""
         return self.__mpv_interface.run_on_mpv(lambda m: m.vid, wait=True, timeout=0.5)
 
-    def is_audio_only(self) -> bool:
-        vid = self.get_video_track_id()
+    @staticmethod
+    def vid_is_audio_only(vid) -> bool:
         if vid is None:
             return False
         if isinstance(vid, bool):
@@ -813,6 +833,28 @@ class MPVVideoPlayer(AVPlayer):
         if isinstance(vid, str):
             return vid.strip().lower() == "no"
         return False
+
+    def is_audio_only(self) -> bool:
+        return self.vid_is_audio_only(self.get_video_track_id())
+
+    def get_state_snapshot(self) -> dict:
+        """Everything the GUI's periodic state tick needs (position,
+        duration, mute, volume, audio-only) in ONE command-owner round-trip
+        instead of five separate blocking submits that each serialize
+        behind every other mpv command and time out independently under
+        load. Returns {'ok': False} on a timed-out read so callers skip
+        the tick rather than act on partial zeros."""
+        def snapshot(m):
+            return {
+                'ok': True,
+                'time_pos': m.time_pos,
+                'duration': m.duration,
+                'mute': bool(m.mute),
+                'volume': m.volume,
+                'vid': m.vid,
+            }
+        result = self.__mpv_interface.run_on_mpv(snapshot, wait=True, timeout=1.0, record_only=True)
+        return result if isinstance(result, dict) else {'ok': False}
 
     def set_reverse_playback(self, enabled: bool):
         # play-direction is a real mpv property (0.39+) but the docs call

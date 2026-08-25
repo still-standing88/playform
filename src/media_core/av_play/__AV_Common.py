@@ -57,6 +57,7 @@ class AVErrorInfo(Enum):
       NET_ERROR = 11
 
 class AVPlaybackState(Enum):
+    AV_STATE_UNKNOWN = -2
     AV_STATE_NOTHING = -1
     AV_STATE_STOPPED = 0
     AV_STATE_PLAYING = 1

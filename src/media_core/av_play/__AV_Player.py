@@ -366,6 +366,13 @@ class AVPlayer(ABC):
                         self._playlist_state = AVPlaylistState.PLAYING
                         self._track_loading = False
 
+                    elif state == AVPlaybackState.AV_STATE_UNKNOWN:
+                        # Transient read stall (mpv command timed out) --
+                        # holding state and retrying next tick is the whole
+                        # point of UNKNOWN; treating it as end-of-track
+                        # skipped tracks whenever mpv got momentarily slow.
+                        pass
+
                     elif state in [AVPlaybackState.AV_STATE_STOPPED, AVPlaybackState.AV_STATE_NOTHING]:
                         still_loading = self._is_track_loading()
                         if self._playlist_state == AVPlaylistState.PLAYING and not still_loading:
