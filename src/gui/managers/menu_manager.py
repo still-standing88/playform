@@ -331,6 +331,10 @@ class MenuManager:
 
         self.main_window.downloads_menu.addSeparator()
 
+        self.main_window.ytdlp_download_action = QAction(_("yt-dlp &Download Manager..."), self.main_window)
+        self.main_window.ytdlp_download_action.triggered.connect(self.main_window.open_ytdlp_downloader)
+        self.main_window.downloads_menu.addAction(self.main_window.ytdlp_download_action)
+
         self.main_window.download_center_action = QAction(_("&Download Center"), self.main_window)
         self.main_window.download_center_action.triggered.connect(self.main_window.open_downloader)
         self.main_window.downloads_menu.addAction(self.main_window.download_center_action)
