@@ -2,9 +2,12 @@ from genericpath import isfile
 import os
 
 from typing import Optional, Callable
-from PySide6.QtGui import QKeyEvent, QActionGroup, QAction
-from PySide6.QtWidgets import QMenu, QListWidget, QListWidgetItem, QLabel, QDialog, QComboBox, QVBoxLayout, QDialogButtonBox
-from PySide6.QtCore import Qt as qt, Slot, QSize
+from PySide6.QtGui import QKeyEvent, QActionGroup, QAction, QFontMetrics, QFont, QColor, QTextOption
+from PySide6.QtWidgets import (
+    QMenu, QListWidget, QListWidgetItem, QLabel, QDialog, QComboBox, QVBoxLayout,
+    QDialogButtonBox, QStyledItemDelegate, QStyleOptionViewItem, QApplication, QStyle
+)
+from PySide6.QtCore import Qt as qt, Slot, QSize, QRect
 import utilities.mpv_bootstrap
 from media_core.av_play import AVMediaInstance, VideoPlayer, AVPlaybackState
 from utilities.formats import image_extensions, formats as media_formats
@@ -23,6 +26,101 @@ import app_db
 
 def _announce(text):
     signal_manager.announce(text, AnnouncementCategory.EXPLORER)
+
+
+DETAILS_ROLE = qt.ItemDataRole.UserRole + 1
+
+
+class FileDetailsDelegate(QStyledItemDelegate):
+    """Detail-view painter: file name wrapped over up to two lines with the
+    entry's details (type/date/size) on a line below. Replaces the old
+    per-item QLabel overlay, whose fixed 200px minimum width clipped long
+    names and whose creation-time sizeHint never adapted to window resizes.
+    Height is uniform for all rows so scrolling stays smooth; width comes
+    from the view's viewport so text re-wraps on resize."""
+
+    MAX_NAME_LINES = 2
+
+    def __init__(self, view):
+        super().__init__(view)
+        self._view = view
+        self._width = 300
+
+    def set_viewport_width(self, width: int):
+        self._width = max(120, int(width))
+
+    @staticmethod
+    def _wrap_lines(text, metrics: QFontMetrics, width: int, max_lines: int) -> list:
+        if not text:
+            return []
+        words = text.split()
+        lines = []
+        current = ""
+        overflow = False
+        for word in words:
+            candidate = f"{current} {word}" if current else word
+            if not current or metrics.horizontalAdvance(candidate) <= width:
+                current = candidate
+            else:
+                lines.append(current)
+                current = word
+                if len(lines) == max_lines:
+                    overflow = True
+                    break
+        if not overflow and current:
+            lines.append(current)
+        if lines and (overflow or metrics.horizontalAdvance(lines[-1]) > width):
+            lines[-1] = metrics.elidedText(lines[-1], qt.TextElideMode.ElideRight, width)
+        return lines[:max_lines]
+
+    def _row_height(self, name_metrics: QFontMetrics, detail_metrics: QFontMetrics) -> int:
+        return self.MAX_NAME_LINES * name_metrics.height() + detail_metrics.height() + 8
+
+    def sizeHint(self, option, index):
+        if self._view.viewMode() != QListWidget.ViewMode.ListMode:
+            return super().sizeHint(option, index)
+        opt = QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        name_metrics = QFontMetrics(opt.font)
+        detail_font = opt.font
+        detail_font.setPointSizeF(max(7.0, detail_font.pointSizeF() - 1))
+        detail_metrics = QFontMetrics(detail_font)
+        return QSize(self._width, self._row_height(name_metrics, detail_metrics))
+
+    def paint(self, painter, option, index):
+        if self._view.viewMode() != QListWidget.ViewMode.ListMode:
+            super().paint(painter, option, index)
+            return
+
+        opt = QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        name = opt.text
+        details = index.data(DETAILS_ROLE) or ""
+
+        opt.text = ""
+        style = opt.widget.style() if opt.widget else QApplication.style()
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, opt, painter, opt.widget)
+
+        rect = opt.rect.adjusted(6, 2, -6, -2)
+        name_metrics = QFontMetrics(opt.font)
+        detail_font = QFont(opt.font)
+        detail_font.setPointSizeF(max(7.0, detail_font.pointSizeF() - 1))
+        detail_metrics = QFontMetrics(detail_font)
+
+        y = rect.top()
+        for line in self._wrap_lines(name, name_metrics, rect.width(), self.MAX_NAME_LINES):
+            painter.setFont(opt.font)
+            painter.setPen(opt.palette.color(qt.ColorRole.Text))
+            painter.drawText(QRect(rect.left(), y, rect.width(), name_metrics.height()),
+                             qt.AlignmentFlag.AlignLeft | qt.AlignmentFlag.AlignVCenter, line)
+            y += name_metrics.height()
+
+        if details:
+            painter.setFont(detail_font)
+            painter.setPen(opt.palette.color(qt.ColorRole.PlaceholderText))
+            elided = detail_metrics.elidedText(details, qt.TextElideMode.ElideRight, rect.width())
+            painter.drawText(QRect(rect.left(), y, rect.width(), detail_metrics.height()),
+                             qt.AlignmentFlag.AlignLeft | qt.AlignmentFlag.AlignVCenter, elided)
 
 
 class ExplorerView(QListWidget):
@@ -55,6 +153,20 @@ class ExplorerView(QListWidget):
         self.itemClicked.connect(self.onItemActivate)
         self.itemActivated.connect(self.onItemActivate)
         contextMenu(self, self.context_menu)
+
+        # Detail view paints name+details through a delegate (no per-item
+        # widgets), re-wraps on resize, and rows load in batches so folders
+        # with thousands of entries stay responsive.
+        self._details_delegate = FileDetailsDelegate(self)
+        self.setItemDelegate(self._details_delegate)
+        self.setVerticalScrollMode(QListWidget.ScrollMode.ScrollPerPixel)
+        self.setUniformItemSizes(False)
+        self.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
+        self.verticalScrollBar().valueChanged.connect(self._on_scroll_near_bottom)
+
+        self.BATCH_SIZE = 500
+        self._pending_entries: list = []
+        self._loading_more = False
 
         last_path = prefs.prefs["last_path"]
         if last_path != "" and os.path.exists(last_path):
@@ -189,40 +301,91 @@ class ExplorerView(QListWidget):
 
     def relist_contents(self):
         self.clear()
-        self.list_contents()
+        self._pending_entries = self._build_entries()
+        self._load_more_entries()
 
-    def list_contents(self):
+    def _entry_details(self, item_info: Optional[PathInfo]) -> tuple:
+        """(visual details line, accessible description, tooltip) for one
+        entry. The visual line is compact ("mp3 · 2026-08-25 · 3.5 MB");
+        the accessible description keeps the labeled wording."""
+        if item_info is None:
+            return "", "", ""
+        is_file = item_info.type == PathType.FILE
+        ext_label = item_info.info.ext if is_file else _("Folder")
+        visual_parts = [ext_label]
+        labeled_parts = [f"{_('Type extension')}: {item_info.info.ext}"]
+        if item_info.info.modify_date is not None:
+            date_str = str(item_info.info.modify_date)
+            visual_parts.append(date_str)
+            labeled_parts.append(f"{_('Date modified')}: {date_str}")
+        if is_file:
+            visual_parts.append(item_info.info.size)
+            labeled_parts.append(f"{_('size')}: {item_info.info.size}")
+        visual = " · ".join(visual_parts)
+        labeled = ", ".join(labeled_parts)
+        tooltip = f"{item_info.info.name}\n{labeled}"
+        return visual, labeled, tooltip
+
+    def _make_list_item(self, label: str, item_info: Optional[PathInfo]) -> QListWidgetItem:
+        item = QListWidgetItem(label)
+        visual, labeled, tooltip = self._entry_details(item_info)
+        item.setData(DETAILS_ROLE, visual)
+        # Every row carries its own description so screen readers announce
+        # name + details on any focused entry, not just the current one.
+        item.setData(qt.ItemDataRole.AccessibleDescriptionRole, labeled)
+        item.setToolTip(tooltip)
+        return item
+
+    def _build_entries(self) -> list:
+        """Full ordered (label, PathInfo) list -- sorting/filtering already
+        happened in Explorer before this point; batches preserve its order."""
+        entries = []
         if self._explorer.mode == ExplorerMode.SEARCH_RESULTS:
             self._search_item_paths = {}
             root = self._explorer.current_path
-            labels = []
-            for item in self._explorer.search_results:
+            for result in self._explorer.search_results:
                 try:
-                    label = os.path.relpath(item.path, root)
+                    label = os.path.relpath(result.path, root)
                 except ValueError:
-                    label = item.path
+                    label = result.path
                 if label in self._search_item_paths:
-                    label = item.path
-                self._search_item_paths[label] = item.path
-                labels.append(label)
-            self.addItems(labels)
+                    label = result.path
+                self._search_item_paths[label] = result.path
+                entries.append((label, result))
         else:
             self._search_item_paths = {}
-            self.addItems(self._explorer.folders + self._explorer.files)
+            for name in self._explorer.folders + self._explorer.files:
+                entries.append((name, self._explorer.items.get(name)))
+        return entries
+
+    def _load_more_entries(self):
+        if not self._pending_entries:
+            return
+        batch = self._pending_entries[:self.BATCH_SIZE]
+        del self._pending_entries[:self.BATCH_SIZE]
+        for label, item_info in batch:
+            self.addItem(self._make_list_item(label, item_info))
+
+    def _on_scroll_near_bottom(self, value: int):
+        bar = self.verticalScrollBar()
+        if not self._pending_entries:
+            return
+        if value >= bar.maximum() - 60:
+            self._load_more_entries()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._details_delegate.set_viewport_width(self.viewport().width())
+        self.doItemsLayout()
 
     def set_view_mode(self, list_mode: bool):
         self.setViewMode(QListWidget.ViewMode.ListMode if list_mode else QListWidget.ViewMode.IconMode)
         if not list_mode:
             self.setGridSize(QSize(96, 96))
             self.setResizeMode(QListWidget.ResizeMode.Adjust)
-            # The detail overlay widget (set_item_info) doesn't fit inside a
-            # fixed icon-grid cell - drop it so Icon view shows plain
-            # icons/text instead of a broken/invisible overlay.
-            for i in range(self.count()):
-                self.removeItemWidget(self.item(i))
         self.setWrapping(not list_mode)
-        if self.currentItem() is not None:
-            self.set_item_info()
+        self._details_delegate.set_viewport_width(self.viewport().width())
+        self.doItemsLayout()
 
     def perform_search(self, query: str):
         root_path, use_db = self._explorer.begin_search(query, media_db=app_db.media_db)
@@ -289,29 +452,6 @@ class ExplorerView(QListWidget):
     def on_playbar_seek(self, position: float):
         if self._instance is not None:
             self._instance.set_position(position)
-
-    def set_item_info(self):
-        if self.currentItem() is None: return
-        current_item = self.currentItem().text()
-        item_info:Optional[PathInfo] = self._explorer.items.get(current_item, None)
-        if item_info is None: return
-        info = f"{_("Type extension")}: {item_info.info.ext}\r{_("Date modified")}: {item_info.info.modify_date}{f"\r{_("size")}: " + item_info.info.size if item_info.type == PathType.FILE else ""}"
-
-        # Accessible description + tooltip work regardless of view mode.
-        self.currentItem().setData(qt.ItemDataRole.AccessibleDescriptionRole, f", {info}")
-        self.currentItem().setToolTip(info.replace("\r", "\n"))
-
-        if self.viewMode() == QListWidget.ViewMode.ListMode:
-            # The overlay widget only fits properly in List/Details view -
-            # Icon view's fixed grid cells can't accommodate it (see
-            # set_view_mode), so it's Icon-mode users get the tooltip/
-            # accessible description above instead.
-            infoText  = QLabel(info,self)
-            infoText.adjustSize()
-            self.setItemWidget(self.currentItem(),infoText)
-            infoText.setMinimumHeight(50)
-            infoText.setMinimumWidth(200)
-            self.currentItem().setSizeHint(infoText.sizeHint())
 
     def _execute_callback(self, callback_name:str, param:str = "", with_param :bool = True):
         callback:Optional[Callable[[str], None]] = self._callbacks.get(callback_name, None)
@@ -470,9 +610,11 @@ class ExplorerView(QListWidget):
 
     @Slot(object, object)
     def onItemChange(self, c, p):
-        if p is not None:
-            p.setData(qt.ItemDataRole.AccessibleDescriptionRole, "")
-            self.removeItemWidget(p)
+        # Loading more rows when focus approaches the end of the loaded
+        # batch keeps keyboard/screen-reader users from ever hitting an
+        # artificial "last item" before the real end of the folder.
+        if c is not None and self._pending_entries and self.row(c) >= self.count() - 10:
+            self._load_more_entries()
 
         if c is None: return
 
@@ -482,7 +624,6 @@ class ExplorerView(QListWidget):
             full_path = self._search_item_paths.get(item_name)
             if full_path is None: return
             self._focused_item_path = full_path
-            c.setData(qt.ItemDataRole.AccessibleDescriptionRole, f", {full_path}")
 
             img_path = full_path if os.path.splitext(full_path)[1].lower() in image_extensions else ""
             self._execute_callback("image_preview_callback", img_path)
@@ -500,8 +641,6 @@ class ExplorerView(QListWidget):
             self._focused_item_path = self._explorer.items[item_name].path
         else:
             self._focused_item_path = os.path.join(self._explorer.current_path, item_name)
-        
-        self.set_item_info()
 
         if item_info.type == PathType.FILE and self._focused_item_path is not None:
             img_path = self._focused_item_path if os.path.splitext(self._focused_item_path)[1].lower() in image_extensions else ""
