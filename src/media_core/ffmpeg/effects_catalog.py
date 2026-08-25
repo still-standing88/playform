@@ -51,13 +51,17 @@ def _fade_filter(values: dict) -> str:
 
 
 def _trim_filter(values: dict) -> str:
+    # start/end and start/duration are mutually exclusive in atrim -- the
+    # mode choice makes the user pick which pair applies instead of
+    # silently preferring end when both end and duration were filled.
     parts = []
     if values.get("start_time") not in (None, ""):
         parts.append(f"start={_fmt(values['start_time'])}")
-    if values.get("end_time") not in (None, ""):
+    if values.get("mode", "start_end") == "start_duration":
+        if values.get("duration") not in (None, ""):
+            parts.append(f"duration={_fmt(values['duration'])}")
+    elif values.get("end_time") not in (None, ""):
         parts.append(f"end={_fmt(values['end_time'])}")
-    elif values.get("duration") not in (None, ""):
-        parts.append(f"duration={_fmt(values['duration'])}")
     return f"atrim={':'.join(parts)},asetpts=PTS-STARTPTS"
 
 
@@ -254,11 +258,54 @@ EFFECTS: list = [
         id="trim", label="Trim (Start / End / Duration)", branch="edits", category="Trim",
         manual_source="ffmpeg-filters/8-audio-filters/atrim.md",
         params=[
+            EffectParam("mode", "Trim By", "choice", "start_end", choices=["start_end", "start_duration"]),
             EffectParam("start_time", "Start Time (s)", "float", None, value_range=(0.0, 36000.0)),
             EffectParam("end_time", "End Time (s)", "float", None, value_range=(0.0, 36000.0)),
             EffectParam("duration", "Duration (s)", "float", None, value_range=(0.0, 36000.0)),
         ],
         build_filter=_trim_filter,
+    ),
+    EffectDefinition(
+        id="dynaudnorm", label="Dynamic Normalize (even out loud/quiet parts)", branch="edits", category="Loudness",
+        manual_source="ffmpeg-filters/8-audio-filters/dynaudnorm.md",
+        params=[
+            EffectParam("peak_target", "Target Peak (0-1)", "float", 0.95, value_range=(0.0, 1.0)),
+            EffectParam("max_gain", "Max Gain Factor", "float", 10.0, value_range=(1.0, 100.0)),
+            EffectParam("frame_length_ms", "Frame Length (ms)", "int", 500, value_range=(10, 8000)),
+        ],
+        build_filter=lambda values: (
+            f"dynaudnorm=p={_fmt(values.get('peak_target', 0.95))}"
+            f":m={_fmt(values.get('max_gain', 10.0))}"
+            f":f={_fmt(values.get('frame_length_ms', 500))}"
+        ),
+    ),
+    EffectDefinition(
+        id="speechnorm", label="Speech Normalizer (boost quiet speech)", branch="edits", category="Loudness",
+        manual_source="ffmpeg-filters/8-audio-filters/speechnorm.md",
+        params=[
+            EffectParam("expansion", "Max Expansion Factor", "float", 2.0, value_range=(1.0, 50.0)),
+            EffectParam("peak_target", "Target Peak (0-1)", "float", 0.95, value_range=(0.0, 1.0)),
+            EffectParam("raise_amount", "Expansion Raise Per Half-Cycle", "float", 0.001, value_range=(0.0, 1.0)),
+        ],
+        build_filter=lambda values: (
+            f"speechnorm=e={_fmt(values.get('expansion', 2.0))}"
+            f":p={_fmt(values.get('peak_target', 0.95))}"
+            f":r={_fmt(values.get('raise_amount', 0.001))}"
+        ),
+    ),
+    EffectDefinition(
+        id="afftdn", label="Noise Reduction (FFT Denoiser)", branch="edits", category="Noise Reduction",
+        manual_source="ffmpeg-filters/8-audio-filters/afftdn.md",
+        params=[
+            EffectParam("noise_reduction_db", "Noise Reduction (dB)", "float", 12.0, value_range=(0.01, 97.0)),
+            EffectParam("noise_floor_db", "Noise Floor (dB)", "float", -50.0, value_range=(-80.0, -20.0)),
+            EffectParam("track_noise", "Track Noise Floor Automatically", "bool", True),
+        ],
+        build_filter=lambda values: (
+            f"afftdn=nr={_fmt(values.get('noise_reduction_db', 12))}"
+            f":nf={_fmt(values.get('noise_floor_db', -50))}"
+            f":tn={1 if values.get('track_noise', True) else 0}"
+        ),
     ),
     EffectDefinition(
         id="reverse", label="Reverse Audio", branch="edits", category="Reverse",
@@ -470,6 +517,72 @@ EFFECTS: list = [
             EffectParam("wet", "Wet Gain", "float", 1.0, value_range=(0.0, 10.0)),
         ],
         build_filter=lambda values: f"afir=dry={_fmt(values.get('dry', 1.0))}:wet={_fmt(values.get('wet', 1.0))}",
+    ),
+    EffectDefinition(
+        id="bass_adjust", label="Bass (Low Shelf)", branch="filters", category="EQ",
+        manual_source="ffmpeg-filters/8-audio-filters/bass.md",
+        params=[
+            EffectParam("gain_db", "Gain (dB)", "float", 3.0, value_range=(-20.0, 20.0)),
+            EffectParam("frequency", "Shelf Frequency (Hz)", "float", 100.0, value_range=(20.0, 600.0)),
+        ],
+        build_filter=lambda values: (
+            f"bass=g={_fmt(values.get('gain_db', 3.0))}:f={_fmt(values.get('frequency', 100))}"
+        ),
+    ),
+    EffectDefinition(
+        id="treble_adjust", label="Treble (High Shelf)", branch="filters", category="EQ",
+        manual_source="ffmpeg-filters/8-audio-filters/treble.md",
+        params=[
+            EffectParam("gain_db", "Gain (dB)", "float", 3.0, value_range=(-20.0, 20.0)),
+            EffectParam("frequency", "Shelf Frequency (Hz)", "float", 3000.0, value_range=(1000.0, 15000.0)),
+        ],
+        build_filter=lambda values: (
+            f"treble=g={_fmt(values.get('gain_db', 3.0))}:f={_fmt(values.get('frequency', 3000))}"
+        ),
+    ),
+    EffectDefinition(
+        id="deesser", label="De-Esser", branch="filters", category="Dynamics",
+        manual_source="ffmpeg-filters/8-audio-filters/deesser.md",
+        params=[
+            EffectParam("intensity", "Trigger Intensity (0-1)", "float", 0.0, value_range=(0.0, 1.0)),
+            EffectParam("max_deessing", "Max Treble Ducking (0-1)", "float", 0.5, value_range=(0.0, 1.0)),
+            EffectParam("frequency_keep", "Original Content Kept (0-1)", "float", 0.5, value_range=(0.0, 1.0)),
+        ],
+        build_filter=lambda values: (
+            f"deesser=i={_fmt(values.get('intensity', 0.0))}"
+            f":m={_fmt(values.get('max_deessing', 0.5))}"
+            f":f={_fmt(values.get('frequency_keep', 0.5))}"
+        ),
+    ),
+    EffectDefinition(
+        id="crystalizer", label="Crystalizer (Transient Sharpening)", branch="filters", category="Enhancement",
+        manual_source="ffmpeg-filters/8-audio-filters/crystalizer.md",
+        params=[
+            EffectParam("intensity", "Intensity (-10 to 10)", "float", 2.0, value_range=(-10.0, 10.0)),
+        ],
+        build_filter=lambda values: f"crystalizer=i={_fmt(values.get('intensity', 2.0))}",
+    ),
+    EffectDefinition(
+        id="tremolo", label="Tremolo (Amplitude Modulation)", branch="filters", category="Time-Based",
+        manual_source="ffmpeg-filters/8-audio-filters/tremolo.md",
+        params=[
+            EffectParam("frequency", "Modulation Frequency (Hz)", "float", 5.0, value_range=(0.1, 20000.0)),
+            EffectParam("depth", "Depth (0-1)", "float", 0.5, value_range=(0.0, 1.0)),
+        ],
+        build_filter=lambda values: (
+            f"tremolo=f={_fmt(values.get('frequency', 5.0))}:d={_fmt(values.get('depth', 0.5))}"
+        ),
+    ),
+    EffectDefinition(
+        id="vibrato", label="Vibrato (Pitch Modulation)", branch="filters", category="Time-Based",
+        manual_source="ffmpeg-filters/8-audio-filters/vibrato.md",
+        params=[
+            EffectParam("frequency", "Modulation Frequency (Hz)", "float", 5.0, value_range=(0.1, 20000.0)),
+            EffectParam("depth", "Depth (0-1)", "float", 0.5, value_range=(0.0, 1.0)),
+        ],
+        build_filter=lambda values: (
+            f"vibrato=f={_fmt(values.get('frequency', 5.0))}:d={_fmt(values.get('depth', 0.5))}"
+        ),
     ),
 ]
 
