@@ -1,5 +1,5 @@
 from typing import Callable, Optional
-from PySide6.QtWidgets import QWidget, QLayout, QVBoxLayout, QHBoxLayout, QLabel
+from PySide6.QtWidgets import QWidget, QLayout, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy
 from PySide6.QtGui import QCloseEvent, QPalette, QColor
 from PySide6.QtCore import Qt
 from app_constance.styles import COLORS, VIDEO_PLACEHOLDER_STYLE, VIDEO_LOADING_STYLE
@@ -20,6 +20,11 @@ class VideoDisplayWidget(QWidget):
         self.setWindowTitle(_("Video Display"))
         self.setAccessibleName(_("Video Display Area"))
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        # Explicitly claim all offered space in both directions so layout
+        # changes elsewhere can never quietly demote the video area to its
+        # minimum -- mpv scales/letterboxes the picture into whatever size
+        # this widget ends up with.
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.vid_palette = self.palette()
         self.vid_palette.setColor(QPalette.ColorRole.Window, COLORS['black'])
         self.setPalette(self.vid_palette)
