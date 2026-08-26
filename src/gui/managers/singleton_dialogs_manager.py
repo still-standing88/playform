@@ -1,5 +1,7 @@
 import os
 
+from PySide6.QtCore import QObject, Signal
+
 from utilities import signal_manager
 from utilities.announcement_categories import AnnouncementCategory
 from utilities.functions import get_app_path
@@ -8,6 +10,15 @@ from app_db.catalog_worker import CatalogWorker
 from ..dialogs.downloader_dialog import DownloaderDialog
 from ..dialogs.catalog_progress_dialog import CatalogProgressDialog
 from ..dialogs.manage_database_dialog import ManageDatabaseDialog
+
+
+class YtDlpFinishBridge(QObject):
+    """Marshals the yt-dlp engine's worker-thread completion callback onto
+    the GUI thread (queued signal) so tray notifications are always shown
+    from the main thread -- and keep working after the manager dialog is
+    closed, since the engine outlives it."""
+
+    entry_finished = Signal(object)
 
 
 def _announce_downloads(text):
@@ -51,7 +62,14 @@ class SingletonDialogsManager:
         if mw._shared_downloader is None:
             dest = os.path.join(get_app_path(), "downloads")
             mw._shared_downloader = Downloader(destination=dest)
+            mw._shared_downloader.download_finished.connect(
+                self._on_native_download_finished)
         return mw._shared_downloader
+
+    def _on_native_download_finished(self, item, succeeded: bool):
+        from utilities.download_notifications import notify_download_finished
+        notify_download_finished(
+            item.filename, succeeded, getattr(item, "error_message", ""))
 
     def open_downloader(self):
         """Open (or raise) the singleton downloader dialog."""
@@ -105,7 +123,14 @@ class SingletonDialogsManager:
             persist_path = os.path.join(get_app_path(), "data", "ytdlp_downloads.json")
             mw._ytdlp_engine = YtDlpDownloadEngine(persist_path=persist_path)
             mw._ytdlp_engine.start()
+            mw._ytdlp_finish_bridge = YtDlpFinishBridge()
+            mw._ytdlp_finish_bridge.entry_finished.connect(self._on_ytdlp_entry_finished)
+            mw._ytdlp_engine.on_entry_finished = mw._ytdlp_finish_bridge.entry_finished.emit
         return mw._ytdlp_engine
+
+    def _on_ytdlp_entry_finished(self, entry):
+        from utilities.download_notifications import notify_download_finished
+        notify_download_finished(entry.title or entry.url, True)
 
     def open_ytdlp_downloader(self, url: str = ""):
         """Open (or raise) the singleton yt-dlp Download Manager dialog,
