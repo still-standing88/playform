@@ -9,6 +9,7 @@ label, list, and log only refresh while the dialog is shown.
 
 import logging
 import os
+import re
 import subprocess
 import sys
 
@@ -77,6 +78,7 @@ class YtDlpDownloaderDialog(QDialog):
         self._build_ui()
         self._engine.start()
         self._refresh_categories()
+        self._refresh_status()
 
     # ------------------------------------------------------------------
     # UI construction
@@ -142,7 +144,10 @@ class YtDlpDownloaderDialog(QDialog):
 
         self.log_edit = QPlainTextEdit(self)
         self.log_edit.setReadOnly(True)
-        self.log_edit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.log_edit.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.log_edit.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+            | Qt.TextInteractionFlag.TextSelectableByKeyboard)
         self.log_edit.setAccessibleName(_("yt-dlp log"))
         self.log_edit.setMaximumHeight(120)
         layout.addWidget(self.log_edit)
@@ -197,8 +202,13 @@ class YtDlpDownloaderDialog(QDialog):
         for category in (CATEGORY_YOUTUBE_VIDEOS, CATEGORY_YOUTUBE_PLAYLISTS,
                          CATEGORY_YOUTUBE_CHANNELS, CATEGORY_OTHER):
             entries = self._engine.get_entries(category)
-            top = QTreeWidgetItem(
-                [f"{_(CATEGORY_LABELS[category])} ({len(entries)})"])
+            if category in (CATEGORY_YOUTUBE_PLAYLISTS, CATEGORY_YOUTUBE_CHANNELS):
+                # The row reads "Playlists (2)" as in two playlists -- not
+                # the number of videos inside them (children show that).
+                top_count = len({e.parent or e.title for e in entries})
+            else:
+                top_count = len(entries)
+            top = QTreeWidgetItem([f"{_(CATEGORY_LABELS[category])} ({top_count})"])
             top.setData(0, Qt.ItemDataRole.UserRole, {"category": category, "parent": None})
             tree.addTopLevelItem(top)
 
@@ -283,21 +293,35 @@ class YtDlpDownloaderDialog(QDialog):
                 return
 
     def _refresh_status(self):
-        current = None
-        for entry in self._engine.get_entries():
-            if entry.status == STATUS_DOWNLOADING:
-                current = entry
-                break
-        if current is None:
-            self.status_label.setText(_("Idle"))
-            self.pause_button.setEnabled(False)
-            return
-        self.status_label.setText(
-            _("Downloading {title} — {pct}% at {speed}, ETA {eta}").format(
+        entries = self._engine.get_entries()
+        current = next((e for e in entries if e.status == STATUS_DOWNLOADING), None)
+
+        counts = {}
+        for entry in entries:
+            counts[entry.status] = counts.get(entry.status, 0) + 1
+        summary_parts = []
+        if counts.get(STATUS_QUEUED):
+            summary_parts.append(_("{count} queued").format(count=counts[STATUS_QUEUED]))
+        if counts.get(STATUS_PAUSED):
+            summary_parts.append(_("{count} paused").format(count=counts[STATUS_PAUSED]))
+        if counts.get(STATUS_COMPLETED):
+            summary_parts.append(_("{count} completed").format(count=counts[STATUS_COMPLETED]))
+        if counts.get(STATUS_FAILED):
+            summary_parts.append(_("{count} failed").format(count=counts[STATUS_FAILED]))
+        summary = " · ".join(summary_parts)
+
+        if current is not None:
+            text = _("Downloading {title} — {pct}% at {speed}, ETA {eta}").format(
                 title=current.title, pct=f"{current.progress_pct:.1f}",
                 speed=current.speed or "—", eta=current.eta or "—")
-        )
-        self.pause_button.setEnabled(True)
+            if summary:
+                text = f"{text} ({summary})"
+        elif summary:
+            text = _("No active download — {summary}").format(summary=summary)
+        else:
+            text = _("No downloads yet. Use Add Download to queue one.")
+        self.status_label.setText(text)
+        self.pause_button.setEnabled(current is not None)
 
     # ------------------------------------------------------------------
     # Actions
@@ -449,6 +473,18 @@ class YtDlpDownloaderDialog(QDialog):
         else:
             self._enqueue_single(url, destination, CATEGORY_OTHER)
 
+    @staticmethod
+    def _derive_parent_name(url: str, kind: str) -> str:
+        """Fallback name when yt-dlp's listing carried no playlist/channel
+        title -- a readable label derived from the URL, never the raw URL."""
+        if kind == "playlist":
+            match = re.search(r"[?&]list=([^&]+)", url)
+            if match:
+                return _("Playlist {id}").format(id=match.group(1))
+            return url
+        tail = url.rstrip("/").rsplit("/", 1)[-1]
+        return tail.lstrip("@") or url
+
     def _ask_channel_kind(self, url: str, destination: str):
         box = QMessageBox(self)
         box.setWindowTitle(_("Channel Downloads"))
@@ -480,10 +516,7 @@ class YtDlpDownloaderDialog(QDialog):
             "channel_all": CATEGORY_YOUTUBE_CHANNELS,
         }
         category = categories.get(kind, CATEGORY_OTHER)
-        if kind == "playlist":
-            parent_name = url
-        else:
-            parent_name = url.rstrip("/").rsplit("/", 1)[-1] or url
+        parent_name = dialog.source_title() or self._derive_parent_name(url, kind)
 
         added_any = False
         for entry_data in dialog.selected_entries():
