@@ -121,6 +121,7 @@ class HotkeysDialog(QDialog):
         self.reset_callback = reset_callback
         self.current_editor = None
         self.current_editor_item = None
+        self._committed_config = self._snapshot_config()
         self.setWindowTitle(_("Hotkeys Configuration"))
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.resize(700, 500)
@@ -161,17 +162,19 @@ class HotkeysDialog(QDialog):
         layout.addLayout(button_layout)
 
     def _set_action_item_text(self, item, action, category, shortcut):
-        # Both columns announce with the same "{action} in {category},
-        # current shortcut: {seq}" description so every row reads
-        # consistently ("Open file  Open file in Main interface, current
-        # shortcut: Ctrl+O"). Column 1's Name is the shortcut text itself,
-        # but its Description restating the full context (rather than a
-        # different "Shortcut for ..." phrasing) is what keeps the
-        # announcement uniform across the two cells.
+        # Both columns announce with the same Name and "{action} in
+        # {category}, current shortcut: {seq}" description so every row
+        # reads identically whichever cell has focus ("Play/Pause ...").
+        # AccessibleTextRole overrides the announced Name: without it,
+        # column 1's Name is its display text -- the bare shortcut -- and
+        # after an edit (focus left where the inline editor was) rows led
+        # with "A" instead of the action name.
         shortcut_display = shortcut if shortcut else _("none")
         description = _("{action} in {category}, current shortcut: {shortcut}").format(
             action=action, category=category, shortcut=shortcut_display)
         item.setText(1, shortcut)
+        item.setData(0, Qt.ItemDataRole.AccessibleTextRole, action)
+        item.setData(1, Qt.ItemDataRole.AccessibleTextRole, action)
         item.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole, description)
         item.setData(1, Qt.ItemDataRole.AccessibleDescriptionRole, description)
 
@@ -259,6 +262,18 @@ class HotkeysDialog(QDialog):
         self.current_editor = None
         self.current_editor_item = None
 
+    @staticmethod
+    def _snapshot_config():
+        return {section: dict(key_config.key_config.items(section))
+                for section in key_config.key_config.sections()}
+
+    def _restore_committed_config(self):
+        cfg = key_config.key_config
+        for section in cfg.sections():
+            cfg.remove_section(section)
+        for section, options in self._committed_config.items():
+            cfg[section] = dict(options)
+
     @Slot()
     def reset_to_default(self):
         reply = QMessageBox.question(
@@ -276,6 +291,7 @@ class HotkeysDialog(QDialog):
     def apply_changes(self):
         key_config.saveConfig()
         key_config.apply_global_hotkeys()
+        self._committed_config = self._snapshot_config()
         if self.reset_callback:
             self.reset_callback()
 
@@ -288,4 +304,5 @@ class HotkeysDialog(QDialog):
     def reject(self):
         if self.current_editor:
             self.cancel_editing()
+        self._restore_committed_config()
         super().reject()
