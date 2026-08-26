@@ -101,6 +101,7 @@ class MainWindow(QMainWindow):
         # yt-dlp downloader singleton
         self._ytdlp_engine = None
         self._ytdlp_dialog = None
+        self._ytdlp_finish_bridge = None
         self.show_ytdlp_button: QPushButton
 
         # Catalog worker singleton
