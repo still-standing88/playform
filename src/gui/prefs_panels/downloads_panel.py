@@ -35,6 +35,14 @@ class DownloadsPanel(QWidget):
 
         outer.addWidget(transfer_group)
 
+        notify_group = QGroupBox(_("Notifications"), self)
+        notify_form = QFormLayout(notify_group)
+        self.notify_finished_check = QCheckBox(_("Notify when a download finishes"), self)
+        self.notify_finished_check.setAccessibleDescription(
+            _("Shows a system tray notification when a download completes or fails."))
+        notify_form.addRow(self.notify_finished_check)
+        outer.addWidget(notify_group)
+
         paths_group = QGroupBox(_("Locations"), self)
         paths_form = QFormLayout(paths_group)
 
@@ -101,6 +109,7 @@ class DownloadsPanel(QWidget):
         self.speed_spin.setValue(prefs.get("download_speed_limit_kbps", 0))
         self.retry_spin.setValue(prefs.get("download_retry_count", 3))
         self.retry_delay_spin.setValue(prefs.get("download_retry_delay_ms", 2000))
+        self.notify_finished_check.setChecked(bool(prefs.get("download_notify_finished", True)))
         self.download_dir_edit.setText(prefs.get("download_dir", ""))
         self.podcast_dir_edit.setText(prefs.get("download_podcast_dir", ""))
         self.proxy_enabled_check.setChecked(prefs.get("proxy_enabled", False))
@@ -117,6 +126,7 @@ class DownloadsPanel(QWidget):
         prefs["download_speed_limit_kbps"] = self.speed_spin.value()
         prefs["download_retry_count"] = self.retry_spin.value()
         prefs["download_retry_delay_ms"] = self.retry_delay_spin.value()
+        prefs["download_notify_finished"] = self.notify_finished_check.isChecked()
         prefs["download_dir"] = self.download_dir_edit.text().strip()
         prefs["download_podcast_dir"] = self.podcast_dir_edit.text().strip()
         prefs["proxy_enabled"] = self.proxy_enabled_check.isChecked()
