@@ -6,7 +6,9 @@ import queue
 import sys
 import threading
 import time
-from concurrent.futures import Future, TimeoutError as FutureTimeoutError
+from concurrent.futures import (
+    Future, InvalidStateError, TimeoutError as FutureTimeoutError
+)
 from typing import Dict, Any, Union, List, Callable, Optional
 from .__AV_Common import *
 from .__AV_Instance import AVMediaInstance
@@ -110,28 +112,40 @@ class _MPVWorker(threading.Thread):
             if item is _SHUTDOWN:
                 break
             func, future = item
-            if future is not None and future.cancelled():
+            if future is not None and not future.set_running_or_notify_cancel():
                 # The submitting caller timed out waiting and cancelled this
                 # job. Executing it anyway would run stale work (an old
                 # position read, a superseded seek) at the head of the queue
                 # during exactly the congested periods that caused the
                 # timeout -- the compounding backlog behind "seeking and
                 # state updates become intermittent until restart".
+                # This also flips PENDING -> RUNNING, so a cancel arriving
+                # mid-execution now fails on the caller side instead of
+                # leaving a settled-out-from-under-us future below.
                 continue
+            error = None
             try:
                 result = handle_mpv_error(func)
-                if future is not None:
-                    future.set_result(result)
             except Exception as e:
-                if future is not None:
-                    future.set_exception(e)
-                else:
-                    # Fire-and-forget (wait=False) jobs have nowhere to
-                    # report a failure to -- without this, a command mpv
-                    # rejects (e.g. an invalid af filter chain) fails
-                    # completely silently, with no error and no visible
-                    # effect other than "the feature just doesn't work".
-                    logger.warning("MPV command failed (fire-and-forget): %s", e)
+                error = e
+            if future is not None:
+                # Completing a future the caller already cancelled raises
+                # InvalidStateError -- letting that escape here killed this
+                # whole thread once, and every later player command with it.
+                try:
+                    if error is None:
+                        future.set_result(result)
+                    else:
+                        future.set_exception(error)
+                except InvalidStateError:
+                    pass
+            elif error is not None:
+                # Fire-and-forget (wait=False) jobs have nowhere to
+                # report a failure to -- without this, a command mpv
+                # rejects (e.g. an invalid af filter chain) fails
+                # completely silently, with no error and no visible
+                # effect other than "the feature just doesn't work".
+                logger.warning("MPV command failed (fire-and-forget): %s", error)
             if self._mpv is not None and self._mpv.core_shutdown:
                 self._drain_rejecting(AVError(AVErrorInfo.INVALID_HANDLE, "MPV core has been shutdown"))
                 break
@@ -159,7 +173,10 @@ class _MPVWorker(threading.Thread):
                 continue
             _func, future = item
             if future is not None:
-                future.set_exception(error)
+                try:
+                    future.set_exception(error)
+                except InvalidStateError:
+                    pass
 
     def wait_ready(self, timeout: float = 10.0) -> None:
         if not self._ready.wait(timeout=timeout):
