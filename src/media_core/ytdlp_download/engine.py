@@ -160,6 +160,7 @@ def _entry_from_raw(raw: dict) -> Optional[dict]:
         "url": entry_url,
         "duration": raw.get("duration") or 0,
         "date": raw.get("upload_date") or raw.get("release_timestamp") or "",
+        "playlist_title": raw.get("playlist") or raw.get("playlist_title") or "",
     }
 
 
