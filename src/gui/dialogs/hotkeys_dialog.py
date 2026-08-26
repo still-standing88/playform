@@ -104,13 +104,13 @@ class HotkeysTree(QTreeWidget):
     assigning tree.keyPressEvent on the instance never overrides Qt's C++
     virtual dispatch, so the old monkey-patch was dead code."""
 
-    enter_pressed = Signal(object)
+    enter_pressed = Signal(object, int)
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             current_item = self.currentItem()
             if current_item is not None and current_item.parent() is not None:
-                self.enter_pressed.emit(current_item)
+                self.enter_pressed.emit(current_item, 1)
                 return
         super().keyPressEvent(event)
 
