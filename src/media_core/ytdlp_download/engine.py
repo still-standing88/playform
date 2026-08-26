@@ -301,6 +301,9 @@ class YtDlpDownloadEngine:
         self.on_queue_changed: Callable[[], None] = lambda: None
         self.on_entry_updated: Callable[[YtDlpEntry], None] = lambda entry: None
         self.on_log_line: Callable[[str], None] = lambda line: None
+        # Fired (worker thread) once per entry that finishes successfully --
+        # consumers wanting GUI-thread delivery must marshal via a Qt signal.
+        self.on_entry_finished: Callable[[YtDlpEntry], None] = lambda entry: None
 
         self._restore()
 
@@ -523,6 +526,8 @@ class YtDlpDownloadEngine:
                 entry.status = STATUS_PAUSED
                 entry.error = f"yt-dlp exited with code {returncode} (paused; resume to retry)"
             self._persist()
+        if entry.status == STATUS_COMPLETED:
+            self.on_entry_finished(entry)
         self.on_entry_updated(entry)
         self.on_queue_changed()
 
