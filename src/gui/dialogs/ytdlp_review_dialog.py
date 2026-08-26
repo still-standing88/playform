@@ -58,6 +58,7 @@ class YtDlpReviewDialog(QDialog):
         self._entries: list = []
         self._thread: _FlatFetchThread | None = None
         self._all_selected = True
+        self._source_title = ""
 
         titles = {
             "playlist": _("Download Playlist"),
@@ -140,6 +141,10 @@ class YtDlpReviewDialog(QDialog):
         # --- Tab 3: log ------------------------------------------------
         self.log_edit = QPlainTextEdit(self)
         self.log_edit.setReadOnly(True)
+        self.log_edit.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.log_edit.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+            | Qt.TextInteractionFlag.TextSelectableByKeyboard)
         self.log_edit.setAccessibleName(_("yt-dlp log"))
         self.tabs.addTab(self.log_edit, _("Log"))
 
@@ -154,6 +159,11 @@ class YtDlpReviewDialog(QDialog):
 
     def set_default_location(self, path: str):
         self.location_edit.setText(path)
+
+    def source_title(self) -> str:
+        """Playlist/channel title as reported by yt-dlp, or "" if the
+        listing carried none."""
+        return self._source_title
 
     def _start_fetch(self):
         urls = [self._url]
@@ -171,6 +181,8 @@ class YtDlpReviewDialog(QDialog):
 
     def _on_entry_found(self, entry):
         self._entries.append(entry)
+        if not self._source_title and entry.get("playlist_title"):
+            self._source_title = entry["playlist_title"]
         item = QTreeWidgetItem([entry["title"]])
         item.setData(0, Qt.ItemDataRole.UserRole, entry)
         item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
