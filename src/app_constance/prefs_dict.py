@@ -32,6 +32,7 @@ prefs = {
 "mpv_extra_options": "",
 "yt-dlp_binary": "",
 "yt-dlp_path": os.path.join(get_parent_dir(), "bin"),
+"download_notify_finished": True,
 "accessibility_feedback": False,
 "tts_speech_interrupt": True,
 "tts_prefer_sapi": False,
