@@ -128,3 +128,94 @@ class MediaMetadataDialog(QDialog):
         rows.append((_("Protocol"), info.get("protocol") or "-"))
 
         return cls(_("Media Metadata"), rows, parent=parent)
+
+    @classmethod
+    def from_mpv_properties(cls, properties: dict, parent=None) -> "MediaMetadataDialog":
+        """Live decoder state rather than a container probe, so it reports
+        what is actually being played (active hwdec, current vo/ao, A/V sync
+        drift, dropped frames) and works for streams ffprobe would have to
+        re-fetch. Every field is optional -- get_media_properties() omits
+        whatever the current media has no value for."""
+        def value_of(key, default="-"):
+            value = properties.get(key)
+            return default if value is None else value
+
+        rows = [
+            (_("File"), value_of("filename")),
+            (_("Title"), value_of("media_title")),
+            (_("Container"), value_of("file_format")),
+        ]
+        if "file_size" in properties:
+            rows.append((_("Size"), _format_size(properties["file_size"])))
+        if "duration" in properties:
+            rows.append((_("Duration"), _format_duration(properties["duration"])))
+        if "percent_pos" in properties:
+            rows.append((_("Position"), f"{float(properties['percent_pos']):.1f}%"))
+
+        video_params = properties.get("video_params") or {}
+        if "video_codec" in properties or video_params:
+            rows.append((_("Video codec"), value_of("video_codec")))
+            width = properties.get("width") or video_params.get("w")
+            height = properties.get("height") or video_params.get("h")
+            if width and height:
+                rows.append((_("Resolution"), f"{width}x{height}"))
+            if video_params.get("pixelformat"):
+                rows.append((_("Pixel format"), video_params["pixelformat"]))
+            for label, key in ((_("Color space"), "colormatrix"),
+                               (_("Color levels"), "colorlevels"),
+                               (_("Primaries"), "primaries"),
+                               (_("Transfer"), "gamma")):
+                if video_params.get(key):
+                    rows.append((label, video_params[key]))
+            if "container_fps" in properties:
+                rows.append((_("Frame rate"), f"{float(properties['container_fps']):.3f}"))
+            if "estimated_vf_fps" in properties:
+                rows.append((_("Estimated output FPS"), f"{float(properties['estimated_vf_fps']):.3f}"))
+            if "video_bitrate" in properties:
+                rows.append((_("Video bitrate"), f"{int(properties['video_bitrate']) // 1000} kb/s"))
+
+        audio_params = properties.get("audio_params") or {}
+        if "audio_codec_name" in properties or audio_params:
+            rows.append((_("Audio codec"), value_of("audio_codec_name")))
+            if audio_params.get("samplerate"):
+                rows.append((_("Sample rate"), f"{audio_params['samplerate']} Hz"))
+            if audio_params.get("channels"):
+                rows.append((_("Channels"), str(audio_params["channels"])))
+            if audio_params.get("format"):
+                rows.append((_("Sample format"), audio_params["format"]))
+            if "audio_bitrate" in properties:
+                rows.append((_("Audio bitrate"), f"{int(properties['audio_bitrate']) // 1000} kb/s"))
+
+        rows.append((_("Video output"), value_of("current_vo")))
+        rows.append((_("Audio output"), value_of("current_ao")))
+        rows.append((_("Audio device"), value_of("audio_device")))
+        rows.append((_("Hardware decoding"), value_of("hwdec_current")))
+
+        if "avsync" in properties:
+            rows.append((_("A/V sync"), f"{float(properties['avsync']):.4f} s"))
+        if "frame_drop_count" in properties:
+            rows.append((_("Dropped frames"), str(properties["frame_drop_count"])))
+        if "decoder_frame_drop_count" in properties:
+            rows.append((_("Decoder dropped frames"), str(properties["decoder_frame_drop_count"])))
+        if "demuxer_cache_duration" in properties:
+            rows.append((_("Cached ahead"), f"{float(properties['demuxer_cache_duration']):.1f} s"))
+        if properties.get("paused_for_cache"):
+            rows.append((_("Buffering"), _("Yes")))
+        if "chapters" in properties:
+            rows.append((_("Chapters"), str(properties["chapters"])))
+
+        for track in properties.get("track_list") or []:
+            kind = track.get("type", "?")
+            parts = [f"#{track.get('id', '?')}", track.get("codec") or "-"]
+            if track.get("lang"):
+                parts.append(track["lang"])
+            if track.get("title"):
+                parts.append(track["title"])
+            if track.get("selected"):
+                parts.append(_("selected"))
+            rows.append((_("Track ({type})").format(type=kind), " / ".join(str(p) for p in parts)))
+
+        for key, value in (properties.get("metadata") or {}).items():
+            rows.append((f"{_('Tag')}: {key}", str(value)))
+
+        return cls(_("Media Metadata (MPV)"), rows, parent=parent)

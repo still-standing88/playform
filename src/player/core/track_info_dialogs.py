@@ -146,6 +146,34 @@ class TrackInfoDialogs:
             else:
                 self._fetch_metadata_for_dialog(source)
 
+    def view_mpv_metadata(self):
+        """The mpv-sourced counterpart to view_media_metadata: no ffprobe
+        subprocess and no yt-dlp round-trip, works identically for local
+        files and streams because it reads the decoder that is already
+        playing them."""
+        widget = self._widget
+        if widget.player is None or widget.player.primary_instance is None:
+            QMessageBox.information(
+                widget, _("No Media"), _("Load media before viewing playback properties.")
+            )
+            return
+
+        try:
+            properties = widget.player.get_media_properties()
+        except Exception as e:
+            QMessageBox.warning(widget, _("Metadata Error"), str(e))
+            return
+
+        if not properties:
+            QMessageBox.information(
+                widget, _("No Metadata"), _("MPV reported no properties for the current media.")
+            )
+            return
+
+        from gui.dialogs.media_metadata_dialog import MediaMetadataDialog
+        dialog = MediaMetadataDialog.from_mpv_properties(properties, parent=widget.window())
+        dialog.exec()
+
     def _fetch_metadata_for_dialog(self, source: str):
         if self._metadata_dialog_thread and self._metadata_dialog_thread.isRunning():
             self._metadata_dialog_thread.quit()

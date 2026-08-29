@@ -964,6 +964,42 @@ class MPVVideoPlayer(AVPlayer):
         result = self.__mpv_interface.run_on_mpv(snapshot, wait=True, timeout=1.0, record_only=True)
         return result if isinstance(result, dict) else {'ok': False}
 
+    def get_media_properties(self) -> dict:
+        """Runtime playback facts for the currently loaded media, straight
+        from the decoder: container/codec/bitrate/colour info plus live
+        counters (avsync, dropped frames) that no out-of-band probe can
+        report. Every property is read individually and unavailable ones are
+        simply omitted -- mpv raises for anything the current media has no
+        value for (no video track, a still image, a stream with no bitrate
+        yet), so one bad read must not lose the whole dict."""
+        names = (
+            "filename", "media_title", "file_format", "file_size",
+            "duration", "time_pos", "percent_pos", "playtime_remaining",
+            "video_codec", "video_format", "width", "height",
+            "video_bitrate", "container_fps", "estimated_vf_fps",
+            "video_params", "current_vo", "hwdec_current",
+            "audio_codec_name", "audio_bitrate", "audio_params",
+            "current_ao", "audio_device",
+            "avsync", "frame_drop_count", "decoder_frame_drop_count",
+            "demuxer_cache_duration", "paused_for_cache",
+            "metadata", "chapters", "track_list",
+        )
+
+        def read(m):
+            data = {}
+            for name in names:
+                try:
+                    value = getattr(m, name)
+                except Exception:
+                    continue
+                if value is None:
+                    continue
+                data[name] = value
+            return data
+
+        result = self.__mpv_interface.run_on_mpv(read, wait=True, timeout=2.0, record_only=True)
+        return result if isinstance(result, dict) else {}
+
     def set_reverse_playback(self, enabled: bool):
         # play-direction is a real mpv property (0.39+) but the docs call
         # it unreliable; verified empirically it's fine for local audio

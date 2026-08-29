@@ -1061,6 +1061,9 @@ class PlayerWidget(QWidget):
     def view_media_metadata(self):
         self._info_dialogs.view_media_metadata()
 
+    def view_mpv_metadata(self):
+        self._info_dialogs.view_mpv_metadata()
+
     def closeEvent(self, event):
         try:
             self._track_loader.cleanup()

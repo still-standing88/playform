@@ -36,10 +36,22 @@ def build_path_context_menu(controls, parent_widget) -> QMenu:
 
     if is_local_file(controls._current_file) or is_url_supported(source):
         menu.addSeparator()
-        metadata_action = menu.addAction(_("View Media Metadata..."))
-        metadata_action.triggered.connect(lambda: _view_media_metadata(controls))
+        metadata_menu = menu.addMenu(_("View Media Metadata"))
+        # Two different sources rather than one merged view: ffprobe/yt-dlp
+        # describe the file or the remote format, mpv describes the running
+        # decoder (active hwdec, current vo/ao, A/V drift, dropped frames).
+        probe_action = metadata_menu.addAction(_("From File (ffprobe)..."))
+        probe_action.triggered.connect(lambda: _view_media_metadata(controls))
+
+        mpv_action = metadata_menu.addAction(_("From Playback (MPV)..."))
+        mpv_action.triggered.connect(lambda: _view_mpv_metadata(controls))
 
     return menu
+
+
+def _view_mpv_metadata(controls):
+    if controls._player_widget and hasattr(controls._player_widget, 'view_mpv_metadata'):
+        controls._player_widget.view_mpv_metadata()  # type: ignore
 
 
 def _view_media_metadata(controls):
