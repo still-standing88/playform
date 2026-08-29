@@ -84,7 +84,9 @@ key_dict = {
 "Flip vertical": "V",
 "Speed up": "F",
 "Speed down": "D",
-"Reverse playback": "R"
+"Reverse playback": "R",
+"Previous subtitle line": "Alt+Left",
+"Next subtitle line": "Alt+Right"
 },
 "Multi Device Capture": {
 "Start capture": "Ctrl+Alt+R",

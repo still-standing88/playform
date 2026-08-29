@@ -108,6 +108,8 @@ class PlayerShortcuts:
             hotkeys["Speed up"]: lambda: widget.player_controls.step_speed(1),
             hotkeys["Speed down"]: lambda: widget.player_controls.step_speed(-1),
             hotkeys["Reverse playback"]: lambda: self._call_if_reverse_available(lambda: widget.player_controls._on_reverse_action_toggled(not widget.player_controls.is_reverse_active)),
+            hotkeys["Previous subtitle line"]: lambda: self._call_if_media(lambda: widget.subtitles_widget.seekRequested.emit(-1)),
+            hotkeys["Next subtitle line"]: lambda: self._call_if_media(lambda: widget.subtitles_widget.seekRequested.emit(1)),
         }
 
         for shortcut in widget._shortcuts.values():
