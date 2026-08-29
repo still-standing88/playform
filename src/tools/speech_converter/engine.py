@@ -33,8 +33,11 @@ class SpeechEngine(QObject):
 
         self._using_sapi_direct = False
         self._sapi_voice = None
+        self._voice_name = self.tts.voice().name()
+        self._enumerator = None
         if IS_WINDOWS and self.engine_name == "sapi":
             self._init_sapi()
+            self._select_sapi_voice(self._sapi_voice, self._voice_name)
 
     def _init_sapi(self):
         try:
@@ -60,11 +63,69 @@ class SpeechEngine(QObject):
     def available_voices(self):
         return self.tts.availableVoices()
 
+    def voices_for_locale(self, locale):
+        # availableVoices() only reports the current locale's voices, so browsing another
+        # locale's voices happens on a throwaway instance to leave playback state alone.
+        if self._enumerator is None:
+            self._enumerator = QTextToSpeech(self.engine_name, self)
+        self._enumerator.setLocale(locale)
+        return self._enumerator.availableVoices()
+
+    def voices_for_locale_name(self, locale_name: str):
+        # availableLocales() can list the same locale name more than once, each entry
+        # exposing a different set of voices, so all of them are merged per language.
+        pairs = []
+        seen = set()
+        for locale in self.available_locales():
+            if locale.name() != locale_name:
+                continue
+            for voice in self.voices_for_locale(locale):
+                if voice.name() in seen:
+                    continue
+                seen.add(voice.name())
+                pairs.append((locale, voice))
+        return pairs
+
+    def current_locale(self):
+        return self.tts.locale()
+
+    def current_voice(self):
+        return self.tts.voice()
+
     def set_locale(self, locale):
         self.tts.setLocale(locale)
 
     def set_voice(self, voice):
         self.tts.setVoice(voice)
+        self._voice_name = voice.name()
+        if self._sapi_voice is not None:
+            try:
+                self._select_sapi_voice(self._sapi_voice, self._voice_name)
+            except Exception as error:
+                self.error_occurred.emit(str(error))
+
+    def apply_voice(self, locale_name: str, voice_name: str):
+        if not locale_name or not voice_name:
+            return
+        for locale, voice in self.voices_for_locale_name(locale_name):
+            if voice.name() == voice_name:
+                self.set_locale(locale)
+                self.set_voice(voice)
+                return
+
+    @staticmethod
+    def _select_sapi_voice(sapi_voice, voice_name: str):
+        if sapi_voice is None or not voice_name:
+            return
+        # Qt reports "Microsoft David Desktop" where SAPI describes the same token as
+        # "Microsoft David Desktop - English (United States)".
+        tokens = sapi_voice.GetVoices()
+        for index in range(tokens.Count):
+            token = tokens.Item(index)
+            description = token.GetDescription()
+            if description == voice_name or description.startswith(f"{voice_name} -"):
+                sapi_voice.Voice = token
+                return
 
     def set_rate(self, value: float):
         self.tts.setRate(value)
@@ -151,6 +212,7 @@ class SpeechEngine(QObject):
 
         try:
             voice = gencache.EnsureDispatch("SAPI.SpVoice")
+            self._select_sapi_voice(voice, self._voice_name)
 
             wav_path = output_path
             needs_transcode = not output_path.lower().endswith(".wav")

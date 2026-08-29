@@ -1,4 +1,6 @@
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QCheckBox, QPushButton
+from PySide6.QtWidgets import (
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QCheckBox, QPushButton, QComboBox
+)
 from PySide6.QtCore import Qt
 
 from tools.speech_converter.engine import SpeechEngine
@@ -30,8 +32,57 @@ class ParametersDialog(QDialog):
         row.addWidget(value_label)
         return row, slider
 
+    def _make_combo_row(self, label: str):
+        row = QHBoxLayout()
+        label_widget = QLabel(label)
+        row.addWidget(label_widget)
+        combo = QComboBox(self)
+        combo.setAccessibleName(label)
+        label_widget.setBuddy(combo)
+        row.addWidget(combo, stretch=1)
+        return row, combo
+
+    def _build_voice_selection(self, layout):
+        language_row, self.language_combo = self._make_combo_row(_("Language"))
+        layout.addLayout(language_row)
+
+        voice_row, self.voice_combo = self._make_combo_row(_("Voice"))
+        layout.addLayout(voice_row)
+
+        seen = set()
+        entries = []
+        for locale in self.engine.available_locales():
+            name = locale.name()
+            if name in seen:
+                continue
+            seen.add(name)
+            entries.append((locale.nativeLanguageName() or name, name))
+        for display, name in sorted(entries):
+            self.language_combo.addItem(display, name)
+
+        current_locale = self._values.get("locale") or self.engine.current_locale().name()
+        index = self.language_combo.findData(current_locale)
+        if index >= 0:
+            self.language_combo.setCurrentIndex(index)
+
+        self.language_combo.currentIndexChanged.connect(self._populate_voices)
+        self._populate_voices()
+
+    def _populate_voices(self):
+        locale_name = self.language_combo.currentData()
+        if not locale_name:
+            return
+        wanted = self.voice_combo.currentText() or self._values.get("voice") or ""
+        self.voice_combo.clear()
+        for _locale, voice in self.engine.voices_for_locale_name(locale_name):
+            self.voice_combo.addItem(voice.name())
+        index = self.voice_combo.findText(wanted)
+        self.voice_combo.setCurrentIndex(index if index >= 0 else 0)
+
     def _build_ui(self):
         layout = QVBoxLayout(self)
+
+        self._build_voice_selection(layout)
 
         volume_row, self.volume_slider = self._make_slider_row(
             _("Volume"), 0, 100, int(self._values.get("volume", 1.0) * 100)
@@ -84,6 +135,8 @@ class ParametersDialog(QDialog):
 
     def values(self) -> dict:
         return {
+            "locale": self.language_combo.currentData() or "",
+            "voice": self.voice_combo.currentText(),
             "volume": self.volume_slider.value() / 100.0,
             "rate": self.speed_slider.value() / 100.0,
             "pitch": self.pitch_slider.value() / 100.0,

@@ -49,6 +49,8 @@ class SpeechConverterUI(QWidget):
         self.progress_dialog = None
 
         self.parameters = {
+            "locale": self.engine.current_locale().name(),
+            "voice": self.engine.current_voice().name(),
             "volume": 1.0, "rate": 0.0, "pitch": 0.0,
             "use_pitch_xml": self.engine.supports_pitch_xml(), "pitch_xml_middle": 0,
         }
@@ -97,6 +99,7 @@ class SpeechConverterUI(QWidget):
         QShortcut(QKeySequence("Ctrl+F"), self, activated=self._open_parameters)
 
     def _apply_parameters(self):
+        self.engine.apply_voice(self.parameters.get("locale", ""), self.parameters.get("voice", ""))
         self.engine.set_volume(self.parameters["volume"])
         self.engine.set_rate(self.parameters["rate"])
         self.engine.set_pitch(self.parameters["pitch"])
