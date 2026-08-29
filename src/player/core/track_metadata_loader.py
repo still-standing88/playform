@@ -146,6 +146,7 @@ class TrackMetadataLoader:
             logger.debug("Subtitle delay write failed", exc_info=True)
 
     def on_subtitle_visibility_toggled(self, visible: bool):
+        prefs.prefs["subtitle_render_on_video"] = bool(visible)
         try:
             self._widget.player.set_subtitle_visibility(visible)
         except Exception:

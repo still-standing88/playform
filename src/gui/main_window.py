@@ -715,8 +715,20 @@ class MainWindow(QMainWindow):
 
         dialog = PreferencesDialog(self, audio_devices, self.apply_audio_device)
         dialog.finished.connect(lambda: setattr(self, '_dialog_open', False))
+        dialog.preferences_saved.connect(self._apply_subtitle_style_prefs)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             _announce_dialogs(_("Preferences saved"))
+
+    def _apply_subtitle_style_prefs(self, _saved_prefs):
+        from player.core.subtitle_style import apply_saved_subtitle_style
+        player = getattr(self.player_widget, "player", None)
+        apply_saved_subtitle_style(player)
+        try:
+            self.player_widget.subtitles_widget.sync_mpv_state(
+                player.get_subtitle_delay(), player.get_subtitle_visibility()
+            )
+        except Exception:
+            pass
             
     def open_hotkeys(self):
         if self._dialog_open:

@@ -3,6 +3,7 @@ import media_core.av_play as av_play
 from app_config import prefs
 from utilities.functions import get_debug_level, get_mpvlog_file, parse_mpv_options
 from .video_quality_menu import apply_saved_options
+from .subtitle_style import apply_saved_subtitle_style
 
 
 def init_mpv_player(widget):
@@ -48,6 +49,7 @@ def init_mpv_player(widget):
         widget.audio_filters_widget.set_player(widget.player)
         widget.audio_sync_widget.set_player(widget.player)
         apply_saved_options(widget.player)
+        apply_saved_subtitle_style(widget.player)
 
         device_name = prefs.prefs.get("device_name", "")
         if device_name:
