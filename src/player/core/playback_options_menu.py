@@ -2,6 +2,7 @@ from PySide6.QtGui import QActionGroup
 from PySide6.QtWidgets import QMenu
 
 from app_constance.misc import video_aspect_ratios, video_scales, video_speeds, video_rotations
+from .video_quality_menu import build_video_quality_menu
 
 
 def build_more_options_menu(controls) -> QMenu:
@@ -57,6 +58,8 @@ def build_more_options_menu(controls) -> QMenu:
     flip_vertical_action.setChecked(controls.is_flip_vertical)
     flip_vertical_action.setEnabled(controls.is_video_available)
     flip_vertical_action.triggered.connect(controls._on_flip_vertical_action_toggled)
+
+    build_video_quality_menu(controls, menu)
 
     fullscreen_action = menu.addAction(_("Fullscreen"))
     fullscreen_action_state = lambda: fullscreen_action.setChecked(controls.is_fullscreen)

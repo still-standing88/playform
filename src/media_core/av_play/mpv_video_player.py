@@ -867,6 +867,57 @@ class MPVVideoPlayer(AVPlayer):
     def set_deband(self, enabled: bool):
         self.__mpv_interface.run_on_mpv(lambda m, e=enabled: setattr(m, 'deband', e), wait=False)
 
+    # Video quality/decode knobs. Each maps 1:1 to an mpv property whose
+    # accepted values are enumerated in app_constance.misc; hwdec is the only
+    # one that needs a reload to take effect on already-playing media, which
+    # is why it reports whether it actually changed.
+    _QUALITY_PROPERTIES = {
+        "hwdec": "hwdec",
+        "scale": "scale",
+        "dscale": "dscale",
+        "cscale": "cscale",
+        "tscale": "tscale",
+        "framedrop": "framedrop",
+        "tone_mapping": "tone_mapping",
+        "video_sync": "video_sync",
+    }
+
+    def set_video_quality_option(self, name: str, value) -> None:
+        mpv_property = self._QUALITY_PROPERTIES.get(name)
+        if mpv_property is None:
+            raise AVError(AVErrorInfo.INVALID_FILTER_PARAMETER, f"Unknown video quality option: {name}")
+        self.__mpv_interface.run_on_mpv(
+            lambda m, p=mpv_property, v=value: setattr(m, p, v), wait=False
+        )
+
+    def get_video_quality_option(self, name: str):
+        mpv_property = self._QUALITY_PROPERTIES.get(name)
+        if mpv_property is None:
+            return None
+        return self.__mpv_interface.run_on_mpv(
+            lambda m, p=mpv_property: getattr(m, p), wait=True, timeout=0.5
+        )
+
+    def set_interpolation(self, enabled: bool):
+        self.__mpv_interface.run_on_mpv(lambda m, e=enabled: setattr(m, 'interpolation', e), wait=False)
+
+    def get_interpolation(self) -> bool:
+        return bool(self.__mpv_interface.run_on_mpv(lambda m: m.interpolation, wait=True, timeout=0.5))
+
+    def set_sharpen(self, amount: float):
+        self.__mpv_interface.run_on_mpv(lambda m, a=float(amount): setattr(m, 'sharpen', a), wait=False)
+
+    def get_sharpen(self) -> float:
+        value = self.__mpv_interface.run_on_mpv(lambda m: m.sharpen, wait=True, timeout=0.5)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def get_active_hwdec(self) -> str:
+        value = self.__mpv_interface.run_on_mpv(lambda m: m.hwdec_current, wait=True, timeout=0.5)
+        return str(value) if value else "no"
+
     def set_audio_delay(self, seconds: float):
         """Shifts audio relative to video for A/V sync correction. Positive
         delays audio, negative advances it."""

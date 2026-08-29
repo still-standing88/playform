@@ -73,3 +73,60 @@ video_scales = [
 
 screenshot_formats = ["jpg", "png", "tiff"]
 app_languages = ["EN - English", "FR - French", "AR - Arabic", "ES - Spanish"]
+
+# Video quality/decode options for the player's More Options > Video Quality
+# submenu. Each list is (label, mpv value); values verified accepted by the
+# bundled libmpv build, so an unlisted one means that build rejects it.
+video_hwdec_modes = [
+    ("Automatic (safe)", "auto-safe"),
+    ("Automatic (any)", "auto"),
+    ("Disabled", "no"),
+    ("D3D11 VA", "d3d11va"),
+    ("DXVA2", "dxva2"),
+    ("NVDEC", "nvdec"),
+    ("Vulkan", "vulkan"),
+]
+
+video_scalers = [
+    ("Bilinear (fastest)", "bilinear"),
+    ("Spline36", "spline36"),
+    ("Lanczos", "lanczos"),
+    ("EWA Lanczos Sharp (best)", "ewa_lanczossharp"),
+    ("Nearest neighbour", "nearest"),
+]
+
+video_downscalers = [
+    ("Mitchell", "mitchell"),
+    ("Bilinear", "bilinear"),
+    ("Catmull-Rom", "catmull_rom"),
+]
+
+video_interpolation_scalers = [
+    ("Oversample", "oversample"),
+    ("Mitchell", "mitchell"),
+    ("Linear", "linear"),
+]
+
+video_framedrop_modes = [
+    ("Disabled", "no"),
+    ("Output only", "vo"),
+    ("Decoder only", "decoder"),
+    ("Decoder and output", "decoder+vo"),
+]
+
+video_tone_mapping_modes = [
+    ("Automatic", "auto"),
+    ("BT.2390", "bt.2390"),
+    ("Reinhard", "reinhard"),
+    ("Hable", "hable"),
+    ("Mobius", "mobius"),
+    ("Clip", "clip"),
+    ("Spline", "spline"),
+]
+
+video_sync_modes = [
+    ("Audio clock", "audio"),
+    ("Display (resample audio)", "display-resample"),
+    ("Display (drop frames)", "display-vdrop"),
+    ("Desynchronized", "desync"),
+]
