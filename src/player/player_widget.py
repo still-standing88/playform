@@ -566,12 +566,15 @@ class PlayerWidget(QWidget):
             image_format = prefs.prefs.get("image_format", "png")
             file_date = str(dt.datetime.now().strftime("%y-%d-%m-%I-%M-%S%p"))
             image_path = os.path.join(get_app_path(), "Screenshots", f"screenshot-{file_date}.{image_format}")
-            self.player.take_screenshot(image_path)
-            _announce(
-                _("Screenshot saved: {filename}").format(
-                    filename=os.path.basename(image_path)
+            saved = self.player.take_screenshot(image_path)
+            if saved:
+                _announce(
+                    _("Screenshot saved: {filename}").format(
+                        filename=os.path.basename(image_path)
+                    )
                 )
-            )
+            else:
+                _announce(_("Failed to take screenshot"))
         except Exception:
             _announce(_("Failed to take screenshot"))
 

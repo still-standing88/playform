@@ -1,5 +1,6 @@
 import locale
 import logging
+import math
 import mpv
 import os
 import queue
@@ -779,6 +780,59 @@ class MPVVideoPlayer(AVPlayer):
 
     def set_resolution(self, width, height):
         self.__mpv_interface.run_on_mpv(lambda m: setattr(m, 'vf', f"scale={width}:{height}"), wait=False)
+
+    def set_aspect_ratio(self, ratio):
+        # mpv accepts "16:9" verbatim, a float, or "-1"/"no" to go back to the
+        # container's own ratio.
+        if ratio in (None, "", "auto", "default", "-1"):
+            value = "-1"
+        else:
+            value = str(ratio)
+        self.__mpv_interface.run_on_mpv(lambda m, v=value: setattr(m, 'video_aspect_override', v), wait=False)
+
+    def get_aspect_ratio(self):
+        return self.__mpv_interface.run_on_mpv(lambda m: m.video_aspect_override, wait=True, timeout=0.5)
+
+    def set_scale(self, scale: float):
+        # video-zoom is log2: 0 == 1x, 1 == 2x, -1 == 0.5x. The UI's menu
+        # offers linear multipliers (0.25 .. 5), so convert rather than
+        # feeding the multiplier straight in (which would zoom 32x at "5").
+        try:
+            factor = float(scale)
+        except (TypeError, ValueError):
+            return
+        if factor <= 0:
+            return
+        zoom = math.log2(factor)
+        self.__mpv_interface.run_on_mpv(lambda m, z=zoom: setattr(m, 'video_zoom', z), wait=False)
+
+    def get_scale(self) -> float:
+        zoom = self.__mpv_interface.run_on_mpv(lambda m: m.video_zoom, wait=True, timeout=0.5)
+        try:
+            return float(2.0 ** float(zoom))
+        except (TypeError, ValueError):
+            return 1.0
+
+    def take_screenshot(self, path: str, include_subtitles: bool = True) -> bool:
+        """Captures what mpv is actually rendering (current vf chain, rotate/
+        flip, colour adjustments) rather than re-decoding the source frame,
+        which is why this goes through mpv instead of the ffmpeg helper.
+        Returns False when mpv rejected the request (no video track, bad
+        path) so callers can report a real failure."""
+        directory = os.path.dirname(path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        image_format = os.path.splitext(path)[1].lstrip(".").lower()
+        includes = "subtitles" if include_subtitles else "video"
+
+        def capture(m):
+            if image_format in ("png", "jpg", "jpeg", "webp"):
+                m.screenshot_format = "jpg" if image_format == "jpeg" else image_format
+            m.screenshot_to_file(path, includes)
+            return True
+
+        result = self.__mpv_interface.run_on_mpv(capture, wait=True, timeout=5.0, record_only=True)
+        return bool(result) and os.path.exists(path)
 
     def set_video_adjust_float(self, name: str, value: float):
         # The widget's own range is 0.0-2.0 (brightness/contrast/saturation) or
