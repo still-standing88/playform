@@ -100,7 +100,7 @@ class TrackMetadataLoader:
         widget._last_subtitle_text = None
         widget.filters_widget.reset_filters()
 
-        source = widget.player_controls._source_url
+        source = self._current_track_source()
         if source and is_url_supported(source):
             widget.chapters_widget.clear_chapters()
             self._fetch_ytdlp_metadata(source)
@@ -115,6 +115,20 @@ class TrackMetadataLoader:
 
                 widget.subtitles_widget.load_all_subtitles(widget.subtitle_manager)
         self.load_chapters_for_current_track()
+
+    def _current_track_source(self) -> Optional[str]:
+        """_source_url is set once per load_url() and stays pinned to the
+        original (possibly playlist) URL, so for an extracted playlist the
+        per-track webpage URL is the one metadata should be fetched for."""
+        widget = self._widget
+        try:
+            index = widget.player._current_playlist_index
+            webpage = widget.player.get_webpage_url(index)
+            if webpage and av_play.is_url(webpage):
+                return webpage
+        except Exception:
+            pass
+        return widget.player_controls._source_url
 
     def _fetch_ytdlp_metadata(self, source: str):
         self._current_ytdlp_source = source
@@ -134,6 +148,7 @@ class TrackMetadataLoader:
 
         widget = self._widget
         widget._info_dialogs.cache_youtube_info(source, info)
+        self._apply_ytdlp_title(info)
 
         chapters = [
             {
@@ -151,6 +166,25 @@ class TrackMetadataLoader:
         widget.subtitles_widget.set_available_languages(list(self._ytdlp_subtitle_tracks.keys()), lang)
         if subtitle_url:
             self._fetch_ytdlp_subtitles(source, subtitle_url, lang)
+
+    def _apply_ytdlp_title(self, info: dict):
+        """fetch_full_info runs without a --format constraint, so it succeeds
+        on URLs where the extraction-time lookup (run_ytdlp) failed and left
+        the entry with no title. Write it back onto the playlist entry so the
+        periodic state tick keeps showing it."""
+        title = info.get("title")
+        if not title:
+            return
+        widget = self._widget
+        try:
+            playlist = widget.player.current_playlist
+            if playlist is not None:
+                index = widget.player._current_playlist_index
+                if 0 <= index < len(playlist):
+                    playlist.entries[index].title = title
+        except Exception:
+            pass
+        widget.player_controls.set_current_track(title)
 
     def on_subtitle_language_selected(self, language: str):
         if language not in self._ytdlp_subtitle_tracks:

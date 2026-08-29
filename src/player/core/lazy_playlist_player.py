@@ -19,6 +19,7 @@ from ..util.url import (
     resolve_webpage_url,
     run_ytdlp_flat_playlist,
     run_ytdlp,
+    get_yt_video_info,
     has_playlist_param,
     is_playlist,
 )
@@ -649,14 +650,26 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
 
     def _fetch_webpage_playlist(self, url: str) -> dict:
         if not is_playlist(url) and not has_playlist_param(url):
+            title = None
             try:
                 info = run_ytdlp(url, as_playlist=False)
                 if isinstance(info, list):
                     info = info[0]
-                title = info.get("title") or info.get("webpage_url") or url
-                return {"title": title, "entries": [{"location": url, "title": title}]}
-            except Exception:
-                return {"title": url, "entries": [{"location": url, "title": url}]}
+                title = info.get("title")
+            except Exception as e:
+                # run_ytdlp constrains --format, so it fails on sites where
+                # no single progressive stream matches even though the
+                # metadata is fine. Retry without that constraint rather
+                # than giving up on the title -- playback itself doesn't
+                # depend on this call (mpv's own ytdl hook resolves the
+                # stream), so a failure here used to silently degrade the
+                # title to the raw URL.
+                logger.warning(f"Metadata extraction failed for {url}: {e}")
+                try:
+                    title = get_yt_video_info(url).get("title")
+                except Exception as retry_error:
+                    logger.warning(f"Title retry failed for {url}: {retry_error}")
+            return {"title": title, "entries": [{"location": url, "title": title}]}
 
         flat_entries = run_ytdlp_flat_playlist(url)
         entries = []

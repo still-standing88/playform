@@ -46,6 +46,20 @@ def _announce(text):
     signal_manager.announce(text, AnnouncementCategory.PLAYBACK)
 
 
+def _display_name(location: str) -> str:
+    """basename() on a resolved streaming URL yields the query-string garbage
+    of a videoplayback path, so fall back to the host for URLs."""
+    if not location:
+        return ""
+    if av_play.is_url(location):
+        from urllib.parse import urlparse
+        try:
+            return urlparse(location).hostname or location
+        except Exception:
+            return location
+    return os.path.basename(location)
+
+
 LayoutType = QVBoxLayout | QHBoxLayout
 
 logger = logging.getLogger(__name__)
@@ -618,7 +632,7 @@ class PlayerWidget(QWidget):
             try:
                 entry = self.player.current_playlist.get_entry(index)
                 if entry:
-                    track_name = entry.title or os.path.basename(entry.location)
+                    track_name = entry.title or _display_name(entry.location)
                     self.player_controls.set_current_track(track_name)
                     self._track_loader.load_subtitles_for_current_track()
                     self.filters_widget.reset_filters()
@@ -690,12 +704,16 @@ class PlayerWidget(QWidget):
                 self.player_controls.set_video_available(not audio_only)
             except Exception:
                 pass
-            track_name = os.path.basename(instance.file_path)
+            track_name = _display_name(instance.file_path)
             if self.player.current_playlist is not None:
                 try:
                     entry = self.player.current_playlist.get_entry(self.player._current_playlist_index)
                     if entry and entry.title:
                         track_name = entry.title
+                    elif entry:
+                        webpage = self.player.get_webpage_url(self.player._current_playlist_index)
+                        if webpage:
+                            track_name = _display_name(webpage)
                 except Exception:
                     pass
             self.player_controls.set_current_track(track_name)
