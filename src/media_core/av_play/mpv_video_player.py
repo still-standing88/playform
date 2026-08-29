@@ -867,6 +867,43 @@ class MPVVideoPlayer(AVPlayer):
     def set_deband(self, enabled: bool):
         self.__mpv_interface.run_on_mpv(lambda m, e=enabled: setattr(m, 'deband', e), wait=False)
 
+    def set_audio_delay(self, seconds: float):
+        """Shifts audio relative to video for A/V sync correction. Positive
+        delays audio, negative advances it."""
+        self.__mpv_interface.run_on_mpv(lambda m, s=float(seconds): setattr(m, 'audio_delay', s), wait=False)
+
+    def get_audio_delay(self) -> float:
+        value = self.__mpv_interface.run_on_mpv(lambda m: m.audio_delay, wait=True, timeout=0.5)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def set_replaygain(self, mode: Optional[str], preamp: float = 0.0, clip: bool = False):
+        """Tag-based loudness normalization. mode is "track"/"album" or None
+        for off; unlike the dynaudnorm/speechnorm audio filters this costs
+        nothing at playback time because it is a gain value read from the
+        file's own tags."""
+        value = mode if mode in ("track", "album") else "no"
+
+        def apply(m):
+            m.replaygain = value
+            m.replaygain_preamp = float(preamp)
+            m.replaygain_clip = bool(clip)
+        self.__mpv_interface.run_on_mpv(apply, wait=False)
+
+    def get_replaygain(self) -> dict:
+        def read(m):
+            return {
+                # mpv reports the disabled state as False, not the "no" it
+                # accepts on write.
+                "mode": m.replaygain or "no",
+                "preamp": m.replaygain_preamp,
+                "clip": bool(m.replaygain_clip),
+            }
+        result = self.__mpv_interface.run_on_mpv(read, wait=True, timeout=0.5)
+        return result if isinstance(result, dict) else {"mode": "no", "preamp": 0.0, "clip": False}
+
     def set_flip_horizontal(self, enabled: bool):
         self._flip_horizontal = enabled
         self._apply_video_flip()

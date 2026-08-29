@@ -26,6 +26,7 @@ from .widgets.video_effects_widget import VideoEffectsWidget
 from .widgets.chapters_widget import ChaptersWidget
 from .widgets.equalizer_widget import EqualizerWidget
 from .widgets.audio_filters_widget import AudioFiltersWidget
+from .widgets.audio_sync_widget import AudioSyncWidget
 from .core.lazy_playlist_player import LazyPlaylistPlayer
 from .core.player_init import init_mpv_player
 from .core.player_shortcuts import PlayerShortcuts
@@ -137,6 +138,7 @@ class PlayerWidget(QWidget):
         self.chapters_widget = ChaptersWidget(self)
         self.equalizer_widget = EqualizerWidget(self)
         self.audio_filters_widget = AudioFiltersWidget(self)
+        self.audio_sync_widget = AudioSyncWidget(self)
         self.side_accordion = Accordion(self)
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
 
@@ -178,6 +180,7 @@ class PlayerWidget(QWidget):
         self.side_accordion.add_section(_("Color Adjustments"), self.filters_widget)
         self.side_accordion.add_section(_("Video Effects"), self.video_effects_widget)
         self.side_accordion.add_section(_("Audio Filters"), self.audio_filters_widget)
+        self.side_accordion.add_section(_("Audio Sync"), self.audio_sync_widget)
 
         # The accordion has no bounded height of its own - with several
         # sections' content stacked open, its total height can exceed the

@@ -45,6 +45,7 @@ def init_mpv_player(widget):
         widget.video_effects_widget.set_player(widget.player)
         widget.equalizer_widget.set_player(widget.player)
         widget.audio_filters_widget.set_player(widget.player)
+        widget.audio_sync_widget.set_player(widget.player)
 
         device_name = prefs.prefs.get("device_name", "")
         if device_name:
