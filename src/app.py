@@ -26,6 +26,9 @@ def main():
     install_crash_handler(get_logs_dir())
     install_translation()
 
+    from log_handler import install_qt_message_handler
+    install_qt_message_handler()
+
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)
