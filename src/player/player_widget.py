@@ -252,6 +252,7 @@ class PlayerWidget(QWidget):
         # unlike the previous out-of-band ffprobe read this has to wait for
         # file-loaded rather than firing at load-request time.
         self._fileLoadedFromMpv.connect(self._track_loader.load_chapters_for_current_track)
+        self._fileLoadedFromMpv.connect(self._track_loader.load_mpv_subtitle_tracks)
 
         self.player.set_queue_changed_callback(self._queueChangedFromMonitor.emit)
 
@@ -305,6 +306,10 @@ class PlayerWidget(QWidget):
         self.player.signals.extraction_failed.connect(self._on_url_extraction_failed)
         self.chapters_widget.chapterActivated.connect(self._track_loader.on_chapter_activated)
         self.subtitles_widget.languageSelected.connect(self._track_loader.on_subtitle_language_selected)
+        self.subtitles_widget.trackSelected.connect(self._track_loader.on_subtitle_track_selected)
+        self.subtitles_widget.delayChanged.connect(self._track_loader.on_subtitle_delay_changed)
+        self.subtitles_widget.visibilityToggled.connect(self._track_loader.on_subtitle_visibility_toggled)
+        self.subtitles_widget.seekRequested.connect(self._track_loader.on_subtitle_seek)
 
     def apply_styles(self):
         self.setStyleSheet(PLAYER_WIDGET_STYLE)

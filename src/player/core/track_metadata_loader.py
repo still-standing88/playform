@@ -105,13 +105,57 @@ class TrackMetadataLoader:
 
         self._current_ytdlp_source = None
         self._ytdlp_subtitle_tracks = {}
-        widget.subtitles_widget.set_available_languages([])
         instance = widget.player.primary_instance
         if instance and av_play.is_path(instance.file_path):
             if widget.subtitle_manager.load_for_video(instance.file_path):
 
                 widget.subtitles_widget.load_all_subtitles(widget.subtitle_manager)
+        self.load_mpv_subtitle_tracks()
         self.load_chapters_for_current_track()
+
+    def load_mpv_subtitle_tracks(self):
+        """Embedded tracks only exist once mpv has opened the file, so this
+        runs off file-loaded rather than at load-request time. yt-dlp sources
+        keep their own language list in the same combo, so leave them alone."""
+        widget = self._widget
+        source = self._current_track_source()
+        if source and is_url_supported(source):
+            return
+
+        try:
+            tracks = widget.player.get_subtitle_tracks()
+            widget.subtitles_widget.set_available_tracks(tracks)
+            widget.subtitles_widget.sync_mpv_state(
+                widget.player.get_subtitle_delay(),
+                widget.player.get_subtitle_visibility(),
+            )
+        except Exception:
+            logger.debug("Subtitle track read failed", exc_info=True)
+            widget.subtitles_widget.set_available_tracks([])
+
+    def on_subtitle_track_selected(self, track_id):
+        try:
+            self._widget.player.set_subtitle_track(track_id)
+        except Exception:
+            logger.debug("Subtitle track selection failed", exc_info=True)
+
+    def on_subtitle_delay_changed(self, seconds: float):
+        try:
+            self._widget.player.set_subtitle_delay(seconds)
+        except Exception:
+            logger.debug("Subtitle delay write failed", exc_info=True)
+
+    def on_subtitle_visibility_toggled(self, visible: bool):
+        try:
+            self._widget.player.set_subtitle_visibility(visible)
+        except Exception:
+            logger.debug("Subtitle visibility write failed", exc_info=True)
+
+    def on_subtitle_seek(self, skip: int):
+        try:
+            self._widget.player.subtitle_seek(skip)
+        except Exception:
+            logger.debug("Subtitle seek failed", exc_info=True)
 
     def _current_track_source(self) -> Optional[str]:
         """_source_url is set once per load_url() and stays pinned to the
