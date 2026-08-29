@@ -58,6 +58,25 @@ def is_valid_config():
     return True
 
 
+def merge_missing_keys() -> bool:
+    """Adds actions introduced since the user's config was written, keeping
+    their existing bindings. Without this, any new default key made the whole
+    config 'invalid' and keysToDefault() discarded every customization."""
+    changed = False
+    for section, keys in default_keys.key_dict.items():
+        config_section = next((s for s in key_config if s.lower() == section.lower()), None)
+        if config_section is None:
+            key_config[section] = dict(keys)
+            changed = True
+            continue
+        existing = {k.lower() for k in key_config[config_section]}
+        for action, sequence in keys.items():
+            if action.lower() not in existing:
+                key_config[config_section][action] = sequence
+                changed = True
+    return changed
+
+
 def saveConfig():
     key_config_file = f"{get_app_path()}/data/key_config.cfg"
     with open(key_config_file, "w") as config_file:
@@ -70,8 +89,11 @@ def load_keys():
     if os.path.exists(key_config_file):
         key_config.read(key_config_file)
         if not is_valid_config():
-            keysToDefault()
-            saveConfig()
+            if merge_missing_keys() and is_valid_config():
+                saveConfig()
+            else:
+                keysToDefault()
+                saveConfig()
     else:
         keysToDefault()
         saveConfig()
