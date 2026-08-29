@@ -1193,6 +1193,56 @@ class MPVVideoPlayer(AVPlayer):
         the app's parsed list has no equivalent."""
         self.__mpv_interface.run_on_mpv(lambda m, s=int(skip): m.sub_seek(s), wait=False)
 
+    # Rendering style for mpv's on-video subtitles. Colours are "#AARRGGBB";
+    # a 6-digit "#RRGGBB" is accepted but silently becomes fully opaque, so
+    # callers wanting transparency must pass 8 digits.
+    _SUBTITLE_STYLE_PROPERTIES = {
+        "font": "sub_font",
+        "font_size": "sub_font_size",
+        "bold": "sub_bold",
+        "scale": "sub_scale",
+        "color": "sub_color",
+        "back_color": "sub_back_color",
+        "border_color": "sub_border_color",
+        "border_size": "sub_border_size",
+        "shadow_offset": "sub_shadow_offset",
+        "position": "sub_pos",
+        "ass_override": "sub_ass_override",
+    }
+
+    def set_subtitle_style(self, **options) -> None:
+        """Applies any subset of the style options in one command-owner
+        round-trip. Unknown names are ignored rather than raising, so a
+        stale pref key can't break the whole apply."""
+        writes = [
+            (self._SUBTITLE_STYLE_PROPERTIES[name], value)
+            for name, value in options.items()
+            if name in self._SUBTITLE_STYLE_PROPERTIES and value is not None
+        ]
+        if not writes:
+            return
+
+        def apply(m):
+            for mpv_property, value in writes:
+                try:
+                    setattr(m, mpv_property, value)
+                except Exception:
+                    logger.warning("Subtitle style write failed: %s=%r", mpv_property, value)
+        self.__mpv_interface.run_on_mpv(apply, wait=False)
+
+    def get_subtitle_style(self) -> dict:
+        def read(m):
+            data = {}
+            for name, mpv_property in self._SUBTITLE_STYLE_PROPERTIES.items():
+                try:
+                    data[name] = getattr(m, mpv_property)
+                except Exception:
+                    continue
+            return data
+
+        result = self.__mpv_interface.run_on_mpv(read, wait=True, timeout=1.0, record_only=True)
+        return result if isinstance(result, dict) else {}
+
     def set_start_file_callback(self, callback):
         def register(m):
             @m.event_callback('file-loaded')
