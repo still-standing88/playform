@@ -1114,6 +1114,85 @@ class MPVVideoPlayer(AVPlayer):
             normalized.append({"start": start, "end": end, "title": title})
         return normalized
 
+    def get_subtitle_tracks(self) -> list:
+        """Embedded subtitle tracks from mpv's track-list. The app's own
+        SubtitleManager only ever finds sidecar files matching the video's
+        basename, so tracks muxed into the container were previously
+        invisible. Each entry is {id, lang, title, codec, selected,
+        external, forced}; id is what set_subtitle_track() takes."""
+        def read(m):
+            return m.track_list or []
+
+        tracks = self.__mpv_interface.run_on_mpv(read, wait=True, timeout=1.5, record_only=True)
+        if not isinstance(tracks, list):
+            return []
+
+        subtitles = []
+        for track in tracks:
+            if track.get("type") != "sub":
+                continue
+            subtitles.append({
+                "id": track.get("id"),
+                "lang": track.get("lang") or "",
+                "title": track.get("title") or "",
+                "codec": track.get("codec") or "",
+                "selected": bool(track.get("selected")),
+                "external": bool(track.get("external")),
+                "forced": bool(track.get("forced")),
+            })
+        return subtitles
+
+    def set_subtitle_track(self, track_id) -> None:
+        """track_id is an int from get_subtitle_tracks(), or None/"no" to
+        disable subtitle decoding entirely."""
+        value = "no" if track_id in (None, False, "no") else track_id
+        self.__mpv_interface.run_on_mpv(lambda m, v=value: setattr(m, 'sid', v), wait=False)
+
+    def get_subtitle_track(self):
+        """The selected track id, or None when subtitles are off (mpv
+        reports that as False rather than a number)."""
+        value = self.__mpv_interface.run_on_mpv(lambda m: m.sid, wait=True, timeout=0.5)
+        if value in (None, False, "no"):
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    def add_subtitle_file(self, path: str, select: bool = True) -> None:
+        self.__mpv_interface.run_on_mpv(
+            lambda m, p=path, f="select" if select else "auto": m.sub_add(p, f), wait=False
+        )
+
+    def set_subtitle_visibility(self, visible: bool) -> None:
+        """mpv renders subtitles onto the video independently of the app's
+        own subtitle list panel -- sidecar files are auto-added on load, so
+        this is how that rendering gets turned off without losing the
+        parsed list."""
+        self.__mpv_interface.run_on_mpv(lambda m, v=visible: setattr(m, 'sub_visibility', v), wait=False)
+
+    def get_subtitle_visibility(self) -> bool:
+        return bool(self.__mpv_interface.run_on_mpv(lambda m: m.sub_visibility, wait=True, timeout=0.5))
+
+    def set_subtitle_delay(self, seconds: float) -> None:
+        """Shifts subtitle timing relative to video. Positive delays them."""
+        self.__mpv_interface.run_on_mpv(
+            lambda m, s=float(seconds): setattr(m, 'sub_delay', s), wait=False
+        )
+
+    def get_subtitle_delay(self) -> float:
+        value = self.__mpv_interface.run_on_mpv(lambda m: m.sub_delay, wait=True, timeout=0.5)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def subtitle_seek(self, skip: int) -> None:
+        """Seeks playback to the next/previous subtitle line. Depends on
+        mpv's own subtitle timing, so it needs a track selected in mpv --
+        the app's parsed list has no equivalent."""
+        self.__mpv_interface.run_on_mpv(lambda m, s=int(skip): m.sub_seek(s), wait=False)
+
     def set_start_file_callback(self, callback):
         def register(m):
             @m.event_callback('file-loaded')
