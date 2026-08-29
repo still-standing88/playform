@@ -130,3 +130,13 @@ video_sync_modes = [
     ("Display (drop frames)", "display-vdrop"),
     ("Desynchronized", "desync"),
 ]
+
+# How mpv treats an ASS/SSA subtitle's own embedded styling. Without "force",
+# the app's font/colour/size settings are ignored for those formats.
+subtitle_ass_override_modes = [
+    ("Keep subtitle styling, scale only", "scale"),
+    ("Keep subtitle styling", "no"),
+    ("Override with app settings", "force"),
+    ("Override, keeping positions", "yes"),
+    ("Strip all styling", "strip"),
+]

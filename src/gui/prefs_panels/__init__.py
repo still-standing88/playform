@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app_config import prefs
 from .general_panel import GeneralPanel
 from .media_panel import MediaPanel
+from .subtitles_panel import SubtitlesPanel
 from .accessibility_panel import AccessibilityPanel
 from .advanced_panel import AdvancedPanel
 from .database_panel import DatabasePanel
@@ -40,6 +41,9 @@ class PreferencesDialog(QDialog):
         self.media_panel = MediaPanel(self, self.audio_devices)
         self.tab_widget.addTab(self.media_panel, _("Media"))
 
+        self.subtitles_panel = SubtitlesPanel(self)
+        self.tab_widget.addTab(self.subtitles_panel, _("Subtitles"))
+
         self.accessibility_panel = AccessibilityPanel(self)
         self.tab_widget.addTab(self.accessibility_panel, _("Accessibility"))
 
@@ -62,6 +66,7 @@ class PreferencesDialog(QDialog):
 
         self.general_panel.load_settings(current_prefs)
         self.media_panel.load_settings(current_prefs)
+        self.subtitles_panel.load_settings(current_prefs)
         self.accessibility_panel.load_settings(current_prefs)
         self.advanced_panel.load_settings(current_prefs)
         self.database_panel.load_settings(current_prefs)
@@ -80,6 +85,7 @@ class PreferencesDialog(QDialog):
         
         language_changed = self.general_panel.save_settings(prefs.prefs)
         self.media_panel.save_settings(prefs.prefs)
+        self.subtitles_panel.save_settings(prefs.prefs)
         self.accessibility_panel.save_settings(prefs.prefs)
         self.advanced_panel.save_settings(prefs.prefs)
         self.database_panel.save_settings(prefs.prefs)
