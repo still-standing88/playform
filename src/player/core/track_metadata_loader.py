@@ -6,12 +6,9 @@ import media_core.av_play as av_play
 from PySide6.QtCore import QThread, Signal
 
 from app_config import prefs
-from utilities.chapter_probe import get_chapters
 from ..util.url import fetch_full_info, is_url_supported
 
 logger = logging.getLogger(__name__)
-
-_CHAPTER_CAPABLE_EXTENSIONS = {"mp4", "m4v", "mkv", "m4b"}
 
 
 class _YtdlpInfoFetchThread(QThread):
@@ -215,19 +212,26 @@ class TrackMetadataLoader:
         logger.warning(f"yt-dlp metadata fetch failed for {source}: {error_msg}")
 
     def load_chapters_for_current_track(self):
+        """Chapters come from mpv, which has already demuxed them for the
+        file it is playing -- no second ffprobe process, and it covers every
+        container mpv can read rather than a hardcoded extension list.
+        YouTube chapters stay on the yt-dlp path (_on_ytdlp_metadata_ready)
+        since they are description-derived and mpv never sees them; this
+        leaves them alone rather than clearing them."""
         widget = self._widget
-        widget.chapters_widget.clear_chapters()
         instance = widget.player.primary_instance
-        if not instance or not av_play.is_path(instance.file_path):
+        if not instance:
             return
 
-        ext = os.path.splitext(instance.file_path)[1].lower().lstrip(".")
-        if ext not in _CHAPTER_CAPABLE_EXTENSIONS:
+        source = self._current_track_source()
+        if source and is_url_supported(source):
             return
 
+        widget.chapters_widget.clear_chapters()
         try:
-            chapters = get_chapters(instance.file_path)
+            chapters = widget.player.get_chapters()
         except Exception:
+            logger.debug("Chapter read failed", exc_info=True)
             return
 
         if chapters:

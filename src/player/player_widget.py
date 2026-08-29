@@ -245,6 +245,10 @@ class PlayerWidget(QWidget):
         self._queueChangedFromMonitor.connect(self.queueChanged)
         self._reverseStoppedFromMonitor.connect(self._on_reverse_stopped_from_monitor)
         self._fileLoadedFromMpv.connect(self.seek_to_last)
+        # mpv only knows the chapter list once the file is actually open, so
+        # unlike the previous out-of-band ffprobe read this has to wait for
+        # file-loaded rather than firing at load-request time.
+        self._fileLoadedFromMpv.connect(self._track_loader.load_chapters_for_current_track)
 
         self.player.set_queue_changed_callback(self._queueChangedFromMonitor.emit)
 

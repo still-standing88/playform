@@ -948,6 +948,48 @@ class MPVVideoPlayer(AVPlayer):
     def get_reverse_playback(self) -> bool:
         return self._reverse_playback_active
 
+    def get_chapters(self) -> list:
+        """mpv's own chapter-list for the loaded file, normalised to the
+        {start, end, title} shape the chapters widget expects. mpv reports
+        only a start time per chapter, so each end is the next start (the
+        last one runs to duration). Returns [] when nothing is loaded or the
+        read fails, so callers never have to handle a partial read."""
+        def read(m):
+            chapters = m.chapter_list or []
+            duration = m.duration
+            return chapters, duration
+
+        result = self.__mpv_interface.run_on_mpv(read, wait=True, timeout=1.5, record_only=True)
+        if not isinstance(result, tuple):
+            return []
+        raw, duration = result
+        if not raw:
+            return []
+
+        try:
+            total = float(duration) if duration is not None else 0.0
+        except (TypeError, ValueError):
+            total = 0.0
+
+        normalized = []
+        for index, chapter in enumerate(raw):
+            try:
+                start = float(chapter.get("time") or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if index + 1 < len(raw):
+                try:
+                    end = float(raw[index + 1].get("time") or 0.0)
+                except (TypeError, ValueError):
+                    end = start
+            else:
+                end = total if total > start else start
+            title = chapter.get("title") or ""
+            if isinstance(title, bytes):
+                title = title.decode("utf-8", "replace")
+            normalized.append({"start": start, "end": end, "title": title})
+        return normalized
+
     def set_start_file_callback(self, callback):
         def register(m):
             @m.event_callback('file-loaded')
