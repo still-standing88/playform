@@ -18,7 +18,7 @@ from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSplitter,
     QTreeWidget, QTreeWidgetItem, QListWidget, QListWidgetItem, QMenu,
-    QPlainTextEdit, QMessageBox,
+    QPlainTextEdit, QMessageBox, QFileDialog,
 )
 
 from app_constance.styles import TITLE_LABEL_STYLE
@@ -26,6 +26,7 @@ from media_core.ytdlp_download.engine import (
     YtDlpDownloadEngine,
     classify_url,
     url_has_playlist_param,
+    parse_link_file,
     CATEGORY_YOUTUBE_VIDEOS,
     CATEGORY_YOUTUBE_PLAYLISTS,
     CATEGORY_YOUTUBE_CHANNELS,
@@ -154,6 +155,11 @@ class YtDlpDownloaderDialog(QDialog):
 
         bottom_row = QHBoxLayout()
         bottom_row.addStretch()
+        self.add_link_file_button = QPushButton(_("Add From Link File..."), self)
+        self.add_link_file_button.setToolTip(
+            _("Queue every YouTube video link listed in a text file"))
+        self.add_link_file_button.clicked.connect(self.open_link_file)
+        bottom_row.addWidget(self.add_link_file_button)
         self.add_download_button = QPushButton(_("Add Download..."), self)
         self.add_download_button.clicked.connect(self._on_add_download)
         bottom_row.addWidget(self.add_download_button)
@@ -502,7 +508,44 @@ class YtDlpDownloaderDialog(QDialog):
         elif clicked is both_button:
             self._open_review(url, "channel_all", destination)
 
-    def _open_review(self, url: str, kind: str, destination: str):
+    @Slot()
+    def open_link_file(self, path: str = "", destination: str = ""):
+        """Queue the YouTube video links listed in a text file. Playlist,
+        channel and otherwise unusable lines are reported as skipped rather
+        than expanded, so a link file only ever yields single videos."""
+        if not path:
+            path, _selected = QFileDialog.getOpenFileName(
+                self, _("Select Link File"), "",
+                _("Text Files (*.txt);;All Files (*.*)"))
+            if not path:
+                return
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as handle:
+                text = handle.read()
+        except OSError as exc:
+            QMessageBox.warning(self, _("Link File"),
+                                _("Could not read the file: {error}").format(error=exc))
+            return
+
+        urls, skipped = parse_link_file(text)
+        if not urls:
+            QMessageBox.information(
+                self, _("Link File"),
+                _("No usable YouTube video links were found in this file.\n\n"
+                  "{count} line(s) were skipped.").format(count=len(skipped)))
+            return
+        if skipped:
+            QMessageBox.information(
+                self, _("Link File"),
+                _("{found} video link(s) found. {skipped} line(s) were skipped "
+                  "because they were not single-video links.").format(
+                    found=len(urls), skipped=len(skipped)))
+
+        self._open_review(urls, "link_file",
+                          destination or default_ytdlp_destination(),
+                          source_name=os.path.splitext(os.path.basename(path))[0])
+
+    def _open_review(self, url, kind: str, destination: str, source_name: str = ""):
         dialog = YtDlpReviewDialog(url, kind, self)
         dialog.set_default_location(destination)
         if dialog.exec() != QDialog.DialogCode.Accepted:
@@ -514,9 +557,13 @@ class YtDlpDownloaderDialog(QDialog):
             "channel_videos": CATEGORY_YOUTUBE_CHANNELS,
             "channel_shorts": CATEGORY_YOUTUBE_CHANNELS,
             "channel_all": CATEGORY_YOUTUBE_CHANNELS,
+            "link_file": CATEGORY_YOUTUBE_VIDEOS,
         }
         category = categories.get(kind, CATEGORY_OTHER)
-        parent_name = dialog.source_title() or self._derive_parent_name(url, kind)
+        if kind == "link_file":
+            parent_name = source_name or _("Link file")
+        else:
+            parent_name = dialog.source_title() or self._derive_parent_name(url, kind)
 
         added_any = False
         for entry_data in dialog.selected_entries():

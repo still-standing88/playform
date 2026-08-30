@@ -150,11 +150,15 @@ class SingletonDialogsManager:
         else:
             _announce_downloads(_("yt-dlp Download Manager opened"))
 
+    def open_ytdlp_link_file(self):
+        """Open the yt-dlp manager and go straight to its link-file picker."""
+        self.open_ytdlp_downloader()
+        self.main_window._ytdlp_dialog.open_link_file()
+
     def _on_ytdlp_hidden(self):
         mw = self.main_window
         mw.show_ytdlp_button.setVisible(True)
         _announce_downloads(_("yt-dlp Download Manager minimized"))
-
     def _on_ytdlp_closed(self):
         mw = self.main_window
         mw._ytdlp_dialog = None

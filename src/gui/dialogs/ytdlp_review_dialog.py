@@ -1,4 +1,4 @@
-"""Review-before-download dialog for playlist/channel URLs.
+"""Review-before-download dialog for playlist/channel/link-file sources.
 
 Tab 1 lists the videos (fetched off-thread via --flat-playlist) in a
 checkbox tree with select/deselect-all and a retrieval-progress label;
@@ -34,14 +34,16 @@ class _FlatFetchThread(QThread):
     def run(self):
         total = 0
         try:
-            for url in self._urls:
-                entries = fetch_flat_entries(
-                    url,
-                    on_log=lambda line: self.log_line.emit(line),
-                )
-                for entry in entries:
-                    self.entry_found.emit(entry)
-                    total += 1
+            def _on_entry(entry):
+                nonlocal total
+                total += 1
+                self.entry_found.emit(entry)
+
+            fetch_flat_entries(
+                self._urls,
+                on_log=lambda line: self.log_line.emit(line),
+                on_entry=_on_entry,
+            )
         except InterruptedError:
             pass
         except Exception as exc:
@@ -51,9 +53,10 @@ class _FlatFetchThread(QThread):
 
 
 class YtDlpReviewDialog(QDialog):
-    def __init__(self, url: str, kind: str, parent=None):
+    def __init__(self, url, kind: str, parent=None):
         super().__init__(parent)
-        self._url = url
+        self._urls = [url] if isinstance(url, str) else list(url)
+        self._url = self._urls[0] if self._urls else ""
         self._kind = kind
         self._entries: list = []
         self._thread: _FlatFetchThread | None = None
@@ -65,6 +68,7 @@ class YtDlpReviewDialog(QDialog):
             "channel_videos": _("Download Channel Videos"),
             "channel_shorts": _("Download Channel Shorts"),
             "channel_all": _("Download Channel"),
+            "link_file": _("Download Links From File"),
         }
         self.setWindowTitle(titles.get(kind, _("Download Videos")))
         self.resize(640, 520)
@@ -166,7 +170,7 @@ class YtDlpReviewDialog(QDialog):
         return self._source_title
 
     def _start_fetch(self):
-        urls = [self._url]
+        urls = list(self._urls)
         if self._kind == "channel_shorts":
             urls = [self._url.rstrip("/") + "/shorts"]
         elif self._kind == "channel_all":

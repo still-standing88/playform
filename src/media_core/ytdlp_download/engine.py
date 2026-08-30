@@ -87,6 +87,79 @@ def url_has_playlist_param(url: str) -> bool:
         return False
 
 
+_VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
+_ID_PATH_PREFIXES = ("/shorts/", "/live/", "/embed/", "/v/")
+_NON_VIDEO_PATH_PREFIXES = ("/playlist", "/@", "/channel/", "/c/", "/user/", "/results", "/feed")
+
+
+def normalize_video_url(line: str) -> Optional[str]:
+    """Reduce one text-file line to a canonical single-video watch URL, or
+    None when it is not a YouTube video link (playlists, channels, search
+    pages, junk). Every parameter other than the video id is dropped."""
+    line = (line or "").strip().strip("\"'")
+    if not line or line.startswith("#"):
+        return None
+
+    if _VIDEO_ID_RE.match(line):
+        return f"https://www.youtube.com/watch?v={line}"
+
+    candidate = line if "//" in line else f"https://{line}"
+    try:
+        parsed = urlparse(candidate)
+    except ValueError:
+        return None
+    if parsed.scheme not in ("http", "https"):
+        return None
+
+    host = (parsed.hostname or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    if host.startswith("m."):
+        host = host[2:]
+    path = parsed.path or ""
+
+    video_id = ""
+    if host == "youtu.be":
+        video_id = path.lstrip("/").split("/", 1)[0]
+    elif host in ("youtube.com", "youtube-nocookie.com"):
+        if path.startswith(_NON_VIDEO_PATH_PREFIXES):
+            return None
+        if path.startswith("/watch"):
+            video_id = (parse_qs(parsed.query or "").get("v") or [""])[0]
+        else:
+            for prefix in _ID_PATH_PREFIXES:
+                if path.startswith(prefix):
+                    video_id = path[len(prefix):].split("/", 1)[0]
+                    break
+    if not _VIDEO_ID_RE.match(video_id or ""):
+        return None
+    return f"https://www.youtube.com/watch?v={video_id}"
+
+
+def parse_link_file(text: str) -> tuple:
+    """Split a link-file's contents into (video_urls, skipped_lines).
+
+    Lines are trimmed, comments and blanks ignored, non-video links
+    (playlists/channels/search) rejected, and duplicates collapsed while
+    preserving the file's order."""
+    urls: list = []
+    seen: set = set()
+    skipped: list = []
+    for raw in (text or "").splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        normalized = normalize_video_url(stripped)
+        if normalized is None:
+            skipped.append(stripped)
+            continue
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        urls.append(normalized)
+    return urls, skipped
+
+
 def _deno_args() -> list:
     # Same helper role as player.util.url._get_deno_arg -- deno is solely a
     # yt-dlp dependency; duplicated here because media_core must not import
@@ -164,19 +237,28 @@ def _entry_from_raw(raw: dict) -> Optional[dict]:
     }
 
 
-def fetch_flat_entries(url: str, on_log: Optional[Callable[[str], None]] = None,
-                       cancel_event: Optional[threading.Event] = None) -> list:
+def fetch_flat_entries(url, on_log: Optional[Callable[[str], None]] = None,
+                       cancel_event: Optional[threading.Event] = None,
+                       on_entry: Optional[Callable[[dict], None]] = None) -> list:
     """List a playlist/channel's videos without downloading (--flat-playlist
     --dump-json; stdout carries one JSON object per entry, the same shape
     the player's own flat listing relies on). Returns [{id, title, url,
-    duration, date}, ...]. Runs on its caller's thread."""
+    duration, date}, ...]. Runs on its caller's thread.
+
+    `url` may be a single URL or a list of them (one yt-dlp run for the
+    whole batch). `on_entry` fires per entry as stdout is parsed, so a
+    caller can populate a view before the run finishes."""
     binary = find_ytdlp_binary()
     if not binary:
         raise RuntimeError("yt-dlp executable was not found.")
 
+    urls = [url] if isinstance(url, str) else list(url)
+    if not urls:
+        return []
+
     cmd = [binary, "--flat-playlist", "--dump-json", "--no-warnings"] \
         + _deno_args() + _cookies_args()
-    cmd.append(url)
+    cmd.extend(urls)
 
     if on_log:
         on_log(f"$ {' '.join(cmd)}")
@@ -222,10 +304,14 @@ def fetch_flat_entries(url: str, on_log: Optional[Callable[[str], None]] = None,
                     entry = _entry_from_raw(raw)
                     if entry is not None:
                         entries.append(entry)
+                        if on_entry:
+                            on_entry(entry)
             else:
                 entry = _entry_from_raw(data)
                 if entry is not None:
                     entries.append(entry)
+                    if on_entry:
+                        on_entry(entry)
         returncode = process.wait()
     finally:
         if process.poll() is None:

@@ -827,6 +827,9 @@ class MainWindow(QMainWindow):
     def open_ytdlp_downloader_with_url(self, url: str):
         self.singleton_dialogs.open_ytdlp_downloader(url=url)
 
+    def open_ytdlp_link_file(self):
+        self.singleton_dialogs.open_ytdlp_link_file()
+
     def _show_minimized_ytdlp(self):
         self.singleton_dialogs.show_minimized_ytdlp()
 
