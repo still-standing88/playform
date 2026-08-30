@@ -63,14 +63,19 @@ BUTTON_STYLE = f"""
 TOOLBUTTON_STYLE = """
     QToolButton {
         background-color: transparent;
-        border: none;
+        border: 2px solid transparent;
         color: white;
         font-size: 14px;
         font-weight: bold;
-        padding: 4px;
+        padding: 2px;
     }
     QToolButton:hover {
         background-color: rgba(255, 165, 0, 0.3);
+        border-radius: 4px;
+    }
+    QToolButton:focus {
+        background-color: rgba(255, 165, 0, 0.2);
+        border: 2px solid rgba(255, 165, 0, 0.9);
         border-radius: 4px;
     }
     QToolButton:pressed {
