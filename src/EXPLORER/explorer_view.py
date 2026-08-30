@@ -2,7 +2,7 @@ from genericpath import isfile
 import os
 
 from typing import Optional, Callable
-from PySide6.QtGui import QKeyEvent, QActionGroup, QAction, QFontMetrics, QFont, QColor, QTextOption
+from PySide6.QtGui import QKeyEvent, QActionGroup, QAction, QFontMetrics, QFont, QColor, QTextOption, QPalette
 from PySide6.QtWidgets import (
     QMenu, QListWidget, QListWidgetItem, QLabel, QDialog, QComboBox, QVBoxLayout,
     QDialogButtonBox, QStyledItemDelegate, QStyleOptionViewItem, QApplication, QStyle
@@ -110,14 +110,14 @@ class FileDetailsDelegate(QStyledItemDelegate):
         y = rect.top()
         for line in self._wrap_lines(name, name_metrics, rect.width(), self.MAX_NAME_LINES):
             painter.setFont(opt.font)
-            painter.setPen(opt.palette.color(qt.ColorRole.Text))
+            painter.setPen(opt.palette.color(QPalette.ColorRole.Text))
             painter.drawText(QRect(rect.left(), y, rect.width(), name_metrics.height()),
                              qt.AlignmentFlag.AlignLeft | qt.AlignmentFlag.AlignVCenter, line)
             y += name_metrics.height()
 
         if details:
             painter.setFont(detail_font)
-            painter.setPen(opt.palette.color(qt.ColorRole.PlaceholderText))
+            painter.setPen(opt.palette.color(QPalette.ColorRole.PlaceholderText))
             elided = detail_metrics.elidedText(details, qt.TextElideMode.ElideRight, rect.width())
             painter.drawText(QRect(rect.left(), y, rect.width(), detail_metrics.height()),
                              qt.AlignmentFlag.AlignLeft | qt.AlignmentFlag.AlignVCenter, elided)
