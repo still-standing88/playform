@@ -484,13 +484,6 @@ class ExplorerView(QListWidget):
         if item_info is None: return  # Guard against None
         menu = QMenu()
 
-        sort_menu = menu.addMenu(_("Sort by"))
-        menuItem(sort_menu, _("Name (A\u2013Z)"),       lambda: self._sort("name_asc"),     self)
-        menuItem(sort_menu, _("Name (Z\u2013A)"),       lambda: self._sort("name_desc"),    self)
-        menuItem(sort_menu, _("Newest first"),           lambda: self._sort("date_newest"),  self)
-        menuItem(sort_menu, _("Oldest first"),           lambda: self._sort("date_oldest"),  self)
-        menu.addSeparator()
-
         if item_info.type == PathType.FOLDER:
             menuItem(menu, _("navigate to folder"), self.forward, self)
         elif item_info.type == PathType.FILE:
@@ -536,6 +529,13 @@ class ExplorerView(QListWidget):
         view_group.addAction(icon_action)
         view_menu.addAction(list_action)
         view_menu.addAction(icon_action)
+
+        if self._explorer.mode != ExplorerMode.SEARCH_RESULTS:
+            sort_menu = menu.addMenu(_("Sort by"))
+            menuItem(sort_menu, _("Name (A\u2013Z)"),       lambda: self._sort("name_asc"),     self)
+            menuItem(sort_menu, _("Name (Z\u2013A)"),       lambda: self._sort("name_desc"),    self)
+            menuItem(sort_menu, _("Newest first"),           lambda: self._sort("date_newest"),  self)
+            menuItem(sort_menu, _("Oldest first"),           lambda: self._sort("date_oldest"),  self)
 
         filter_menu = menu.addMenu(_("Filter"))
         filter_group = QActionGroup(filter_menu)
