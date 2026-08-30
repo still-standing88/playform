@@ -6,7 +6,7 @@ from typing import Optional, Callable, Dict, List, Tuple
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QToolButton,
                                QSlider, QLabel, QSizePolicy, QFrame, QSpinBox, QMenu)
 from PySide6.QtWidgets import QDialog, QApplication
-from PySide6.QtCore import Qt, Signal, QTimer, Slot
+from PySide6.QtCore import Qt, Signal, QTimer, Slot, QSize
 from PySide6.QtGui import QIcon, QFont
 
 from gui_controls.toggle_button import ToggleButton
@@ -17,6 +17,7 @@ from .dialogs.goto_dialog import GoToDialog
 from app_constance.misc import video_resolutions, video_speeds, video_aspect_ratios, video_scales
 from app_constance.styles import (PLAYER_CONTROLS_STYLE, BUTTON_STYLE, SLIDER_STYLE,
                                    TIME_LABEL_STYLE, TRACK_LABEL_STYLE, TOOLBUTTON_STYLE,
+                                   CONTROLS_SEPARATOR_STYLE,
                                    get_repeat_button_active_style)
 from utilities.functions import get_app_path
 from .core.playback_state_manager import PlaybackStateManager
@@ -156,7 +157,7 @@ class PlayerControls(QWidget):
         self.bookmarks_btn.setIcon(load_icon("bookmarks.svg"))
 
         self.goto_btn = QToolButton(self)
-        self.goto_btn.setIcon(load_icon("seek.svg"))
+        self.goto_btn.setIcon(load_icon("goto.svg"))
 
         self.screenshot_btn = QToolButton(self)
         self.screenshot_btn.setIcon(load_icon("screenshot.svg"))
@@ -193,6 +194,7 @@ class PlayerControls(QWidget):
         for btn, tooltip in button_specs:
             btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
             btn.setFixedSize(36, 36)
+            btn.setIconSize(QSize(22, 22))
             btn.setToolTip(tooltip)
 
         self.seek_slider = QSlider(Qt.Orientation.Horizontal, self)
@@ -208,11 +210,12 @@ class PlayerControls(QWidget):
         self.mute_btn = QToolButton(self)
         self.mute_btn.setIcon(load_icon("mute_off.svg"))
         self.mute_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-        self.mute_btn.setFixedSize(35, 35)
+        self.mute_btn.setFixedSize(36, 36)
+        self.mute_btn.setIconSize(QSize(22, 22))
         self.mute_btn.setToolTip(_("Mute/Unmute"))
 
         self.more_btn = QPushButton("⋯", self)
-        self.more_btn.setFixedSize(35, 35)
+        self.more_btn.setFixedSize(36, 36)
         self.more_btn.setToolTip(_("More Options"))
 
         self.volume_slider = QSlider(Qt.Orientation.Horizontal, self)
@@ -244,10 +247,12 @@ class PlayerControls(QWidget):
         self.current_track_label.customContextMenuRequested.connect(self.show_path_context_menu)
 
         self.separator1 = QFrame(self)
-        self.separator1.setFrameStyle(QFrame.Shape.VLine | QFrame.Shadow.Sunken)
-
         self.separator2 = QFrame(self)
-        self.separator2.setFrameStyle(QFrame.Shape.VLine | QFrame.Shadow.Sunken)
+        self.separator3 = QFrame(self)
+        # FlowLayout sizes items to their sizeHint, and a bare VLine QFrame
+        # hints zero height - without a fixed size they never render.
+        for separator in (self.separator1, self.separator2, self.separator3):
+            separator.setFixedSize(1, 26)
 
     def layout_widgets(self):
 
@@ -277,8 +282,10 @@ class PlayerControls(QWidget):
         for widget in (self.toggle_controls_btn,
                        self.previous_btn, self.backward_btn, self.play_pause_btn,
                        self.forward_btn, self.next_btn, self.separator1,
-                       self.repeat_btn, self.shuffle_btn, self.bookmarks_btn,
-                       self.goto_btn, self.screenshot_btn, self.separator2,
+                       self.repeat_btn, self.shuffle_btn,
+                       self.playlist_view_btn, self.queue_view_btn, self.separator2,
+                       self.bookmarks_btn, self.goto_btn, self.screenshot_btn,
+                       self.separator3,
                        self.mute_btn, self.volume_icon_label, self.volume_slider,
                        self.time_label, self.more_btn):
             self.buttons_flow.addWidget(widget)
@@ -290,7 +297,8 @@ class PlayerControls(QWidget):
         self.expandable_widgets = [
             self.previous_btn, self.backward_btn, self.forward_btn,
             self.next_btn, self.repeat_btn, self.separator1,
-            self.seek_icon_label, self.seek_slider, self.separator2, self.mute_btn,
+            self.seek_icon_label, self.seek_slider, self.separator2,
+            self.separator3, self.mute_btn,
             self.volume_icon_label,
             self.volume_slider, self.time_label, self.current_track_label, self.shuffle_btn, self.bookmarks_btn, self.goto_btn, self.screenshot_btn,
             self.playlist_view_btn, self.queue_view_btn,
@@ -330,11 +338,15 @@ class PlayerControls(QWidget):
         # Apply QToolButton style to media control buttons
         for btn in [self.play_pause_btn, self.previous_btn, self.backward_btn,
                    self.forward_btn, self.next_btn, self.repeat_btn, self.shuffle_btn,
-                   self.bookmarks_btn, self.screenshot_btn, self.mute_btn]:
+                   self.bookmarks_btn, self.goto_btn, self.screenshot_btn,
+                   self.playlist_view_btn, self.queue_view_btn, self.mute_btn]:
             btn.setStyleSheet(TOOLBUTTON_STYLE)
 
         # Apply QPushButton style to more button
         self.more_btn.setStyleSheet(BUTTON_STYLE)
+
+        for separator in (self.separator1, self.separator2, self.separator3):
+            separator.setStyleSheet(CONTROLS_SEPARATOR_STYLE)
 
         self.seek_slider.setStyleSheet(SLIDER_STYLE)
         self.volume_slider.setStyleSheet(SLIDER_STYLE)
@@ -565,7 +577,8 @@ class PlayerControls(QWidget):
         for widget in [self.play_pause_btn, self.previous_btn, self.backward_btn,
                       self.forward_btn, self.next_btn, self.repeat_btn, self.shuffle_btn,
                       self.mute_btn, self.seek_slider, self.volume_slider, self.goto_btn,
-                      self.bookmarks_btn, self.screenshot_btn]:
+                      self.bookmarks_btn, self.screenshot_btn,
+                      self.playlist_view_btn, self.queue_view_btn]:
             widget.setEnabled(enabled)
 
     @Slot(int)

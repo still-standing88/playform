@@ -24,8 +24,6 @@ COLORS = {
     'button_pressed': "#21618c",
     'button_disabled': "#bdc3c7",
     'button_repeat_active': "#e74c3c",
-    'label_text': "#2c3e50",
-    'track_label_text': "#34495e",
     'player_bg': "#ecf0f1",
     'player_border': "#bdc3c7",
     'slider_groove_border': "#bbb",
@@ -49,6 +47,8 @@ APP_PALETTE_COLORS = {
 }
 
 PLAYER_CONTROLS_STYLE = "background-color: transparent;"
+
+CONTROLS_SEPARATOR_STYLE = "QFrame { background-color: rgba(255, 255, 255, 0.25); border: none; }"
 
 BUTTON_STYLE = f"""
     QPushButton {{
@@ -89,9 +89,11 @@ SLIDER_STYLE = f"""
     QSlider::handle:horizontal:hover {{ background: {COLORS['button_hover']}; }}
 """
 
-TIME_LABEL_STYLE = f"QLabel {{ color: {COLORS['label_text']}; font-weight: bold; }}"
+# No explicit color - these sit on the themed player background, so the
+# active QDarkStyle palette's text color has to win.
+TIME_LABEL_STYLE = "QLabel { font-weight: bold; }"
 
-TRACK_LABEL_STYLE = f"QLabel {{ color: {COLORS['track_label_text']}; font-size: 14px; }}"
+TRACK_LABEL_STYLE = "QLabel { font-size: 14px; }"
 
 VIDEO_PLACEHOLDER_STYLE = f"""
     QLabel {{
