@@ -341,19 +341,19 @@ class MenuManager:
         self.main_window.add_download_action.triggered.connect(self.main_window.open_add_download_dialog)
         self.main_window.downloads_menu.addAction(self.main_window.add_download_action)
 
-        self.main_window.downloads_menu.addSeparator()
-
-        self.main_window.ytdlp_download_action = QAction(_("yt-dlp &Download Manager..."), self.main_window)
-        self.main_window.ytdlp_download_action.triggered.connect(self.main_window.open_ytdlp_downloader)
-        self.main_window.downloads_menu.addAction(self.main_window.ytdlp_download_action)
-
         self.main_window.ytdlp_link_file_action = QAction(_("Download From &Link File..."), self.main_window)
         self.main_window.ytdlp_link_file_action.triggered.connect(self.main_window.open_ytdlp_link_file)
         self.main_window.downloads_menu.addAction(self.main_window.ytdlp_link_file_action)
 
+        self.main_window.downloads_menu.addSeparator()
+
         self.main_window.download_center_action = QAction(_("&Download Center"), self.main_window)
         self.main_window.download_center_action.triggered.connect(self.main_window.open_downloader)
         self.main_window.downloads_menu.addAction(self.main_window.download_center_action)
+
+        self.main_window.ytdlp_download_action = QAction(_("yt-dlp Download &Manager..."), self.main_window)
+        self.main_window.ytdlp_download_action.triggered.connect(self.main_window.open_ytdlp_downloader)
+        self.main_window.downloads_menu.addAction(self.main_window.ytdlp_download_action)
         
     def setup_options_menu(self):
         self.main_window.preferences_action = QAction(_("&Manage Preferences"), self.main_window)
