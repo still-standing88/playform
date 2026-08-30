@@ -173,6 +173,12 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
         for that; the "Add Effect" picker browses the catalog directly)."""
         return list(self._added_effect_order)
 
+    @staticmethod
+    def get_addable_audio_filter_ids() -> List[str]:
+        """Catalog ids the effects chain can actually instantiate -- the
+        picker must filter on this or it offers rows that silently fail."""
+        return list(AUDIO_FILTER_CLASSES)
+
     def _get_audio_filter_object(self, name: str) -> Optional[MPVAudioFilter]:
         if name not in self._audio_filter_objects:
             filter_cls = AUDIO_FILTER_CLASSES.get(name)

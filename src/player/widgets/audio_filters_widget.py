@@ -194,7 +194,9 @@ class AudioFiltersWidget(QWidget):
         if not self.player:
             return
         existing = set(self.player.get_audio_filter_names())
-        available = [effect for effect in MPV_EFFECTS if effect.id not in existing]
+        addable = set(self.player.get_addable_audio_filter_ids())
+        available = [effect for effect in MPV_EFFECTS
+                     if effect.id not in existing and effect.id in addable]
         if not available:
             QMessageBox.information(
                 self, _("Add Effect"), _("All available effects have already been added.")
