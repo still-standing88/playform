@@ -34,6 +34,7 @@ class MainWindowShortcuts:
             hotkeys["Documentation"]: mw.open_documentation,
             hotkeys["Hotkeys dialog"]: mw.open_hotkeys,
             hotkeys["Prefrences Dialog"]: mw.open_preferences,
+            hotkeys["Restart application"]: mw.restart_application,
             "F6": mw.focus_next_widget,
             "Shift+F6": mw.focus_previous_widget,
         }

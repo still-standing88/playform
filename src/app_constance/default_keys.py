@@ -29,7 +29,8 @@ key_dict = {
 "Focus player": "Alt+P",
 "Documentation":"F1",
 "Hotkeys dialog": "F4",
-"Prefrences Dialog":"Ctrl+P"
+"Prefrences Dialog":"Ctrl+P",
+"Restart application": "Ctrl+Shift+R"
 },
 "Explorer": {
 "Play/Pause": "Space",
