@@ -316,13 +316,30 @@ class PlayerWidget(QWidget):
 
     @Slot(bool)
     def _on_accordion_panel_toggled(self, hidden):
+        was_hidden = not self.accordion_scroll.isVisible()
         self.accordion_scroll.setVisible(not hidden)
         if hidden:
-            self.toggle_accordion_btn.setText(_("Show Side Panel"))
+            # Hiding the scroll area alone leaves the splitter pane at the
+            # width it was last given, so the video never reclaims it.
+            if not was_hidden:
+                self._accordion_pane_width = max(self.main_splitter.sizes()[1],
+                                                 self.IDEAL_ACCORDION_WIDTH)
+            # Collapsed to an arrow so the pane shrinks to a thin strip; the
+            # full label would hold ~230px of width open on its own.
+            self.toggle_accordion_btn.setText("\u00ab")
             self.toggle_accordion_btn.setToolTip(_("Show Side Panel"))
+            self.toggle_accordion_btn.setAccessibleName(_("Show Side Panel"))
         else:
             self.toggle_accordion_btn.setText(_("Hide Side Panel"))
             self.toggle_accordion_btn.setToolTip(_("Hide Side Panel"))
+            self.toggle_accordion_btn.setAccessibleName(_("Hide Side Panel"))
+
+        total = sum(self.main_splitter.sizes())
+        if hidden:
+            keep = self.toggle_accordion_btn.sizeHint().width() + 12
+        else:
+            keep = getattr(self, "_accordion_pane_width", self.IDEAL_ACCORDION_WIDTH)
+        self.main_splitter.setSizes([max(0, total - keep), keep])
 
     @Slot()
     def _on_play_pause_clicked(self):
@@ -1013,6 +1030,9 @@ class PlayerWidget(QWidget):
     # from whatever the smallest screen ever seen last demanded.
     IDEAL_ACCORDION_FLOOR = 170
     MIN_ACCORDION_FLOOR = 0
+
+    # Matches main_splitter's initial right-pane size in layout_widgets().
+    IDEAL_ACCORDION_WIDTH = 300
 
     def set_accordion_floor(self, px: int):
         self.accordion_scroll.setMinimumHeight(max(self.MIN_ACCORDION_FLOOR, px))
