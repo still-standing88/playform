@@ -3,13 +3,14 @@
     <file alias="bookmarks.svg">icons/bookmarks.svg</file>
     <file alias="explorer.svg">icons/explorer.svg</file>
     <file alias="forward.svg">icons/forward.svg</file>
+    <file alias="goto.svg">icons/goto.svg</file>
     <file alias="mute_off.svg">icons/mute_off.svg</file>
     <file alias="mute_on.svg">icons/mute_on.svg</file>
     <file alias="next.svg">icons/next.svg</file>
     <file alias="pause.svg">icons/pause.svg</file>
     <file alias="play.svg">icons/play.svg</file>
-    <file alias="previous.svg">icons/previous.svg</file>
     <file alias="playlist.svg">icons/playlist.svg</file>
+    <file alias="previous.svg">icons/previous.svg</file>
     <file alias="queue.svg">icons/queue.svg</file>
     <file alias="repeat.svg">icons/repeat.svg</file>
     <file alias="rewind.svg">icons/rewind.svg</file>
@@ -20,6 +21,6 @@
     <file alias="volume.svg">icons/volume.svg</file>
   </qresource>
   <qresource prefix="app">
-    <file>PlayForm.png</file>
+    <file>playform.png</file>
   </qresource>
 </RCC>
