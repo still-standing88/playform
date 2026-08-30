@@ -607,7 +607,29 @@ class MainWindow(QMainWindow):
     def open_logs_viewer(self):
         dlg = LogsViewerDialog(self)
         dlg.exec()
-        
+
+    def restart_application(self, debug_mode: bool = False):
+        from utilities.functions import set_restart_flag, set_restart_debug
+
+        if debug_mode:
+            reply = QMessageBox.warning(
+                self,
+                _("Enable Debug Mode?"),
+                _(
+                    "Debug mode is unstable and is known to crash. It should only "
+                    "be used to diagnose a problem, not for normal playback.\n\n"
+                    "Restart with debug mode enabled?"
+                ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+
+        set_restart_debug(debug_mode)
+        set_restart_flag(True)
+        QTimer.singleShot(0, QApplication.instance().closeAllWindows)
+
     def _find_device_index(self, player, device_name: str) -> int:
         if not device_name:
             return -1

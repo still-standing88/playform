@@ -221,12 +221,21 @@ def set_restart_flag(flag:bool):
 def get_restart_flag() -> bool:
     return os.environ.get("APP_RESTART", "0") == "1"
 
+def set_restart_debug(enabled:bool):
+    os.environ["APP_RESTART_DEBUG"] = "1" if enabled else "0"
+
 def restart_app():
+    # Unset means "keep whatever mode we're in"; the Debug menu's restart
+    # actions set it explicitly to force one way or the other.
+    debug = os.environ.get("APP_RESTART_DEBUG") or os.environ.get("PLAYFORM_DEBUG", "0")
+    args = [a for a in sys.argv[1:] if a != "--debug"]
+    if debug == "1":
+        args.append("--debug")
     if is_frozen():
-        os.execl(sys.executable, sys.executable, *sys.argv[1:])
+        os.execl(sys.executable, sys.executable, *args)
     else:
         python = sys.executable
-        os.execl(python, python, *sys.argv)
+        os.execl(python, python, sys.argv[0], *args)
 
 def initialize_com():
     if sys.platform == "win32":

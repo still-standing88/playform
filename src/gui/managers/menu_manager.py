@@ -324,6 +324,18 @@ class MenuManager:
         self.main_window.show_console_dock_action.triggered.connect(self.main_window.dock_manager.toggle_console_dock)
         self.main_window.debug_menu.addAction(self.main_window.show_console_dock_action)
 
+        self.main_window.debug_menu.addSeparator()
+
+        self.main_window.restart_app_action = QAction(_("&Restart Application"), self.main_window)
+        self.main_window.restart_app_action.triggered.connect(
+            lambda: self.main_window.restart_application(False))
+        self.main_window.debug_menu.addAction(self.main_window.restart_app_action)
+
+        self.main_window.restart_debug_action = QAction(_("Restart in &Debug Mode..."), self.main_window)
+        self.main_window.restart_debug_action.triggered.connect(
+            lambda: self.main_window.restart_application(True))
+        self.main_window.debug_menu.addAction(self.main_window.restart_debug_action)
+
     def setup_downloads_menu(self):
         self.main_window.add_download_action = QAction(_("Add &Download..."), self.main_window)
         self.main_window.add_download_action.triggered.connect(self.main_window.open_add_download_dialog)
