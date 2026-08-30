@@ -314,6 +314,37 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             persist=False,
         )
 
+    def reapply_audio_chain(self) -> None:
+        """Re-push the equalizer and effects onto the current instance.
+
+        Releasing a media instance clears the backend's applied-filter map,
+        but the filter ids cached here survive - so every filter looked
+        enabled while actually applying nothing, until it was toggled off
+        and on again. Prefs hold the persisted chain, so re-reading them is
+        also what first applies it (init() runs before any instance
+        exists).
+        """
+        if self.primary_instance is None:
+            return
+        instance = self.primary_instance
+        # Drop whatever this instance still knows about first; ids from an
+        # already-released instance simply won't be found, which is fine.
+        for filter_id in list(self._audio_filter_ids.values()):
+            try:
+                instance.remove_filter(filter_id)
+            except Exception:
+                pass
+        if self._equalizer_filter_id is not None:
+            try:
+                instance.remove_filter(self._equalizer_filter_id)
+            except Exception:
+                pass
+        self._audio_filter_ids.clear()
+        self._equalizer_filter_id = None
+        self._equalizer_filter = None
+        self._apply_saved_equalizer()
+        self._apply_saved_audio_effects()
+
     def init(self, *args, **kw):
         super().init(*args, **kw)
         self._preload_stop_event.clear()
@@ -379,6 +410,7 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             playlist, auto_play=auto_play, start_index=target_index
         )
 
+        self.reapply_audio_chain()
         self._schedule_preload_ahead(target_index)
 
     def load_url(self, url: str):
