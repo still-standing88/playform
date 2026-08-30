@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QShortcut, QKeySequence
 from PySide6.QtCore import Qt
 
+from app_config import key_config
 from tools.speech_converter.engine import SpeechEngine, IS_WINDOWS
 from tools.speech_converter.parameters_dialog import ParametersDialog
 from tools.speech_converter.job import SaveSpeechJob
@@ -19,6 +20,16 @@ def _announce(text):
     signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
 _SAVE_FILTER = "MP3 Audio (*.mp3);;WAV Audio (*.wav);;OGG Audio (*.ogg);;FLAC Audio (*.flac);;All Files (*.*)"
+
+HOTKEY_SECTION = "Speech Converter"
+
+_DEFAULT_SHORTCUTS = {
+    "Speak/Pause": "F7",
+    "Stop speaking": "F8",
+    "Open text file": "Ctrl+O",
+    "Save as audio": "Ctrl+S",
+    "Parameters": "Ctrl+F",
+}
 
 
 class SpeechTextEdit(QTextEdit):
@@ -47,6 +58,7 @@ class SpeechConverterUI(QWidget):
 
         self.save_job = None
         self.progress_dialog = None
+        self._shortcuts = []
 
         self.parameters = {
             "locale": self.engine.current_locale().name(),
@@ -65,10 +77,6 @@ class SpeechConverterUI(QWidget):
         self.text_edit = SpeechTextEdit(self._open_text_file, self._save_as, self)
         self.text_edit.setPlaceholderText(_("Type or paste text to speak..."))
         self.text_edit.setAccessibleName(_("Text to speak"))
-        self.text_edit.setAccessibleDescription(
-            _("Right-click for Open Text File and Save As. Shortcuts: F7 speak/pause, "
-              "F8 stop, Ctrl+O open, Ctrl+S save, Ctrl+F parameters.")
-        )
         layout.addWidget(self.text_edit, stretch=1)
 
         button_row = QHBoxLayout()
@@ -92,11 +100,45 @@ class SpeechConverterUI(QWidget):
         self._install_shortcuts()
 
     def _install_shortcuts(self):
-        QShortcut(QKeySequence(Qt.Key.Key_F7), self, activated=self._on_speak_pause_shortcut)
-        QShortcut(QKeySequence(Qt.Key.Key_F8), self, activated=self._on_stop)
-        QShortcut(QKeySequence("Ctrl+S"), self, activated=self._save_as)
-        QShortcut(QKeySequence("Ctrl+O"), self, activated=self._open_text_file)
-        QShortcut(QKeySequence("Ctrl+F"), self, activated=self._open_parameters)
+        for shortcut in self._shortcuts:
+            shortcut.setParent(None)
+        self._shortcuts = []
+
+        section = (key_config.key_config[HOTKEY_SECTION]
+                   if HOTKEY_SECTION in key_config.key_config else {})
+        callbacks = {
+            "Speak/Pause": self._on_speak_pause_shortcut,
+            "Stop speaking": self._on_stop,
+            "Open text file": self._open_text_file,
+            "Save as audio": self._save_as,
+            "Parameters": self._open_parameters,
+        }
+        for action, callback in callbacks.items():
+            sequence = section.get(action, _DEFAULT_SHORTCUTS[action])
+            if not sequence:
+                continue
+            shortcut = QShortcut(QKeySequence(sequence), self)
+            shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+            shortcut.activated.connect(callback)
+            self._shortcuts.append(shortcut)
+
+        self._update_shortcut_description(section)
+
+    def _update_shortcut_description(self, section):
+        parts = [
+            _("{key} speak/pause").format(key=section.get("Speak/Pause", _DEFAULT_SHORTCUTS["Speak/Pause"])),
+            _("{key} stop").format(key=section.get("Stop speaking", _DEFAULT_SHORTCUTS["Stop speaking"])),
+            _("{key} open").format(key=section.get("Open text file", _DEFAULT_SHORTCUTS["Open text file"])),
+            _("{key} save").format(key=section.get("Save as audio", _DEFAULT_SHORTCUTS["Save as audio"])),
+            _("{key} parameters").format(key=section.get("Parameters", _DEFAULT_SHORTCUTS["Parameters"])),
+        ]
+        self.text_edit.setAccessibleDescription(
+            _("Right-click for Open Text File and Save As. Shortcuts: {shortcuts}.").format(
+                shortcuts=", ".join(parts))
+        )
+
+    def reset_shortcuts(self):
+        self._install_shortcuts()
 
     def _apply_parameters(self):
         self.engine.apply_voice(self.parameters.get("locale", ""), self.parameters.get("voice", ""))

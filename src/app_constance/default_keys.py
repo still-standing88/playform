@@ -92,6 +92,13 @@ key_dict = {
 "Start capture": "Ctrl+Alt+R",
 "Pause/Resume capture": "Ctrl+Alt+P",
 "Stop capture": "Ctrl+Alt+S"
+},
+"Speech Converter": {
+"Speak/Pause": "F7",
+"Stop speaking": "F8",
+"Open text file": "Ctrl+O",
+"Save as audio": "Ctrl+S",
+"Parameters": "Ctrl+F"
 }
 }
 

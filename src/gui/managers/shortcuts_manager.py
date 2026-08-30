@@ -56,13 +56,12 @@ class MainWindowShortcuts:
         if hasattr(mw.player_widget, 'reset_shortcuts'):
             mw.player_widget.reset_shortcuts()
 
-        # Multi Device Capture is a Tools-menu ToolDialog now, not an
-        # always-alive dock widget - only rebuild its widget-scoped
-        # transport shortcuts (Start/Pause-Resume/Stop, see
-        # multi_device_capture/ui.py) while its dialog actually exists.
-        capture_dialog = mw.tool_dialogs.get("multi_device_capture")
-        if capture_dialog and hasattr(capture_dialog.tool_widget, 'reset_shortcuts'):
-            capture_dialog.tool_widget.reset_shortcuts()
+        # Tool dialogs are created on demand, so their widget-scoped
+        # shortcuts can only be rebuilt while the dialog exists.
+        for dialog in mw.tool_dialogs.values():
+            tool_widget = getattr(dialog, 'tool_widget', None)
+            if tool_widget is not None and hasattr(tool_widget, 'reset_shortcuts'):
+                tool_widget.reset_shortcuts()
 
     def install_shortcuts(self):
         self.main_window._shortcut_manager.install_on_application()
