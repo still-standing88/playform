@@ -32,10 +32,10 @@ logger = logging.getLogger(__name__)
 # "Add Effect" picker dialog too) and keyed by catalog id -- NOT the filter
 # class's own AVFilter "handle" (its stable, untranslated display label,
 # still used internally for af-chain ordering, see _rebuild_filter_chain).
-# The Equalizer has its own dedicated accordion section/UI already, so
-# it's intentionally excluded here.
+# The Equalizer appears here as well as in its own accordion section; the
+# af chain drops whichever copy would duplicate the other's parameters.
 AUDIO_FILTER_CLASSES = {
-    effect.id: effect.filter_class for effect in MPV_EFFECTS if effect.id != "equalizer"
+    effect.id: effect.filter_class for effect in MPV_EFFECTS
 }
 
 

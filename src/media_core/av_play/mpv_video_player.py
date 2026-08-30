@@ -625,9 +625,14 @@ class MPVMediaInterface(AVMediaInterface):
         # (and evaluation order matters for some filter combinations).
         filter_objs = sorted(self.__applied_filters.values(), key=lambda f: f.handle)
         filter_strings = []
+        seen = set()
         for filter_obj in filter_objs:
             filter_string = filter_obj.construct()
-            if filter_string:
+            # Two filters that construct identically (e.g. the Equalizer
+            # section's instance and an "Add Effect" copy carrying the same
+            # parameters) would each apply their full effect, doubling it.
+            if filter_string and filter_string not in seen:
+                seen.add(filter_string)
                 filter_strings.append(filter_string)
         return ",".join(filter_strings) if filter_strings else ""
 
