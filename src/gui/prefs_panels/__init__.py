@@ -82,6 +82,7 @@ class PreferencesDialog(QDialog):
         old_mpv_extra_options = prefs.prefs.get("mpv_extra_options", "")
         old_debug_level = prefs.prefs.get("debug_level", 2)
         old_language = prefs.prefs.get("language", "en")
+        old_ffmpeg_path = prefs.prefs.get("ffmpeg_path", "")
         
         language_changed = self.general_panel.save_settings(prefs.prefs)
         self.media_panel.save_settings(prefs.prefs)
@@ -133,6 +134,13 @@ class PreferencesDialog(QDialog):
         from player.util.utilities import update_prefs_with_found_binaries
         update_prefs_with_found_binaries(prefs.prefs)
         reinit_ytdlp_settings()
+
+        if old_ffmpeg_path != prefs.prefs.get("ffmpeg_path", ""):
+            from tools.ffmpeg_handler import FFmpegHandler
+            FFmpegHandler.reset()
+
+        if self._main_window is not None:
+            self._main_window.singleton_dialogs.apply_download_prefs()
         
         if self.audio_device_callback:
             self.audio_device_callback(prefs.prefs.get("device_name", ""))
