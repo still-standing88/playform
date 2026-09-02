@@ -63,6 +63,7 @@ class YtDlpDownloaderDialog(QDialog):
         super().__init__(parent)
         self._engine = engine
         self._bridge = _EngineBridge()
+        self._title_threads: list = []
         self.setWindowTitle(_("yt-dlp Download Manager"))
         self.setWindowModality(Qt.WindowModality.NonModal)
         self.setMinimumSize(860, 520)
@@ -548,7 +549,9 @@ class YtDlpDownloaderDialog(QDialog):
     def _open_review(self, url, kind: str, destination: str, source_name: str = ""):
         dialog = YtDlpReviewDialog(url, kind, self)
         dialog.set_default_location(destination)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        if not accepted:
+            dialog.deleteLater()
             return
         options = dialog.options()
 
@@ -575,9 +578,12 @@ class YtDlpDownloaderDialog(QDialog):
             if not options["start_now"]:
                 self._engine.pause(entry.id)
 
+        selected_count = len(dialog.selected_entries())
+        dialog.deleteLater()
+
         if added_any:
             self.show_dialog()
-            self._announce_queue_added(len(dialog.selected_entries()))
+            self._announce_queue_added(selected_count)
 
     def _announce_queue_added(self, count: int):
         from utilities import signal_manager
@@ -597,12 +603,24 @@ class YtDlpDownloaderDialog(QDialog):
                 self._engine.set_title(entry_id, found["title"])
 
         thread.entry_found.connect(_on_found)
-        thread.finished_ok.connect(thread.deleteLater)
-        thread.failed.connect(thread.deleteLater)
+        # QThread.finished, not finished_ok: the latter is emitted from inside
+        # run(), so deleting on it can destroy a thread that is still running.
+        thread.finished.connect(lambda t=thread: self._discard_title_thread(t))
+        self._title_threads.append(thread)
         thread.start()
 
         self.show_dialog()
         self._announce_queue_added(1)
+
+    def _discard_title_thread(self, thread):
+        if thread in self._title_threads:
+            self._title_threads.remove(thread)
+        thread.deleteLater()
+
+    def _stop_title_threads(self):
+        for thread in list(self._title_threads):
+            thread.stop_and_wait()
+        self._title_threads.clear()
 
     # ------------------------------------------------------------------
     # Chrome
@@ -642,5 +660,6 @@ class YtDlpDownloaderDialog(QDialog):
         super().keyPressEvent(event)
 
     def closeEvent(self, event):
+        self._stop_title_threads()
         self.dialog_closed.emit()
         event.accept()
