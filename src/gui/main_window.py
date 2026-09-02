@@ -811,12 +811,11 @@ class MainWindow(QMainWindow):
 
     def _get_podcast_download_manager(self):
         from media_providers.podcasts.download_manager import PodcastDownloadManager
-        from utilities.functions import get_app_path
-        import os
+        from utilities.download_paths import podcast_download_dir
         if self.podcast_widget is None:
             return None
-        dest = os.path.join(get_app_path(), "downloads", "podcasts")
-        return PodcastDownloadManager(self.podcast_widget.feed_mgr, self._get_shared_downloader(), dest)
+        return PodcastDownloadManager(
+            self.podcast_widget.feed_mgr, self._get_shared_downloader(), podcast_download_dir())
 
     def queue_podcast_episode_download(self, feed_url: str, entry):
         manager = self._get_podcast_download_manager()

@@ -5,6 +5,7 @@ from PySide6.QtCore import QObject, Signal
 from utilities import signal_manager
 from utilities.announcement_categories import AnnouncementCategory
 from utilities.functions import get_app_path
+from utilities.download_paths import default_download_dir
 from downloader.downloader import Downloader
 from app_db.catalog_worker import CatalogWorker
 from ..dialogs.downloader_dialog import DownloaderDialog
@@ -60,11 +61,37 @@ class SingletonDialogsManager:
         """Return the singleton Downloader, creating it on first call."""
         mw = self.main_window
         if mw._shared_downloader is None:
-            dest = os.path.join(get_app_path(), "downloads")
-            mw._shared_downloader = Downloader(destination=dest)
+            mw._shared_downloader = Downloader(destination=default_download_dir())
             mw._shared_downloader.download_finished.connect(
                 self._on_native_download_finished)
+            self._apply_download_prefs_to(mw._shared_downloader)
         return mw._shared_downloader
+
+    @staticmethod
+    def _apply_download_prefs_to(downloader: Downloader):
+        from app_config import prefs
+        downloader.apply_settings(
+            max_parallel=prefs.prefs.get("download_max_parallel", 2),
+            speed_limit_kbps=prefs.prefs.get("download_speed_limit_kbps", 0),
+            retry_count=prefs.prefs.get("download_retry_count", 3),
+            retry_delay_ms=prefs.prefs.get("download_retry_delay_ms", 2000),
+        )
+        downloader.apply_proxy(
+            enabled=bool(prefs.prefs.get("proxy_enabled", False)),
+            proxy_type=prefs.prefs.get("proxy_type", "http"),
+            host=prefs.prefs.get("proxy_host", ""),
+            port=prefs.prefs.get("proxy_port", 8080) or 8080,
+            user=prefs.prefs.get("proxy_user", ""),
+            password=prefs.prefs.get("proxy_pass", ""),
+        )
+
+    def apply_download_prefs(self):
+        """Push the Downloads/Proxy prefs onto the live downloader. Called
+        after the Preferences dialog saves; a downloader that hasn't been
+        created yet picks them up in get_shared_downloader()."""
+        downloader = self.main_window._shared_downloader
+        if downloader is not None:
+            self._apply_download_prefs_to(downloader)
 
     def _on_native_download_finished(self, item, succeeded: bool):
         from utilities.download_notifications import notify_download_finished

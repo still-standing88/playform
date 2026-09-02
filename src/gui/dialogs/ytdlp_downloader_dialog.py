@@ -50,8 +50,8 @@ class _EngineBridge(QObject):
 
 
 def default_ytdlp_destination() -> str:
-    from utilities.functions import get_app_path
-    return os.path.join(get_app_path(), "downloads", "yt-dlp")
+    from utilities.download_paths import ytdlp_download_dir
+    return ytdlp_download_dir()
 
 
 class YtDlpDownloaderDialog(QDialog):
