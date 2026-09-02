@@ -160,34 +160,72 @@ def parse_link_file(text: str) -> tuple:
     return urls, skipped
 
 
+def _pref(key: str, default: str = "") -> str:
+    try:
+        from app_config import prefs as _prefs
+        value = _prefs.prefs.get(key, default)
+    except Exception:
+        return default
+    return str(value) if value else default
+
+
+def _app_bin_dir() -> str:
+    """Directory holding the bundled yt-dlp/ffmpeg/deno binaries. The dev
+    layout (repo-root bin/, one level above src/) and the frozen layout
+    (bin/ beside the exe) differ, so both are probed."""
+    try:
+        from utilities.functions import get_parent_dir
+        candidate = os.path.join(get_parent_dir(), "bin")
+        if os.path.isdir(candidate):
+            return candidate
+    except Exception:
+        pass
+    package_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    for base in (package_root, os.path.dirname(package_root)):
+        candidate = os.path.join(base, "bin")
+        if os.path.isdir(candidate):
+            return candidate
+    return ""
+
+
 def _deno_args() -> list:
     # Same helper role as player.util.url._get_deno_arg -- deno is solely a
     # yt-dlp dependency; duplicated here because media_core must not import
     # from the player package.
     name = "deno.exe" if os.name == "nt" else "deno"
-    try:
-        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        candidate = os.path.join(os.path.dirname(base), "bin", name)
+    bin_dir = _app_bin_dir()
+    if bin_dir:
+        candidate = os.path.join(bin_dir, name)
         if os.path.isfile(candidate):
             return ["--js-runtimes", f"deno:{candidate}", "--remote-components", "ejs:github"]
-    except Exception:
-        pass
     return ["--remote-components", "ejs:github"]
 
 
 def find_ytdlp_binary() -> str:
-    """Locate the yt-dlp binary the same way the player does (pref path,
-    then PATH) without importing app_config/player."""
+    """Locate the yt-dlp binary the same way the player does: the app's own
+    prefs (Preferences > Advanced) first, then the bundled bin dir, then
+    PATH -- without importing the player package."""
     exe = "yt-dlp.exe" if os.name == "nt" else "yt-dlp"
-    try:
-        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        candidate = os.path.join(os.path.dirname(base), "bin", exe)
+
+    pref_binary = _pref("yt-dlp_binary")
+    if pref_binary and os.path.isfile(pref_binary):
+        return pref_binary
+
+    pref_path = _pref("yt-dlp_path")
+    if pref_path:
+        candidate = pref_path if os.path.isfile(pref_path) else os.path.join(pref_path, exe)
         if os.path.isfile(candidate):
             return candidate
-    except Exception:
-        pass
-    path_var = os.environ.get("PATH", "")
-    for directory in path_var.split(os.pathsep):
+
+    bin_dir = _app_bin_dir()
+    if bin_dir:
+        candidate = os.path.join(bin_dir, exe)
+        if os.path.isfile(candidate):
+            return candidate
+
+    for directory in os.environ.get("PATH", "").split(os.pathsep):
+        if not directory:
+            continue
         candidate = os.path.join(directory, exe)
         if os.path.isfile(candidate):
             return candidate
@@ -195,29 +233,32 @@ def find_ytdlp_binary() -> str:
 
 
 def _cookies_args() -> list:
-    args = []
-    try:
-        from app_config import prefs as _prefs
-        cookies_file = _prefs.prefs.get("youtube_cookies")
-        if cookies_file:
-            args.extend(["--cookies", cookies_file])
-    except Exception:
-        pass
-    return args
+    cookies_file = _pref("youtube_cookies")
+    if not cookies_file:
+        return []
+    if not os.path.isfile(cookies_file):
+        logger.warning("Configured YouTube cookies file not found, ignoring: %s", cookies_file)
+        return []
+    return ["--cookies", cookies_file]
 
 
 def _ffmpeg_location_args() -> list:
-    # Same bin-dir resolution as tools.ffmpeg_handler.FFmpegHandler, inlined
+    # Same resolution order as tools.ffmpeg_handler.FFmpegHandler, inlined
     # because media_core must not import from the tools layer.
-    args = []
-    try:
-        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        candidate = os.path.join(os.path.dirname(base), "bin", "ffmpeg.exe" if os.name == "nt" else "ffmpeg")
-        if os.path.isfile(candidate):
-            args.extend(["--ffmpeg-location", os.path.dirname(candidate)])
-    except Exception:
-        pass
-    return args
+    exe = "ffmpeg.exe" if os.name == "nt" else "ffmpeg"
+
+    pref_binary = _pref("ffmpeg_binary")
+    if pref_binary and os.path.isfile(pref_binary):
+        return ["--ffmpeg-location", os.path.dirname(pref_binary)]
+
+    pref_path = _pref("ffmpeg_path")
+    if pref_path and os.path.isfile(os.path.join(pref_path, exe)):
+        return ["--ffmpeg-location", pref_path]
+
+    bin_dir = _app_bin_dir()
+    if bin_dir and os.path.isfile(os.path.join(bin_dir, exe)):
+        return ["--ffmpeg-location", bin_dir]
+    return []
 
 
 def _entry_from_raw(raw: dict) -> Optional[dict]:
@@ -285,7 +326,24 @@ def fetch_flat_entries(url, on_log: Optional[Callable[[str], None]] = None,
     reader = threading.Thread(target=_drain_stderr, daemon=True)
     reader.start()
 
+    # stdout reads block, so a cancel arriving mid-listing is only noticed
+    # once yt-dlp writes again -- this watcher kills the process instead.
+    watcher = None
+    if cancel_event is not None:
+        def _watch_cancel():
+            while process.poll() is None:
+                if cancel_event.wait(timeout=0.2):
+                    try:
+                        process.terminate()
+                    except Exception:
+                        pass
+                    return
+
+        watcher = threading.Thread(target=_watch_cancel, daemon=True)
+        watcher.start()
+
     cancelled = False
+    returncode = 0
     try:
         assert process.stdout is not None
         for line in process.stdout:
@@ -312,10 +370,20 @@ def fetch_flat_entries(url, on_log: Optional[Callable[[str], None]] = None,
                     entries.append(entry)
                     if on_entry:
                         on_entry(entry)
-        returncode = process.wait()
     finally:
+        if cancel_event is not None and cancel_event.is_set():
+            cancelled = True
         if process.poll() is None:
-            process.terminate()
+            try:
+                process.terminate()
+            except Exception:
+                pass
+        returncode = process.wait()
+        # Joined so no further on_log callback can reach a caller that has
+        # already torn its log view down.
+        reader.join(timeout=2.0)
+        if watcher is not None:
+            watcher.join(timeout=2.0)
 
     if cancelled:
         raise InterruptedError("Listing cancelled")
