@@ -132,6 +132,7 @@ class Downloader(QObject):
         self._speed_limit_kbps = 0
         self._retry_count = 3
         self._retry_delay_ms = 2000
+        self._proxy = None
 
         for _ in range(max_concurrent):
             manager = QNetworkAccessManager()
@@ -175,11 +176,13 @@ class Downloader(QObject):
                 proxy.setUser(user)
             if password:
                 proxy.setPassword(password)
+        self._proxy = proxy
         for manager in self._network_managers:
             manager.setProxy(proxy)
 
     def _apply_proxy_to_manager(self, manager):
-        pass
+        if self._proxy is not None:
+            manager.setProxy(self._proxy)
 
     def add_download(self, url, destination=None, filename=None, progress_callback=None, finished_callback=None, metadata=None):
         dest = Path(destination) if destination else self.destination
