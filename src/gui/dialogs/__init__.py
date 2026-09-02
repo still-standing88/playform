@@ -5,6 +5,7 @@ from .tool_dialog import ToolDialog
 from .toolbar_customize_dialog import ToolbarCustomizeDialog
 from .youtube_info_dialog import YouTubeInfoDialog, YtDlpWorker
 from .downloader_dialog import DownloaderDialog
+from .proxy_settings_dialog import ProxySettingsDialog
 from .prefs_dialog import PreferencesDialog
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     "YouTubeInfoDialog",
     "YtDlpWorker",
     "DownloaderDialog",
+    "ProxySettingsDialog",
     "PreferencesDialog",
 ]
