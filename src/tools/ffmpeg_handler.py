@@ -12,44 +12,46 @@ class FFmpegHandler:
     _errors: list = []
 
     @staticmethod
+    def reset():
+        """Drop the cached resolution so the next call re-reads prefs. Called
+        when the FFmpeg Path pref changes, otherwise every ffmpeg-backed tool
+        keeps using the old binary until restart."""
+        FFmpegHandler._ffmpeg_path = None
+        FFmpegHandler._ffprobe_path = None
+        FFmpegHandler._errors.clear()
+
+    @staticmethod
     def get_ffmpeg_binary():
         if FFmpegHandler._ffmpeg_path is not None:
             return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
 
-        base_dir = get_parent_dir()
-        bin_dir = os.path.join(base_dir, 'bin')
         ffmpeg_exe_name = 'ffmpeg' + ('.exe' if os.name == 'nt' else '')
         ffprobe_exe_name = 'ffprobe' + ('.exe' if os.name == 'nt' else '')
-        local_ffmpeg_path = os.path.join(bin_dir, ffmpeg_exe_name)
-        local_ffprobe_path = os.path.join(bin_dir, ffprobe_exe_name)
 
-        if not os.path.exists(local_ffmpeg_path):
-            found_ffmpeg = resolve_ffmpeg_binary_path()
-            
-            if found_ffmpeg and os.path.exists(found_ffmpeg):
-                FFmpegHandler._ffmpeg_path = found_ffmpeg
-                ffprobe_dir = os.path.dirname(found_ffmpeg)
-                ffprobe_candidate = os.path.join(ffprobe_dir, ffprobe_exe_name)
-                FFmpegHandler._ffprobe_path = ffprobe_candidate if os.path.exists(ffprobe_candidate) else None
+        # The pref takes priority over the bundled bin dir; a user who points
+        # this at their own build expects that build to be used.
+        pref_dir = str(prefs.prefs.get('ffmpeg_path', '') or '')
+        bin_dir = os.path.join(get_parent_dir(), 'bin')
+        for directory in (pref_dir, bin_dir):
+            if not directory:
+                continue
+            ffmpeg_candidate = os.path.join(directory, ffmpeg_exe_name)
+            if os.path.isfile(ffmpeg_candidate):
+                ffprobe_candidate = os.path.join(directory, ffprobe_exe_name)
+                FFmpegHandler._ffmpeg_path = ffmpeg_candidate
+                FFmpegHandler._ffprobe_path = ffprobe_candidate if os.path.isfile(ffprobe_candidate) else None
                 return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
-            
-            # Deprecated: FFmpeg is now installed via the Utility Download Center
-            # instead of being unpacked from ffmpeg_binary.py / pyffmpeg here.
-            # extracted_ffmpeg, extracted_ffprobe = extract_ffmpeg_from_pyffmpeg(bin_dir)
-            #
-            # if extracted_ffmpeg and os.path.exists(extracted_ffmpeg):
-            #     FFmpegHandler._ffmpeg_path = extracted_ffmpeg
-            #     FFmpegHandler._ffprobe_path = extracted_ffprobe
-            #     return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
-            
-            FFmpegHandler._errors.append("FFmpeg not found in system PATH or preferences")
-            FFmpegHandler._ffmpeg_path = "ffmpeg"
-            FFmpegHandler._ffprobe_path = "ffprobe"
+
+        found_ffmpeg = resolve_ffmpeg_binary_path()
+        if found_ffmpeg and os.path.exists(found_ffmpeg):
+            FFmpegHandler._ffmpeg_path = found_ffmpeg
+            ffprobe_candidate = os.path.join(os.path.dirname(found_ffmpeg), ffprobe_exe_name)
+            FFmpegHandler._ffprobe_path = ffprobe_candidate if os.path.exists(ffprobe_candidate) else None
             return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
 
-        FFmpegHandler._ffmpeg_path = local_ffmpeg_path
-        FFmpegHandler._ffprobe_path = local_ffprobe_path
-        
+        FFmpegHandler._errors.append("FFmpeg not found in system PATH or preferences")
+        FFmpegHandler._ffmpeg_path = "ffmpeg"
+        FFmpegHandler._ffprobe_path = "ffprobe"
         return FFmpegHandler._ffmpeg_path, FFmpegHandler._ffprobe_path
 
     @staticmethod
