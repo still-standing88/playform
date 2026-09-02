@@ -85,17 +85,6 @@ def get_user_directories():
     return [f"{userpath}/{folder}" for folder in folders if os.path.exists(f"{userpath}/{folder}")]
 
 
-def fileProperties(filepath):
-    pf = pform.system()
-    if pf == "Windows":
-        ctypes.windll.shell32.ShellExecuteW(None, "properties", filepath, None, None, 2)
-    elif pf == "Linux":
-        import subprocess
-        subprocess.run(["xdg-open", filepath])
-    import subprocess
-    subprocess.Popen(["explorer", "/select,", filepath])
-
-
 def notifyer(msg_title,msg):
     from PySide6.QtWidgets import QApplication
     app = QApplication.instance()
@@ -140,13 +129,6 @@ def youtube_url(url):
 def isValidURL(url):
     import validators as vl
     return vl.url(url) == True
-
-def network_check():
-    return sp.call(['ping','-n','1','8.8.8.8'])
-
-
-def open_explorer(path):
-    sp.Popen(fr'explorer /select,"{path}"')
 
 def is_frozen():
     return getattr(sys, 'frozen', False) or "__compiled__" in globals()
