@@ -19,26 +19,58 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import shutil
 import subprocess
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# repo_root/media-metadata-parser/exiftool-13.59_64/ExifTool.exe - the vendored
-# binary was never moved when this module relocated into src/media_core/metaparser/.
-_DEFAULT_EXIFTOOL = Path(__file__).parent.parent.parent.parent / "media-metadata-parser" / "exiftool-13.59_64" / "ExifTool.exe"
+_EXE_NAME = "exiftool.exe" if os.name == "nt" else "exiftool"
 
 
 class ExifToolError(Exception):
     pass
 
 
+def _candidate_paths() -> list:
+    """Search order: the `exiftool_binary` pref (not surfaced in the
+    Preferences dialog -- this is a dev-only oracle), then the app's bin
+    dir, then PATH."""
+    candidates: list = []
+
+    try:
+        from app_config import prefs as _prefs
+        configured = _prefs.prefs.get("exiftool_binary") or ""
+    except Exception:
+        configured = ""
+    if configured:
+        configured_path = Path(configured)
+        candidates.append(configured_path / _EXE_NAME if configured_path.is_dir() else configured_path)
+
+    try:
+        from utilities.functions import get_parent_dir
+        candidates.append(Path(get_parent_dir()) / "bin" / _EXE_NAME)
+    except Exception:
+        pass
+
+    on_path = shutil.which("exiftool")
+    if on_path:
+        candidates.append(Path(on_path))
+
+    return candidates
+
+
 def _resolve_exiftool_path(exiftool_path: str | Path | None) -> Path | None:
-    candidate = Path(exiftool_path) if exiftool_path else _DEFAULT_EXIFTOOL
-    if not candidate.is_file():
-        logger.warning("ExifTool binary not found at %s", candidate)
-        return None
-    return candidate
+    candidates = [Path(exiftool_path)] if exiftool_path else _candidate_paths()
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    logger.warning(
+        "ExifTool binary not found (looked in: %s). Set the 'exiftool_binary' pref to its path.",
+        ", ".join(str(c) for c in candidates) or "no candidates",
+    )
+    return None
 
 
 def extract_json(path: str | Path, exiftool_path: str | Path | None = None) -> dict | None:
@@ -53,12 +85,16 @@ def extract_json(path: str | Path, exiftool_path: str | Path | None = None) -> d
         return None
 
     path = Path(path)
+    kwargs = {}
+    if os.name == "nt":
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
     try:
         result = subprocess.run(
             [str(exe), "-j", "-G", "-a", str(path)],
             capture_output=True,
             timeout=30,
             check=False,
+            **kwargs,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         logger.warning("exiftool subprocess failed for %s: %s", path, exc)

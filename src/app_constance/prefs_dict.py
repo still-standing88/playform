@@ -32,6 +32,9 @@ prefs = {
 "mpv_extra_options": "",
 "yt-dlp_binary": "",
 "yt-dlp_path": os.path.join(get_parent_dir(), "bin"),
+# Dev-only metadata cross-check oracle (media_core.metaparser.exiftool_bridge);
+# deliberately not surfaced in the Preferences dialog.
+"exiftool_binary": "",
 "download_notify_finished": True,
 "accessibility_feedback": False,
 "tts_speech_interrupt": True,
