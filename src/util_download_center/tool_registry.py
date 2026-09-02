@@ -34,6 +34,8 @@ YTDLP = ToolDef(
         "sources such as YouTube and other streaming platforms."
     ),
     github_repo="yt-dlp/yt-dlp",
+    # yt-dlp publishes no native Windows arm64 build; the x86_64 exe runs under
+    # Windows' own emulation. yt-dlp_macos is already a universal2 binary.
     asset_patterns={
         "windows": {
             "x86_64":  "yt-dlp.exe",
@@ -95,6 +97,9 @@ FFMPEG = ToolDef(
     is_zip=True,
     binary_name_posix="ffmpeg",
     binary_name_win="ffmpeg.exe",
+    # Windows and macOS aarch64 deliberately reuse the x86_64 builds: neither
+    # GyanD nor evermeet publishes native arm64 6.0 binaries, and both run
+    # under the OS's own x64 emulation. Linux has a real arm64 static build.
     direct_urls={
         "windows": {
             "x86_64": ["https://github.com/GyanD/codexffmpeg/releases/download/6.0/ffmpeg-6.0-essentials_build.7z"],
@@ -102,7 +107,7 @@ FFMPEG = ToolDef(
         },
         "linux": {
             "x86_64": ["https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-6.0-amd64-static.tar.xz"],
-            "aarch64": ["https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-6.0-amd64-static.tar.xz"],
+            "aarch64": ["https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-6.0-arm64-static.tar.xz"],
         },
         "macos": {
             "x86_64": [
