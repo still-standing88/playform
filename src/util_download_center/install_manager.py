@@ -61,7 +61,28 @@ def install_tool(
     except Exception as exc:
         return False, str(exc)
 
+    _record_installed_binary(tool_name, dest)
     return True, str(dest)
+
+
+def _record_installed_binary(tool_name: str, dest: Path) -> None:
+    """Point the matching prefs at a freshly installed binary so tools pick
+    it up without waiting for the next startup's binary scan."""
+    pref_keys = {
+        "yt-dlp": ("yt-dlp_binary", "yt-dlp_path"),
+        "ffmpeg": ("ffmpeg_binary", "ffmpeg_path"),
+    }.get(tool_name)
+    if pref_keys is None or not dest.exists():
+        return
+    binary_key, dir_key = pref_keys
+    try:
+        from app_config import prefs
+
+        prefs.prefs[binary_key] = str(dest)
+        prefs.prefs[dir_key] = str(dest.parent)
+        prefs.save()
+    except Exception:
+        pass
 
 
 def _install_ffmpeg_binaries(downloaded_path: str) -> tuple[bool, str]:
@@ -128,16 +149,7 @@ def _install_ffmpeg_binaries(downloaded_path: str) -> tuple[bool, str]:
         if not copied:
             return False, "Could not locate ffmpeg or ffprobe in the downloaded package"
 
-        try:
-            from app_config import prefs
-
-            ffmpeg_dest = bin_dir / ffmpeg_name
-            if ffmpeg_dest.exists():
-                prefs.prefs["ffmpeg_binary"] = str(ffmpeg_dest)
-                prefs.prefs["ffmpeg_path"] = str(bin_dir)
-                prefs.save()
-        except Exception:
-            pass
+        _record_installed_binary("ffmpeg", bin_dir / ffmpeg_name)
 
         return True, ", ".join(copied)
     except Exception as exc:

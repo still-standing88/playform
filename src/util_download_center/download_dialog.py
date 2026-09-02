@@ -216,6 +216,14 @@ class UtilityDownloadDialog(QDialog):
     def _finalize(self):
         import shutil
         shutil.rmtree(self._temp_dir, ignore_errors=True)
+
+        # Newly installed binaries land in bin/ with prefs already updated;
+        # the cached resolutions have to be dropped for tools to see them.
+        from player import reinit_ytdlp_settings
+        from tools.ffmpeg_handler import FFmpegHandler
+        FFmpegHandler.reset()
+        reinit_ytdlp_settings()
+
         self._desc.setPlainText(
             _("Done. All selected utilities have been processed.\n"
             "You may close this dialog.")
