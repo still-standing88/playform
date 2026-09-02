@@ -7,6 +7,7 @@ yt-dlp log. OK enqueues the checked entries through the engine.
 """
 
 import logging
+import threading
 
 from PySide6.QtCore import Qt, Signal, QThread
 from PySide6.QtWidgets import (
@@ -29,7 +30,18 @@ class _FlatFetchThread(QThread):
     def __init__(self, urls: list, parent=None):
         super().__init__(parent)
         self._urls = urls
-        self._cancel = None
+        self._cancel = threading.Event()
+
+    def cancel(self):
+        self._cancel.set()
+
+    def stop_and_wait(self, timeout_ms: int = 5000):
+        """Cancel and join. Signals are blocked first so nothing is delivered
+        to a caller that is already tearing itself down."""
+        self.blockSignals(True)
+        self._cancel.set()
+        if self.isRunning():
+            self.wait(timeout_ms)
 
     def run(self):
         total = 0
@@ -43,12 +55,14 @@ class _FlatFetchThread(QThread):
                 self._urls,
                 on_log=lambda line: self.log_line.emit(line),
                 on_entry=_on_entry,
+                cancel_event=self._cancel,
             )
         except InterruptedError:
-            pass
+            return
         except Exception as exc:
             logger.warning("Flat listing failed", exc_info=True)
             self.failed.emit(str(exc))
+            return
         self.finished_ok.emit(total)
 
 
@@ -205,6 +219,15 @@ class YtDlpReviewDialog(QDialog):
 
     def _on_fetch_failed(self, message: str):
         self.progress_label.setText(_("Retrieval failed: {error}").format(error=message))
+
+    def done(self, result: int):
+        # Single choke point for OK/Cancel/close: the listing thread must be
+        # joined before Qt destroys this dialog (its parent), or libQt aborts
+        # with "QThread: Destroyed while thread is still running".
+        thread, self._thread = self._thread, None
+        if thread is not None:
+            thread.stop_and_wait()
+        super().done(result)
 
     def _show_tree_menu(self, position):
         menu = QMenu(self)
