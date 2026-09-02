@@ -39,8 +39,20 @@ def set_ytdlp_log(log_file: Optional[str] = None, verbose: bool = False):
     YTDLP_LOG_FILE = log_file
     YTDLP_VERBOSE = verbose
 
-def get_yt_video_info(url: str) -> dict:
-    command = [YTDLP_PATH, '--dump-json', '--no-playlist'] + _get_deno_arg() + [url]
+def _get_cookies_arg(cookies: Optional[str] = None) -> List[str]:
+    if not cookies:
+        from app_config import prefs
+        cookies = prefs.prefs.get("youtube_cookies") or ""
+    if not cookies:
+        return []
+    if not os.path.isfile(cookies):
+        logger.warning("Configured YouTube cookies file not found, ignoring: %s", cookies)
+        return []
+    return ['--cookies', cookies]
+
+def get_yt_video_info(url: str, cookies: Optional[str] = None) -> dict:
+    command = [YTDLP_PATH, '--dump-json', '--no-playlist'] \
+        + _get_deno_arg() + _get_cookies_arg(cookies) + [url]
     try:
         result = subprocess.run(
             command,
@@ -59,8 +71,6 @@ def get_yt_video_info(url: str) -> dict:
         raise ValueError(f"Failed to parse JSON from yt-dlp output.")
 
 def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None):
-    from app_config import prefs
-    
     cmd = [YTDLP_PATH, '--dump-json'] + _get_deno_arg()
     
     if not as_playlist:
@@ -68,12 +78,7 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
     
     cmd.extend(['--format', 'best[protocol^=http]'])
     
-    if cookies:
-        cmd.extend(['--cookies', cookies])
-    else:
-        cookies_file = prefs.prefs.get("youtube_cookies")
-        if cookies_file:
-            cmd.extend(['--cookies', cookies_file])
+    cmd.extend(_get_cookies_arg(cookies))
     
     if YTDLP_VERBOSE:
         cmd.append('--verbose')
@@ -107,16 +112,8 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
         raise ValueError("No output from yt-dlp")
 
 def fetch_full_info(url: str, cookies: Optional[str] = None):
-    from app_config import prefs
-    
-    cmd = [YTDLP_PATH, '--dump-json', '--no-playlist'] + _get_deno_arg() + [url]
-    
-    if cookies:
-        cmd.extend(['--cookies', cookies])
-    else:
-        cookies_file = prefs.prefs.get("youtube_cookies")
-        if cookies_file:
-            cmd.extend(['--cookies', cookies_file])
+    cmd = [YTDLP_PATH, '--dump-json', '--no-playlist'] \
+        + _get_deno_arg() + _get_cookies_arg(cookies) + [url]
     
     if YTDLP_VERBOSE:
         cmd.append('--verbose')
@@ -137,22 +134,13 @@ def fetch_full_info(url: str, cookies: Optional[str] = None):
     return json.loads(result.stdout.strip())
 
 def fetch_video_comments(url: str, cookies: Optional[str] = None, max_comments: int = 200) -> List[dict]:
-    from app_config import prefs
-
     # yt-dlp's own default is to fetch *all* comments, which can take
     # minutes-to-effectively-forever on popular videos; cap it so this
     # stays usable from an interactive dialog.
     cmd = [
         YTDLP_PATH, '--dump-json', '--no-playlist', '--write-comments',
         '--extractor-args', f'youtube:max_comments={max_comments}',
-    ] + _get_deno_arg() + [url]
-
-    if cookies:
-        cmd.extend(['--cookies', cookies])
-    else:
-        cookies_file = prefs.prefs.get("youtube_cookies")
-        if cookies_file:
-            cmd.extend(['--cookies', cookies_file])
+    ] + _get_deno_arg() + _get_cookies_arg(cookies) + [url]
 
     if YTDLP_VERBOSE:
         cmd.append('--verbose')
@@ -339,16 +327,8 @@ def resolve_webpage_url(url: str, cookies: Optional[str] = None) -> str:
 
 
 def run_ytdlp_flat_playlist(url: str, cookies: Optional[str] = None) -> List[dict]:
-    from app_config import prefs
-
-    cmd = [YTDLP_PATH, "--flat-playlist", "--dump-json"] + _get_deno_arg()
-
-    if cookies:
-        cmd.extend(["--cookies", cookies])
-    else:
-        cookies_file = prefs.prefs.get("youtube_cookies")
-        if cookies_file:
-            cmd.extend(["--cookies", cookies_file])
+    cmd = [YTDLP_PATH, "--flat-playlist", "--dump-json"] \
+        + _get_deno_arg() + _get_cookies_arg(cookies)
 
     if YTDLP_VERBOSE:
         cmd.append("--verbose")
