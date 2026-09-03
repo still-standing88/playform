@@ -47,7 +47,7 @@ class AudioSettingsForm(QWidget):
         self.volume = QSpinBox()
         self.volume.setRange(0, _MAX_VOLUME_PERCENT)
         self.volume.setValue(100)
-        self.volume.setSuffix(" %")
+        self.volume.setSuffix(_(" %"))
         self.volume.setToolTip(_("Over 100% boosts gain (ffmpeg's volume filter, e.g. 200% ~= +6dB)."))
         form.addRow(_("Sample rate (Hz)"), self.sample_rate)
         form.addRow(_("Channels"), self.channels)

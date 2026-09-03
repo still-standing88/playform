@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Optional
-from gettext import gettext as _
 
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
@@ -102,7 +101,7 @@ class UtilityDownloadDialog(QDialog):
             return
         tool: ToolDef = current.data(Qt.ItemDataRole.UserRole)
         if tool:
-            self._desc.setPlainText(tool.description)
+            self._desc.setPlainText(_(tool.description))
 
     @Slot()
     def _on_check_changed(self, _item):

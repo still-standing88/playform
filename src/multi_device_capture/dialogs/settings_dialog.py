@@ -117,7 +117,10 @@ class SettingsDialog(QDialog):
         w = QWidget()
         form = QFormLayout(w)
         res_cap = QComboBox()
-        res_cap.addItems(["Passthrough", "1920x1080", "1280x720"])
+        # Labels are translated; the setting keeps the untranslated value.
+        res_cap.addItem(_("Passthrough"), "Passthrough")
+        for value in ("1920x1080", "1280x720"):
+            res_cap.addItem(value, value)
         fps = QSpinBox()
         fps.setRange(1, 240)
         fps.setValue(30)
@@ -142,7 +145,7 @@ class SettingsDialog(QDialog):
         self.audio_defaults.from_settings(audio)
 
         video = self.settings.get_video()
-        idx = self.res_cap.findText(video.get("resolution_cap", "Passthrough"))
+        idx = self.res_cap.findData(video.get("resolution_cap", "Passthrough"))
         if idx >= 0:
             self.res_cap.setCurrentIndex(idx)
         self.fps.setValue(video.get("fps", 30))
@@ -159,7 +162,7 @@ class SettingsDialog(QDialog):
 
     def _save_video(self) -> None:
         self.settings.set_video({
-            "resolution_cap": self.res_cap.currentText(),
+            "resolution_cap": self.res_cap.currentData(),
             "fps": self.fps.value(),
             "capture_cursor": self.cursor.isChecked(),
         })

@@ -113,7 +113,7 @@ class UpdateAvailableDialog(QDialog):
             files_list.setMaximumHeight(100)
             for asset in assets:
                 size_mb = asset.get("size", 0) / (1024 * 1024)
-                item = QListWidgetItem(f"{asset['name']}  ({size_mb:.2f} MB)")
+                item = QListWidgetItem(_("{name}  ({size:.2f} MB)").format(name=asset['name'], size=size_mb))
                 files_list.addItem(item)
             layout.addWidget(files_list)
 

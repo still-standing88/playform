@@ -75,11 +75,11 @@ class CaptureSource(CaptureSourceConfig):
         if self.media_type in AUDIO_KINDS:
             rate = self.settings.get("sample_rate", "?")
             ch = self.settings.get("channels", "?")
-            return f"{rate} Hz - {ch} ch"
+            return _("{rate} Hz - {channels} ch").format(rate=rate, channels=ch)
         if self.media_type == MediaType.CAMERA:
             res = self.settings.get("resolution", "?")
             fps = self.settings.get("fps", "?")
-            return f"{res} @ {fps}fps"
+            return _("{resolution} @ {fps}fps").format(resolution=res, fps=fps)
         if self.media_type == MediaType.MONITOR:
             return self.device_name
         if self.media_type == MediaType.WINDOW:

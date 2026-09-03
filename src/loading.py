@@ -11,7 +11,7 @@ class LoadingSplash(QSplashScreen):
         painter.setPen(QColor(255, 255, 255))
         font = QFont("Segoe UI", 16, QFont.Weight.Bold)
         painter.setFont(font)
-        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "PlayForm\nLoading...")
+        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, _("PlayForm\nLoading..."))
         painter.end()
         
         super().__init__(pixmap, )#Qt.WindowType.WindowStaysOnTopHint)

@@ -2,6 +2,8 @@ import platform as _platform
 import sys
 from dataclasses import dataclass, field
 
+from utilities.i18n import N_
+
 
 @dataclass
 class ToolDef:
@@ -28,7 +30,7 @@ def current_machine() -> str:
 YTDLP = ToolDef(
     name="yt-dlp",
     label="yt-dlp",
-    description=(
+    description=N_(
         "yt-dlp is a feature-rich command-line audio/video downloader with support "
         "for thousands of sites. PlayForm uses yt-dlp to download media from online "
         "sources such as YouTube and other streaming platforms."
@@ -58,7 +60,7 @@ YTDLP = ToolDef(
 DENO = ToolDef(
     name="deno",
     label="Deno",
-    description=(
+    description=N_(
         "Deno is a secure, modern JavaScript and TypeScript runtime built on V8. "
         "PlayForm doesn't use Deno directly - yt-dlp uses it as an optional JS "
         "runtime to resolve certain sites' streaming URLs. "
@@ -87,7 +89,7 @@ DENO = ToolDef(
 FFMPEG = ToolDef(
     name="ffmpeg",
     label="FFmpeg",
-    description=(
+    description=N_(
         "FFmpeg provides ffmpeg and ffprobe binaries used by PlayForm tools for "
         "media conversion, extraction, and thumbnail generation. The download "
         "installs only the ffmpeg and ffprobe executables into PlayForm's bin folder."

@@ -41,7 +41,7 @@ class RadioBrowser:
             try:
                 self._client = await asyncio.to_thread(_build)
             except (httpx.HTTPError, OSError, IndexError) as exception:
-                msg = "Error occurred while communicating with the Radio Browser API"
+                msg = _("Error occurred while communicating with the Radio Browser API")
                 raise RadioBrowserConnectionError(msg) from exception
         return self._client
 
@@ -58,11 +58,11 @@ class RadioBrowser:
             return await asyncio.to_thread(client.client.get, url, **(params or {}))
         except httpx.TimeoutException as exception:
             self._client = None
-            msg = "Timeout occurred while connecting to the Radio Browser API"
+            msg = _("Timeout occurred while connecting to the Radio Browser API")
             raise RadioBrowserConnectionTimeoutError(msg) from exception
         except httpx.HTTPError as exception:
             self._client = None
-            msg = "Error occurred while communicating with the Radio Browser API"
+            msg = _("Error occurred while communicating with the Radio Browser API")
             raise RadioBrowserConnectionError(msg) from exception
         except ValueError as exception:
             raise RadioBrowserError(str(exception)) from exception
