@@ -26,7 +26,7 @@ def read_subtitle_file(file_path, encoding='utf-8'):
             })
         return events
     except Exception as e:
-        return f"Error reading file with '{encoding}' encoding: {str(e)}"
+        return _("Error reading file with '{encoding}' encoding: {error}").format(encoding=encoding, error=e)
 
 def parse_time(time_str):
     if not time_str:
@@ -66,9 +66,9 @@ def convert_and_clean_subtitles(files, output_dir, options):
             }
             
             subs.save(output_path, **save_options)
-        return f"Success: Processed {len(files)} file(s)."
+        return True, _("Success: Processed {count} file(s).").format(count=len(files))
     except Exception as e:
-        return f"Error: {str(e)}"
+        return False, _("Error: {error}").format(error=e)
 
 def process_subtitles(files, output_dir, options):
     try:
@@ -113,6 +113,6 @@ def process_subtitles(files, output_dir, options):
                     line.plaintext = modified_text
 
             subs.save(os.path.join(output_dir, os.path.basename(file_path)))
-        return f"Success: Processed {len(files)} file(s)."
+        return True, _("Success: Processed {count} file(s).").format(count=len(files))
     except Exception as e:
-        return f"Error: {str(e)}"
+        return False, _("Error: {error}").format(error=e)

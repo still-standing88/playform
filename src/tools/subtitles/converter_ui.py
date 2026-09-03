@@ -1,5 +1,4 @@
 import os
-from gettext import gettext as _
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout,
     QLabel, QComboBox, QCheckBox, QPushButton, QListWidget, QFileDialog,
@@ -33,13 +32,13 @@ class SubtitleConverterThread(QThread):
             return
         
         self.progress.emit(_("Starting conversion..."))
-        result = convert_and_clean_subtitles(self.file_paths, self.output_dir, self.options)
+        ok, message = convert_and_clean_subtitles(self.file_paths, self.output_dir, self.options)
         
-        if result.startswith("Success"):
-            self.progress.emit(result)
+        if ok:
+            self.progress.emit(message)
             self.finished.emit()
         else:
-            self.error.emit(result)
+            self.error.emit(message)
 
     def stop(self):
         self._is_running = False

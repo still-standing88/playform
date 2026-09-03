@@ -1,5 +1,4 @@
 import os
-from gettext import gettext as _
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QFormLayout,
     QLabel, QLineEdit, QComboBox, QCheckBox, QPushButton, QFileDialog,
@@ -36,13 +35,13 @@ class SubtitleEditorThread(QThread):
             return
         
         self.progress.emit(_("Processing subtitle file..."))
-        result = process_subtitles([self.file_path], self.output_dir, self.options)
+        ok, message = process_subtitles([self.file_path], self.output_dir, self.options)
         
-        if result.startswith("Success"):
-            self.progress.emit(result)
+        if ok:
+            self.progress.emit(message)
             self.finished.emit()
         else:
-            self.error.emit(result)
+            self.error.emit(message)
 
     def stop(self):
         self._is_running = False
@@ -190,7 +189,10 @@ class SubtitleEditorUI(QWidget):
         cc_widget = QWidget()
         cc_layout = QFormLayout(cc_widget)
         self.case_style_combo = QComboBox()
-        self.case_style_combo.addItems(["UPPERCASE", "lowercase", "Title Case"])
+        # Labels are translated; handler.py matches on the untranslated data value.
+        for value, label in (("UPPERCASE", _("UPPERCASE")), ("lowercase", _("lowercase")),
+                             ("Title Case", _("Title Case"))):
+            self.case_style_combo.addItem(label, value)
         cc_layout.addRow(_("Style:"), self.case_style_combo)
         self.op_stack.addWidget(cc_widget)
         
@@ -283,7 +285,7 @@ class SubtitleEditorUI(QWidget):
                 suffix = self.suffix_edit.text()
                 modified_text = f"{prefix}{original_text}{suffix}"
             elif self.op_change_case_radio.isChecked():
-                style = self.case_style_combo.currentText()
+                style = self.case_style_combo.currentData()
                 if style == "UPPERCASE":
                     modified_text = original_text.upper()
                 elif style == "lowercase":
@@ -333,7 +335,7 @@ class SubtitleEditorUI(QWidget):
             "case_sensitive": self.case_sensitive_check.isChecked(),
             "prefix": self.prefix_edit.text(),
             "suffix": self.suffix_edit.text(),
-            "case_style": self.case_style_combo.currentText()
+            "case_style": self.case_style_combo.currentData()
         }
 
         self.status_label.setText(_("Processing..."))
