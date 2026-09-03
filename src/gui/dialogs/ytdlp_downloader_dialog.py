@@ -31,7 +31,6 @@ from media_core.ytdlp_download.engine import (
     CATEGORY_YOUTUBE_PLAYLISTS,
     CATEGORY_YOUTUBE_CHANNELS,
     CATEGORY_OTHER,
-    CATEGORY_LABELS,
     STATUS_QUEUED,
     STATUS_DOWNLOADING,
     STATUS_PAUSED,
@@ -39,8 +38,16 @@ from media_core.ytdlp_download.engine import (
     STATUS_FAILED,
 )
 from .ytdlp_review_dialog import YtDlpReviewDialog, _FlatFetchThread
+from utilities.i18n import N_
 
 logger = logging.getLogger(__name__)
+
+CATEGORY_LABELS = {
+    CATEGORY_YOUTUBE_VIDEOS: N_("YouTube Videos"),
+    CATEGORY_YOUTUBE_PLAYLISTS: N_("YouTube Playlists"),
+    CATEGORY_YOUTUBE_CHANNELS: N_("YouTube Channels"),
+    CATEGORY_OTHER: N_("Other Videos"),
+}
 
 
 class _EngineBridge(QObject):

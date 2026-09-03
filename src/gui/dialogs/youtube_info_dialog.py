@@ -1,4 +1,3 @@
-from gettext import gettext as _
 from typing import Optional
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, 
@@ -6,6 +5,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QThread, Signal, QMutex, QWaitCondition
 from PySide6.QtGui import QFont
+
+from utilities.i18n import N_
 
 
 class YtDlpWorker(QThread):
@@ -43,20 +44,20 @@ class YtDlpWorker(QThread):
 class YouTubeInfoDialog(QDialog):
 
     STAT_FIELDS = [
-        ("title",         "Title"),
-        ("uploader",      "Channel"),
-        ("channel",       "Channel name"),
-        ("upload_date",   "Uploaded"),
-        ("duration",      "Duration"),
-        ("view_count",    "Views"),
-        ("like_count",    "Likes"),
-        ("comment_count", "Comments"),
-        ("age_limit",     "Age limit"),
-        ("availability",  "Availability"),
-        ("live_status",   "Live status"),
-        ("categories",    "Categories"),
-        ("tags",          "Tags"),
-        ("webpage_url",   "URL"),
+        ("title",         N_("Title")),
+        ("uploader",      N_("Channel")),
+        ("channel",       N_("Channel name")),
+        ("upload_date",   N_("Uploaded")),
+        ("duration",      N_("Duration")),
+        ("view_count",    N_("Views")),
+        ("like_count",    N_("Likes")),
+        ("comment_count", N_("Comments")),
+        ("age_limit",     N_("Age limit")),
+        ("availability",  N_("Availability")),
+        ("live_status",   N_("Live status")),
+        ("categories",    N_("Categories")),
+        ("tags",          N_("Tags")),
+        ("webpage_url",   N_("URL")),
     ]
 
     def __init__(self, url: str, parent=None, cached_info: Optional[dict] = None):
