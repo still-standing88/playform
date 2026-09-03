@@ -19,17 +19,18 @@ from app_constance.misc import (
     video_tone_mapping_modes,
     video_sync_modes,
 )
+from utilities.i18n import N_
 
 # (submenu label, mpv option name, pref key, choices)
 _CHOICE_OPTIONS = (
-    ("Hardware Decoding", "hwdec", "video_hwdec", video_hwdec_modes),
-    ("Upscaler", "scale", "video_scale", video_scalers),
-    ("Downscaler", "dscale", "video_dscale", video_downscalers),
-    ("Chroma Scaler", "cscale", "video_cscale", video_scalers),
-    ("Interpolation Scaler", "tscale", "video_tscale", video_interpolation_scalers),
-    ("Frame Dropping", "framedrop", "video_framedrop", video_framedrop_modes),
-    ("HDR Tone Mapping", "tone_mapping", "video_tone_mapping", video_tone_mapping_modes),
-    ("Video Sync", "video_sync", "video_sync", video_sync_modes),
+    (N_("Hardware Decoding"), "hwdec", "video_hwdec", video_hwdec_modes),
+    (N_("Upscaler"), "scale", "video_scale", video_scalers),
+    (N_("Downscaler"), "dscale", "video_dscale", video_downscalers),
+    (N_("Chroma Scaler"), "cscale", "video_cscale", video_scalers),
+    (N_("Interpolation Scaler"), "tscale", "video_tscale", video_interpolation_scalers),
+    (N_("Frame Dropping"), "framedrop", "video_framedrop", video_framedrop_modes),
+    (N_("HDR Tone Mapping"), "tone_mapping", "video_tone_mapping", video_tone_mapping_modes),
+    (N_("Video Sync"), "video_sync", "video_sync", video_sync_modes),
 )
 
 _SHARPEN_STEPS = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)

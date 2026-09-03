@@ -358,7 +358,7 @@ class PlayerWidget(QWidget):
                 # reloading the file when the backend is idle.
                 instance.play()
         except av_play.AVError as e:
-            msg = f"Playback error: {getattr(e, 'message', str(e))}"
+            msg = _("Playback error: {details}").format(details=getattr(e, 'message', str(e)))
             QMessageBox.critical(self, _("Playback Error"), msg)
 
     @Slot()
@@ -373,7 +373,7 @@ class PlayerWidget(QWidget):
             else:
                 instance.mute()
         except av_play.AVError as e:
-            msg = f"Mute error: {getattr(e, 'message', str(e))}"
+            msg = _("Mute error: {details}").format(details=getattr(e, 'message', str(e)))
             QMessageBox.critical(self, _("Mute Error"), msg)
 
     @Slot()
@@ -471,7 +471,7 @@ class PlayerWidget(QWidget):
                 position = self.player_controls.get_seek_position()
                 instance.set_position(position)
             except av_play.AVError as e:
-                msg = f"Seek error: {getattr(e, 'message', str(e))}"
+                msg = _("Seek error: {details}").format(details=getattr(e, 'message', str(e)))
                 QMessageBox.critical(self, _("Seek Error"), msg)
 
     @Slot(int)
@@ -483,7 +483,7 @@ class PlayerWidget(QWidget):
                 prefs.prefs["player_volume"] = volume
                 prefs.save()
             except av_play.AVError as e:
-                msg = f"Volume error: {getattr(e, 'message', str(e))}"
+                msg = _("Volume error: {details}").format(details=getattr(e, 'message', str(e)))
                 QMessageBox.critical(self, _("Volume Error"), msg)
 
     @Slot()
@@ -497,7 +497,7 @@ class PlayerWidget(QWidget):
                 prefs.prefs["player_volume"] = new_volume
                 prefs.save()
             except av_play.AVError as e:
-                msg = f"Volume error: {getattr(e, 'message', str(e))}"
+                msg = _("Volume error: {details}").format(details=getattr(e, 'message', str(e)))
                 QMessageBox.critical(self, _("Volume Error"), msg)
 
     def _on_volume_down(self):
@@ -510,7 +510,7 @@ class PlayerWidget(QWidget):
                 prefs.prefs["player_volume"] = new_volume
                 prefs.save()
             except av_play.AVError as e:
-                msg = f"Volume error: {getattr(e, 'message', str(e))}"
+                msg = _("Volume error: {details}").format(details=getattr(e, 'message', str(e)))
                 QMessageBox.critical(self, _("Volume Error"), msg)
 
     @Slot()
@@ -520,7 +520,7 @@ class PlayerWidget(QWidget):
             try:
                 instance.set_position(0)
             except av_play.AVError as e:
-                msg = f"Seek error: {getattr(e, 'message', str(e))}"
+                msg = _("Seek error: {details}").format(details=getattr(e, 'message', str(e)))
                 QMessageBox.critical(self, _("Seek Error"), msg)
 
     @Slot()
@@ -531,7 +531,7 @@ class PlayerWidget(QWidget):
                 length = instance.get_length()
                 instance.set_position(length )
             except av_play.AVError as e:
-                msg = f"Seek error: {getattr(e, 'message', str(e))}"
+                msg = _("Seek error: {details}").format(details=getattr(e, 'message', str(e)))
                 QMessageBox.critical(self, _("Seek Error"), msg)
 
     @Slot()
@@ -542,7 +542,7 @@ class PlayerWidget(QWidget):
                 self.player_controls.save_last_position()
                 instance.stop()
             except av_play.AVError as e:
-                msg = f"Stop error: {getattr(e, 'message', str(e))}"
+                msg = _("Stop error: {details}").format(details=getattr(e, 'message', str(e)))
                 QMessageBox.critical(self, _("Stop Error"), msg)
 
     @Slot(float)

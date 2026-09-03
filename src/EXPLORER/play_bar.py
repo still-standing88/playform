@@ -123,7 +123,7 @@ class PlayerBar(QWidget):
         self.update()
     
     def enterEvent(self, event):
-        tooltip_text = "Click center: Play/Pause | Click left: Backward | Click right: Forward | Click bar: Seek"
+        tooltip_text = _("Click center: Play/Pause | Click left: Backward | Click right: Forward | Click bar: Seek")
         QToolTip.showText(self.mapToGlobal(event.pos()), tooltip_text, self)
         self._tooltip_timer.start(3000)
     

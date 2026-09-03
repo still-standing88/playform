@@ -415,7 +415,7 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
 
     def load_url(self, url: str):
         if not ensure_ytdlp_available(None, show_message=False):
-            self.signals.extraction_failed.emit("yt-dlp is not available.")
+            self.signals.extraction_failed.emit(_("yt-dlp is not available."))
             return
 
         if self._extract_worker and self._extract_worker.isRunning():
@@ -437,7 +437,7 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
     def _on_extraction_done(self, playlist_info: dict):
         try:
             playlist = av_play.Playlist(
-                title=playlist_info.get("title") or "Extracted Playlist"
+                title=playlist_info.get("title") or _("Extracted Playlist")
             )
             for entry in playlist_info.get("entries", []):
                 playlist.add_entry(
@@ -711,7 +711,7 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
 
         flat_entries = run_ytdlp_flat_playlist(url)
         entries = []
-        title = "Extracted Playlist"
+        title = _("Extracted Playlist")
         for info in flat_entries:
             webpage = info.get("webpage_url") or info.get("original_url") or info.get("url")
             if not webpage:
@@ -719,5 +719,5 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             title = info.get("playlist_title") or info.get("playlist") or title
             entries.append({"location": webpage, "title": info.get("title")})
         if not entries:
-            raise ValueError("No playable entries found in playlist")
+            raise ValueError(_("No playable entries found in playlist"))
         return {"title": title, "entries": entries}
