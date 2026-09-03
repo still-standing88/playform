@@ -161,11 +161,9 @@ class ThumbnailGeneratorUI(QWidget):
 
     def update_progress(self, progress: Progress):
         if self.progress_dialog:
-            progress_text = (
-                f"Frame: {progress.frame} | "
-                f"Time: {progress.time} | "
-                f"Bitrate: {progress.bitrate:.2f} kbps | "
-                f"Speed: {progress.speed:.2f}x"
+            progress_text = _("Frame: {frame} | Time: {time} | Bitrate: {bitrate:.2f} kbps | Speed: {speed:.2f}x").format(
+                frame=progress.frame, time=progress.time,
+                bitrate=progress.bitrate, speed=progress.speed,
             )
             self.progress_dialog.setLabelText(progress_text)
 

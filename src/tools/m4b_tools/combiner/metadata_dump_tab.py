@@ -64,7 +64,8 @@ class MetadataDumpTab(QWidget):
         self.begin_button.clicked.connect(self._on_begin)
 
     def _browse_output(self):
-        path, _filter = QFileDialog.getSaveFileName(self, _("Save Metadata CSV As"), "", "CSV Files (*.csv)")
+        path, _filter = QFileDialog.getSaveFileName(self, _("Save Metadata CSV As"), "",
+                                                    _("CSV Files (*.csv)"))
         if path:
             self.output_path_edit.setText(path)
 

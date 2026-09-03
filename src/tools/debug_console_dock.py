@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import sys
-from gettext import gettext as _
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (

@@ -97,7 +97,8 @@ class LabelsTab(QWidget):
             self.book_path_edit.setText(path)
 
     def _browse_labels_existing(self):
-        path, _filter = QFileDialog.getOpenFileName(self, _("Select Label File"), "", "Text Files (*.txt)")
+        path, _filter = QFileDialog.getOpenFileName(self, _("Select Label File"), "",
+                                                    _("Text Files (*.txt)"))
         if path:
             self.labels_path_edit.setText(path)
 
@@ -113,7 +114,8 @@ class LabelsTab(QWidget):
         if not book_path:
             return
 
-        labels_path, _filter = QFileDialog.getSaveFileName(self, _("Save Label File"), "", "Text Files (*.txt)")
+        labels_path, _filter = QFileDialog.getSaveFileName(self, _("Save Label File"), "",
+                                                           _("Text Files (*.txt)"))
         if not labels_path:
             return
 

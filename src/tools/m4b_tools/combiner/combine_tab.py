@@ -143,17 +143,20 @@ class CombineTab(QWidget):
         self.begin_button.clicked.connect(self._on_begin)
 
     def _browse_csv(self):
-        path, _filter = QFileDialog.getOpenFileName(self, _("Select Combine CSV"), "", "CSV Files (*.csv)")
+        path, _filter = QFileDialog.getOpenFileName(self, _("Select Combine CSV"), "",
+                                                    _("CSV Files (*.csv)"))
         if path:
             self.csv_path_edit.setText(path)
 
     def _browse_cover(self):
-        path, _filter = QFileDialog.getOpenFileName(self, _("Select Cover Image"), "", "Images (*.png *.jpg *.jpeg)")
+        path, _filter = QFileDialog.getOpenFileName(self, _("Select Cover Image"), "",
+                                                    _("Images (*.png *.jpg *.jpeg)"))
         if path:
             self.cover_edit.setText(path)
 
     def _browse_output(self):
-        path, _filter = QFileDialog.getSaveFileName(self, _("Save Combined Audiobook As"), "", "M4B Audiobook (*.m4b)")
+        path, _filter = QFileDialog.getSaveFileName(self, _("Save Combined Audiobook As"), "",
+                                                    _("M4B Audiobook (*.m4b)"))
         if path:
             self.output_path_edit.setText(path)
 

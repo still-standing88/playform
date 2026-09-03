@@ -88,17 +88,20 @@ class CoverTab(QWidget):
             self.book_path_edit.setText(path)
 
     def _browse_extract_output(self):
-        path, _filter = QFileDialog.getSaveFileName(self, _("Save Cover As"), "", "Images (*.png *.jpg *.jpeg)")
+        path, _filter = QFileDialog.getSaveFileName(self, _("Save Cover As"), "",
+                                                    _("Images (*.png *.jpg *.jpeg)"))
         if path:
             self.extract_output_edit.setText(path)
 
     def _browse_cover_image(self):
-        path, _filter = QFileDialog.getOpenFileName(self, _("Select Cover Image"), "", "Images (*.png *.jpg *.jpeg)")
+        path, _filter = QFileDialog.getOpenFileName(self, _("Select Cover Image"), "",
+                                                    _("Images (*.png *.jpg *.jpeg)"))
         if path:
             self.cover_image_edit.setText(path)
 
     def _browse_apply_output(self):
-        path, _filter = QFileDialog.getSaveFileName(self, _("Save Audiobook As"), "", "M4B Audiobook (*.m4b)")
+        path, _filter = QFileDialog.getSaveFileName(self, _("Save Audiobook As"), "",
+                                                    _("M4B Audiobook (*.m4b)"))
         if path:
             self.apply_output_edit.setText(path)
 

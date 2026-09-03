@@ -19,7 +19,9 @@ from utilities.announcement_categories import AnnouncementCategory
 def _announce(text):
     signal_manager.announce(text, AnnouncementCategory.TOOLS)
 
-_SAVE_FILTER = "MP3 Audio (*.mp3);;WAV Audio (*.wav);;OGG Audio (*.ogg);;FLAC Audio (*.flac);;All Files (*.*)"
+
+def _save_filter():
+    return _("MP3 Audio (*.mp3);;WAV Audio (*.wav);;OGG Audio (*.ogg);;FLAC Audio (*.flac);;All Files (*.*)")
 
 HOTKEY_SECTION = "Speech Converter"
 
@@ -178,7 +180,8 @@ class SpeechConverterUI(QWidget):
         self.engine.stop()
 
     def _open_text_file(self):
-        path, _filter = QFileDialog.getOpenFileName(self, _("Open Text File"), "", "Text Files (*.txt);;All Files (*.*)")
+        path, _filter = QFileDialog.getOpenFileName(self, _("Open Text File"), "",
+                                                    _("Text Files (*.txt);;All Files (*.*)"))
         if not path:
             return
         try:
@@ -200,7 +203,7 @@ class SpeechConverterUI(QWidget):
             )
             return
 
-        path, _filter = QFileDialog.getSaveFileName(self, _("Save Speech As"), "", _SAVE_FILTER)
+        path, _filter = QFileDialog.getSaveFileName(self, _("Save Speech As"), "", _save_filter())
         if not path:
             return
 

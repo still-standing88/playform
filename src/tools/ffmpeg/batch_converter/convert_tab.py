@@ -58,7 +58,7 @@ class AudioConvertPanel(QWidget):
         self.sample_rate_combo.clear()
         self.sample_rate_combo.addItem(_("Keep Original"), 0)
         for rate in fmt.sample_rates or []:
-            self.sample_rate_combo.addItem(f"{rate} Hz", rate)
+            self.sample_rate_combo.addItem(_("{rate} Hz").format(rate=rate), rate)
         self.sample_rate_combo.setCurrentIndex(0)
 
         has_bitrate = bool(fmt.bitrates_kbps)
@@ -68,7 +68,7 @@ class AudioConvertPanel(QWidget):
         if has_bitrate:
             self.bit_rate_combo.addItem(_("Keep Original (Encoder Default)"), 0)
             for rate in fmt.bitrates_kbps:
-                self.bit_rate_combo.addItem(f"{rate} kbps", rate)
+                self.bit_rate_combo.addItem(_("{rate} kbps").format(rate=rate), rate)
             self.bit_rate_combo.setCurrentIndex(0)
 
         has_bit_depth = bool(fmt.bit_depths)
@@ -79,7 +79,7 @@ class AudioConvertPanel(QWidget):
         if has_bit_depth:
             self.bit_depth_combo.addItem(_("Keep Original"), 0)
             for depth in fmt.bit_depths:
-                self.bit_depth_combo.addItem(f"{depth}-bit", depth)
+                self.bit_depth_combo.addItem(_("{depth}-bit").format(depth=depth), depth)
             self.bit_depth_combo.setCurrentIndex(0)
 
         self._clear_codec_options()

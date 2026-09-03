@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional
-from gettext import gettext as _
 
 from PySide6.QtCore import Qt, QEvent
 from PySide6.QtWidgets import (

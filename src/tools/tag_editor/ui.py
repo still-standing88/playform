@@ -1,6 +1,5 @@
 import os
 import music_tag
-from gettext import gettext as _
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit,
@@ -61,7 +60,7 @@ class TagEditorUI(QWidget):
         for tag in tags_to_display:
             label = QLabel(tag.replace('_', ' ').title() + ":")
             edit = QLineEdit()
-            edit.setAccessibleName(f"{tag.replace('_', ' ').title()} tag editor")
+            edit.setAccessibleName(_("{tag} tag editor").format(tag=tag.replace('_', ' ').title()))
             self.grid_layout.addWidget(label, row, 0)
             self.grid_layout.addWidget(edit, row, 1)
             self.tag_widgets[tag] = edit
@@ -71,6 +70,9 @@ class TagEditorUI(QWidget):
         self.lyrics_edit = QTextEdit()
         self.lyrics_edit.setTabChangesFocus(True)
         self.lyrics_edit.setAccessibleName(_("Lyrics tag editor"))
+        # Long lyrics scroll internally; capping keeps short entries from
+        # stretching the whole right panel.
+        self.lyrics_edit.setMaximumHeight(160)
         lyrics_label = QLabel(_("Lyrics:"))
         # The box is the only row that grows, so a default-aligned label ends up
         # centred against a 275px field instead of beside its first line.
@@ -81,6 +83,7 @@ class TagEditorUI(QWidget):
         self.lyrics_edit.textChanged.connect(self.update_tag_data)
 
         right_panel.addLayout(self.grid_layout)
+        right_panel.addStretch()
 
         self.main_layout.addLayout(left_panel, 1)
         self.main_layout.addLayout(right_panel, 2)
