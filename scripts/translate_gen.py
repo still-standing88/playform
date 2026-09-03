@@ -105,6 +105,7 @@ def main() -> int:
             "--language=Python",
             "--from-code=UTF-8",
             "--keyword=_",
+            "--keyword=N_",
             "--keyword=ngettext:1,2",
             "--sort-output",
             "--no-location",

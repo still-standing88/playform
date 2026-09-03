@@ -107,6 +107,19 @@ def translate_creat(c, language):
 
 
 @task
+def translate_merge(c, languages=None):
+    """Merge the POT template into existing PO catalogs, keeping translations.
+
+    Args:
+        languages: Comma-separated language codes (e.g. 'fr,ar').
+                   If omitted, every catalog under lang/ is merged.
+    """
+    print("Merging translation template into catalogs...")
+    args = [lang.strip() for lang in languages.split(",")] if languages else []
+    _run_python_script(c, "translate_merge.py", *args)
+
+
+@task
 def build_docs(c, langs=None):
     """Compile Markdown documentation to HTML.
     
@@ -236,6 +249,7 @@ namespace.add_task(run_app)
 namespace.add_task(translate_gen)
 namespace.add_task(translate_compile)
 namespace.add_task(translate_creat)
+namespace.add_task(translate_merge)
 namespace.add_task(build_docs)
 namespace.add_task(compile)
 namespace.add_task(bundle)

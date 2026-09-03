@@ -42,3 +42,9 @@ def install_translation(language: str | None = None, domain: str = DOMAIN):
     translation = gettext.translation(domain, localedir=localedir, languages=languages, fallback=True)
     translation.install()
     return translation
+
+
+def N_(message: str) -> str:
+    """Extraction-only marker for labels defined before a catalog is loaded
+    (module-level tables); the call site still passes them through _()."""
+    return message
