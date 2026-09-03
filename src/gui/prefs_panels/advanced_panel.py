@@ -149,7 +149,7 @@ class AdvancedPanel(QWidget):
 
         if self._dialog_kind_for(key) == "file":
             path, __ = QFileDialog.getOpenFileName(self, _("Select Cookies File"),
-                                                     "", "Text Files (*.txt);;All Files (*)")
+                                                     "", _("Text Files (*.txt);;All Files (*)"))
         else:
             path = QFileDialog.getExistingDirectory(self, _("Select Directory"))
 

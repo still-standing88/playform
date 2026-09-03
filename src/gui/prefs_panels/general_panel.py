@@ -19,7 +19,9 @@ class GeneralPanel(QWidget):
         layout.addRow(_("Screenshot Format:"), self.screenshot_format_combo)
         
         self.theme_combo = QComboBox()
-        self.theme_combo.addItems(["system", "light", "dark"])
+        # Labels are translated; the pref keeps the untranslated value.
+        for value, label in (("system", _("System")), ("light", _("Light")), ("dark", _("Dark"))):
+            self.theme_combo.addItem(label, value)
         layout.addRow(_("Theme:"), self.theme_combo)
         
         self.auto_update_check = QCheckBox(_("Auto check for updates"))
@@ -38,7 +40,9 @@ class GeneralPanel(QWidget):
         if prefs["image_format"] in screenshot_formats:
             self.screenshot_format_combo.setCurrentText(prefs["image_format"])
             
-        self.theme_combo.setCurrentText(prefs["color_theme"])
+        theme_index = self.theme_combo.findData(prefs["color_theme"])
+        if theme_index >= 0:
+            self.theme_combo.setCurrentIndex(theme_index)
         self.auto_update_check.setChecked(prefs["auto_check_for_updates"])
         self.save_urls_check.setChecked(prefs["save_urls"])
         
@@ -48,7 +52,7 @@ class GeneralPanel(QWidget):
 
         prefs["language"] = selected_language
         prefs["image_format"] = self.screenshot_format_combo.currentText()
-        prefs["color_theme"] = self.theme_combo.currentText()
+        prefs["color_theme"] = self.theme_combo.currentData()
         prefs["auto_check_for_updates"] = self.auto_update_check.isChecked()
         prefs["save_urls"] = self.save_urls_check.isChecked()
         prefs["should_restart"] = prefs.get("should_restart", False) or language_changed

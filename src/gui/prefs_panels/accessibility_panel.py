@@ -39,12 +39,12 @@ class AccessibilityPanel(QWidget):
         if sys.platform != "win32":
             self.voice_settings_btn = QPushButton(_("Voice Settings"))
             self.voice_settings_btn.clicked.connect(self.open_voice_settings)
-            speech_layout.addRow("Configure Voice:", self.voice_settings_btn)
+            speech_layout.addRow(_("Configure Voice:"), self.voice_settings_btn)
         else:
             self.voice_settings_btn = None
             
         self.interrupt_check = QCheckBox(_("Interrupt previous speech"))
-        speech_layout.addRow("Speech Interrupt:", self.interrupt_check)
+        speech_layout.addRow(_("Speech Interrupt:"), self.interrupt_check)
 
         self.announcements_btn = QPushButton(_("Announcements..."))
         self.announcements_btn.setToolTip(_("Choose which kinds of events are announced by speech"))
