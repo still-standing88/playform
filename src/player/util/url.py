@@ -64,11 +64,11 @@ def get_yt_video_info(url: str, cookies: Optional[str] = None) -> dict:
         )
         return json.loads(result.stdout)
     except FileNotFoundError:
-        raise RuntimeError(f"yt-dlp executable not found at '{YTDLP_PATH}'.")
+        raise RuntimeError(_("yt-dlp executable not found at '{path}'.").format(path=YTDLP_PATH))
     except subprocess.CalledProcessError as e:
-        raise ValueError(f"yt-dlp returned an error: {e.stderr}")
+        raise ValueError(_("yt-dlp returned an error: {error}").format(error=e.stderr))
     except json.JSONDecodeError:
-        raise ValueError(f"Failed to parse JSON from yt-dlp output.")
+        raise ValueError(_("Failed to parse JSON from yt-dlp output."))
 
 def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None):
     cmd = [YTDLP_PATH, '--dump-json'] + _get_deno_arg()
@@ -100,7 +100,7 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
         result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
     
     if result.returncode != 0:
-        raise ValueError(f"yt-dlp failed: {result.stderr}")
+        raise ValueError(_("yt-dlp failed: {error}").format(error=result.stderr))
     
     lines = [line for line in result.stdout.strip().split('\n') if line]
     
@@ -109,7 +109,7 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
     elif lines:
         return json.loads(lines[0])
     else:
-        raise ValueError("No output from yt-dlp")
+        raise ValueError(_("No output from yt-dlp"))
 
 def fetch_full_info(url: str, cookies: Optional[str] = None):
     cmd = [YTDLP_PATH, '--dump-json', '--no-playlist'] \
@@ -129,7 +129,7 @@ def fetch_full_info(url: str, cookies: Optional[str] = None):
         result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
     
     if result.returncode != 0:
-        raise ValueError(f"Failed to fetch full info: {result.stderr}")
+        raise ValueError(_("Failed to fetch full info: {error}").format(error=result.stderr))
 
     return json.loads(result.stdout.strip())
 
@@ -156,7 +156,7 @@ def fetch_video_comments(url: str, cookies: Optional[str] = None, max_comments: 
         result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
 
     if result.returncode != 0:
-        raise ValueError(f"Failed to fetch comments: {result.stderr}")
+        raise ValueError(_("Failed to fetch comments: {error}").format(error=result.stderr))
 
     info = json.loads(result.stdout.strip())
     return info.get("comments") or []
@@ -242,7 +242,7 @@ def get_best_format(info) -> str:
     if video:
         return video[-1]["url"]
 
-    raise ValueError("No playable formats found")
+    raise ValueError(_("No playable formats found"))
 
 
 _supported_extractor_names: set[str] | None = None
@@ -346,7 +346,7 @@ def run_ytdlp_flat_playlist(url: str, cookies: Optional[str] = None) -> List[dic
         result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
 
     if result.returncode != 0:
-        raise ValueError(f"yt-dlp failed: {result.stderr}")
+        raise ValueError(_("yt-dlp failed: {error}").format(error=result.stderr))
 
     lines = [line for line in result.stdout.strip().split("\n") if line]
     return [json.loads(line) for line in lines]

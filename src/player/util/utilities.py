@@ -241,7 +241,7 @@ def _check_ytdlp_uncached(path: str) -> BinaryCheckResult:
             version=None,
             major=None,
             ok=False,
-            message="yt-dlp path is not configured.",
+            message=_("yt-dlp path is not configured."),
         )
 
     exists = os.path.exists(path)
@@ -255,7 +255,7 @@ def _check_ytdlp_uncached(path: str) -> BinaryCheckResult:
             version=None,
             major=None,
             ok=False,
-            message="yt-dlp was not found at the configured path.",
+            message=_("yt-dlp was not found at the configured path."),
         )
 
     rc, out, err = _run_command([path, "--version"])
@@ -268,13 +268,13 @@ def _check_ytdlp_uncached(path: str) -> BinaryCheckResult:
 
     ok = bool(runnable and detected)
     if ok:
-        msg = "yt-dlp is available."
+        msg = _("yt-dlp is available.")
     else:
-        msg = "yt-dlp was found but does not appear to be a valid yt-dlp executable."
+        msg = _("yt-dlp was found but does not appear to be a valid yt-dlp executable.")
 
     if not runnable:
-        details = err.strip() or "command failed"
-        msg = f"yt-dlp was found but could not be executed: {details}"
+        details = err.strip() or _("command failed")
+        msg = _("yt-dlp was found but could not be executed: {details}").format(details=details)
 
     return BinaryCheckResult(
         name="yt-dlp",
@@ -302,7 +302,7 @@ def check_ffmpeg(min_major: int = 6) -> BinaryCheckResult:
             version=None,
             major=None,
             ok=False,
-            message="FFmpeg path is not configured. Use Get/Update Utilities to download FFmpeg.",
+            message=_("FFmpeg path is not configured. Use Get/Update Utilities to download FFmpeg."),
         )
 
     exists = os.path.exists(path)
@@ -316,7 +316,7 @@ def check_ffmpeg(min_major: int = 6) -> BinaryCheckResult:
             version=None,
             major=None,
             ok=False,
-            message="FFmpeg was not found at the configured path. Use Get/Update Utilities to install FFmpeg.",
+            message=_("FFmpeg was not found at the configured path. Use Get/Update Utilities to install FFmpeg."),
         )
 
     rc, out, err = _run_command([path, "-version"])
@@ -336,15 +336,16 @@ def check_ffmpeg(min_major: int = 6) -> BinaryCheckResult:
     ok = bool(runnable and detected and meets)
 
     if not runnable:
-        details = err.strip() or "command failed"
-        msg = f"FFmpeg was found but could not be executed: {details}"
+        details = err.strip() or _("command failed")
+        msg = _("FFmpeg was found but could not be executed: {details}").format(details=details)
     elif not detected:
-        msg = "FFmpeg was found but does not appear to be a valid ffmpeg executable."
+        msg = _("FFmpeg was found but does not appear to be a valid ffmpeg executable.")
     elif not meets:
-        found = str(major) if major is not None else "unknown"
-        msg = f"FFmpeg version is not sufficient. Required {min_major}.x+, found {found}."
+        found = str(major) if major is not None else _("unknown")
+        msg = _("FFmpeg version is not sufficient. Required {required}.x+, found {found}.").format(
+            required=min_major, found=found)
     else:
-        msg = "FFmpeg is available and meets the minimum version requirement."
+        msg = _("FFmpeg is available and meets the minimum version requirement.")
 
     return BinaryCheckResult(
         name="ffmpeg",
@@ -372,7 +373,7 @@ def check_ffprobe(min_major: int = 6) -> BinaryCheckResult:
             version=None,
             major=None,
             ok=False,
-            message="ffprobe path is not configured. Use Get/Update Utilities to download FFmpeg (ffprobe ships alongside it).",
+            message=_("ffprobe path is not configured. Use Get/Update Utilities to download FFmpeg (ffprobe ships alongside it)."),
         )
 
     exists = os.path.exists(path)
@@ -386,7 +387,7 @@ def check_ffprobe(min_major: int = 6) -> BinaryCheckResult:
             version=None,
             major=None,
             ok=False,
-            message="ffprobe was not found at the configured path. Use Get/Update Utilities to install FFmpeg.",
+            message=_("ffprobe was not found at the configured path. Use Get/Update Utilities to install FFmpeg."),
         )
 
     rc, out, err = _run_command([path, "-version"])
@@ -406,15 +407,16 @@ def check_ffprobe(min_major: int = 6) -> BinaryCheckResult:
     ok = bool(runnable and detected and meets)
 
     if not runnable:
-        details = err.strip() or "command failed"
-        msg = f"ffprobe was found but could not be executed: {details}"
+        details = err.strip() or _("command failed")
+        msg = _("ffprobe was found but could not be executed: {details}").format(details=details)
     elif not detected:
-        msg = "ffprobe was found but does not appear to be a valid ffprobe executable."
+        msg = _("ffprobe was found but does not appear to be a valid ffprobe executable.")
     elif not meets:
-        found = str(major) if major is not None else "unknown"
-        msg = f"ffprobe version is not sufficient. Required {min_major}.x+, found {found}."
+        found = str(major) if major is not None else _("unknown")
+        msg = _("ffprobe version is not sufficient. Required {required}.x+, found {found}.").format(
+            required=min_major, found=found)
     else:
-        msg = "ffprobe is available and meets the minimum version requirement."
+        msg = _("ffprobe is available and meets the minimum version requirement.")
 
     return BinaryCheckResult(
         name="ffprobe",
@@ -430,13 +432,13 @@ def check_ffprobe(min_major: int = 6) -> BinaryCheckResult:
 
 
 def show_binary_check_result(parent: Optional[QWidget], result: BinaryCheckResult, title: Optional[str] = None):
-    window_title = title or f"{result.name} Check"
+    window_title = title or _("{name} Check").format(name=result.name)
 
     details = []
     if result.path:
-        details.append(f"Path: {result.path}")
+        details.append(_("Path: {path}").format(path=result.path))
     if result.version:
-        details.append(f"Version: {result.version}")
+        details.append(_("Version: {version}").format(version=result.version))
 
     text = result.message
     if details:
@@ -453,7 +455,7 @@ def ensure_ytdlp_available(parent: Optional[QWidget] = None, show_message: bool 
     if result.ok:
         return True
     if show_message:
-        show_binary_check_result(parent, result, "yt-dlp Not Available")
+        show_binary_check_result(parent, result, _("yt-dlp Not Available"))
     return False
 
 
@@ -462,7 +464,7 @@ def ensure_ffmpeg_available(parent: Optional[QWidget] = None, show_message: bool
     if result.ok:
         return True
     if show_message:
-        show_binary_check_result(parent, result, "FFmpeg Not Available")
+        show_binary_check_result(parent, result, _("FFmpeg Not Available"))
     return False
 
 
@@ -471,7 +473,7 @@ def ensure_ffprobe_available(parent: Optional[QWidget] = None, show_message: boo
     if result.ok:
         return True
     if show_message:
-        show_binary_check_result(parent, result, "ffprobe Not Available")
+        show_binary_check_result(parent, result, _("ffprobe Not Available"))
     return False
 
 
