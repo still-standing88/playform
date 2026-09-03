@@ -705,7 +705,7 @@ class ListCtrl(QWidget):
         self._list_view.setTabKeyNavigation(False)
         
         # Accessibility
-        self._list_view.setAccessibleName("List Control")
+        self._list_view.setAccessibleName(_("List Control"))
         self._update_accessibility()
         self._sync_scroll_corner_style()
         
@@ -1116,8 +1116,9 @@ class ListCtrl(QWidget):
 
     def _update_accessibility(self):
         description = (
-            f"Multi-column list view with {self._model.get_column_count()} columns "
-            f"and {self._model.rowCount()} rows"
+            _("Multi-column list view with {columns} columns and {rows} rows").format(
+                columns=self._model.get_column_count(), rows=self._model.rowCount()
+            )
         )
         self._list_view.setAccessibleDescription(description)
         self.setAccessibleDescription(description)

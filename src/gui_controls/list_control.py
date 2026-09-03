@@ -219,4 +219,8 @@ class Listctrl(QListWidget):
         return self.count() - 1
 
     def updateDiscription(self):
-        self.setAccessibleDescription(f"list view with {self.getColumnCount()} columns and {self.getRowCount()} rows")
+        self.setAccessibleDescription(
+            _("list view with {columns} columns and {rows} rows").format(
+                columns=self.getColumnCount(), rows=self.getRowCount()
+            )
+        )

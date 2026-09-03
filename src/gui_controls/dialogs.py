@@ -18,7 +18,7 @@ class InfoDialog(QDialog):
 
     def ui(self):
        self.text_field = QPlainTextEdit(self)
-       self.close_button = QPushButton("Close",self)
+       self.close_button = QPushButton(_("Close"),self)
        self.text_field.setReadOnly(True)
        self.text_field.setTabChangesFocus(True)
        self.text_field.setPlainText(self.text)
@@ -53,9 +53,9 @@ class FileDialog(QDialog):
     def ui(self):
         self.files_list = QListWidget(self)
         self.browse_btn = QToolButton(self)
-        self.browse_btn.setText("browse")
-        self.confirm_btn = ConfirmButton("Confirm",self)
-        self.cancel_btn = CancelButton("Cancel",)
+        self.browse_btn.setText(_("Browse"))
+        self.confirm_btn = ConfirmButton(_("Confirm"),self)
+        self.cancel_btn = CancelButton(_("Cancel"),)
         self.browse_btn.clicked.connect(self.onbrowse)
         self.confirm_btn.clicked.connect(self.onConfirm)
         self.cancel_btn.clicked.connect(self.close)

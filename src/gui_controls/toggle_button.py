@@ -131,11 +131,11 @@ class ToggleButton(QPushButton):
         
     def updateAccessibility(self):
         if self.activated:
-            self.setAccessibleDescription("Toggle button activated - Press to deactivate")
-            self.setAccessibleName(f"{self.text()} - Active")
+            self.setAccessibleDescription(_("Toggle button activated - Press to deactivate"))
+            self.setAccessibleName(_("{label} - Active").format(label=self.text()))
         else:
-            self.setAccessibleDescription("Toggle button not activated - Press to activate")
-            self.setAccessibleName(f"{self.text()} - Inactive")
+            self.setAccessibleDescription(_("Toggle button not activated - Press to activate"))
+            self.setAccessibleName(_("{label} - Inactive").format(label=self.text()))
             
     def setActuated(self, state):
         if isinstance(state, bool) and state != self.activated:
