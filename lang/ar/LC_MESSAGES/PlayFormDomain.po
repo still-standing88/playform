@@ -25,19 +25,19 @@ msgid " %"
 msgstr " %"
 
 msgid " (Max retries reached)"
-msgstr " (لقد وصلت إلى الحد الأقصى لعدد المحاولات.)"
+msgstr " (تم الوصول إلى الحد الأقصى لعدد المحاولات)"
 
 msgid " KB/s"
-msgstr " ك.ب/ث"
+msgstr " KB/s"
 
 msgid " dB"
-msgstr " د.ب"
+msgstr " dB"
 
 msgid " ms"
-msgstr " م.ث"
+msgstr " ms"
 
 msgid " s"
-msgstr " ث"
+msgstr " s"
 
 msgid "#"
 msgstr "رقم"
@@ -49,22 +49,22 @@ msgid "&Audiobook Tools (Bind/Split/Slide/Labels/Cover)"
 msgstr "&أدوات الكتب الصوتية (ربط/تقسيم/إزاحة/تسميات/غلاف)"
 
 msgid "&Backward"
-msgstr "&رجوع إلى الخلف"
+msgstr "&إرجاع"
 
 msgid "&Batch Converter"
-msgstr "م&حول الدفعات"
+msgstr "&محوّل الدفعات"
 
 msgid "&Bookmarks..."
-msgstr "الإ&شارات المرجعية..."
+msgstr "&العلامات المرجعية..."
 
 msgid "&Check for Updates..."
-msgstr "التحقق &من التحديثات..."
+msgstr "&التحقق من التحديثات..."
 
 msgid "&Close Media"
 msgstr "&إغلاق الوسائط"
 
 msgid "&Debug"
-msgstr "تصحيح الأ&خطاء"
+msgstr "&تصحيح الأخطاء"
 
 msgid "&Documentation..."
 msgstr "&دليل المستخدم..."
@@ -85,7 +85,7 @@ msgid "&File"
 msgstr "&ملف"
 
 msgid "&Forward"
-msgstr "ت&قدم إلى الأمام"
+msgstr "&تقديم"
 
 msgid "&Go to Time..."
 msgstr "&الانتقال إلى وقت..."
@@ -94,37 +94,37 @@ msgid "&M4B Tools"
 msgstr "&أدوات M4B"
 
 msgid "&Manage Hotkeys"
-msgstr "إدارة الا&ختصارات"
+msgstr "&إدارة الاختصارات"
 
 msgid "&Manage Preferences"
-msgstr "إدارة ال&تفضيلات"
+msgstr "&إدارة التفضيلات"
 
 msgid "&Media"
 msgstr "&وسائط"
 
 msgid "&Media Extractor"
-msgstr "م&ستخرج الوسائط"
+msgstr "&مستخرج الوسائط"
 
 msgid "&Minimize Player"
-msgstr "تصغير ال&مشغل"
+msgstr "&تصغير المشغّل"
 
 msgid "&Minimize to Taskbar"
-msgstr "&تصغير إلى جهة الإشعارات"
+msgstr "&تصغير إلى شريط المهام"
 
 msgid "&Mute/Unmute"
-msgstr "كتم الصوت/إل&غاء كتم الصوت"
+msgstr "&كتم الصوت/إلغاء كتم الصوت"
 
 msgid "&Next"
-msgstr "ال&تالي"
+msgstr "&التالي"
 
 msgid "&Open"
 msgstr "&فتح"
 
 msgid "&Open File..."
-msgstr "فتح م&لف..."
+msgstr "&فتح ملف..."
 
 msgid "&Options"
-msgstr "ال&خيارات"
+msgstr "&الخيارات"
 
 msgid "&Panels"
 msgstr "&اللوحات"
@@ -133,13 +133,13 @@ msgid "&Panels Bar"
 msgstr "&شريط اللوحات"
 
 msgid "&Play/Pause"
-msgstr "تشغيل/إيقاف &مؤقت"
+msgstr "&تشغيل/إيقاف مؤقت"
 
 msgid "&Previous"
-msgstr "ال&سابق"
+msgstr "&السابق"
 
 msgid "&Recent Files"
-msgstr "ال&ملفات الأخيرة"
+msgstr "&الملفات الأخيرة"
 
 msgid "&Restart Application"
 msgstr "&إعادة تشغيل التطبيق"
@@ -154,13 +154,13 @@ msgid "&Stop"
 msgstr "&إيقاف"
 
 msgid "&Subtitle Tools"
-msgstr "أدوات ال&ترجمة"
+msgstr "&أدوات الترجمة"
 
 msgid "&Tag Editor"
-msgstr "مح&رر معلومات الوسائط"
+msgstr "&محرر معلومات الوسائط"
 
 msgid "&Thumbnail Generator"
-msgstr "م&ولد الصور المصغرة"
+msgstr "&مولد الصور المصغرة"
 
 msgid "&Toolbar"
 msgstr "&شريط الأدوات"
@@ -182,7 +182,7 @@ msgstr "(لا توجد ملفات سجلات)"
 
 #, python-brace-format
 msgid "... and {count} more"
-msgstr "... و{count} المزيد"
+msgstr "... و{count} أخرى"
 
 msgid "0 is the top of the video, 100 the bottom"
 msgstr "0 هو أعلى الفيديو، و100 هو أسفله"
@@ -207,7 +207,7 @@ msgstr ""
 
 #, python-brace-format
 msgid "<b>Bitrate:</b> {bitrate} kbps"
-msgstr "<b>معدل البت:</b> {bitrate} كيلوبت في الثانية"
+msgstr "<b>معدل البت:</b> {bitrate} kbps"
 
 #, python-brace-format
 msgid "<b>Codec:</b> {codec}"
@@ -221,7 +221,7 @@ msgid "<b>Description:</b>"
 msgstr "<b>الوصف:</b>"
 
 msgid "<b>Entries</b>"
-msgstr "<b>الإدخالات</b>"
+msgstr "<b>العناصر</b>"
 
 msgid "<b>Feeds</b>"
 msgstr "<b>الخلاصات</b>"
@@ -253,7 +253,7 @@ msgstr "<b>الملخص/الوصف</b>"
 
 #, python-brace-format
 msgid "<b>Tags:</b> {tags}"
-msgstr "<b>العلامات:</b> {tags}"
+msgstr "<b>الوسوم:</b> {tags}"
 
 #, python-brace-format
 msgid "<b>Votes:</b> {votes}"
@@ -261,7 +261,7 @@ msgstr "<b>التصويتات:</b> {votes}"
 
 #, python-brace-format
 msgid "<em>... and {count} more</em>"
-msgstr "<em>... و{count} المزيد</em>"
+msgstr "<em>... و{count} أخرى</em>"
 
 msgid "<p><em>No summary or description available.</em></p>"
 msgstr "<p><em>لا يتوفر ملخص أو وصف.</em></p>"
@@ -276,16 +276,16 @@ msgstr ""
 "الإغلاق يحفظ قائمة الانتظار، وتُستأنف في المرة القادمة التي تفتح فيها هذه النافذة."
 
 msgid "A feed operation is already in progress."
-msgstr "هناك عملية على الموجز قيد التنفيذ بالفعل."
+msgstr "هناك عملية على الخلاصة قيد التنفيذ بالفعل."
 
 msgid "A folder is still being cataloged."
-msgstr "لا يزال يتم فهرسة أحد المجلدات."
+msgstr "ما زال أحد المجلدات قيد الفهرسة."
 
 msgid "A modern, accessible media player for audio and video files."
-msgstr "مشغل وسائط حديث ويمكن الوصول إليه للصوت والفيديو."
+msgstr "مشغّل وسائط حديث لملفات الصوت والفيديو، يدعم إمكانية الوصول."
 
 msgid "A running log of each completed, skipped, or failed file."
-msgstr "سجل مباشر لكل ملف مكتمل أو متجاوَز أو فاشل."
+msgstr "سجل مستمر لكل ملف اكتمل أو تم تخطيه أو فشل."
 
 msgid "A/V sync"
 msgstr "تزامن الصوت والفيديو"
@@ -313,13 +313,13 @@ msgid "Accessibility"
 msgstr "إمكانية الوصول"
 
 msgid "Action"
-msgstr "فعل"
+msgstr "الإجراء"
 
 msgid "Active Tools"
 msgstr "الأدوات النشطة"
 
 msgid "Add"
-msgstr "أضف"
+msgstr "إضافة"
 
 msgid "Add &Download..."
 msgstr "&إضافة تنزيل..."
@@ -346,7 +346,7 @@ msgid "Add Effect..."
 msgstr "إضافة تأثير..."
 
 msgid "Add Feed"
-msgstr "إضافة موجز"
+msgstr "إضافة خلاصة"
 
 msgid "Add File(s)..."
 msgstr "إضافة ملف/ملفات..."
@@ -376,7 +376,7 @@ msgid "Add Prefix/Suffix"
 msgstr "إضافة بادئة/لاحقة"
 
 msgid "Add Tracks"
-msgstr "إضافة مقاطع"
+msgstr "إضافة مسارات"
 
 msgid "Add an audio effect"
 msgstr "إضافة تأثير صوتي"
@@ -394,10 +394,10 @@ msgid "Add at least one file to combine."
 msgstr "أضف ملفًا واحدًا على الأقل للتجميع."
 
 msgid "Add existing path"
-msgstr "إضافة المسار الموجود"
+msgstr "إضافة مسار موجود"
 
 msgid "Add new"
-msgstr "أضف جديدا"
+msgstr "إضافة جديد"
 
 msgid "Add new path to library"
 msgstr "إضافة مسار جديد إلى المكتبة"
@@ -442,7 +442,7 @@ msgstr "التأثيرات الصوتية المضافة"
 
 #, python-brace-format
 msgid "Added {count} track(s) to playlist"
-msgstr "تمت إضافة {count} مقطعًا إلى قائمة التشغيل"
+msgstr "تمت إضافة {count} من المسارات إلى قائمة التشغيل"
 
 msgid "Additional download details"
 msgstr "تفاصيل إضافية عن التنزيل"
@@ -544,11 +544,10 @@ msgstr "هل أنت متأكد أنك تريد مسح كافة الملفات ا
 
 msgid "Are you sure you want to reset all hotkeys to default?"
 msgstr ""
-"هل أنت متأكد أنك تريد إعادة تعيين جميع مفاتيح التشغيل السريع إلى الوضع "
-"الافتراضي؟"
+"هل أنت متأكد أنك تريد إعادة تعيين جميع الاختصارات إلى الوضع الافتراضي؟"
 
 msgid "Artist"
-msgstr "فنان"
+msgstr "الفنان"
 
 msgid "Aspect Ratio"
 msgstr "نسبة العرض إلى الارتفاع"
@@ -572,7 +571,7 @@ msgstr ""
 "*.wv)"
 
 msgid "Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)"
-msgstr "ملفات الصوت (*.mp3 *.wav *.flac *.ogg *.m4a);;جميع الملفات (*)"
+msgstr "الملفات الصوتية (*.mp3 *.wav *.flac *.ogg *.m4a);;كل الملفات (*)"
 
 msgid "Audio Filters"
 msgstr "المرشحات الصوتية"
@@ -602,7 +601,7 @@ msgid "Audio only"
 msgstr "الصوت فقط"
 
 msgid "Audio only -- disabled while the current media has a video track"
-msgstr "الصوت فقط -- معطل أثناء احتواء الوسائط الحالية على مسار فيديو"
+msgstr "الصوت فقط -- معطّل عندما تحتوي الوسائط الحالية على مسار فيديو"
 
 msgid "Audio output"
 msgstr "مخرج الصوت"
@@ -653,7 +652,7 @@ msgid "Auto check for updates"
 msgstr "التحقق من التحديثات تلقائيًا"
 
 msgid "Automatic Thumbnail Filter"
-msgstr "تصفية الصور المصغرة التلقائية"
+msgstr "التصفية التلقائية للصور المصغرة"
 
 msgid ""
 "Automatic download is not available in developer mode.\n"
@@ -691,7 +690,7 @@ msgid "Background colour"
 msgstr "لون الخلفية"
 
 msgid "Backward"
-msgstr "الرجوع إلى الخلف"
+msgstr "إرجاع"
 
 msgid "Batch Conversion Finished"
 msgstr "انتهى التحويل المجمّع"
@@ -700,7 +699,7 @@ msgid "Batch Conversion Progress"
 msgstr "تقدّم التحويل المجمّع"
 
 msgid "Batch Converter"
-msgstr "محول دفعة"
+msgstr "محوّل الدفعات"
 
 msgid "Batch conversion cancelled"
 msgstr "تم إلغاء التحويل المجمّع"
@@ -739,10 +738,10 @@ msgid "Bold"
 msgstr "عريض"
 
 msgid "Bookmarks"
-msgstr "الإشارات المرجعية"
+msgstr "العلامات المرجعية"
 
 msgid "Bookmarks list"
-msgstr "قائمة الإشارات المرجعية"
+msgstr "قائمة العلامات المرجعية"
 
 msgid "Both"
 msgstr "كلاهما"
@@ -751,10 +750,10 @@ msgid "Brightness"
 msgstr "السطوع"
 
 msgid "Browse"
-msgstr "تصفح"
+msgstr "استعراض"
 
 msgid "Browse Video"
-msgstr "تصفح ملف فيديو"
+msgstr "استعراض ملف فيديو"
 
 msgid "Browse for default download folder"
 msgstr "استعراض مجلد التنزيل الافتراضي"
@@ -856,7 +855,7 @@ msgid "Category: {category}"
 msgstr "الفئة: {category}"
 
 msgid "Change Case"
-msgstr "تكبير أو تصغير الأحرف"
+msgstr "تغيير حالة الأحرف"
 
 msgid "Channel"
 msgstr "القناة"
@@ -966,7 +965,7 @@ msgid "Clear & Rebuild Catalog"
 msgstr "مسح الفهرس وإعادة بنائه"
 
 msgid "Clear && Rebuild Catalog..."
-msgstr "مسح الفهرس وإعادة بنائه..."
+msgstr "مسح الفهرس && إعادة بنائه..."
 
 msgid "Clear All"
 msgstr "مسح الكل"
@@ -978,7 +977,7 @@ msgid "Clear All Favorites"
 msgstr "مسح كل المفضلة"
 
 msgid "Clear All Feeds"
-msgstr "مسح كل الموجزات"
+msgstr "مسح كل الخلاصات"
 
 msgid "Clear All Recent Files"
 msgstr "مسح كل الملفات الأخيرة"
@@ -993,7 +992,7 @@ msgid "Clear Nonexistent"
 msgstr "مسح العناصر غير الموجودة"
 
 msgid "Clear Nonexistent Tracks"
-msgstr "مسح المقاطع غير الموجودة"
+msgstr "مسح المسارات غير الموجودة"
 
 msgid "Clear Queue"
 msgstr "مسح قائمة الانتظار"
@@ -1005,7 +1004,7 @@ msgid "Clear Search History"
 msgstr "مسح سجل البحث"
 
 msgid "Clear Tracks"
-msgstr "مسح المقاطع"
+msgstr "مسح المسارات"
 
 msgid "Clear all"
 msgstr "مسح الكل"
@@ -1014,7 +1013,7 @@ msgid "Clear all cached data?"
 msgstr "هل تريد مسح جميع البيانات المخزنة مؤقتًا؟"
 
 msgid "Clear all tracks from this playlist?"
-msgstr "هل تريد مسح كل المقاطع من قائمة التشغيل هذه؟"
+msgstr "هل تريد مسح كل المسارات من قائمة التشغيل هذه؟"
 
 msgid "Clear cache button"
 msgstr "مسح ذاكرة التخزين المؤقت"
@@ -1029,14 +1028,14 @@ msgid "Click above to preview this device."
 msgstr "انقر أعلاه لمعاينة هذا الجهاز."
 
 msgid "Click already in progress"
-msgstr "النقر بالفعل قيد التقدم"
+msgstr "النقر قيد التنفيذ بالفعل"
 
 msgid ""
 "Click center: Play/Pause | Click left: Backward | Click right: Forward | "
 "Click bar: Seek"
 msgstr ""
-"النقر في المنتصف: تشغيل/إيقاف مؤقت | النقر على اليسار: الرجوع إلى الخلف | "
-"النقر على اليمين: التقدم إلى الأمام | النقر على الشريط: الانتقال إلى موضع"
+"النقر في المنتصف: تشغيل/إيقاف مؤقت | النقر على اليسار: إرجاع | النقر على "
+"اليمين: تقديم | النقر على الشريط: الانتقال"
 
 #, python-brace-format
 msgid "Click failed: {error}"
@@ -1076,25 +1075,25 @@ msgid "Color space"
 msgstr "مساحة الألوان"
 
 msgid "Combine"
-msgstr "دمج"
+msgstr "تجميع"
 
 msgid "Combine Audiobooks"
-msgstr "دمج الكتب الصوتية"
+msgstr "تجميع الكتب الصوتية"
 
 msgid "Combine CSV file path"
-msgstr "مسار ملف CSV للدمج"
+msgstr "مسار ملف CSV للتجميع"
 
 msgid "Combine failed or was cancelled"
-msgstr "فشل الدمج أو تم إلغاؤه"
+msgstr "فشل التجميع أو تم إلغاؤه"
 
 msgid "Combined Audiobook Metadata (overrides CSV, optional)"
-msgstr "البيانات الوصفية للكتاب الصوتي المدمج (تتجاوز CSV، اختياري)"
+msgstr "البيانات الوصفية للكتاب الصوتي المجمَّع (تتجاوز CSV، اختياري)"
 
 msgid "Combining Audiobooks"
-msgstr "جارٍ دمج الكتب الصوتية"
+msgstr "جارٍ تجميع الكتب الصوتية"
 
 msgid "Combining audiobooks..."
-msgstr "جارٍ دمج الكتب الصوتية..."
+msgstr "جارٍ تجميع الكتب الصوتية..."
 
 msgid "Comments"
 msgstr "التعليقات"
@@ -1233,7 +1232,7 @@ msgid ""
 "Could not resolve links for the following utilities:\n"
 "\n"
 msgstr ""
-"تعذر تحليل الروابط للأدوات المساعدة التالية:\n"
+"تعذر تحديد روابط الأدوات المساعدة التالية:\n"
 "\n"
 
 msgid "Could not split the playlist with the current settings"
@@ -1241,7 +1240,7 @@ msgstr "تعذر تقسيم قائمة التشغيل بالإعدادات ال�
 
 #, python-brace-format
 msgid "Couldn't open {error}"
-msgstr "تعذر الفتح {error}"
+msgstr "تعذر فتح {error}"
 
 msgid "Country"
 msgstr "دولة"
@@ -1268,20 +1267,20 @@ msgid "Create"
 msgstr "إنشاء"
 
 msgid "Create Playlist"
-msgstr "إنشاء قائمة التشغيل"
+msgstr "إنشاء قائمة تشغيل"
 
 msgid "Create log file"
 msgstr "إنشاء ملف سجل"
 
 msgid "Create playlist from folder"
-msgstr "إنشاء قائمة التشغيل من المجلد"
+msgstr "إنشاء قائمة تشغيل من مجلد"
 
 #, python-brace-format
 msgid ""
 "Created and loaded playlist '{playlist_name}' with {track_count} tracks"
 msgstr ""
 "تم إنشاء وتحميل قائمة التشغيل '{playlist_name}' التي تحتوي على {track_count}"
-" من المقاطع"
+" من المسارات"
 
 msgid "Created new playlist"
 msgstr "تم إنشاء قائمة تشغيل جديدة"
@@ -1296,7 +1295,7 @@ msgid "Current path"
 msgstr "المسار الحالي"
 
 msgid "Current playlist tracks list"
-msgstr "قائمة مقاطع قائمة التشغيل الحالية"
+msgstr "قائمة المسارات في قائمة التشغيل الحالية"
 
 msgid "Current proxy"
 msgstr "الوكيل الحالي"
@@ -1317,7 +1316,7 @@ msgid "Custom format extension"
 msgstr "امتداد التنسيق المخصص"
 
 msgid "Customize &Toolbar..."
-msgstr "تخصيص &شريط الأدوات..."
+msgstr "&تخصيص شريط الأدوات..."
 
 msgid "Customize Toolbar"
 msgstr "تخصيص شريط الأدوات"
@@ -1362,7 +1361,7 @@ msgid "Date modified"
 msgstr "تاريخ التعديل"
 
 msgid "Deband"
-msgstr "إزالة التدرّج اللوني"
+msgstr "إزالة النطاقات اللونية"
 
 msgid "Debug Console"
 msgstr "وحدة تحكم التصحيح"
@@ -1371,7 +1370,7 @@ msgid "Debug Level:"
 msgstr "مستوى التصحيح:"
 
 msgid "Debug console initialized."
-msgstr "تم تهيئة وحدة تحكم التصحيح."
+msgstr "تمت تهيئة وحدة تحكم التصحيح."
 
 msgid ""
 "Debug mode is unstable and is known to crash. It should only be used to diagnose a problem, not for normal playback.\n"
@@ -1413,7 +1412,7 @@ msgid "Delete Selected"
 msgstr "حذف المحدد"
 
 msgid "Delete all feeds and cache?"
-msgstr "هل تريد حذف جميع الخلاصات في ذاكرة التخزين المؤقت؟"
+msgstr "هل تريد حذف جميع الخلاصات وذاكرة التخزين المؤقت؟"
 
 msgid "Delete original files (not recommended)"
 msgstr "حذف الملفات الأصلية (غير مُستحسن)"
@@ -1436,11 +1435,11 @@ msgid "Delete source"
 msgstr "حذف المصدر"
 
 msgid "Delete the selected track?"
-msgstr "هل تريد حذف المقطع المحدد؟"
+msgstr "هل تريد حذف المسار المحدد؟"
 
 #, python-brace-format
 msgid "Delete the selected {count} tracks?"
-msgstr "هل تريد حذف المقاطع المحددة البالغ عددها {count}؟"
+msgstr "هل تريد حذف المسارات المحددة البالغ عددها {count}؟"
 
 #, python-brace-format
 msgid "Deleted playlist '{name}'"
@@ -1489,7 +1488,7 @@ msgid ""
 "Direct media link copied to clipboard:\n"
 "{media_url}"
 msgstr ""
-"تم نسخ الرابط المباشر إلى الحافظة:\n"
+"تم نسخ رابط الوسائط المباشر إلى الحافظة:\n"
 "{media_url}"
 
 msgid "Disable All"
@@ -1502,7 +1501,7 @@ msgid "Documentation Not Found"
 msgstr "تعذر العثور على دليل المستخدم"
 
 msgid "Done"
-msgstr "منتهي"
+msgstr "تم"
 
 msgid "Done."
 msgstr "تم."
@@ -1511,17 +1510,17 @@ msgid ""
 "Done. All selected utilities have been processed.\n"
 "You may close this dialog."
 msgstr ""
-"تمت معالجة كافة الأدوات المساعدة المحددة.\n"
+"تم. تمت معالجة كافة الأدوات المساعدة المحددة.\n"
 "يمكنك إغلاق مربع الحوار هذا."
 
 msgid "Double-click an effect to edit its parameters"
 msgstr "انقر نقرًا مزدوجًا على تأثير لتحرير معاملاته"
 
 msgid "Double-click or press Enter on a file to open it"
-msgstr "انقر نقرًا مزدوجًا أو اضغط على Enter على الملف لفتحه"
+msgstr "انقر نقرًا مزدوجًا على ملف أو اضغط Enter لفتحه"
 
 msgid "Download"
-msgstr "تحميل"
+msgstr "تنزيل"
 
 msgid "Download All Episodes"
 msgstr "تنزيل كل الحلقات"
@@ -1554,7 +1553,7 @@ msgid "Download Info:"
 msgstr "معلومات التنزيل:"
 
 msgid "Download Later"
-msgstr "التنزيل لاحقًا"
+msgstr "تنزيل لاحقًا"
 
 msgid "Download Links From File"
 msgstr "تنزيل الروابط من ملف"
@@ -1682,7 +1681,7 @@ msgid "Duration"
 msgstr "المدة"
 
 msgid "Duration (s) / Timestamp"
-msgstr "المدة (ث) / الطابع الزمني"
+msgstr "المدة (s) / الطابع الزمني"
 
 msgid "Edit"
 msgstr "تحرير"
@@ -1743,7 +1742,7 @@ msgid "Enable live preview"
 msgstr "تمكين المعاينة المباشرة"
 
 msgid "Enable speech accessibility feedback"
-msgstr "تفعيل التغذية الراجعة الصوتية لإمكانية الوصول"
+msgstr "تمكين الملاحظات الصوتية لإمكانية الوصول"
 
 msgid "Enable yt-dlp Logging"
 msgstr "تمكين تسجيل yt-dlp"
@@ -1800,17 +1799,17 @@ msgid "Enter station name..."
 msgstr "أدخل اسم المحطة..."
 
 msgid "Entry Detail Text"
-msgstr "نص تفاصيل الإدخال"
+msgstr "نص تفاصيل العنصر"
 
 msgid "Entry Tree"
-msgstr "شجرة الإدخالات"
+msgstr "شجرة العناصر"
 
 msgid "Entry data copied to clipboard"
-msgstr "تم نسخ بيانات الإدخال إلى الحافظة"
+msgstr "تم نسخ بيانات العنصر إلى الحافظة"
 
 #, python-brace-format
 msgid "Entry: {title}, Published: {published}, Link: {link}"
-msgstr "المدخلة: {title}، تاريخ النشر: {published}، الرابط: {link}"
+msgstr "العنصر: {title}، تاريخ النشر: {published}، الرابط: {link}"
 
 msgid "Equalizer"
 msgstr "المعادل الصوتي"
@@ -1912,7 +1911,7 @@ msgid "Extracted Playlist"
 msgstr "تم استخراج قائمة التشغيل"
 
 msgid "Extracting URL..."
-msgstr "جارٍ استخراج الرابط..."
+msgstr "جارٍ استخراج عنوان URL..."
 
 msgid "Extracting..."
 msgstr "جارٍ الاستخراج..."
@@ -1933,10 +1932,10 @@ msgid "FAILED or cancelled."
 msgstr "فشل أو تم الإلغاء."
 
 msgid "FAILED: bind did not complete."
-msgstr "فشل: لم يكتمل التجميع."
+msgstr "فشل: لم يكتمل الربط."
 
 msgid "FAILED: combine did not complete."
-msgstr "فشل: لم يكتمل الدمج."
+msgstr "فشل: لم يكتمل التجميع."
 
 #, python-brace-format
 msgid "FAILED: {error}"
@@ -1984,7 +1983,7 @@ msgstr ""
 "FFmpeg."
 
 msgid "FULL ENTRY DATA"
-msgstr "بيانات الإدخال الكاملة"
+msgstr "بيانات العنصر الكاملة"
 
 msgid "Failed"
 msgstr "فشل"
@@ -2053,7 +2052,7 @@ msgstr "فشل تنظيف المفضّلة: {error}"
 
 #, python-brace-format
 msgid "Failed to prune recents: {error}"
-msgstr "فشل تنظيف العناصر الحديثة: {error}"
+msgstr "فشل تنظيف العناصر الأخيرة: {error}"
 
 #, python-brace-format
 msgid ""
@@ -2072,7 +2071,7 @@ msgstr "فشلت إزالة المفضلة: {error}"
 
 #, python-brace-format
 msgid "Failed to remove recent file: {error}"
-msgstr "فشل إزالة الملف الحديث: {error}"
+msgstr "فشلت إزالة الملف الأخير: {error}"
 
 msgid "Failed to save tags"
 msgstr "فشل حفظ الوسوم"
@@ -2086,7 +2085,7 @@ msgid "Failed to start process: {error}"
 msgstr "فشل بدء العملية: {error}"
 
 msgid "Failed to start thumbnail generation"
-msgstr "فشل في بدء إنشاء الصورة المصغرة"
+msgstr "فشل بدء إنشاء الصور المصغّرة"
 
 msgid "Failed to take screenshot"
 msgstr "فشل في التقاط لقطة الشاشة"
@@ -2106,7 +2105,7 @@ msgid "Favorites list"
 msgstr "قائمة المفضلة"
 
 msgid "Feed List"
-msgstr "قائمة الموجزات"
+msgstr "قائمة الخلاصات"
 
 msgid "Feed URL updated successfully"
 msgstr "تم تحديث عنوان URL للخلاصة بنجاح"
@@ -2135,10 +2134,10 @@ msgid "Fetching download links from GitHub…"
 msgstr "جارٍ جلب روابط التنزيل من GitHub…"
 
 msgid "Fetching feed..."
-msgstr "جلب الخلاصة..."
+msgstr "جارٍ جلب الخلاصة..."
 
 msgid "Fetching media metadata..."
-msgstr "جارٍ جلب بيانات الوسائط..."
+msgstr "جارٍ جلب البيانات الوصفية للوسائط..."
 
 msgid "Fetching video information..."
 msgstr "جارٍ جلب معلومات الفيديو..."
@@ -2147,7 +2146,7 @@ msgid "File"
 msgstr "ملف"
 
 msgid "File Content Preview (Live)"
-msgstr "معاينة محتوى الملف (مباشر)"
+msgstr "معاينة محتوى الملف (مباشرة)"
 
 msgid "File Explorer"
 msgstr "مستكشف الملفات"
@@ -2207,7 +2206,7 @@ msgid "Filter the downloads list by status or source"
 msgstr "تصفية قائمة التنزيلات حسب الحالة أو المصدر"
 
 msgid "Filter type"
-msgstr "نوع الفلتر"
+msgstr "نوع التصفية"
 
 msgid "Filter value"
 msgstr "قيمة التصفية"
@@ -2220,7 +2219,7 @@ msgid "Find and Replace"
 msgstr "البحث والاستبدال"
 
 msgid "Find:"
-msgstr "إيجاد:"
+msgstr "البحث:"
 
 #, python-brace-format
 msgid "Finished: {path}"
@@ -2233,7 +2232,7 @@ msgid "Flip Vertical"
 msgstr "قلب رأسي"
 
 msgid "Float"
-msgstr "عائم"
+msgstr "تعويم"
 
 msgid "Folder"
 msgstr "مجلد"
@@ -2266,13 +2265,13 @@ msgid "Font:"
 msgstr "الخط:"
 
 msgid "Format"
-msgstr "التنسيق"
+msgstr "الصيغة"
 
 msgid "Format (extension):"
 msgstr "الصيغة (الامتداد):"
 
 msgid "Format ID"
-msgstr "معرّف التنسيق"
+msgstr "معرّف الصيغة"
 
 msgid "Format:"
 msgstr "الصيغة:"
@@ -2281,7 +2280,7 @@ msgid "Formats"
 msgstr "الصيغ"
 
 msgid "Forward"
-msgstr "تقدم إلى الأمام"
+msgstr "تقديم"
 
 #, python-brace-format
 msgid "Found {count} stations"
@@ -2326,10 +2325,10 @@ msgid "From Playback (MPV)..."
 msgstr "من التشغيل (MPV)..."
 
 msgid "Full Entry Data"
-msgstr "بيانات الإدخال الكاملة"
+msgstr "بيانات العنصر الكاملة"
 
 msgid "Full Entry Details"
-msgstr "تفاصيل الدخول الكاملة"
+msgstr "تفاصيل العنصر الكاملة"
 
 msgid "Full Path"
 msgstr "المسار الكامل"
@@ -2350,7 +2349,7 @@ msgid "Generate Thumbnail(s)"
 msgstr "إنشاء صور مصغرة"
 
 msgid "Generation Mode:"
-msgstr "وضع التوليد:"
+msgstr "وضع الإنشاء:"
 
 msgid "Generic families such as sans-serif and monospace are accepted"
 msgstr "تُقبل العائلات العامة مثل sans-serif و monospace"
@@ -2359,7 +2358,7 @@ msgid "Genre"
 msgstr "النوع"
 
 msgid "Get/Update &Utilities..."
-msgstr "الحصول على الأدوات المسا&عدة وتحديثها..."
+msgstr "&الحصول على الأدوات المساعدة وتحديثها..."
 
 msgid "Glob Pattern"
 msgstr "نمط Glob"
@@ -2393,7 +2392,7 @@ msgid "Hide Side Panel"
 msgstr "إخفاء اللوحة الجانبية"
 
 msgid "Hide to status bar"
-msgstr "إخفاء في شريط الحالة"
+msgstr "الإخفاء إلى شريط الحالة"
 
 msgid "Hide/Show Side Panel"
 msgstr "إخفاء/إظهار اللوحة الجانبية"
@@ -2461,10 +2460,10 @@ msgid "Info"
 msgstr "معلومات"
 
 msgid "Initializing locale..."
-msgstr "جارٍ تهيئة المنطقة..."
+msgstr "جارٍ تهيئة الإعدادات المحلية..."
 
 msgid "Initializing player…"
-msgstr "تهيئة المشغّل…"
+msgstr "جارٍ تهيئة المشغّل…"
 
 msgid "Input Encoding:"
 msgstr "ترميز الإدخال:"
@@ -2509,7 +2508,7 @@ msgid "Invalid URL"
 msgstr "رابط غير صالح"
 
 msgid "Invalid feed format"
-msgstr "تنسيق خلاصة غير صالح"
+msgstr "صيغة خلاصة غير صالحة"
 
 msgid "Job Progress"
 msgstr "تقدّم المهمة"
@@ -2569,7 +2568,7 @@ msgid "Library"
 msgstr "المكتبة"
 
 msgid "License"
-msgstr "رخصة"
+msgstr "الترخيص"
 
 msgid "Light"
 msgstr "فاتح"
@@ -2649,7 +2648,7 @@ msgstr "تم تحميل {count} دولة"
 
 #, python-brace-format
 msgid "Loaded {count} file(s) for tag editing"
-msgstr "تم تحميل {count} ملف لتحرير الوسوم"
+msgstr "تم تحميل {count} ملفًا لتحرير الوسوم"
 
 #, python-brace-format
 msgid "Loaded {count} languages"
@@ -2664,7 +2663,7 @@ msgstr "جارٍ تحميل الرابط:"
 
 #, python-brace-format
 msgid "Loading URL: {url}"
-msgstr "جارٍ تحميل عنوان URL: {url}"
+msgstr "جارٍ تحميل الرابط: {url}"
 
 msgid "Loading configuration..."
 msgstr "جارٍ تحميل الإعدادات..."
@@ -2673,7 +2672,7 @@ msgid "Loading database..."
 msgstr "جارٍ تحميل قاعدة البيانات..."
 
 msgid "Loading entries..."
-msgstr "تحميل العناصر..."
+msgstr "جارٍ تحميل العناصر..."
 
 msgid "Loading favorites..."
 msgstr "جارٍ تحميل المفضلة..."
@@ -2691,7 +2690,7 @@ msgstr "جارٍ التحميل:"
 
 #, python-brace-format
 msgid "Loading: {filename}"
-msgstr "جارٍ تحميل: {filename}"
+msgstr "جارٍ التحميل: {filename}"
 
 msgid "Location:"
 msgstr "الموقع:"
@@ -2753,7 +2752,7 @@ msgid "Main video playback area"
 msgstr "منطقة تشغيل الفيديو الرئيسية"
 
 msgid "Manage &Database..."
-msgstr "إدارة &قاعدة البيانات..."
+msgstr "&إدارة قاعدة البيانات..."
 
 msgid "Manage Database"
 msgstr "إدارة قاعدة البيانات"
@@ -2771,7 +2770,7 @@ msgid "Manage Database restored"
 msgstr "تمت استعادة إدارة قاعدة البيانات"
 
 msgid "Manual Frame Selection"
-msgstr "اختيار الإطار اليدوي"
+msgstr "تحديد الإطار يدويًا"
 
 #, python-brace-format
 msgid "Mark {index}: {minutes:02d}:{seconds:02d}"
@@ -2824,7 +2823,7 @@ msgstr "فشل تفريغ البيانات الوصفية"
 
 #, python-brace-format
 msgid "Metadata dump finished ({count} rows)"
-msgstr "انتهى تفريغ البيانات الوصفية ({count} صف)"
+msgstr "انتهى تفريغ البيانات الوصفية ({count} صفًا)"
 
 msgid "MicroDVD"
 msgstr "MicroDVD"
@@ -2836,7 +2835,7 @@ msgid "Minimize Controls"
 msgstr "تصغير عناصر التحكم"
 
 msgid "Minimize/Maximize Controls"
-msgstr "تصغير/تكبير"
+msgstr "تصغير/تكبير عناصر التحكم"
 
 msgid "Minimum Segment Length"
 msgstr "أدنى طول للمقطع"
@@ -2860,10 +2859,10 @@ msgid "Motion Interpolation"
 msgstr "استيفاء الحركة"
 
 msgid "Move Down"
-msgstr "تحرك للأسفل"
+msgstr "تحريك للأسفل"
 
 msgid "Move Up"
-msgstr "تحرك لأعلى"
+msgstr "تحريك للأعلى"
 
 msgid "Multi &Device Capture"
 msgstr "&التقاط متعدد الأجهزة"
@@ -2879,10 +2878,10 @@ msgid "Multi-column list view with {columns} columns and {rows} rows"
 msgstr "عرض قائمة متعدد الأعمدة يتضمّن {columns} عمودًا و{rows} صفًا"
 
 msgid "Multiplier applied on top of the font size"
-msgstr "معامل مضاعفة يُطبّق فوق حجم الخط"
+msgstr "معامل مضاعفة يُطبَّق على حجم الخط"
 
 msgid "Mute"
-msgstr "كتم"
+msgstr "كتم الصوت"
 
 msgid "Mute Error"
 msgstr "خطأ في كتم الصوت"
@@ -2892,10 +2891,10 @@ msgid "Mute error: {details}"
 msgstr "خطأ في كتم الصوت: {details}"
 
 msgid "Mute toggled"
-msgstr "كتم الصوت"
+msgstr "تم تبديل كتم الصوت"
 
 msgid "Mute/Unmute"
-msgstr "كتم/إلغاء الكتم"
+msgstr "كتم الصوت/إلغاء الكتم"
 
 msgid "N/A"
 msgstr "لا يوجد"
@@ -2910,7 +2909,7 @@ msgid "Name (Z–A)"
 msgstr "الاسم (تنازلي Z-A)"
 
 msgid "Name:"
-msgstr "اسم:"
+msgstr "الاسم:"
 
 msgid "Naming && Destination"
 msgstr "التسمية && الوجهة"
@@ -3009,7 +3008,7 @@ msgid "No Subtitles"
 msgstr "لا توجد ترجمة"
 
 msgid "No URL"
-msgstr "لا يوجد رابط"
+msgstr "لا يوجد عنوان URL"
 
 msgid "No Update Available"
 msgstr "لا توجد تحديثات متاحة"
@@ -3039,23 +3038,23 @@ msgid "No default audio output device is available to preview through."
 msgstr "لا يوجد جهاز إخراج صوتي افتراضي للمعاينة من خلاله."
 
 msgid "No direct media link found for this entry."
-msgstr "لم يتم العثور على رابط مباشر لهذه المدخلة."
+msgstr "لم يتم العثور على رابط وسائط مباشر لهذا العنصر."
 
 msgid "No download selected"
-msgstr "لم يتم تحديد أي تنزيلات"
+msgstr "لم يتم تحديد أي تنزيل"
 
 msgid "No downloadable assets found in this release."
-msgstr "لم يتم العثور على أصول قابلة للتنزيل في هذا الإصدار."
+msgstr "لم يتم العثور على ملفات قابلة للتنزيل في هذا الإصدار."
 
 msgid "No downloads yet. Use Add Download to queue one."
 msgstr ""
 "لا توجد تنزيلات بعد. استخدم إضافة تنزيل لإدراج واحد في قائمة الانتظار."
 
 msgid "No entries found for this feed."
-msgstr "لم يتم العثور على إدخالات لهذه الخلاصة."
+msgstr "لم يتم العثور على عناصر لهذه الخلاصة."
 
 msgid "No entries match your search."
-msgstr "لا توجد إدخالات تطابق بحثك."
+msgstr "لا توجد عناصر تطابق بحثك."
 
 msgid "No file loaded."
 msgstr "لم يتم تحميل أي ملف."
@@ -3064,13 +3063,13 @@ msgid "No folder being scanned"
 msgstr "لا يوجد مجلد قيد الفحص"
 
 msgid "No links could be resolved."
-msgstr "تعذر تحليل أي روابط."
+msgstr "تعذّر استخراج أي روابط."
 
 msgid "No media loaded"
 msgstr "لم يتم تحميل أي وسائط"
 
 msgid "No output from yt-dlp"
-msgstr "لا مخرجات من yt-dlp"
+msgstr "لا توجد مخرجات من yt-dlp"
 
 #, python-brace-format
 msgid "No platform manifest found for '{platform}' in this release."
@@ -3086,10 +3085,10 @@ msgid "No playlist selected"
 msgstr "لم يتم تحديد قائمة تشغيل"
 
 msgid "No playlists available. Create a playlist first."
-msgstr "لا توجد قوائم تشغيل متاحة. قم بإنشاء قائمة تشغيل أولاً."
+msgstr "لا توجد قوائم تشغيل متاحة. أنشئ قائمة تشغيل أولاً."
 
 msgid "No playlists exist. Would you like to create a new playlist?"
-msgstr "لا توجد أي قوائم تشغيل. هل تريد إنشاء قائمة جديدة؟"
+msgstr "لا توجد أي قوائم تشغيل. هل تريد إنشاء قائمة تشغيل جديدة؟"
 
 msgid "No preview yet."
 msgstr "لا توجد معاينة بعد."
@@ -3117,7 +3116,7 @@ msgstr "لا توجد مصادر"
 
 #, python-brace-format
 msgid "No stream URL found for {name}"
-msgstr "لم يتم العثور على عنوان URL للبث لـ {name}"
+msgstr "لم يتم العثور على عنوان URL للبث الخاص بـ {name}"
 
 msgid "No subtitle track is available for this source."
 msgstr "لا يوجد مسار ترجمة متاح لهذا المصدر."
@@ -3135,10 +3134,10 @@ msgstr ""
 "لم يتم العثور على ملفات وسائط مدعومة في المجلد المحدد:\n"
 "{folder_path}\n"
 "\n"
-"تتضمن التنسيقات المدعومة ملفات الصوت والفيديو."
+"تتضمن الصيغ المدعومة ملفات الصوت والفيديو."
 
 msgid "No track playing"
-msgstr "لا يوجد مقطع قيد التشغيل"
+msgstr "لا يوجد مسار قيد التشغيل"
 
 #, python-brace-format
 msgid ""
@@ -3160,7 +3159,7 @@ msgid "None"
 msgstr "لا يوجد"
 
 msgid "Not Found"
-msgstr "لم يتم العثور عليه"
+msgstr "غير موجود"
 
 msgid "Not Supported"
 msgstr "غير مدعوم"
@@ -3186,7 +3185,7 @@ msgid "Number of Images to Generate:"
 msgstr "عدد الصور المراد إنشاؤها:"
 
 msgid "Number of images to generate from scene changes"
-msgstr "عدد الصور التي سيتم توليدها من تغييرات المشهد"
+msgstr "عدد الصور المراد إنشاؤها من تغيّرات المشاهد"
 
 msgid "OK"
 msgstr "موافق"
@@ -3208,13 +3207,13 @@ msgid "OK: wrote {count} row(s)."
 msgstr "تم: كتابة {count} صف."
 
 msgid "Off"
-msgstr "مغلق"
+msgstr "معطّل"
 
 msgid "Oldest first"
 msgstr "الأقدم أولاً"
 
 msgid "Omit FPS declaration (output)"
-msgstr "حذف إعلان معدل الإطارات (الإخراج)"
+msgstr "حذف إعلان FPS (الإخراج)"
 
 msgid "On-Video Rendering"
 msgstr "العرض على الفيديو"
@@ -3227,13 +3226,13 @@ msgid "Open"
 msgstr "فتح"
 
 msgid "Open &Folder..."
-msgstr "فتح &مجلد..."
+msgstr "&فتح مجلد..."
 
 msgid "Open &Playlist..."
-msgstr "فتح &قائمة تشغيل..."
+msgstr "&فتح قائمة تشغيل..."
 
 msgid "Open &URL..."
-msgstr "فتح &عنوان URL..."
+msgstr "&فتح عنوان URL..."
 
 msgid "Open File Location"
 msgstr "فتح موقع الملف"
@@ -3260,10 +3259,10 @@ msgid "Open Text File..."
 msgstr "فتح ملف نصي..."
 
 msgid "Open URL"
-msgstr "فتح رابط"
+msgstr "فتح عنوان URL"
 
 msgid "Open in Explorer"
-msgstr "فتح في مستكشف الوسائط"
+msgstr "فتح في مستكشف الملفات"
 
 msgid "Opened"
 msgstr "تم الفتح"
@@ -3281,10 +3280,10 @@ msgid "Ordered file list"
 msgstr "قائمة ملفات مرتّبة"
 
 msgid "Original format"
-msgstr "التنسيق الأصلي"
+msgstr "الصيغة الأصلية"
 
 msgid "Other Videos"
-msgstr "فيديوهات أخرى"
+msgstr "مقاطع فيديو أخرى"
 
 msgid "Outline Colour:"
 msgstr "لون الحدود:"
@@ -3317,10 +3316,10 @@ msgid "Output Folder"
 msgstr "مجلد الإخراج"
 
 msgid "Output Format"
-msgstr "تنسيق الإخراج"
+msgstr "صيغة الإخراج"
 
 msgid "Output Format:"
-msgstr "تنسيق الإخراج:"
+msgstr "صيغة الإخراج:"
 
 msgid "Output audiobook file path"
 msgstr "مسار ملف الكتاب الصوتي الناتج"
@@ -3353,15 +3352,15 @@ msgid "Parameters..."
 msgstr "المعاملات..."
 
 msgid "Parent Directory"
-msgstr "المجلد الأصلي"
+msgstr "المجلد الأصل"
 
 #, python-brace-format
 msgid ""
 "Part 1: tracks 1-{a}\n"
 "Part 2: tracks {b}-{c}"
 msgstr ""
-"الجزء 1: المقاطع 1-{a}\n"
-"الجزء 2: المقاطع {b}-{c}"
+"الجزء 1: المسارات 1-{a}\n"
+"الجزء 2: المسارات {b}-{c}"
 
 msgid "Passthrough"
 msgstr "تمرير مباشر"
@@ -3408,7 +3407,7 @@ msgstr "متوقف مؤقتًا"
 
 #, python-brace-format
 msgid "Paused — {label}"
-msgstr "مُوقف مؤقتًا — {label}"
+msgstr "متوقف مؤقتًا — {label}"
 
 msgid ""
 "Pausing splits a recording into segments that are joined into one file on "
@@ -3428,13 +3427,13 @@ msgid "Pitch (SAPI XML tag)"
 msgstr "حدّة الصوت (وسم SAPI XML)"
 
 msgid "Pixel format"
-msgstr "تنسيق البكسل"
+msgstr "صيغة البكسل"
 
 msgid "Play"
 msgstr "تشغيل"
 
 msgid "Play Entry"
-msgstr "تشغيل الإدخال"
+msgstr "تشغيل العنصر"
 
 msgid "Play Station"
 msgstr "تشغيل المحطة"
@@ -3500,11 +3499,11 @@ msgstr ""
 
 #, python-brace-format
 msgid "Playlist '{name}' created"
-msgstr "تم إنشاء قائمة التشغيل \"{name}\"."
+msgstr "تم إنشاء قائمة التشغيل \"{name}\""
 
 #, python-brace-format
 msgid "Playlist '{name}' needs at least 2 tracks to split."
-msgstr "تحتاج قائمة التشغيل '{name}' إلى مقطعين على الأقل لتقسيمها."
+msgstr "تحتاج قائمة التشغيل '{name}' إلى مسارين على الأقل لتقسيمها."
 
 #, python-brace-format
 msgid "Playlist '{new_name}' already exists"
@@ -3512,7 +3511,7 @@ msgstr "قائمة التشغيل \"{new_name}\" موجودة بالفعل"
 
 #, python-brace-format
 msgid "Playlist '{new_name}' updated"
-msgstr "تم تحديث قائمة التشغيل \"{new_name}\"."
+msgstr "تم تحديث قائمة التشغيل \"{new_name}\""
 
 #, python-brace-format
 msgid "Playlist '{playlist_name}' not found"
@@ -3533,7 +3532,7 @@ msgid "Playlist sorted"
 msgstr "تم فرز قائمة التشغيل"
 
 msgid "Playlist tracks list"
-msgstr "قائمة مقاطع قائمة التشغيل"
+msgstr "مسارات قائمة التشغيل"
 
 #, python-brace-format
 msgid "Playlist {id}"
@@ -3552,13 +3551,13 @@ msgid "Please enter a playlist name"
 msgstr "الرجاء إدخال اسم قائمة التشغيل"
 
 msgid "Please enter a valid HTTP/HTTPS URL"
-msgstr "الرجاء إدخال عنوان URL صالح لـ HTTP/HTTPS"
+msgstr "الرجاء إدخال عنوان URL صالح بصيغة HTTP/HTTPS"
 
 msgid "Please load a subtitle file first."
-msgstr "يرجى تحميل ملف الترجمة أولا."
+msgstr "يرجى تحميل ملف ترجمة أولاً."
 
 msgid "Please select a playlist"
-msgstr "الرجاء تحديد قائمة التشغيل"
+msgstr "الرجاء تحديد قائمة تشغيل"
 
 msgid "Please select a valid input video file."
 msgstr "الرجاء تحديد ملف فيديو صالح."
@@ -3660,7 +3659,7 @@ msgid "Previous track"
 msgstr "المسار السابق"
 
 msgid "Primaries"
-msgstr "الأوليات اللونية"
+msgstr "الألوان الأولية"
 
 msgid "Processing"
 msgstr "المعالجة"
@@ -3727,14 +3726,14 @@ msgid "Queue is empty"
 msgstr "قائمة الانتظار فارغة"
 
 msgid "Queued"
-msgstr "في الانتظار"
+msgstr "في قائمة الانتظار"
 
 #, python-brace-format
 msgid "Queued episode for download: {title}"
 msgstr "تمت إضافة الحلقة إلى قائمة انتظار التنزيل: {title}"
 
 msgid "Queued tracks list"
-msgstr "قائمة المقاطع في الانتظار"
+msgstr "قائمة المسارات في قائمة الانتظار"
 
 #, python-brace-format
 msgid "Queued {count} download(s)"
@@ -3782,7 +3781,7 @@ msgid "Recents"
 msgstr "الأخيرة"
 
 msgid "Recents && Favorites"
-msgstr "الأخيرة والمفضلة"
+msgstr "الأخيرة && المفضلة"
 
 msgid "Recents/Favorites"
 msgstr "الأخيرة/المفضلة"
@@ -3794,16 +3793,16 @@ msgid "Refresh"
 msgstr "تحديث"
 
 msgid "Refresh All Feeds"
-msgstr "تحديث كل الموجزات"
+msgstr "تحديث كل الخلاصات"
 
 msgid "Refresh Feed"
-msgstr "تحديث الموجز"
+msgstr "تحديث الخلاصة"
 
 msgid "Refresh status"
 msgstr "تحديث الحالة"
 
 msgid "Refreshing feed..."
-msgstr "جارٍ تحديث التغذية..."
+msgstr "جارٍ تحديث الخلاصة..."
 
 msgid "Refreshing feeds..."
 msgstr "جارٍ تحديث الخلاصات..."
@@ -3813,20 +3812,20 @@ msgid ""
 "Refreshing:\n"
 "{url}..."
 msgstr ""
-"تحديث:\n"
+"جارٍ التحديث:\n"
 "{url}..."
 
 msgid "Register Click"
 msgstr "تسجيل نقرة"
 
 msgid "Remember Explorer search history"
-msgstr "تذكّر سجل بحث المستكشف"
+msgstr "تذكّر سجل بحث مستكشف الملفات"
 
 msgid "Remove"
 msgstr "إزالة"
 
 msgid "Remove Feed"
-msgstr "إزالة الموجز"
+msgstr "إزالة الخلاصة"
 
 msgid "Remove File"
 msgstr "إزالة الملف"
@@ -3838,10 +3837,10 @@ msgid "Remove Selected..."
 msgstr "إزالة المحدد..."
 
 msgid "Remove This Track"
-msgstr "إزالة هذا المقطع"
+msgstr "إزالة هذا المسار"
 
 msgid "Remove all added effects?"
-msgstr "إزالة كل التأثيرات المضافة؟"
+msgstr "هل تريد إزالة كل التأثيرات المضافة؟"
 
 #, python-brace-format
 msgid ""
@@ -3864,18 +3863,18 @@ msgid "Remove miscellaneous events"
 msgstr "إزالة الأحداث المتنوعة"
 
 msgid "Remove this session?"
-msgstr "إزالة هذه الجلسة؟"
+msgstr "هل تريد إزالة هذه الجلسة؟"
 
 msgid "Remove this source from every session and delete it?"
-msgstr "إزالة هذا المصدر من كل الجلسات وحذفه؟"
+msgstr "هل تريد إزالة هذا المصدر من كل الجلسات وحذفه؟"
 
 #, python-brace-format
 msgid ""
 "Remove {count} folder(s) from the database? Their indexed entries are "
 "deleted from the search index; nothing is touched on disk."
 msgstr ""
-"هل تريد إزالة {count} مجلد(ات) من قاعدة البيانات؟ سيتم حذف إدخالاتها "
-"المفهرسة من فهرس البحث؛ ولن يتم المساس بأي شيء على القرص."
+"هل تريد إزالة {count} مجلد من قاعدة البيانات؟ ستُحذف عناصرها المفهرسة من "
+"فهرس البحث؛ ولن يتم المساس بأي شيء على القرص."
 
 #, python-brace-format
 msgid "Removed missing playlist '{name}'"
@@ -3886,7 +3885,7 @@ msgstr "تمت إزالة المحطة من المفضلة"
 
 #, python-brace-format
 msgid "Removed {count} track(s) from playlist"
-msgstr "تمت إزالة {count} مقطع(ات) من قائمة التشغيل"
+msgstr "تمت إزالة {count} مسار من قائمة التشغيل"
 
 msgid "Rename"
 msgstr "إعادة تسمية"
@@ -3902,7 +3901,7 @@ msgid ""
 "Reorder tracks by dragging them or pressing Shift+Up / Shift+Down. Right-"
 "click for more options."
 msgstr ""
-"أعد ترتيب المقاطع بسحبها أو بالضغط على Shift+Up / Shift+Down. انقر بزر "
+"أعد ترتيب المسارات بسحبها أو بالضغط على Shift+Up / Shift+Down. انقر بزر "
 "الماوس الأيمن لمزيد من الخيارات."
 
 msgid "Repeat all"
@@ -3918,13 +3917,13 @@ msgid "Repeat one"
 msgstr "تكرار الحالي"
 
 msgid "Repeat: All"
-msgstr "كرر: الكل"
+msgstr "تكرار: الكل"
 
 msgid "Repeat: Off"
-msgstr "كرر: معطل"
+msgstr "تكرار: معطل"
 
 msgid "Repeat: One"
-msgstr "كرر: واحد"
+msgstr "تكرار: واحد"
 
 msgid "Replace With:"
 msgstr "استبدال بـ:"
@@ -3945,7 +3944,7 @@ msgid "Reset audio delay to zero"
 msgstr "إعادة تعيين تأخير الصوت إلى صفر"
 
 msgid "Reset to Default"
-msgstr "إرجاع الإعدادات إلى القيم الإفتراضية"
+msgstr "إعادة التعيين إلى الافتراضي"
 
 msgid "Resolution"
 msgstr "الدقة"
@@ -3993,7 +3992,7 @@ msgid "Retry Count"
 msgstr "عدد المحاولات"
 
 msgid "Retry Count:"
-msgstr "عدد إعادات المحاولة:"
+msgstr "عدد المحاولات:"
 
 msgid "Retry Delay:"
 msgstr "تأخير إعادة المحاولة:"
@@ -4002,7 +4001,7 @@ msgid "Retry Download"
 msgstr "إعادة محاولة التنزيل"
 
 msgid "Retry count"
-msgstr "عدد إعادات المحاولة"
+msgstr "عدد المحاولات"
 
 msgid "Retry delay"
 msgstr "تأخير إعادة المحاولة"
@@ -4028,10 +4027,10 @@ msgid "Sample Rate"
 msgstr "معدل العينات"
 
 msgid "Sample format"
-msgstr "تنسيق العينة"
+msgstr "صيغة العينة"
 
 msgid "Sample rate"
-msgstr "معدل أخذ العينات"
+msgstr "معدل العينات"
 
 msgid "Sample rate (Hz)"
 msgstr "معدل العينات (Hz)"
@@ -4067,7 +4066,7 @@ msgid "Save Failed"
 msgstr "فشل الحفظ"
 
 msgid "Save Label File"
-msgstr "حفظ ملف العلامات"
+msgstr "حفظ ملف التسميات"
 
 msgid "Save Metadata CSV As"
 msgstr "حفظ ملف CSV للبيانات الوصفية باسم"
@@ -4135,7 +4134,7 @@ msgid "Screen"
 msgstr "شاشة"
 
 msgid "Screenshot Format:"
-msgstr "سيغة ملف لقطة الشاشة:"
+msgstr "صيغة لقطة الشاشة:"
 
 #, python-brace-format
 msgid "Screenshot saved: {filename}"
@@ -4155,7 +4154,7 @@ msgstr "زر البحث"
 
 #, python-brace-format
 msgid "Search complete: {count} result(s)"
-msgstr "اكتمل البحث: {count} نتيجة (نتائج)"
+msgstr "اكتمل البحث: {count} نتيجة"
 
 msgid "Search current folder"
 msgstr "البحث في المجلد الحالي"
@@ -4168,7 +4167,7 @@ msgid "Search failed: {error}"
 msgstr "فشل البحث: {error}"
 
 msgid "Search:"
-msgstr "إبحث:"
+msgstr "بحث:"
 
 #, python-brace-format
 msgid "Searching for '{search_name}'..."
@@ -4178,13 +4177,13 @@ msgid "Searching..."
 msgstr "جارٍ البحث..."
 
 msgid "Seek"
-msgstr "مسار الوقت"
+msgstr "الانتقال"
 
 msgid "Seek Error"
-msgstr "خطأ في البحث عن الموضع"
+msgstr "خطأ في الانتقال"
 
 msgid "Seek Offset:"
-msgstr "مقدار إزاحة الوقت:"
+msgstr "مقدار الانتقال:"
 
 #, python-brace-format
 msgid "Seek error: {details}"
@@ -4197,7 +4196,7 @@ msgid "Seek playback to the previous subtitle line"
 msgstr "الانتقال بالتشغيل إلى سطر الترجمة السابق"
 
 msgid "Segment Timeline Widget"
-msgstr "أداة الجدول الزمني للمقاطع"
+msgstr "أداة الخط الزمني للمقاطع"
 
 msgid "Select"
 msgstr "تحديد"
@@ -4206,7 +4205,7 @@ msgid "Select All"
 msgstr "تحديد الكل"
 
 msgid "Select Audio Files"
-msgstr "حدد ملفات الصوت"
+msgstr "اختيار ملفات الصوت"
 
 msgid "Select Audiobook File"
 msgstr "اختيار ملف الكتاب الصوتي"
@@ -4215,7 +4214,7 @@ msgid "Select Combine CSV"
 msgstr "اختيار ملف CSV للتجميع"
 
 msgid "Select Cookies File"
-msgstr "حدد ملف ملفات تعريف الارتباط"
+msgstr "اختيار ملف تعريف الارتباط"
 
 msgid "Select Cover Image"
 msgstr "اختيار صورة الغلاف"
@@ -4233,10 +4232,10 @@ msgid "Select Folder"
 msgstr "اختيار مجلد"
 
 msgid "Select Folder to Catalog"
-msgstr "حدد مجلدًا لفهرسته"
+msgstr "اختيار مجلد للفهرسة"
 
 msgid "Select Label File"
-msgstr "اختيار ملف العلامات"
+msgstr "اختيار ملف التسميات"
 
 msgid "Select Link File"
 msgstr "اختيار ملف الروابط"
@@ -4245,7 +4244,7 @@ msgid "Select Log File"
 msgstr "اختيار ملف السجل"
 
 msgid "Select Output Directory"
-msgstr "حدد مسار الإخراج"
+msgstr "اختيار دليل الإخراج"
 
 msgid "Select Output Folder"
 msgstr "اختيار مجلد الإخراج"
@@ -4263,13 +4262,13 @@ msgid "Select Source Folder"
 msgstr "اختيار المجلد المصدر"
 
 msgid "Select Subtitle File"
-msgstr "حدد ملف الترجمة"
+msgstr "اختيار ملف الترجمة"
 
 msgid "Select Subtitle Files"
-msgstr "حدد ملفات الترجمة"
+msgstr "اختيار ملفات الترجمة"
 
 msgid "Select Video File"
-msgstr "حدد ملف الفيديو"
+msgstr "اختيار ملف الفيديو"
 
 msgid "Select a playlist to add the file to:"
 msgstr "حدد قائمة تشغيل لإضافة الملف إليها:"
@@ -4286,7 +4285,7 @@ msgid "Select default output directory"
 msgstr "اختيار دليل الإخراج الافتراضي"
 
 msgid "Select from Scene Changes"
-msgstr "اختر من تغييرات المشهد"
+msgstr "اختيار من تغييرات المشهد"
 
 msgid "Select how to filter stations"
 msgstr "حدد كيفية تصفية المحطات"
@@ -4345,7 +4344,7 @@ msgid "Sharpen"
 msgstr "زيادة الحدة"
 
 msgid "Shift Time:"
-msgstr "وقت التحول:"
+msgstr "الإزاحة الزمنية:"
 
 msgid ""
 "Shifts an existing audiobook's chapters in time and rewrites the file in "
@@ -4369,22 +4368,22 @@ msgid "Show"
 msgstr "إظهار"
 
 msgid "Show &Console Dock"
-msgstr "إظهار &لوحة وحدة التحكم"
+msgstr "&إظهار لوحة وحدة التحكم"
 
 msgid "Show &Explorer"
-msgstr "عرض ال&مستكشف"
+msgstr "&إظهار مستكشف الملفات"
 
 msgid "Show &Playlists"
-msgstr "عرض &قوائم التشغيل"
+msgstr "&إظهار قوائم التشغيل"
 
 msgid "Show &Podcasts"
-msgstr "عرض ال&بودكاست"
+msgstr "&إظهار البودكاست"
 
 msgid "Show &Radio Browser"
-msgstr "عرض متصفح ال&راديو"
+msgstr "&إظهار متصفح الراديو"
 
 msgid "Show &Recents/Favorites"
-msgstr "عرض &الأخيرة/المفضلة"
+msgstr "&إظهار الأخيرة/المفضلة"
 
 msgid "Show Cataloging"
 msgstr "إظهار الفهرسة"
@@ -4411,7 +4410,7 @@ msgid "Show YouTube Info"
 msgstr "إظهار معلومات YouTube"
 
 msgid "Show favorites button"
-msgstr "إظهار زر المفضلة"
+msgstr "زر إظهار المفضلة"
 
 msgid "Show more info"
 msgstr "إظهار مزيد من المعلومات"
@@ -4423,7 +4422,7 @@ msgid "Show queue"
 msgstr "إظهار قائمة الانتظار"
 
 msgid "Show subtitles on video"
-msgstr "إظهار الترجمات على الفيديو"
+msgstr "إظهار الترجمة على الفيديو"
 
 msgid "Show yt-dlp Downloader"
 msgstr "إظهار مُنزِّل yt-dlp"
@@ -4497,7 +4496,7 @@ msgstr ""
 "هل تريد إعادة التشغيل الآن؟"
 
 msgid "Sort"
-msgstr "فرز"
+msgstr "ترتيب"
 
 msgid "Sort By"
 msgstr "ترتيب حسب"
@@ -4521,7 +4520,7 @@ msgid "Sort order"
 msgstr "الترتيب"
 
 msgid "Source"
-msgstr "مصدر"
+msgstr "المصدر"
 
 msgid "Source (modified in place)"
 msgstr "المصدر (يُعدَّل في موضعه)"
@@ -4622,7 +4621,7 @@ msgid "Spoken Events:"
 msgstr "الأحداث المنطوقة:"
 
 msgid "Start"
-msgstr "بدء"
+msgstr "بداية"
 
 msgid "Start Time"
 msgstr "وقت البدء"
@@ -4646,16 +4645,16 @@ msgid "Starting application..."
 msgstr "جارٍ تشغيل التطبيق..."
 
 msgid "Starting conversion..."
-msgstr "بدء التحويل..."
+msgstr "جارٍ بدء التحويل..."
 
 msgid "Starting extraction"
-msgstr "بدء الاستخراج"
+msgstr "جارٍ بدء الاستخراج"
 
 msgid "Starting generation..."
 msgstr "جارٍ بدء الإنشاء..."
 
 msgid "Starting thumbnail generation"
-msgstr "بدء إنشاء الصور المصغرة"
+msgstr "جارٍ بدء إنشاء الصور المصغرة"
 
 msgid "Starting..."
 msgstr "جارٍ البدء..."
@@ -4674,14 +4673,14 @@ msgid ""
 "Station: {name}. Country: {country}. Language: {language}. Tags: {tags}. "
 "Codec: {codec}. Bitrate: {bitrate}."
 msgstr ""
-"المحطة: {name}. الدولة: {country}. اللغة: {language}. العلامات: {tags}. "
-"برنامج الترميز: {codec}. معدل البت: {bitrate}."
+"المحطة: {name}. الدولة: {country}. اللغة: {language}. الوسوم: {tags}. "
+"الترميز: {codec}. معدل البت: {bitrate}."
 
 msgid "Status"
 msgstr "الحالة"
 
 msgid "Stay Silent"
-msgstr "البقاء صامتًا"
+msgstr "بدون إشعار"
 
 msgid "Stereo"
 msgstr "ستيريو"
@@ -4720,13 +4719,13 @@ msgid "Style:"
 msgstr "النمط:"
 
 msgid "Subtitle &Converter"
-msgstr "مح&ول الترجمة"
+msgstr "&محوّل الترجمة"
 
 msgid "Subtitle &Editor"
-msgstr "مح&رر الترجمة"
+msgstr "&محرر الترجمة"
 
 msgid "Subtitle Converter"
-msgstr "محول الترجمة"
+msgstr "محوّل الترجمة"
 
 msgid "Subtitle Delay (seconds)"
 msgstr "تأخير الترجمة (ثوانٍ)"
@@ -4742,10 +4741,10 @@ msgstr ""
 "*.vtt);;كل الملفات (*)"
 
 msgid "Subtitle conversion completed"
-msgstr "اكتمل التحويل بنجاح."
+msgstr "اكتمل تحويل الترجمة"
 
 msgid "Subtitle conversion completed successfully."
-msgstr "اكتمل التحويل بنجاح."
+msgstr "اكتمل تحويل الترجمة بنجاح."
 
 msgid "Subtitle conversion failed"
 msgstr "فشل تحويل الترجمة"
@@ -4792,7 +4791,7 @@ msgid "Suffix:"
 msgstr "لاحقة:"
 
 msgid "Summary and description of selected entry"
-msgstr "ملخص ووصف الإدخال المحدد"
+msgstr "ملخص ووصف العنصر المحدد"
 
 msgid "Supported Media Files"
 msgstr "ملفات الوسائط المدعومة"
@@ -4811,11 +4810,11 @@ msgstr "الوسوم"
 
 #, python-brace-format
 msgid "Tags saved for {count} file(s)"
-msgstr "تم حفظ الوسوم لـ {count} ملف(ات)"
+msgstr "تم حفظ الوسوم لـ {count} ملف"
 
 #, python-brace-format
 msgid "Tags saved for {filename}"
-msgstr "تم حفظ الوسوم بنجاح لـ {filename}"
+msgstr "تم حفظ الوسوم لـ {filename}"
 
 msgid "Tags saved successfully."
 msgstr "تم حفظ الوسوم بنجاح."
@@ -4845,7 +4844,7 @@ msgid "Text Files (*.txt);;All Files (*.*)"
 msgstr "ملفات نصية (*.txt);;كل الملفات (*.*)"
 
 msgid "Text Operation"
-msgstr "عملية النص"
+msgstr "العملية النصية"
 
 msgid "Text colour"
 msgstr "لون النص"
@@ -4857,13 +4856,13 @@ msgid "The MPV options are not valid. Please check the syntax."
 msgstr "خيارات MPV غير صالحة. يرجى التحقق من الصياغة."
 
 msgid "The Subtitles panel's text list is shown either way"
-msgstr "تُعرض قائمة نصوص لوحة الترجمات في كلتا الحالتين"
+msgstr "تُعرض قائمة نصوص لوحة الترجمة في كلتا الحالتين"
 
 msgid "The batch conversion job has finished."
 msgstr "انتهت مهمة التحويل المجمّع."
 
 msgid "The default audio output device does not support the preview format."
-msgstr "جهاز إخراج الصوت الافتراضي لا يدعم تنسيق المعاينة."
+msgstr "جهاز إخراج الصوت الافتراضي لا يدعم صيغة المعاينة."
 
 msgid ""
 "The documentation could not be found.\n"
@@ -4974,7 +4973,7 @@ msgid "Thumbnail generation mode"
 msgstr "وضع إنشاء الصورة المصغرة"
 
 msgid "Time (hh:mm:ss or mm:ss):"
-msgstr "الوقت (س س:د د:ث ث أو د د:ث ث):"
+msgstr "الوقت (hh:mm:ss أو mm:ss):"
 
 msgid "Time Window && Segment Filtering"
 msgstr "النافذة الزمنية && تصفية المقاطع"
@@ -4987,10 +4986,10 @@ msgid "Timeout occurred while connecting to the Radio Browser API"
 msgstr "انتهت المهلة أثناء الاتصال بواجهة Radio Browser API"
 
 msgid "Timestamp (HH:MM:SS):"
-msgstr "الطابع الزمني (س س:د د:ث س):"
+msgstr "الطابع الزمني (HH:MM:SS):"
 
 msgid "Timestamp for manual frame selection"
-msgstr "الطابع الزمني لاختيار الإطار اليدوي"
+msgstr "الطابع الزمني لتحديد الإطار يدويًا"
 
 msgid "Timestamp to jump to"
 msgstr "الطابع الزمني المطلوب الانتقال إليه"
@@ -5014,13 +5013,13 @@ msgid "To FPS:"
 msgstr "إلى FPS:"
 
 msgid "Toggle &Repeat: All"
-msgstr "تبديل الت&كرار: الكل"
+msgstr "&تبديل التكرار: الكل"
 
 msgid "Toggle &Repeat: Off"
-msgstr "تبديل الت&كرار: إيقاف"
+msgstr "&تبديل التكرار: معطل"
 
 msgid "Toggle &Repeat: One"
-msgstr "تبديل الت&كرار: واحد"
+msgstr "&تبديل التكرار: واحد"
 
 msgid "Toggle button activated - Press to deactivate"
 msgstr "زر تبديل مُفعَّل - اضغط لإلغاء التفعيل"
@@ -5029,7 +5028,7 @@ msgid "Toggle button not activated - Press to activate"
 msgstr "زر تبديل غير مُفعَّل - اضغط للتفعيل"
 
 msgid "Too many redirects"
-msgstr "عدد كبير من عمليات إعادة التوجيه"
+msgstr "عدد كبير جدًا من عمليات إعادة التوجيه"
 
 msgid "Tool Active"
 msgstr "الأداة قيد العمل"
@@ -5050,7 +5049,7 @@ msgid "Total indexed files:"
 msgstr "إجمالي الملفات المفهرسة:"
 
 msgid "Track"
-msgstr "المقطع"
+msgstr "المسار"
 
 #, python-brace-format
 msgid "Track ({type})"
@@ -5072,23 +5071,23 @@ msgstr "عمليات النقل"
 msgid ""
 "Tree of feed entries with title, date, and link. Right-click for options."
 msgstr ""
-"شجرة إدخالات الخلاصة مع العنوان والتاريخ والارتباط. انقر بزر الماوس الأيمن "
+"شجرة عناصر الخلاصة مع العنوان والتاريخ والرابط. انقر بزر الماوس الأيمن "
 "للحصول على الخيارات."
 
 msgid "Trim Start"
-msgstr "تقليم البداية"
+msgstr "قص البداية"
 
 msgid "Trim from start"
-msgstr "تقليم من البداية"
+msgstr "قص من البداية"
 
 msgid "Trim silence from segment edges"
-msgstr "تقليم الصمت من أطراف المقاطع"
+msgstr "قص الصمت من أطراف المقاطع"
 
 msgid "Type a station name and press Enter to search"
 msgstr "اكتب اسم المحطة ثم اضغط Enter للبحث"
 
 msgid "Type and press Enter to search entries..."
-msgstr "اكتب واضغط على Enter للبحث عن الإدخالات..."
+msgstr "اكتب واضغط على Enter للبحث عن العناصر..."
 
 msgid "Type extension"
 msgstr "الامتداد"
@@ -5115,7 +5114,7 @@ msgid "URL:"
 msgstr "الرابط:"
 
 msgid "Unknown"
-msgstr "مجهول"
+msgstr "غير معروف"
 
 msgid "Unknown error"
 msgstr "خطأ غير معروف"
@@ -5124,7 +5123,7 @@ msgid "Unlimited"
 msgstr "غير محدود"
 
 msgid "Unmute"
-msgstr "إلغاء الكتم"
+msgstr "إلغاء كتم الصوت"
 
 #, python-brace-format
 msgid "Unrecognized path: {path}"
@@ -5150,19 +5149,19 @@ msgid "Update Failed"
 msgstr "فشل التحديث"
 
 msgid "Update Feed URL"
-msgstr "تحديث عنوان URL للخلاصة"
+msgstr "تحديث رابط الخلاصة"
 
 msgid "Update Ready"
 msgstr "التحديث جاهز"
 
 msgid "Updater Not Found"
-msgstr "تعذر العثور على المحدّث"
+msgstr "لم يُعثر على برنامج التحديث"
 
 msgid "Uploaded"
 msgstr "تاريخ الرفع"
 
 msgid "Upscaler"
-msgstr "مُحجِّم التكبير"
+msgstr "مرشّح التكبير"
 
 msgid "Use Variable Bit Rate (Quality)"
 msgstr "استخدام معدل بت متغير (الجودة)"
@@ -5177,13 +5176,13 @@ msgid "User:"
 msgstr "المستخدم:"
 
 msgid "Validating feed..."
-msgstr "جارٍ التحقق من التغذية..."
+msgstr "جارٍ التحقق من الخلاصة..."
 
 msgid "Validating new feed URL..."
-msgstr "جارٍ التحقق من صحة عنوان URL للخلاصة الجديدة..."
+msgstr "جارٍ التحقق من رابط الخلاصة الجديد..."
 
 msgid "Value:"
-msgstr "قيمة:"
+msgstr "القيمة:"
 
 msgid "Verbose Output:"
 msgstr "المخرجات المفصّلة:"
@@ -5250,10 +5249,10 @@ msgid "Video display area"
 msgstr "منطقة عرض الفيديو"
 
 msgid "Video file input path"
-msgstr "مسار إدخال ملف الفيديو"
+msgstr "مسار ملف الفيديو المُدخَل"
 
 msgid "Video formats"
-msgstr "تنسيقات الفيديو"
+msgstr "صِيَغ الفيديو"
 
 msgid "Video only"
 msgstr "الفيديو فقط"
@@ -5280,10 +5279,10 @@ msgid "View Comments..."
 msgstr "عرض التعليقات..."
 
 msgid "View Full Entry Dump"
-msgstr "عرض تفريغ الإدخال الكامل"
+msgstr "عرض التفريغ الكامل للعنصر"
 
 msgid "View Media Metadata"
-msgstr "عرض بيانات الوسائط الوصفية"
+msgstr "عرض البيانات الوصفية للوسائط"
 
 msgid "Views"
 msgstr "المشاهدات"
@@ -5360,7 +5359,7 @@ msgid "YouTube Channels"
 msgstr "قنوات YouTube"
 
 msgid "YouTube Cookies File"
-msgstr "ملف ملفات تعريف الارتباط لـ YouTube"
+msgstr "ملف تعريف ارتباط YouTube"
 
 msgid "YouTube Playlists"
 msgstr "قوائم تشغيل YouTube"
@@ -5375,13 +5374,13 @@ msgid ""
 msgstr ""
 "فيديوهات YouTube وقوائم التشغيل والقنوات وتنزيلات الفيديو الأخرى. تتوسّع "
 "قوائم التشغيل والقنوات لتُظهر عناصرها، وانقر بالزر الأيمن للإيقاف المؤقت "
-"والاستئناف والإزالة وفتح الموقع."
+"والاستئناف والإزالة وفتح موقع الملف."
 
 msgid "Zoom &In"
-msgstr "ت&كبير"
+msgstr "&تكبير"
 
 msgid "Zoom &Out"
-msgstr "ت&صغير"
+msgstr "&تصغير"
 
 msgid "[forced]"
 msgstr "[مفروضة]"
@@ -5393,18 +5392,18 @@ msgid "command failed"
 msgstr "فشل الأمر"
 
 msgid "confirm"
-msgstr "موافق"
+msgstr "تأكيد"
 
 msgid "copy path"
-msgstr "نسخ المسار إلى الحافظة"
+msgstr "نسخ المسار"
 
 #, python-brace-format
 msgid ""
 "current shortcut: {shortcut}. Press the desired key combination; releasing "
 "it accepts. Escape cancels."
 msgstr ""
-"الاختصار الحالي: {shortcut}. اضغط تركيبة المفاتيح المطلوبة، ويُقبل الاختصار "
-"عند تحريرها. Escape للإلغاء."
+"الاختصار الحالي: {shortcut}. اضغط تركيبة المفاتيح المطلوبة؛ يُقبل الاختصار "
+"بمجرد إفلاتها. مفتاح Escape للإلغاء."
 
 msgid "device not found"
 msgstr "لم يُعثر على الجهاز"
@@ -5416,7 +5415,7 @@ msgid "e.g. C:\\Books\\*.m4b"
 msgstr "مثال: C:\\Books\\*.m4b"
 
 msgid "e.g., 1.5s or -1m10s"
-msgstr "على سبيل المثال، 1.5 ثانية أو -1 دقيقة و10 ثانية"
+msgstr "مثال: 1.5s أو -1m10s"
 
 #, python-brace-format
 msgid "error: {message}"
@@ -5475,7 +5474,7 @@ msgstr ""
 "الإغلاق."
 
 msgid "is not a valid URL. Check the URL format and try again."
-msgstr "ليس رابطًا صالحًا. تحقق من تنسيق الرابط وحاول مرة أخرى."
+msgstr "ليس رابطًا صالحًا. تحقق من صيغة الرابط وحاول مرة أخرى."
 
 #, python-brace-format
 msgid "list view with {columns} columns and {rows} rows"
@@ -5548,7 +5547,7 @@ msgid "yt-dlp Download Manager opened"
 msgstr "تم فتح مدير تنزيلات yt-dlp"
 
 msgid "yt-dlp Download Manager restored"
-msgstr "تم استعادة مدير تنزيلات yt-dlp"
+msgstr "تمت استعادة مدير تنزيلات yt-dlp"
 
 msgid "yt-dlp Logging:"
 msgstr "تسجيل yt-dlp:"
@@ -5623,7 +5622,7 @@ msgstr "{app} محدّث (الإصدار {version})."
 
 #, python-brace-format
 msgid "{count} comment(s) loaded"
-msgstr "تم تحميل {count} تعليق(ات)"
+msgstr "تم تحميل {count} تعليق"
 
 #, python-brace-format
 msgid "{count} completed"
@@ -5631,7 +5630,7 @@ msgstr "{count} مكتمل"
 
 #, python-brace-format
 msgid "{count} download(s) are still in progress."
-msgstr "لا يزال هناك {count} تنزيل/تنزيلات قيد التنفيذ."
+msgstr "لا يزال هناك {count} تنزيل قيد التنفيذ."
 
 #, python-brace-format
 msgid "{count} failed"
@@ -5643,11 +5642,11 @@ msgstr "تم حفظ {count} ملف."
 
 #, python-brace-format
 msgid "{count} missing entr(y/ies) removed."
-msgstr "تمت إزالة {count} إدخال مفقود."
+msgstr "تمت إزالة {count} عنصر مفقود."
 
 #, python-brace-format
 msgid "{count} parts with track counts: {sizes}"
-msgstr "{count} جزء بأعداد المقاطع: {sizes}"
+msgstr "{count} جزء بأعداد المسارات: {sizes}"
 
 #, python-brace-format
 msgid "{count} paused"
@@ -5655,11 +5654,11 @@ msgstr "{count} مُوقف مؤقتًا"
 
 #, python-brace-format
 msgid "{count} queued"
-msgstr "{count} في الانتظار"
+msgstr "{count} في قائمة الانتظار"
 
 #, python-brace-format
 msgid "{count} track(s) queued"
-msgstr "تمت إضافة {count} مقطع إلى قائمة الانتظار"
+msgstr "تمت إضافة {count} مسار إلى قائمة الانتظار"
 
 #, python-brace-format
 msgid "{depth}-bit"
@@ -5723,7 +5722,7 @@ msgstr "{names} (مدمجة)"
 
 #, python-brace-format
 msgid "{name}  ({count} sources)"
-msgstr "{name}  ({count} مصادر)"
+msgstr "{name}  ({count} مصدر)"
 
 #, python-brace-format
 msgid "{name}  ({size:.2f} MB)"
@@ -5735,7 +5734,7 @@ msgstr "{name} (نسخة)"
 
 #, python-brace-format
 msgid "{name} ({count} tracks)"
-msgstr "{name} ({count} مقطع)"
+msgstr "{name} ({count} مسار)"
 
 #, python-brace-format
 msgid "{name} Check"
