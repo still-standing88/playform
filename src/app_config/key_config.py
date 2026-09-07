@@ -10,11 +10,53 @@ hotkeys = {}
 hotkeys_funcs = {}
 key_config = cfgp.ConfigParser()
 key_config.optionxform = str
+DISABLED_HOTKEYS_SECTION = "Disabled hotkeys"
+
+
+def _disabled_hotkey_id(section, action):
+    return f"{section}::{action}"
+
+
+def is_hotkey_enabled(section, action):
+    if DISABLED_HOTKEYS_SECTION not in key_config:
+        return True
+    return not key_config.getboolean(
+        DISABLED_HOTKEYS_SECTION,
+        _disabled_hotkey_id(section, action),
+        fallback=False,
+    )
+
+
+def set_hotkey_enabled(section, action, enabled):
+    if DISABLED_HOTKEYS_SECTION not in key_config:
+        key_config[DISABLED_HOTKEYS_SECTION] = {}
+    key_config[DISABLED_HOTKEYS_SECTION][
+        _disabled_hotkey_id(section, action)
+    ] = str(not enabled)
+
+
+def get_hotkey_sequence(section, action):
+    return key_config.get(section, action, fallback="")
+
+
+def get_active_hotkey_sequence(section, action):
+    if not is_hotkey_enabled(section, action):
+        return ""
+    return get_hotkey_sequence(section, action)
+
+
+def set_hotkey_sequence(section, action, sequence):
+    key_config[section][action] = sequence
+
+
+def reset_hotkey(section, action):
+    set_hotkey_sequence(section, action, key_dict[section][action])
+    set_hotkey_enabled(section, action, True)
 
 
 def modifyKey(section, hotkey, sequence):
     import keyboard
-    key_config[section][hotkey] = sequence
+    set_hotkey_sequence(section, hotkey, sequence)
     if section.lower() == "global":
         old_id = hotkeys.pop(hotkey, None)
         if old_id is not None:
@@ -23,8 +65,9 @@ def modifyKey(section, hotkey, sequence):
             except Exception:
                 pass
         func = hotkeys_funcs.get(hotkey)
-        if func:
-            hid = keyboard.add_hotkey(sequence, func)
+        active_sequence = get_active_hotkey_sequence(section, hotkey)
+        if active_sequence and func:
+            hid = keyboard.add_hotkey(active_sequence, func)
             hotkeys[hotkey] = hid
 
 
@@ -36,6 +79,7 @@ def is_valid_hotkey(hotkey):
 
 def keysToDefault():
     global key_config
+    key_config.remove_section(DISABLED_HOTKEYS_SECTION)
     for keyset, keys in key_dict.items():
         key_config[keyset] = {}
         for key in keys:
@@ -44,7 +88,10 @@ def keysToDefault():
 
 def is_valid_config():
     default_sections = {s.lower() for s in default_keys.key_dict}
-    config_sections = {s.lower() for s in key_config if s.lower() != "default"}
+    config_sections = {
+        s.lower() for s in key_config
+        if s.lower() not in {"default", DISABLED_HOTKEYS_SECTION.lower()}
+    }
     if default_sections != config_sections:
         return False
     for section in default_keys.key_dict:
@@ -112,7 +159,8 @@ def apply_global_hotkeys():
         global_section = key_config["Global"]
     else:
         global_section = key_dict.get("Global", {})
-    for action, sequence in global_section.items():
+    for action in global_section:
+        sequence = get_active_hotkey_sequence("Global", action)
         if not sequence:
             continue
         func = hotkeys_funcs.get(action)
