@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
-    QPushButton, QLineEdit, QMessageBox, QHeaderView, QMenu
+    QPushButton, QLineEdit, QMessageBox, QHeaderView, QMenu, QCheckBox,
+    QWidget
 )
 from PySide6.QtCore import Qt, Slot, Signal
 from PySide6.QtGui import QKeySequence
@@ -146,7 +147,6 @@ class HotkeysDialog(QDialog):
         self.tree.header().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         self.tree.itemClicked.connect(self.on_item_clicked)
         self.tree.itemDoubleClicked.connect(self.on_item_double_clicked)
-        self.tree.itemChanged.connect(self.on_item_changed)
         self.tree.enter_pressed.connect(self.start_editing)
         self.tree.setEditTriggers(QTreeWidget.EditTrigger.NoEditTriggers)
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -190,7 +190,6 @@ class HotkeysDialog(QDialog):
 
     def _set_action_item_enabled(self, item, category, action):
         is_enabled = key_config.is_hotkey_enabled(category, action)
-        item.setCheckState(2, Qt.CheckState.Checked if is_enabled else Qt.CheckState.Unchecked)
         item.setData(2, Qt.ItemDataRole.AccessibleTextRole, action)
         item.setData(
             2,
@@ -199,6 +198,10 @@ class HotkeysDialog(QDialog):
                 state=_("enabled") if is_enabled else _("disabled"),
             ),
         )
+        checkbox_container = self.tree.itemWidget(item, 2)
+        checkbox = checkbox_container.findChild(QCheckBox) if checkbox_container else None
+        if checkbox is not None:
+            checkbox.setChecked(is_enabled)
 
     def populate_tree(self):
         self.tree.blockSignals(True)
@@ -217,10 +220,23 @@ class HotkeysDialog(QDialog):
                     action_item.setData(0, Qt.ItemDataRole.UserRole, category_name)
                     self._set_action_item_text(action_item, action, category_name, shortcut)
                     action_item.setFlags(
-                        (action_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                        | Qt.ItemFlag.ItemIsUserCheckable
+                        action_item.flags() & ~Qt.ItemFlag.ItemIsEditable
                     )
                     self._set_action_item_enabled(action_item, category_name, action)
+                    checkbox = QCheckBox()
+                    checkbox.setAccessibleName(action)
+                    checkbox.setToolTip(_("Enable or disable this hotkey"))
+                    checkbox.setChecked(key_config.is_hotkey_enabled(category_name, action))
+                    checkbox.toggled.connect(
+                        lambda enabled, section=category_name, name=action, row=action_item:
+                        self._set_hotkey_enabled(row, section, name, enabled)
+                    )
+                    checkbox_container = QWidget()
+                    checkbox_layout = QHBoxLayout(checkbox_container)
+                    checkbox_layout.setContentsMargins(0, 0, 0, 0)
+                    checkbox_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                    checkbox_layout.addWidget(checkbox)
+                    self.tree.setItemWidget(action_item, 2, checkbox_container)
             self.tree.addTopLevelItem(category_item)
             category_item.setExpanded(False)
         self.tree.header().setSectionsMovable(False)
@@ -238,16 +254,9 @@ class HotkeysDialog(QDialog):
         if item.parent() is not None and column == 1:
             self.start_editing(item, column)
 
-    @Slot(object, int)
-    def on_item_changed(self, item, column):
-        if column != 2 or item.parent() is None:
-            return
-        key_config.set_hotkey_enabled(
-            item.parent().text(0),
-            item.text(0),
-            item.checkState(2) == Qt.CheckState.Checked,
-        )
-        self._set_action_item_enabled(item, item.parent().text(0), item.text(0))
+    def _set_hotkey_enabled(self, item, category, action, enabled):
+        key_config.set_hotkey_enabled(category, action, enabled)
+        self._set_action_item_enabled(item, category, action)
 
     @Slot(object)
     def filter_hotkeys(self, query):
