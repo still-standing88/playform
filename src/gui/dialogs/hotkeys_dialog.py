@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
-    QPushButton, QLineEdit, QMessageBox, QHeaderView
+    QPushButton, QLineEdit, QMessageBox, QHeaderView, QMenu
 )
 from PySide6.QtCore import Qt, Slot, Signal
 from PySide6.QtGui import QKeySequence
@@ -131,16 +131,26 @@ class HotkeysDialog(QDialog):
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText(_("Search hotkeys"))
+        self.search_edit.setClearButtonEnabled(True)
+        self.search_edit.textChanged.connect(self.filter_hotkeys)
+        layout.addWidget(self.search_edit)
+
         self.tree = HotkeysTree()
-        self.tree.setColumnCount(2)
-        self.tree.setHeaderLabels([_("Action"), _("Shortcut")])
+        self.tree.setColumnCount(3)
+        self.tree.setHeaderLabels([_("Action"), _("Shortcut"), _("Enabled")])
         self.tree.setAlternatingRowColors(True)
         self.tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.tree.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.tree.header().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         self.tree.itemClicked.connect(self.on_item_clicked)
         self.tree.itemDoubleClicked.connect(self.on_item_double_clicked)
+        self.tree.itemChanged.connect(self.on_item_changed)
         self.tree.enter_pressed.connect(self.start_editing)
         self.tree.setEditTriggers(QTreeWidget.EditTrigger.NoEditTriggers)
+        self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self.open_context_menu)
         self.tree.header().setSectionsMovable(False)
         self.tree.header().setSectionsClickable(False)
         layout.addWidget(self.tree)
@@ -178,10 +188,23 @@ class HotkeysDialog(QDialog):
         item.setData(0, Qt.ItemDataRole.AccessibleDescriptionRole, description)
         item.setData(1, Qt.ItemDataRole.AccessibleDescriptionRole, description)
 
+    def _set_action_item_enabled(self, item, category, action):
+        is_enabled = key_config.is_hotkey_enabled(category, action)
+        item.setCheckState(2, Qt.CheckState.Checked if is_enabled else Qt.CheckState.Unchecked)
+        item.setData(2, Qt.ItemDataRole.AccessibleTextRole, action)
+        item.setData(
+            2,
+            Qt.ItemDataRole.AccessibleDescriptionRole,
+            _("Hotkey is {state}").format(
+                state=_("enabled") if is_enabled else _("disabled"),
+            ),
+        )
+
     def populate_tree(self):
+        self.tree.blockSignals(True)
         self.tree.clear()
         for category_name in key_config.key_dict.keys():
-            category_item = QTreeWidgetItem(self.tree, [category_name, ""])
+            category_item = QTreeWidgetItem(self.tree, [category_name, "", ""])
             # Selectable so screen-reader/keyboard users can actually reach
             # and read category rows -- stripping ItemIsSelectable made
             # arrow-key navigation skip them entirely (unreadable).
@@ -190,14 +213,20 @@ class HotkeysDialog(QDialog):
                                   _("Category: {category}").format(category=category_name))
             if category_name in key_config.key_config:
                 for action, shortcut in key_config.key_config[category_name].items():
-                    action_item = QTreeWidgetItem(category_item, [action, shortcut])
+                    action_item = QTreeWidgetItem(category_item, [action, shortcut, ""])
                     action_item.setData(0, Qt.ItemDataRole.UserRole, category_name)
                     self._set_action_item_text(action_item, action, category_name, shortcut)
-                    action_item.setFlags(action_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                    action_item.setFlags(
+                        (action_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                        | Qt.ItemFlag.ItemIsUserCheckable
+                    )
+                    self._set_action_item_enabled(action_item, category_name, action)
             self.tree.addTopLevelItem(category_item)
             category_item.setExpanded(False)
         self.tree.header().setSectionsMovable(False)
         self.tree.header().setSectionsClickable(False)
+        self.tree.blockSignals(False)
+        self.filter_hotkeys(self.search_edit.text())
 
     @Slot(object, int)
     def on_item_clicked(self, item, column):
@@ -208,6 +237,63 @@ class HotkeysDialog(QDialog):
     def on_item_double_clicked(self, item, column):
         if item.parent() is not None and column == 1:
             self.start_editing(item, column)
+
+    @Slot(object, int)
+    def on_item_changed(self, item, column):
+        if column != 2 or item.parent() is None:
+            return
+        key_config.set_hotkey_enabled(
+            item.parent().text(0),
+            item.text(0),
+            item.checkState(2) == Qt.CheckState.Checked,
+        )
+        self._set_action_item_enabled(item, item.parent().text(0), item.text(0))
+
+    @Slot(object)
+    def filter_hotkeys(self, query):
+        query = query.strip().casefold()
+        for category_index in range(self.tree.topLevelItemCount()):
+            category_item = self.tree.topLevelItem(category_index)
+            has_match = False
+            for action_index in range(category_item.childCount()):
+                action_item = category_item.child(action_index)
+                matches = not query or query in action_item.text(0).casefold()
+                action_item.setHidden(not matches)
+                has_match = has_match or matches
+            category_item.setHidden(not has_match)
+            category_item.setExpanded(bool(query) and has_match)
+
+    @Slot(object)
+    def open_context_menu(self, position):
+        item = self.tree.itemAt(position)
+        if item is None or item.parent() is None:
+            return
+        self.tree.setCurrentItem(item)
+        category = item.parent().text(0)
+        action = item.text(0)
+        is_enabled = key_config.is_hotkey_enabled(category, action)
+
+        menu = QMenu(self)
+        toggle_action = menu.addAction(_("Disable") if is_enabled else _("Enable"))
+        unbind_action = menu.addAction(_("Unbind shortcut"))
+        reset_action = menu.addAction(_("Reset hotkey"))
+        selected_action = menu.exec(self.tree.viewport().mapToGlobal(position))
+
+        if selected_action == toggle_action:
+            key_config.set_hotkey_enabled(category, action, not is_enabled)
+            self._set_action_item_enabled(item, category, action)
+        elif selected_action == unbind_action:
+            key_config.set_hotkey_sequence(category, action, "")
+            self._set_action_item_text(item, action, category, "")
+        elif selected_action == reset_action:
+            key_config.reset_hotkey(category, action)
+            self._set_action_item_text(
+                item,
+                action,
+                category,
+                key_config.get_hotkey_sequence(category, action),
+            )
+            self._set_action_item_enabled(item, category, action)
 
     def start_editing(self, item, column):
         if column != 1 or item.parent() is None:
@@ -238,10 +324,10 @@ class HotkeysDialog(QDialog):
         item = self.current_editor_item
         parent = item.parent()
 
-        if new_seq and parent is not None:
+        if parent is not None:
             category = parent.text(0)
             action_text = item.text(0)
-            key_config.key_config[category][action_text] = new_seq
+            key_config.set_hotkey_sequence(category, action_text, new_seq)
             self._set_action_item_text(item, action_text, category, new_seq)
 
         self._teardown_editor(item)
