@@ -152,13 +152,13 @@ class MultiDeviceCaptureUI(QWidget):
             shortcut.setParent(None)
         self._shortcuts = []
 
-        section = key_config.key_config[HOTKEY_SECTION] if HOTKEY_SECTION in key_config.key_config else {}
         mapping = {
-            section.get("Start capture", "Ctrl+Alt+R"): self.start_capture,
-            section.get("Pause/Resume capture", "Ctrl+Alt+P"): self.toggle_pause_resume,
-            section.get("Stop capture", "Ctrl+Alt+S"): self.stop_capture,
+            "Start capture": self.start_capture,
+            "Pause/Resume capture": self.toggle_pause_resume,
+            "Stop capture": self.stop_capture,
         }
-        for key_sequence, callback in mapping.items():
+        for action, callback in mapping.items():
+            key_sequence = key_config.get_active_hotkey_sequence(HOTKEY_SECTION, action)
             if not key_sequence:
                 continue
             shortcut = QShortcut(QKeySequence(key_sequence), self)

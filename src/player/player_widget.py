@@ -1069,7 +1069,7 @@ class PlayerWidget(QWidget):
         self._shortcuts_ctrl.setup()
 
     def reset_shortcuts(self):
-        pass
+        self.set_shortcuts()
 
     def _install_event_filters(self):
         self._shortcuts_ctrl.install_event_filters()

@@ -11,37 +11,38 @@ class MainWindowShortcuts:
 
     def setup(self):
         mw = self.main_window
-        hotkeys = key_config.key_config["Main interface"]
         shortcuts = {
-            hotkeys["Open file"]: mw.open_file_dialog,
-            hotkeys["Open folder"]: mw.open_folder_dialog,
-            hotkeys["Open URL"]: mw.open_url_dialog,
-            hotkeys["Close Currently playing Media"]: self.close_current_media,
-            hotkeys["Show/Hide explorer"]: self.toggle_explorer_shortcut,
-            hotkeys["Show/Hide player controls"]: self.toggle_player_shortcut,
-            hotkeys["Toggle playlists"]: self.toggle_playlists_shortcut,
-            hotkeys["Toggle podcasts"]: self.toggle_podcasts_shortcut,
-            hotkeys["Toggle radio"]: self.toggle_radio_shortcut,
-            hotkeys["Toggle recents/favorites"]: self.toggle_recents_favorites_shortcut,
-            hotkeys["Focus playlists"]: self.focus_playlists,
-            hotkeys["Focus podcasts"]: self.focus_podcasts,
-            hotkeys["Focus radio"]: self.focus_radio,
-            hotkeys["Focus recents/favorites"]: self.focus_recents_favorites,
-            hotkeys["Hide window"]: mw.hide_to_tray,
-            hotkeys["Exit"]: mw.close_application,
-            hotkeys["Focus explorer"]: self.focus_explorer,
-            hotkeys["Focus player"]: self.focus_player,
-            hotkeys["Documentation"]: mw.open_documentation,
-            hotkeys["Hotkeys dialog"]: mw.open_hotkeys,
-            hotkeys["Prefrences Dialog"]: mw.open_preferences,
-            hotkeys["Restart application"]: mw.restart_application,
-            "F6": mw.focus_next_widget,
-            "Shift+F6": mw.focus_previous_widget,
+            "Open file": mw.open_file_dialog,
+            "Open folder": mw.open_folder_dialog,
+            "Open URL": mw.open_url_dialog,
+            "Close Currently playing Media": self.close_current_media,
+            "Show/Hide explorer": self.toggle_explorer_shortcut,
+            "Show/Hide player controls": self.toggle_player_shortcut,
+            "Toggle playlists": self.toggle_playlists_shortcut,
+            "Toggle podcasts": self.toggle_podcasts_shortcut,
+            "Toggle radio": self.toggle_radio_shortcut,
+            "Toggle recents/favorites": self.toggle_recents_favorites_shortcut,
+            "Focus playlists": self.focus_playlists,
+            "Focus podcasts": self.focus_podcasts,
+            "Focus radio": self.focus_radio,
+            "Focus recents/favorites": self.focus_recents_favorites,
+            "Hide window": mw.hide_to_tray,
+            "Exit": mw.close_application,
+            "Focus explorer": self.focus_explorer,
+            "Focus player": self.focus_player,
+            "Documentation": mw.open_documentation,
+            "Hotkeys dialog": mw.open_hotkeys,
+            "Prefrences Dialog": mw.open_preferences,
+            "Restart application": mw.restart_application,
         }
 
         mw._shortcut_manager.clear_shortcuts()
-        for shortcut in shortcuts:
-            mw._shortcut_manager.add_context_shortcut(shortcut, shortcuts[shortcut])
+        for action, callback in shortcuts.items():
+            sequence = key_config.get_active_hotkey_sequence("Main interface", action)
+            if sequence:
+                mw._shortcut_manager.add_context_shortcut(sequence, callback)
+        mw._shortcut_manager.add_context_shortcut("F6", mw.focus_next_widget)
+        mw._shortcut_manager.add_context_shortcut("Shift+F6", mw.focus_previous_widget)
         self.install_shortcuts()
 
     def reset_shortcuts(self):

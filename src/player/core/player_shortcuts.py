@@ -59,57 +59,56 @@ class PlayerShortcuts:
 
     def setup(self):
         widget = self._widget
-        hotkeys = key_config.key_config["Player"]
 
         shortcuts: Dict[str, Callable] = {
-            hotkeys["Play/Pause"]: lambda: self._call_if_enabled(widget.player_controls.play_pause_btn, widget.player_controls.playPauseClicked.emit),
-            hotkeys["Backward"]: lambda: self._call_if_enabled(widget.player_controls.backward_btn, widget.player_controls.backwardClicked.emit),
-            hotkeys["Forward"]: lambda: self._call_if_enabled(widget.player_controls.forward_btn, widget.player_controls.forwardClicked.emit),
-            hotkeys["Stop"]: lambda: self._call_if_media(widget.player_controls.stopRequested.emit),
-            hotkeys["Mute/Unmute"]: lambda: self._call_if_enabled(widget.player_controls.mute_btn, widget.player_controls.muteUnmuteClicked.emit),
-            hotkeys["Previous"]: lambda: self._call_if_enabled(widget.player_controls.previous_btn, widget.player_controls.previousClicked.emit),
-            hotkeys["Next"]: lambda: self._call_if_enabled(widget.player_controls.next_btn, widget.player_controls.nextClicked.emit),
-            hotkeys["Jump to beginning"]: lambda: self._call_if_enabled(widget.player_controls.seek_slider, widget.player_controls.jumpToBeginningRequested.emit),
-            hotkeys["Jump to the end"]: lambda: self._call_if_enabled(widget.player_controls.seek_slider, widget.player_controls.jumpToEndRequested.emit),
-            hotkeys["Toggle repeat"]: lambda: self._call_if_enabled(widget.player_controls.repeat_btn, widget.player_controls.repeatClicked.emit),
-            hotkeys["Volume up"]: lambda: self._call_if_enabled(widget.player_controls.volume_slider, widget.player_controls.volume_up),
-            hotkeys["Volume down"]: lambda: self._call_if_enabled(widget.player_controls.volume_slider, widget.player_controls.volume_down),
-            hotkeys["Bookmarks list"]: lambda: widget.player_controls.show_bookmarks_dialog(),
-            hotkeys["Go to time"]: lambda: widget.player_controls.show_goto_dialog(),
-            hotkeys["New mark at current position"]: lambda: widget.player_controls.add_bookmark_at_current_position(),
-            hotkeys["Repeat loop start"]: lambda: self._on_repeat_start_shortcut(),
-            hotkeys["Repeat loop end"]: lambda: self._on_repeat_end_shortcut(),
-            hotkeys["Clear repeat loop"]: lambda: widget.player_controls.clear_repeat_loop(),
-            hotkeys["Take snapshot"]: lambda: self._call_if_media(widget.player_controls.screenshotRequested.emit),
-            hotkeys["Delete current bookmark"]: lambda: widget.player_controls.delete_current_bookmark(),
-            hotkeys["Fullscreen"]: lambda: widget.player_controls.fullscreenToggled.emit(True),
-            hotkeys["Exit fullscreen"]: lambda: widget.player_controls.fullscreenToggled.emit(False),
-            hotkeys["Previous bookmark"]: lambda: widget.player_controls.jump_to_previous_bookmark(),
-            hotkeys["Next bookmark"]: lambda: widget.player_controls.jump_to_next_bookmark(),
-            hotkeys["Previous repeat loop"]: lambda: widget.player_controls.jump_to_previous_loop(),
-            hotkeys["Next repeat loop"]: lambda: widget.player_controls.jump_to_next_loop(),
-            hotkeys["Mark1 position"]: lambda: widget.player_controls.jump_to_mark(0),
-            hotkeys["Mark2 position"]: lambda: widget.player_controls.jump_to_mark(1),
-            hotkeys["Mark3 position"]: lambda: widget.player_controls.jump_to_mark(2),
-            hotkeys["Mark4 position"]: lambda: widget.player_controls.jump_to_mark(3),
-            hotkeys["Mark5 position"]: lambda: widget.player_controls.jump_to_mark(4),
-            hotkeys["Mark6 position"]: lambda: widget.player_controls.jump_to_mark(5),
-            hotkeys["Mark7 position"]: lambda: widget.player_controls.jump_to_mark(6),
-            hotkeys["Mark8 position"]: lambda: widget.player_controls.jump_to_mark(7),
-            hotkeys["Mark9 position"]: lambda: widget.player_controls.jump_to_mark(8),
-            hotkeys["Mark10 position"]: lambda: widget.player_controls.jump_to_mark(9),
-            hotkeys["Pan up"]: lambda: self._call_if_video(lambda: widget.player_controls.pan_by(0.0, -widget.player_controls.PAN_STEP)),
-            hotkeys["Pan down"]: lambda: self._call_if_video(lambda: widget.player_controls.pan_by(0.0, widget.player_controls.PAN_STEP)),
-            hotkeys["Pan left"]: lambda: self._call_if_video(lambda: widget.player_controls.pan_by(-widget.player_controls.PAN_STEP, 0.0)),
-            hotkeys["Pan right"]: lambda: self._call_if_video(lambda: widget.player_controls.pan_by(widget.player_controls.PAN_STEP, 0.0)),
-            hotkeys["Rotate video"]: lambda: self._call_if_video(self._on_rotate_shortcut),
-            hotkeys["Flip horizontal"]: lambda: self._call_if_video(lambda: widget.player_controls._on_flip_horizontal_action_toggled(not widget.player_controls.is_flip_horizontal)),
-            hotkeys["Flip vertical"]: lambda: self._call_if_video(lambda: widget.player_controls._on_flip_vertical_action_toggled(not widget.player_controls.is_flip_vertical)),
-            hotkeys["Speed up"]: lambda: widget.player_controls.step_speed(1),
-            hotkeys["Speed down"]: lambda: widget.player_controls.step_speed(-1),
-            hotkeys["Reverse playback"]: lambda: self._call_if_reverse_available(lambda: widget.player_controls._on_reverse_action_toggled(not widget.player_controls.is_reverse_active)),
-            hotkeys["Previous subtitle line"]: lambda: self._call_if_media(lambda: widget.subtitles_widget.seekRequested.emit(-1)),
-            hotkeys["Next subtitle line"]: lambda: self._call_if_media(lambda: widget.subtitles_widget.seekRequested.emit(1)),
+            "Play/Pause": lambda: self._call_if_enabled(widget.player_controls.play_pause_btn, widget.player_controls.playPauseClicked.emit),
+            "Backward": lambda: self._call_if_enabled(widget.player_controls.backward_btn, widget.player_controls.backwardClicked.emit),
+            "Forward": lambda: self._call_if_enabled(widget.player_controls.forward_btn, widget.player_controls.forwardClicked.emit),
+            "Stop": lambda: self._call_if_media(widget.player_controls.stopRequested.emit),
+            "Mute/Unmute": lambda: self._call_if_enabled(widget.player_controls.mute_btn, widget.player_controls.muteUnmuteClicked.emit),
+            "Previous": lambda: self._call_if_enabled(widget.player_controls.previous_btn, widget.player_controls.previousClicked.emit),
+            "Next": lambda: self._call_if_enabled(widget.player_controls.next_btn, widget.player_controls.nextClicked.emit),
+            "Jump to beginning": lambda: self._call_if_enabled(widget.player_controls.seek_slider, widget.player_controls.jumpToBeginningRequested.emit),
+            "Jump to the end": lambda: self._call_if_enabled(widget.player_controls.seek_slider, widget.player_controls.jumpToEndRequested.emit),
+            "Toggle repeat": lambda: self._call_if_enabled(widget.player_controls.repeat_btn, widget.player_controls.repeatClicked.emit),
+            "Volume up": lambda: self._call_if_enabled(widget.player_controls.volume_slider, widget.player_controls.volume_up),
+            "Volume down": lambda: self._call_if_enabled(widget.player_controls.volume_slider, widget.player_controls.volume_down),
+            "Bookmarks list": lambda: widget.player_controls.show_bookmarks_dialog(),
+            "Go to time": lambda: widget.player_controls.show_goto_dialog(),
+            "New mark at current position": lambda: widget.player_controls.add_bookmark_at_current_position(),
+            "Repeat loop start": lambda: self._on_repeat_start_shortcut(),
+            "Repeat loop end": lambda: self._on_repeat_end_shortcut(),
+            "Clear repeat loop": lambda: widget.player_controls.clear_repeat_loop(),
+            "Take snapshot": lambda: self._call_if_media(widget.player_controls.screenshotRequested.emit),
+            "Delete current bookmark": lambda: widget.player_controls.delete_current_bookmark(),
+            "Fullscreen": lambda: widget.player_controls.fullscreenToggled.emit(True),
+            "Exit fullscreen": lambda: widget.player_controls.fullscreenToggled.emit(False),
+            "Previous bookmark": lambda: widget.player_controls.jump_to_previous_bookmark(),
+            "Next bookmark": lambda: widget.player_controls.jump_to_next_bookmark(),
+            "Previous repeat loop": lambda: widget.player_controls.jump_to_previous_loop(),
+            "Next repeat loop": lambda: widget.player_controls.jump_to_next_loop(),
+            "Mark1 position": lambda: widget.player_controls.jump_to_mark(0),
+            "Mark2 position": lambda: widget.player_controls.jump_to_mark(1),
+            "Mark3 position": lambda: widget.player_controls.jump_to_mark(2),
+            "Mark4 position": lambda: widget.player_controls.jump_to_mark(3),
+            "Mark5 position": lambda: widget.player_controls.jump_to_mark(4),
+            "Mark6 position": lambda: widget.player_controls.jump_to_mark(5),
+            "Mark7 position": lambda: widget.player_controls.jump_to_mark(6),
+            "Mark8 position": lambda: widget.player_controls.jump_to_mark(7),
+            "Mark9 position": lambda: widget.player_controls.jump_to_mark(8),
+            "Mark10 position": lambda: widget.player_controls.jump_to_mark(9),
+            "Pan up": lambda: self._call_if_video(lambda: widget.player_controls.pan_by(0.0, -widget.player_controls.PAN_STEP)),
+            "Pan down": lambda: self._call_if_video(lambda: widget.player_controls.pan_by(0.0, widget.player_controls.PAN_STEP)),
+            "Pan left": lambda: self._call_if_video(lambda: widget.player_controls.pan_by(-widget.player_controls.PAN_STEP, 0.0)),
+            "Pan right": lambda: self._call_if_video(lambda: widget.player_controls.pan_by(widget.player_controls.PAN_STEP, 0.0)),
+            "Rotate video": lambda: self._call_if_video(self._on_rotate_shortcut),
+            "Flip horizontal": lambda: self._call_if_video(lambda: widget.player_controls._on_flip_horizontal_action_toggled(not widget.player_controls.is_flip_horizontal)),
+            "Flip vertical": lambda: self._call_if_video(lambda: widget.player_controls._on_flip_vertical_action_toggled(not widget.player_controls.is_flip_vertical)),
+            "Speed up": lambda: widget.player_controls.step_speed(1),
+            "Speed down": lambda: widget.player_controls.step_speed(-1),
+            "Reverse playback": lambda: self._call_if_reverse_available(lambda: widget.player_controls._on_reverse_action_toggled(not widget.player_controls.is_reverse_active)),
+            "Previous subtitle line": lambda: self._call_if_media(lambda: widget.subtitles_widget.seekRequested.emit(-1)),
+            "Next subtitle line": lambda: self._call_if_media(lambda: widget.subtitles_widget.seekRequested.emit(1)),
         }
 
         for shortcut in widget._shortcuts.values():
@@ -117,8 +116,11 @@ class PlayerShortcuts:
             shortcut.setParent(None)
         widget._shortcuts.clear()
 
-        for shortcut, callback in shortcuts.items():
-            sh = QShortcut(shortcut, widget)
+        for action, callback in shortcuts.items():
+            sequence = key_config.get_active_hotkey_sequence("Player", action)
+            if not sequence:
+                continue
+            sh = QShortcut(sequence, widget)
             sh.activated.connect(callback)
             sh.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
             # QShortcut defaults to autoRepeat=True -- holding a key even
@@ -133,7 +135,7 @@ class PlayerShortcuts:
             # controls (seek/skip/next/previous/etc.) should ever fire more
             # than once per physical press.
             sh.setAutoRepeat(False)
-            widget._shortcuts[shortcut] = sh
+            widget._shortcuts[action] = sh
 
     def _on_rotate_shortcut(self):
         controls = self._widget.player_controls

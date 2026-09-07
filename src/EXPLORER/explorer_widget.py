@@ -38,6 +38,8 @@ class ExplorerWidget(QWidget):
         self._video_preview_active = False
         self._video_preview_applied: Optional[bool] = None
         self._files_splitter: Optional[QSplitter] = None
+        self._player_state_timer = QTimer()
+        self._player_state_timer.timeout.connect(self._update_player_bar)
 
         super().__init__(kw.get("parent", None))
         self.setWindowTitle(_("Explorer"))
@@ -78,6 +80,7 @@ class ExplorerWidget(QWidget):
 
         self._player.init(config=config)
         self._player.set_window(self.video_widget.winId())
+        self._player_state_timer.start(700)
         
         device_name = prefs.prefs.get("device_name", "")
         if device_name:
@@ -484,6 +487,25 @@ class ExplorerWidget(QWidget):
         self._video_preview_active = active
         self._apply_video_preview_sizes()
 
+    @Slot()
+    def _update_player_bar(self):
+        instance = self._player.primary_instance
+        if instance is None:
+            self.player_bar.setProgress(0.0)
+            self.player_bar.setState(False)
+            return
+
+        snapshot = self._player.get_state_snapshot()
+        if not snapshot.get("ok"):
+            return
+
+        duration = float(snapshot.get("duration") or 0)
+        position = float(snapshot.get("time_pos") or 0)
+        self.player_bar.setProgress(position / duration if duration > 0 else 0.0)
+        self.player_bar.setState(
+            instance.get_playback_state() == AVPlaybackState.AV_STATE_PLAYING
+        )
+
     def _apply_video_preview_sizes(self):
         # Only redistributes the vertical splitter - deliberately never
         # touches video_widget's minimumHeight, so an idle Explorer keeps the
@@ -539,19 +561,21 @@ class ExplorerWidget(QWidget):
             shortcut.setParent(None)
         self._shortcuts = {}
 
-        hotkeys = key_config.key_config["Explorer"]
         mapping: Dict[str, Callable] = {
-            hotkeys["Play/Pause"]: self.explorer_view.media_play_pause,
-            hotkeys["Stop"]: self.explorer_view.media_stop,
-            hotkeys["Forward"]: self.explorer_view.media_forward,
-            hotkeys["Backward"]: self.explorer_view.media_backward,
-            hotkeys["Search files/folders"]: self._focus_search,
+            "Play/Pause": self.explorer_view.media_play_pause,
+            "Stop": self.explorer_view.media_stop,
+            "Forward": self.explorer_view.media_forward,
+            "Backward": self.explorer_view.media_backward,
+            "Search files/folders": self._focus_search,
         }
-        for key_sequence, callback in mapping.items():
+        for action, callback in mapping.items():
+            key_sequence = key_config.get_active_hotkey_sequence("Explorer", action)
+            if not key_sequence:
+                continue
             shortcut = QShortcut(QKeySequence(key_sequence), self)
             shortcut.setContext(qt.ShortcutContext.WidgetWithChildrenShortcut)
             shortcut.activated.connect(callback)
-            self._shortcuts[key_sequence] = shortcut
+            self._shortcuts[action] = shortcut
 
     def _focus_search(self):
         # QComboBox's internal line edit sets its focus proxy back to the

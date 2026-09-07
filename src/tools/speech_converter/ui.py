@@ -106,8 +106,6 @@ class SpeechConverterUI(QWidget):
             shortcut.setParent(None)
         self._shortcuts = []
 
-        section = (key_config.key_config[HOTKEY_SECTION]
-                   if HOTKEY_SECTION in key_config.key_config else {})
         callbacks = {
             "Speak/Pause": self._on_speak_pause_shortcut,
             "Stop speaking": self._on_stop,
@@ -116,7 +114,7 @@ class SpeechConverterUI(QWidget):
             "Parameters": self._open_parameters,
         }
         for action, callback in callbacks.items():
-            sequence = section.get(action, _DEFAULT_SHORTCUTS[action])
+            sequence = key_config.get_active_hotkey_sequence(HOTKEY_SECTION, action)
             if not sequence:
                 continue
             shortcut = QShortcut(QKeySequence(sequence), self)
@@ -124,15 +122,15 @@ class SpeechConverterUI(QWidget):
             shortcut.activated.connect(callback)
             self._shortcuts.append(shortcut)
 
-        self._update_shortcut_description(section)
+        self._update_shortcut_description()
 
-    def _update_shortcut_description(self, section):
+    def _update_shortcut_description(self):
         parts = [
-            _("{key} speak/pause").format(key=section.get("Speak/Pause", _DEFAULT_SHORTCUTS["Speak/Pause"])),
-            _("{key} stop").format(key=section.get("Stop speaking", _DEFAULT_SHORTCUTS["Stop speaking"])),
-            _("{key} open").format(key=section.get("Open text file", _DEFAULT_SHORTCUTS["Open text file"])),
-            _("{key} save").format(key=section.get("Save as audio", _DEFAULT_SHORTCUTS["Save as audio"])),
-            _("{key} parameters").format(key=section.get("Parameters", _DEFAULT_SHORTCUTS["Parameters"])),
+            _("{key} speak/pause").format(key=key_config.get_active_hotkey_sequence(HOTKEY_SECTION, "Speak/Pause")),
+            _("{key} stop").format(key=key_config.get_active_hotkey_sequence(HOTKEY_SECTION, "Stop speaking")),
+            _("{key} open").format(key=key_config.get_active_hotkey_sequence(HOTKEY_SECTION, "Open text file")),
+            _("{key} save").format(key=key_config.get_active_hotkey_sequence(HOTKEY_SECTION, "Save as audio")),
+            _("{key} parameters").format(key=key_config.get_active_hotkey_sequence(HOTKEY_SECTION, "Parameters")),
         ]
         self.text_edit.setAccessibleDescription(
             _("Right-click for Open Text File and Save As. Shortcuts: {shortcuts}.").format(
