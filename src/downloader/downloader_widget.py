@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetIte
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QStandardItemModel, QStandardItem
 from downloader.downloader import Downloader, DownloadStatus
+from app_constance.styles import error_color
 
 CATEGORY_ROLE = Qt.ItemDataRole.UserRole + 1
 
@@ -303,7 +304,7 @@ class DownloaderWidget(QWidget):
             text += f"<br><b>{_('Source')}:</b> {info['metadata']['source_kind']}"
 
         if info['error']:
-            text += f"<br><b style='color: red;'>{_("Error")}:</b> {info['error']}"
+            text += f"<br><b style='color: {error_color()};'>{_("Error")}:</b> {info['error']}"
 
         self.info_label.setText(text)
 
@@ -319,6 +320,10 @@ class DownloaderWidget(QWidget):
         if info['error']:
             plain += f" {_('Error')}: {info['error']}"
         self.info_label.setAccessibleDescription(plain)
+
+    def apply_theme_styles(self):
+        if self.current_item is not None:
+            self.update_info_display()
 
     def update_more_info_display(self):
         if not self.current_item:
