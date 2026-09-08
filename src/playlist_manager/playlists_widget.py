@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                                QFileDialog, QMenu,
                                QListWidgetItem)
 from PySide6.QtGui import QAction
-from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtCore import Qt, QTimer, Signal, Slot
 from .playlist_view import PlaylistView
 from .playlist_create_dialog import PlaylistCreateDialog
 from .playlist_edit_dialog import PlaylistEditDialog
@@ -280,6 +280,14 @@ class PlaylistsWidget(QWidget):
                 break
 
     def _confirm_remove_missing_playlist(self, name, file_path):
+        # Deferred via QTimer so __init__ can never block on this modal
+        # prompt (e.g. under test harnesses or offscreen platforms).
+        QTimer.singleShot(
+            0,
+            lambda n=name, p=file_path: self._prompt_remove_missing_playlist(n, p)
+        )
+
+    def _prompt_remove_missing_playlist(self, name, file_path):
         reply = QMessageBox.question(
             self,
             _("Missing Playlist"),
