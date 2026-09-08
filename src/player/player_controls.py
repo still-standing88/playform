@@ -355,8 +355,30 @@ class PlayerControls(QWidget):
 
         self.time_label.setStyleSheet(TIME_LABEL_STYLE)
         self.current_track_label.setStyleSheet(TRACK_LABEL_STYLE)
+        self.refresh_theme_icons()
 
     apply_styles = apply_theme_styles
+
+    def refresh_theme_icons(self):
+        icon_names = (
+            (self.previous_btn, "previous.svg"),
+            (self.backward_btn, "rewind.svg"),
+            (self.play_pause_btn, "pause.svg" if self.is_playing else "play.svg"),
+            (self.forward_btn, "forward.svg"),
+            (self.next_btn, "next.svg"),
+            (self.repeat_btn, "repeat.svg"),
+            (self.shuffle_btn, "shuffle.svg"),
+            (self.bookmarks_btn, "bookmarks.svg"),
+            (self.goto_btn, "goto.svg"),
+            (self.screenshot_btn, "screenshot.svg"),
+            (self.playlist_view_btn, "playlist.svg"),
+            (self.queue_view_btn, "queue.svg"),
+            (self.mute_btn, "mute_on.svg" if self.is_muted else "mute_off.svg"),
+        )
+        for button, icon_name in icon_names:
+            button.setIcon(load_icon(icon_name))
+        self.seek_icon_label.setPixmap(load_pixmap("seek.svg"))
+        self.volume_icon_label.setPixmap(load_pixmap("volume.svg"))
 
     def _resync_buttons_container_height(self):
         # Nested heightForWidth widgets inside a plain QVBoxLayout are a

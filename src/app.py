@@ -34,6 +34,8 @@ def main():
     app.setApplicationVersion(APP_VERSION)
     app.setOrganizationName(APP_PUBLISHER)
     app.setOrganizationDomain(APP_WEBSITE)
+    from utilities.icon_loader import get_app_icon
+    app.setWindowIcon(get_app_icon())
     
     from loading import LoadingSplash
     splash = LoadingSplash()

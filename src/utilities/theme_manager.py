@@ -99,6 +99,8 @@ def apply_theme(theme_name: Optional[str] = None, app: Optional[QApplication] = 
     
     # Apply stylesheet to application
     app.setStyleSheet(stylesheet)
+    from utilities.icon_loader import clear_cache
+    clear_cache()
     
     # Force all widgets to reapply styles
     _repolish_all_widgets(app)

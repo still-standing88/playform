@@ -1,8 +1,7 @@
 import os
-from pathlib import Path
 from typing import Optional
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon, QPainter, QPixmap
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from utilities.functions import is_dev_mode, get_parent_dir
 
 _icon_cache = {}
@@ -11,6 +10,22 @@ _icon_cache = {}
 # fade, so the Disabled pixmaps have to be baked into the QIcon.
 _DISABLED_SIZES = (16, 22, 24, 32, 48)
 _DISABLED_OPACITY = 0.35
+
+
+def _theme_icon_color() -> QColor:
+    from app_constance.styles import theme_qcolor
+    return theme_qcolor("COLOR_TEXT_1")
+
+
+def _tint_pixmap(source: QPixmap, color: QColor) -> QPixmap:
+    tinted = QPixmap(source.size())
+    tinted.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(tinted)
+    painter.drawPixmap(0, 0, source)
+    painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+    painter.fillRect(tinted.rect(), color)
+    painter.end()
+    return tinted
 
 def get_assets_dir() -> Optional[str]:
     try:
@@ -32,9 +47,10 @@ def _with_disabled_pixmaps(source: QIcon) -> QIcon:
     # be re-hosted in a plain icon alongside their faded copies.
     icon = QIcon()
     for size in _DISABLED_SIZES:
-        normal = source.pixmap(QSize(size, size), QIcon.Mode.Normal)
-        if normal.isNull():
+        source_pixmap = source.pixmap(QSize(size, size), QIcon.Mode.Normal)
+        if source_pixmap.isNull():
             continue
+        normal = _tint_pixmap(source_pixmap, _theme_icon_color())
         icon.addPixmap(normal, QIcon.Mode.Normal, QIcon.State.Off)
         icon.addPixmap(normal, QIcon.Mode.Active, QIcon.State.Off)
         faded = QPixmap(normal.size())
@@ -47,8 +63,9 @@ def _with_disabled_pixmaps(source: QIcon) -> QIcon:
     return icon if not icon.isNull() else source
 
 def load_icon(icon_name: str) -> QIcon:
-    if icon_name in _icon_cache:
-        return _icon_cache[icon_name]
+    cache_key = f"icon::{icon_name}::{_theme_icon_color().name(QColor.NameFormat.HexArgb)}"
+    if cache_key in _icon_cache:
+        return _icon_cache[cache_key]
     
     icon = QIcon()
     assets_dir = get_assets_dir()
@@ -65,7 +82,7 @@ def load_icon(icon_name: str) -> QIcon:
             icon = QIcon(icon_path)
 
     icon = _with_disabled_pixmaps(icon)
-    _icon_cache[icon_name] = icon
+    _icon_cache[cache_key] = icon
     return icon
 
 def load_pixmap(icon_name: str) -> QPixmap:
@@ -78,7 +95,7 @@ def load_pixmap(icon_name: str) -> QPixmap:
     if assets_dir is None:
         try:
             resource_path = f":/icons/{icon_name}"
-            pixmap = QPixmap(resource_path)
+            pixmap = _tint_pixmap(QPixmap(resource_path), _theme_icon_color())
             _icon_cache[cache_key] = pixmap
             return pixmap
         except:
@@ -86,14 +103,18 @@ def load_pixmap(icon_name: str) -> QPixmap:
     else:
         icon_path = os.path.join(assets_dir, icon_name)
         if os.path.exists(icon_path):
-            pixmap = QPixmap(icon_path)
+            pixmap = _tint_pixmap(QPixmap(icon_path), _theme_icon_color())
             _icon_cache[cache_key] = pixmap
             return pixmap
     
     return QPixmap()
 
 def get_app_icon() -> QIcon:
-    return load_icon("app_icon.png")
+    icon = QIcon(":/app/playform.png")
+    if not icon.isNull():
+        return icon
+    app_path = os.path.join(get_parent_dir(), "assets", "playform.png")
+    return QIcon(app_path) if os.path.exists(app_path) else QIcon()
 
 def clear_cache():
     global _icon_cache
