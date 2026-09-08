@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QListWidget, 
                                QPushButton, QLabel, QMessageBox)
 from PySide6.QtCore import Qt, Signal, Slot
+from app_constance.styles import secondary_label_style
 import utilities.mpv_bootstrap
 from media_core.av_play import PlaylistManager
 
@@ -50,7 +51,7 @@ class PlaylistSelectionDialog(QDialog):
         if not playlists:
             no_playlists_label = QLabel(_("No playlists available. Create a playlist first."))
             no_playlists_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            no_playlists_label.setStyleSheet("color: gray; font-style: italic;")
+            no_playlists_label.setStyleSheet(secondary_label_style(italic=True))
         else:
             for playlist_name in playlists:
                 self.playlists_list.addItem(playlist_name)

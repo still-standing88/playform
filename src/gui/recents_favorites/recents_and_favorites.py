@@ -15,7 +15,8 @@ class RecentsAndFavoritesWidget(QWidget):
         
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(8)
         
         self.tab_widget = QTabWidget()
         self.tab_widget.setObjectName("recentsAndFavoritesTabWidget")

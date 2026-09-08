@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
     QWizardPage,
 )
 
+from app_constance.styles import secondary_label_style
 from media_core.av_capture.capabilities import CaptureCapabilities
 from media_core.av_capture.models import CaptureDevice, CaptureFormatOption
 
@@ -126,7 +127,7 @@ class TypeDevicePage(QWizardPage):
         # empty right now instead of it just looking broken. It also
         # doubles as the "loading" status line while the probe is running.
         self.empty_state_label = QLabel()
-        self.empty_state_label.setStyleSheet("color: gray; font-size: 11px;")
+        self.empty_state_label.setStyleSheet(secondary_label_style(font_size=11))
         self.empty_state_label.setWordWrap(True)
         layout.addWidget(self.empty_state_label)
 

@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
                                QRadioButton, QSpinBox, QMessageBox, QButtonGroup)
 from PySide6.QtCore import Qt, Signal, Slot
+from app_constance.styles import secondary_label_style
 import utilities.mpv_bootstrap
 from media_core.av_play import Playlist
 
@@ -60,7 +61,7 @@ class PlaylistSplitDialog(QDialog):
 
         self.preview_label = QLabel()
         self.preview_label.setWordWrap(True)
-        self.preview_label.setStyleSheet("color: gray;")
+        self.preview_label.setStyleSheet(secondary_label_style())
         layout.addWidget(self.preview_label)
 
         layout.addStretch()

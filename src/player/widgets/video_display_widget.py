@@ -2,7 +2,7 @@ from typing import Callable, Optional
 from PySide6.QtWidgets import QWidget, QLayout, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy
 from PySide6.QtGui import QCloseEvent, QPalette, QColor
 from PySide6.QtCore import Qt
-from app_constance.styles import video_placeholder_style, VIDEO_LOADING_STYLE
+from app_constance.styles import video_loading_style, video_placeholder_style
 
 LayoutType = QVBoxLayout | QHBoxLayout 
 
@@ -58,7 +58,7 @@ class VideoDisplayWidget(QWidget):
         
         self.loading_label = QLabel(_("Extracting URL..."), self)
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.loading_label.setStyleSheet(VIDEO_LOADING_STYLE)
+        self.loading_label.setStyleSheet(video_loading_style())
         self.loading_label.hide()
         
         layout.addWidget(self.placeholder_label)
@@ -66,7 +66,7 @@ class VideoDisplayWidget(QWidget):
 
     def apply_theme_styles(self):
         self.placeholder_label.setStyleSheet(video_placeholder_style())
-        self.loading_label.setStyleSheet(VIDEO_LOADING_STYLE)
+        self.loading_label.setStyleSheet(video_loading_style())
 
     # Recomputed fresh on every clamp_to_screen() pass (see DockManager) -
     # never mutated cumulatively, so a bigger screen restores the full,

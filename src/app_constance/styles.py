@@ -21,6 +21,42 @@ def theme_qcolor(name: str, alpha: int | None = None, theme_name: str | None = N
     return color
 
 
+def error_color(theme_name: str | None = None) -> str:
+    return "#b42318" if get_theme_palette(theme_name) is LightPalette else "#ff6b6b"
+
+
+def error_label_style() -> str:
+    return f"QLabel {{ color: {error_color()}; }}"
+
+
+def secondary_label_style(font_size: int | None = None, italic: bool = False) -> str:
+    palette = get_theme_palette()
+    declarations = [f"color: {palette.COLOR_TEXT_3}"]
+    if font_size is not None:
+        declarations.append(f"font-size: {font_size}px")
+    if italic:
+        declarations.append("font-style: italic")
+    return f"QLabel {{ {'; '.join(declarations)}; }}"
+
+
+def legacy_list_header_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        background-color: {palette.COLOR_ACCENT_3};
+        color: {palette.COLOR_TEXT_1};
+        font-weight: bold;
+        border-bottom: 2px solid {palette.COLOR_ACCENT_4};
+    """
+
+
+def legacy_list_item_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        background-color: {palette.COLOR_BACKGROUND_1};
+        border: 1px solid {palette.COLOR_BACKGROUND_4};
+    """
+
+
 def button_style() -> str:
     palette = get_theme_palette()
     return f"""
@@ -120,15 +156,17 @@ def video_placeholder_style() -> str:
     """
 
 
-VIDEO_LOADING_STYLE = """
-    QLabel {
-        background-color: rgba(0, 0, 0, 180);
-        color: white;
-        font-weight: bold;
-        border-radius: 10px;
-        padding: 20px;
-    }
-"""
+def video_loading_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QLabel {{
+            background-color: rgba(0, 0, 0, 180);
+            color: {palette.COLOR_TEXT_1};
+            font-weight: bold;
+            border-radius: 10px;
+            padding: 20px;
+        }}
+    """
 
 
 def subtitles_list_style() -> str:

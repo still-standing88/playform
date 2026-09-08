@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QFormLayout, QLineEdit, QPu
 from PySide6.QtCore import QUrl
 
 from app_config import prefs
+from app_constance.styles import error_label_style
 from utilities.formats import formats as media_formats
 
 SUPPORTED_EXTENSIONS = set(media_formats["audio"]) | set(media_formats["video"])
@@ -44,7 +45,7 @@ class AddDownloadDialog(QDialog):
         layout.addLayout(form)
 
         self.error_label = QLabel(self)
-        self.error_label.setStyleSheet("color: #ff6b6b;")
+        self.error_label.setStyleSheet(error_label_style())
         self.error_label.hide()
         layout.addWidget(self.error_label)
 

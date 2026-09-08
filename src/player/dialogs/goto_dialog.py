@@ -2,6 +2,7 @@ from typing import Optional
 
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QDialogButtonBox
 from PySide6.QtCore import Qt
+from app_constance.styles import error_label_style
 
 
 class GoToDialog(QDialog):
@@ -22,7 +23,7 @@ class GoToDialog(QDialog):
         layout.addLayout(field_layout)
 
         self.error_label = QLabel(self)
-        self.error_label.setStyleSheet("color: red;")
+        self.error_label.setStyleSheet(error_label_style())
         self.error_label.setVisible(False)
         layout.addWidget(self.error_label)
 

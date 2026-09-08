@@ -29,7 +29,8 @@ class RadioFilterWidget(QWidget):
         
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(8)
         
         search_group = QGroupBox(_("Search and Filter"))
         self.search_group = search_group

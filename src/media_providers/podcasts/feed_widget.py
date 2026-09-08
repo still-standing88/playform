@@ -72,8 +72,8 @@ class FeedWidget(QWidget):
 
     def setup_ui(self):
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(5, 5, 5, 5)
-        main_layout.setSpacing(5)
+        main_layout.setContentsMargins(8, 8, 8, 8)
+        main_layout.setSpacing(8)
         
         search_layout = QHBoxLayout()
         search_label = QLabel(_("Search:"))

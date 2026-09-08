@@ -15,6 +15,7 @@ from __future__ import annotations
 from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import QCheckBox, QComboBox, QFormLayout, QLabel, QSpinBox, QWidget
 
+from app_constance.styles import secondary_label_style
 from media_core.av_capture.capabilities import CaptureCapabilities
 from media_core.av_capture.models import CaptureDevice
 
@@ -168,7 +169,7 @@ class _FrameCaptureSettingsForm(QWidget):
         self.capture_cursor.setChecked(True)
         form.addRow(self.capture_cursor)
         self._note_label = QLabel("")
-        self._note_label.setStyleSheet("color: gray; font-size: 11px;")
+        self._note_label.setStyleSheet(secondary_label_style(font_size=11))
         self._note_label.setWordWrap(True)
         form.addRow(self._note_label)
 
