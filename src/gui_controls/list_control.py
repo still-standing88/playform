@@ -2,7 +2,6 @@ from PySide6.QtWidgets import (QLabel, QListWidget, QListWidgetItem, QWidget,
 QVBoxLayout, QHBoxLayout, QSizePolicy, QFrame, QSpacerItem
 , QListView, QAbstractItemView)
 from PySide6.QtCore import Signal, Qt
-from PySide6.QtGui import QFont
 from app_constance.styles import (
     get_theme_palette,
     legacy_list_header_style,
@@ -52,7 +51,6 @@ class ListHeader(QListWidgetItem):
         self.Widget.headers.insert(int(index), name)
         label = QLabel(name)
         label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        label.setFont(QFont("Arial", 12))
         label.setStyleSheet(self.Widget.headerStyle)
         label.setMinimumWidth(100)
         label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -108,7 +106,6 @@ class ListItem(QListWidgetItem):
         label = QLabel(name)
         label.setStyleSheet(self.Widget.columnStyle)
         label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        label.setFont(QFont("Arial", 12))
         label.setMinimumWidth(100)
         label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.Widget._layout.addWidget(label, stretch=1)
