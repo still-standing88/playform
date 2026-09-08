@@ -146,6 +146,9 @@ class FeedWidget(QWidget):
         )
         self.detail_text.setAccessibleName(_("Entry Detail Text"))
         self.detail_text.setAccessibleDescription(_("Summary and description of selected entry"))
+        # Short summaries shouldn't claim all remaining vertical space; long
+        # ones scroll inside the browser.
+        self.detail_text.setMaximumHeight(240)
         entry_layout.addWidget(self.detail_text, 1)
         
         splitter.addWidget(entry_container)
