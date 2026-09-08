@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QRectF, Signal, QPointF
-from PySide6.QtGui import QPainter, QColor, QPen
+from PySide6.QtGui import QPainter, QPen
 from PySide6.QtWidgets import QWidget
-from app_constance.styles import COLORS
+from app_constance.styles import theme_qcolor
 
 
 class SegmentTimelineWidget(QWidget):
@@ -82,25 +82,28 @@ class SegmentTimelineWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        painter.fillRect(self.rect(), COLORS['background_dark'])
+        painter.fillRect(self.rect(), theme_qcolor("COLOR_BACKGROUND_1"))
 
         for seg in self.segments:
             x_start = seg['start'] * w
             x_end = seg['end'] * w
-            color = COLORS['progress_blue_alpha'] if seg['id'] != self.focused_segment_id else COLORS['progress_orange_alpha']
+            color = theme_qcolor(
+                "COLOR_ACCENT_3" if seg['id'] != self.focused_segment_id else "COLOR_ACCENT_5",
+                160,
+            )
             painter.fillRect(QRectF(x_start, 8, x_end - x_start, h - 16), color)
 
 
         for m in self.markers:
             x = m['pos'] * w
-            pen = QPen(COLORS['marker_yellow_alpha'])
+            pen = QPen(theme_qcolor("COLOR_ACCENT_5", 190))
             pen.setWidth(2)
             painter.setPen(pen)
             painter.drawLine(x, 4, x, h - 4)
 
 
         if self._hover_pos is not None:
-            pen = QPen(COLORS['white_alpha'])
+            pen = QPen(theme_qcolor("COLOR_TEXT_1", 128))
             pen.setWidth(1)
             painter.setPen(pen)
             painter.drawLine(self._hover_pos, 0, self._hover_pos, h)

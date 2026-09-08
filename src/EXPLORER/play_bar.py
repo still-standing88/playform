@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QRectF, QPointF, Signal, Slot, QTimer
-from PySide6.QtGui import QPainter, QColor, QPen
+from PySide6.QtGui import QPainter, QPen
 from PySide6.QtWidgets import QWidget, QToolTip
-from app_constance.styles import COLORS
+from app_constance.styles import theme_qcolor
 
 
 class PlayerBar(QWidget):
@@ -55,17 +55,17 @@ class PlayerBar(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        painter.fillRect(self.rect(), COLORS['background_dark'])
+        painter.fillRect(self.rect(), theme_qcolor("COLOR_BACKGROUND_1"))
 
         progress_width = int(w * self._progress)
-        painter.fillRect(QRectF(0, h - 6, progress_width, 6), COLORS['progress_blue'])
+        painter.fillRect(QRectF(0, h - 6, progress_width, 6), theme_qcolor("COLOR_ACCENT_4"))
 
         center_x = w // 2
         center_y = h // 2
         size = int(h * 0.5)
 
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(COLORS['white'])
+        painter.setBrush(theme_qcolor("COLOR_TEXT_1"))
 
         if self._isPlaying:
             # Pause symbol
@@ -83,7 +83,7 @@ class PlayerBar(QWidget):
             painter.drawPolygon(points)
 
         if self._hover_pos is not None:
-            pen = QPen(COLORS['white_alpha'])
+            pen = QPen(theme_qcolor("COLOR_TEXT_1", 128))
             pen.setWidth(1)
             painter.setPen(pen)
             painter.drawLine(self._hover_pos, h - 6, self._hover_pos, h - 2)

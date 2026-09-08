@@ -468,13 +468,6 @@ class ListHeader(QWidget):
         
         self.setFixedHeight(24)
         self.setMouseTracking(True)
-        
-        # Styling
-        self.setAutoFillBackground(True)
-        palette = self.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor("#f0f0f0"))
-        palette.setColor(QPalette.ColorRole.WindowText, QColor("#000000"))
-        self.setPalette(palette)
     
     def set_columns(self, columns: List[ListColumn]):
         """Set column definitions"""
@@ -489,12 +482,6 @@ class ListHeader(QWidget):
     def set_simple_style(self, enable: bool):
         """Use a flatter header style."""
         self._simple_style = enable
-        palette = self.palette()
-        if enable:
-            palette.setColor(QPalette.ColorRole.Window, QColor("#f7f7f7"))
-        else:
-            palette.setColor(QPalette.ColorRole.Window, QColor("#f0f0f0"))
-        self.setPalette(palette)
         self.update()
     
     def paintEvent(self, event):
@@ -503,10 +490,14 @@ class ListHeader(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         # Background
-        painter.fillRect(self.rect(), self.palette().window())
+        from app_constance.styles import theme_qcolor
+        painter.fillRect(
+            self.rect(),
+            theme_qcolor("COLOR_BACKGROUND_1" if self._simple_style else "COLOR_BACKGROUND_2"),
+        )
         
         # Draw bottom border
-        painter.setPen(QPen(QColor("#c0c0c0"), 1))
+        painter.setPen(QPen(theme_qcolor("COLOR_BACKGROUND_4"), 1))
         painter.drawLine(0, self.height() - 1, self.width(), self.height() - 1)
         
         x = 0
@@ -520,7 +511,7 @@ class ListHeader(QWidget):
                             column.width - self._padding * 2 - (self._sort_indicator_width if column.is_sorted else 0), 
                             self.height())
             
-            painter.setPen(self.palette().windowText().color())
+            painter.setPen(theme_qcolor("COLOR_TEXT_1"))
             font = painter.font()
             font.setBold(True)
             painter.setFont(font)
@@ -535,7 +526,7 @@ class ListHeader(QWidget):
                 self._draw_sort_arrow(painter, arrow_x, arrow_y, column.sort_order)
             
             # Column separator
-            painter.setPen(QPen(QColor("#c0c0c0"), 1))
+            painter.setPen(QPen(theme_qcolor("COLOR_BACKGROUND_4"), 1))
             painter.drawLine(x + column.width - 1, 0, x + column.width - 1, self.height())
             
             x += column.width
@@ -545,13 +536,19 @@ class ListHeader(QWidget):
         rect = QRect(x, 0, width, self.height() - 1)
         
         if col_index == self._hover_column:
-            painter.fillRect(rect, QColor("#ededed") if self._simple_style else QColor("#e5e5e5"))
+            from app_constance.styles import theme_qcolor
+            painter.fillRect(rect, theme_qcolor("COLOR_BACKGROUND_3"))
         else:
-            painter.fillRect(rect, self.palette().window())
+            from app_constance.styles import theme_qcolor
+            painter.fillRect(
+                rect,
+                theme_qcolor("COLOR_BACKGROUND_1" if self._simple_style else "COLOR_BACKGROUND_2"),
+            )
     
     def _draw_sort_arrow(self, painter: QPainter, x: int, y: int, order: Qt.SortOrder):
         """Draw sort indicator arrow"""
-        painter.setPen(QPen(QColor("#000000"), 2))
+        from app_constance.styles import theme_qcolor
+        painter.setPen(QPen(theme_qcolor("COLOR_TEXT_1"), 2))
         
         if order == Qt.SortOrder.AscendingOrder:
             # Up arrow

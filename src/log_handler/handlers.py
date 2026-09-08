@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from app_constance.styles import COLORS
+from app_constance.styles import theme_qcolor
 
 class QTextEditLogHandler(logging.Handler):
     def __init__(self, text_widget):
@@ -13,11 +13,11 @@ class QTextEditLogHandler(logging.Handler):
             msg = self.format(record)
             if hasattr(self.text_widget, "setTextColor"):
                 if record.levelno >= logging.ERROR:
-                    self.text_widget.setTextColor(COLORS['red'])
+                    self.text_widget.setTextColor(theme_qcolor("COLOR_ACCENT_5"))
                 elif record.levelno >= logging.WARNING:
-                    self.text_widget.setTextColor(COLORS['orange'])
+                    self.text_widget.setTextColor(theme_qcolor("COLOR_ACCENT_4"))
                 else:
-                    self.text_widget.setTextColor(COLORS['lightgray'])
+                    self.text_widget.setTextColor(theme_qcolor("COLOR_TEXT_2"))
                     
             if hasattr(self.text_widget, "appendPlainText"):
                 self.text_widget.appendPlainText(msg)
@@ -25,7 +25,7 @@ class QTextEditLogHandler(logging.Handler):
                 self.text_widget.append(msg)
                 
             if hasattr(self.text_widget, "setTextColor"):
-                self.text_widget.setTextColor(COLORS['white'])
+                self.text_widget.setTextColor(theme_qcolor("COLOR_TEXT_1"))
         except Exception:
             pass
 
@@ -51,10 +51,10 @@ class LoggingStreamRedirect:
             self.widget.appendPlainText(display_text)
         elif hasattr(self.widget, "append"):
             if self.is_stderr and hasattr(self.widget, "setTextColor"):
-                self.widget.setTextColor(COLORS['red'])
+                self.widget.setTextColor(theme_qcolor("COLOR_ACCENT_5"))
             self.widget.append(display_text)
             if self.is_stderr and hasattr(self.widget, "setTextColor"):
-                self.widget.setTextColor(COLORS['black'])
+                self.widget.setTextColor(theme_qcolor("COLOR_TEXT_1"))
 
         for line in text.splitlines():
             if line:

@@ -12,7 +12,6 @@ import utilities.mpv_bootstrap
 from media_core.av_play import VideoPlayer, AVMediaInstance, AVPlaybackState
 from utilities.formats import formats, image_extensions
 from app_config import prefs, key_config
-from app_constance.styles import COLORS
 from app_db import UserFiles
 from gui_controls.player_key_event_filter import KeyEventFilter
 from .explorer import Explorer
@@ -221,7 +220,7 @@ class ExplorerWidget(QWidget):
         preview_layout = QVBoxLayout(preview_group)
         self.video_widget = QFrame(self)
         self.vid_palette = self.video_widget.palette()
-        self.vid_palette.setColor(QPalette.ColorRole.Window, COLORS['black'])
+        self.vid_palette.setColor(QPalette.ColorRole.Window, qt.GlobalColor.black)
         self.video_widget.setPalette(self.vid_palette)
         self.video_widget.setAutoFillBackground(True)
         # Same native-window attributes as the main player's VideoDisplayWidget.
