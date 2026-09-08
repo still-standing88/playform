@@ -435,12 +435,12 @@ class ExplorerView(QListWidget):
     @Slot()
     def media_backward(self):
         if self._instance is not None:
-            self._instance.set_position(self._instance.get_position() - prefs.prefs["offset"]["seek"])
+            self._player.backward(prefs.prefs["offset"]["seek"])
 
     @Slot()
     def media_forward(self):
         if self._instance is not None:
-            self._instance.set_position(self._instance.get_position() + prefs.prefs["offset"]["seek"])
+            self._player.forward(prefs.prefs["offset"]["seek"])
 
     def media_stop(self):
         if self._instance is not None:
@@ -451,7 +451,7 @@ class ExplorerView(QListWidget):
     @Slot(float)
     def on_playbar_seek(self, position: float):
         if self._instance is not None:
-            self._instance.set_position(position)
+            self._instance.set_position(int(position * self._instance.get_length()))
 
     def _execute_callback(self, callback_name:str, param:str = "", with_param :bool = True):
         callback:Optional[Callable[[str], None]] = self._callbacks.get(callback_name, None)
