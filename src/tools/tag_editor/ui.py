@@ -51,16 +51,26 @@ class TagEditorUI(QWidget):
         self.tag_widgets = {}
         
         tags_to_display = [
-            'tracktitle', 'artist', 'album', 'albumartist', 'composer',
-            'tracknumber', 'totaltracks', 'discnumber', 'totaldiscs',
-            'genre', 'year', 'comment'
+            ('tracktitle', _("Track title")),
+            ('artist', _("Artist")),
+            ('album', _("Album")),
+            ('albumartist', _("Album artist")),
+            ('composer', _("Composer")),
+            ('tracknumber', _("Track number")),
+            ('totaltracks', _("Total tracks")),
+            ('discnumber', _("Disc number")),
+            ('totaldiscs', _("Total discs")),
+            ('genre', _("Genre")),
+            ('year', _("Year")),
+            ('comment', _("Comment")),
         ]
 
         row = 0
-        for tag in tags_to_display:
-            label = QLabel(tag.replace('_', ' ').title() + ":")
+        for tag, display_name in tags_to_display:
+            label = QLabel(f"{display_name}:")
             edit = QLineEdit()
-            edit.setAccessibleName(_("{tag} tag editor").format(tag=tag.replace('_', ' ').title()))
+            edit.setAccessibleName(_("{tag} tag editor").format(tag=display_name))
+            label.setBuddy(edit)
             self.grid_layout.addWidget(label, row, 0)
             self.grid_layout.addWidget(edit, row, 1)
             self.tag_widgets[tag] = edit

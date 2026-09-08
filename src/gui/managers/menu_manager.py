@@ -266,55 +266,55 @@ class MenuManager:
     def setup_tools_menu(self):
         self.main_window.ffmpeg_tools_menu = self.main_window.tools_menu.addMenu(_("&FFmpeg Tools"))
 
-        self.main_window.batch_converter_action = QAction(_("&Batch Converter"), self.main_window)
+        self.main_window.batch_converter_action = QAction(_("&Batch Converter..."), self.main_window)
         self.main_window.batch_converter_action.triggered.connect(self.main_window.tool_manager.open_batch_converter)
         self.main_window.ffmpeg_tools_menu.addAction(self.main_window.batch_converter_action)
 
-        self.main_window.extractor_action = QAction(_("&Media Extractor"), self.main_window)
+        self.main_window.extractor_action = QAction(_("&Media Extractor..."), self.main_window)
         self.main_window.extractor_action.triggered.connect(self.main_window.tool_manager.open_extractor)
         self.main_window.ffmpeg_tools_menu.addAction(self.main_window.extractor_action)
 
         self.main_window.m4b_tools_menu = self.main_window.tools_menu.addMenu(_("&M4B Tools"))
 
-        self.main_window.audiobook_tools_action = QAction(_("&Audiobook Tools (Bind/Split/Slide/Labels/Cover)"), self.main_window)
+        self.main_window.audiobook_tools_action = QAction(_("&Audiobook Tools (Bind/Split/Slide/Labels/Cover)..."), self.main_window)
         self.main_window.audiobook_tools_action.triggered.connect(self.main_window.tool_manager.open_audiobook_tools)
         self.main_window.m4b_tools_menu.addAction(self.main_window.audiobook_tools_action)
 
-        self.main_window.audiobook_combiner_action = QAction(_("Audiobook Co&mbiner (Combine/Metadata Dump)"), self.main_window)
+        self.main_window.audiobook_combiner_action = QAction(_("Audiobook Co&mbiner (Combine/Metadata Dump)..."), self.main_window)
         self.main_window.audiobook_combiner_action.triggered.connect(self.main_window.tool_manager.open_audiobook_combiner)
         self.main_window.m4b_tools_menu.addAction(self.main_window.audiobook_combiner_action)
 
         self.main_window.subtitle_tools_menu = self.main_window.tools_menu.addMenu(_("&Subtitle Tools"))
-        self.main_window.subtitle_converter_action = QAction(_("Subtitle &Converter"), self.main_window)
+        self.main_window.subtitle_converter_action = QAction(_("Subtitle &Converter..."), self.main_window)
         self.main_window.subtitle_converter_action.triggered.connect(self.main_window.tool_manager.open_subtitle_converter)
         self.main_window.subtitle_tools_menu.addAction(self.main_window.subtitle_converter_action)
 
-        self.main_window.subtitle_editor_action = QAction(_("Subtitle &Editor"), self.main_window)
+        self.main_window.subtitle_editor_action = QAction(_("Subtitle &Editor..."), self.main_window)
         self.main_window.subtitle_editor_action.triggered.connect(self.main_window.tool_manager.open_subtitle_editor)
         self.main_window.subtitle_tools_menu.addAction(self.main_window.subtitle_editor_action)
 
         self.main_window.tools_menu.addSeparator()
 
-        self.main_window.tag_editor_action = QAction(_("&Tag Editor"), self.main_window)
+        self.main_window.tag_editor_action = QAction(_("&Tag Editor..."), self.main_window)
         self.main_window.tag_editor_action.triggered.connect(self.main_window.tool_manager.open_tag_editor)
         self.main_window.tools_menu.addAction(self.main_window.tag_editor_action)
 
-        self.main_window.thumbnail_generator_action = QAction(_("&Thumbnail Generator"), self.main_window)
+        self.main_window.thumbnail_generator_action = QAction(_("&Thumbnail Generator..."), self.main_window)
         self.main_window.thumbnail_generator_action.triggered.connect(self.main_window.tool_manager.open_thumbnail_generator)
         self.main_window.tools_menu.addAction(self.main_window.thumbnail_generator_action)
 
-        self.main_window.speech_converter_action = QAction(_("&Speech Converter"), self.main_window)
+        self.main_window.speech_converter_action = QAction(_("&Speech Converter..."), self.main_window)
         self.main_window.speech_converter_action.triggered.connect(self.main_window.tool_manager.open_speech_converter)
         self.main_window.tools_menu.addAction(self.main_window.speech_converter_action)
 
-        self.main_window.multi_device_capture_action = QAction(_("Multi &Device Capture"), self.main_window)
+        self.main_window.multi_device_capture_action = QAction(_("Multi &Device Capture..."), self.main_window)
         self.main_window.multi_device_capture_action.triggered.connect(self.main_window.tool_manager.open_multi_device_capture)
         self.main_window.tools_menu.addAction(self.main_window.multi_device_capture_action)
 
         self.main_window.tools_menu.addSeparator()
 
         self.main_window.debug_menu = self.main_window.tools_menu.addMenu(_("&Debug"))
-        self.main_window.view_logs_action = QAction(_("&View Logs…"), self.main_window)
+        self.main_window.view_logs_action = QAction(_("&View Logs..."), self.main_window)
         self.main_window.view_logs_action.triggered.connect(self.main_window.open_logs_viewer)
         self.main_window.debug_menu.addAction(self.main_window.view_logs_action)
 
@@ -347,7 +347,7 @@ class MenuManager:
 
         self.main_window.downloads_menu.addSeparator()
 
-        self.main_window.download_center_action = QAction(_("&Download Center"), self.main_window)
+        self.main_window.download_center_action = QAction(_("&Download Center..."), self.main_window)
         self.main_window.download_center_action.triggered.connect(self.main_window.open_downloader)
         self.main_window.downloads_menu.addAction(self.main_window.download_center_action)
 
@@ -356,7 +356,7 @@ class MenuManager:
         self.main_window.downloads_menu.addAction(self.main_window.ytdlp_download_action)
         
     def setup_options_menu(self):
-        self.main_window.preferences_action = QAction(_("&Manage Preferences"), self.main_window)
+        self.main_window.preferences_action = QAction(_("&Manage Preferences..."), self.main_window)
         self.main_window.preferences_action.triggered.connect(self.main_window.open_preferences)
         self.main_window.options_menu.addAction(self.main_window.preferences_action)
 
@@ -364,7 +364,7 @@ class MenuManager:
         self.main_window.manage_database_action.triggered.connect(self.main_window.open_manage_database)
         self.main_window.options_menu.addAction(self.main_window.manage_database_action)
 
-        self.main_window.hotkeys_action = QAction(_("&Manage Hotkeys"), self.main_window)
+        self.main_window.hotkeys_action = QAction(_("&Manage Hotkeys..."), self.main_window)
         self.main_window.hotkeys_action.triggered.connect(self.main_window.open_hotkeys)
         self.main_window.options_menu.addAction(self.main_window.hotkeys_action)
 
