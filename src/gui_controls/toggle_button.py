@@ -82,7 +82,7 @@ class ToggleButton(QPushButton):
     def setupStyle(self):
         palette = get_theme_palette()
         self.base_style = f"""
-            QPushButton {
+            QPushButton {{
                 background-color: transparent;
                 border: 2px solid {palette.COLOR_ACCENT_3};
                 border-radius: 8px;
@@ -90,20 +90,20 @@ class ToggleButton(QPushButton):
                 font-weight: bold;
                 color: {palette.COLOR_TEXT_1};
                 text-align: center;
-            }
+            }}
             
-            QPushButton:hover {
+            QPushButton:hover {{
                 border-color: {palette.COLOR_ACCENT_4};
                 background-color: {palette.COLOR_ACCENT_1};
-            }
+            }}
             
-            QPushButton:pressed {
+            QPushButton:pressed {{
                 background-color: {palette.COLOR_ACCENT_2};
-            }
+            }}
         """
         
         self.activated_style = f"""
-            QPushButton {
+            QPushButton {{
                 background-color: {palette.COLOR_ACCENT_3};
                 border: 2px solid {palette.COLOR_ACCENT_4};
                 border-radius: 8px;
@@ -111,16 +111,16 @@ class ToggleButton(QPushButton):
                 font-weight: bold;
                 color: {palette.COLOR_TEXT_1};
                 text-align: center;
-            }
+            }}
             
-            QPushButton:hover {
+            QPushButton:hover {{
                 background-color: {palette.COLOR_ACCENT_4};
                 border-color: {palette.COLOR_ACCENT_5};
-            }
+            }}
             
-            QPushButton:pressed {
+            QPushButton:pressed {{
                 background-color: {palette.COLOR_ACCENT_2};
-            }
+            }}
         """
 
     def apply_theme_styles(self):
