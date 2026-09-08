@@ -44,13 +44,13 @@ class ToolDialog(QDialog):
         title_bar.addStretch()
 
         hide_btn = QPushButton(_("Hide"))
-        hide_btn.setFixedSize(60, 25)
+        hide_btn.setMinimumWidth(60)
 
         hide_btn.clicked.connect(self.hide_and_unlock)
         title_bar.addWidget(hide_btn)
 
         close_btn = QPushButton(_("Close"))
-        close_btn.setFixedSize(60, 25)
+        close_btn.setMinimumWidth(60)
         close_btn.clicked.connect(self.close_dialog)
         title_bar.addWidget(close_btn)
 

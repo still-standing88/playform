@@ -40,13 +40,13 @@ class DownloaderDialog(QDialog):
         title_bar.addStretch()
 
         minimize_btn = QPushButton(_("Minimize"))
-        minimize_btn.setFixedSize(75, 25)
+        minimize_btn.setMinimumWidth(75)
         minimize_btn.setToolTip(_("Hide to status bar"))
         minimize_btn.clicked.connect(self._on_minimize)
         title_bar.addWidget(minimize_btn)
 
         close_btn = QPushButton(_("Close"))
-        close_btn.setFixedSize(60, 25)
+        close_btn.setMinimumWidth(60)
         close_btn.clicked.connect(self._on_close_requested)
         title_bar.addWidget(close_btn)
 
