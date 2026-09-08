@@ -14,8 +14,8 @@ def main():
     # from a compiled/frozen binary as from `python app.py --debug` -- no
     # environment setup needed to get a richer crash dump when one's
     # actually being chased down. Stripped out before cli_args is used
-    # elsewhere (initialize_app_guard/create_main_window treat argv[1] as a
-    # file path to open).
+    # elsewhere (initialize_app_guard/create_main_window treat remaining
+    # arguments as paths or URLs to open).
     debug_mode = "--debug" in cli_args
     if debug_mode:
         cli_args = [a for a in cli_args if a != "--debug"]
@@ -62,7 +62,7 @@ def main():
             sys.exit(0)
         app_db, key_config = initialize_modules(splash)
         window = create_main_window(splash, cli_args)
-        start_local_server(window)
+        window.local_ipc_server = start_local_server(window)
         setup_ipc_handlers(app_instance, window)
         key_config.initialize(window.global_hotkeys)
         key_config.apply_global_hotkeys()

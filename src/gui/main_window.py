@@ -86,7 +86,7 @@ class MainWindow(QMainWindow):
         self.current_player_instance = None
         self.is_player_ready = False
         self._player_warmup_started = False
-        self._pending_external_path = None
+        self._pending_external_paths = []
         self._pending_player_actions = []
         self._dialog_open = False
         self.tool_dialogs = {}
@@ -1095,7 +1095,7 @@ class MainWindow(QMainWindow):
 
     def load_external_path(self, path: str):
         if not self.is_player_ready:
-            self._pending_external_path = path
+            self._pending_external_paths.append(path)
             return
         import media_core.av_play as av_play
         if av_play.is_url(path):
@@ -1108,11 +1108,10 @@ class MainWindow(QMainWindow):
             _announce_playback(_("Unrecognized path: {path}").format(path=path))
 
     def _replay_pending_external_path(self):
-        path = self._pending_external_path
-        if path is None:
-            return
-        self._pending_external_path = None
-        self.load_external_path(path)
+        paths = self._pending_external_paths
+        self._pending_external_paths = []
+        for path in paths:
+            self.load_external_path(path)
 
     def _run_when_player_ready(self, callback):
         if self.is_player_ready:

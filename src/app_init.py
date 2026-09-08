@@ -35,7 +35,7 @@ def _send_via_local_socket(path: str) -> bool:
     socket.connectToServer(LOCAL_SERVER_NAME)
     if not socket.waitForConnected(3000):
         return False
-    socket.write(path.encode("utf-8"))
+    socket.write(f"{path}\n".encode("utf-8"))
     if not socket.waitForBytesWritten(3000):
         socket.disconnectFromServer()
         return False
@@ -88,8 +88,10 @@ def initialize_app_guard(cli_args):
     app_instance.init("PlayForm", lambda: None, False)
 
     if not app_instance.is_primary_instance():
-        if cli_args and len(cli_args) > 1:
-            path = _clean_path_arg(cli_args[1])
+        for raw_arg in cli_args[1:]:
+            path = _clean_path_arg(raw_arg)
+            if not path:
+                continue
             _log(f"[PlayForm IPC] Secondary sending: {path}\n")
             if not _send_via_local_socket(path):
                 app_instance.send_msg_request("cli-args", path)
@@ -130,9 +132,10 @@ def create_main_window(splash, cli_args):
     from gui.main_window import MainWindow
     window = MainWindow()
 
-    if len(cli_args) > 1:
-        path = _clean_path_arg(cli_args[1])
-        QTimer.singleShot(100, lambda: window.load_external_path(path))
+    for raw_arg in cli_args[1:]:
+        path = _clean_path_arg(raw_arg)
+        if path:
+            window.load_external_path(path)
 
     from update_checker import UpdateChecker
     UpdateChecker.instance(parent=window)
@@ -161,10 +164,15 @@ def _read_client(client, window):
     data = client.readAll()
     if not data:
         return
-    path = data.data().decode("utf-8").strip()
-    _log(f"[PlayForm IPC] Primary local: received '{path}'\n")
+    paths = [
+        path.strip()
+        for path in data.data().decode("utf-8").splitlines()
+        if path.strip()
+    ]
     client.disconnectFromServer()
-    QTimer.singleShot(0, lambda p=path: window.load_external_path(p))
+    for path in paths:
+        _log(f"[PlayForm IPC] Primary local: received '{path}'\n")
+        QTimer.singleShot(0, lambda p=path: window.load_external_path(p))
 
 
 def setup_ipc_handlers(app_instance, window):
