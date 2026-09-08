@@ -14,6 +14,7 @@ from datetime import datetime
 from time import mktime
 
 from utilities.functions import get_app_path
+from app_constance.styles import border_color
 from media_core.podcasts.feed_manager import FeedManager
 from media_providers.podcasts.entry_detail_dialog import EntryDetailDialog
 from media_providers.podcasts.feed_job import FeedJob
@@ -621,10 +622,10 @@ class FeedWidget(QWidget):
     def display_entry_detail(self, entry):
         palette = self.detail_text.palette()
         heading_color = palette.text().color().name()
-        rule_color = palette.mid().color().name()
+        rule_color = border_color()
 
         html_parts = []
-        html_parts.append("<div style='font-family: Arial, sans-serif; padding: 10px; line-height: 1.6;'>")
+        html_parts.append("<div style='padding: 10px; line-height: 1.6;'>")
 
         for field in self.LONG_TEXT_FIELDS:
             val = self.get_entry_value(entry, field)

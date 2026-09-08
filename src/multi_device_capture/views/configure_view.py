@@ -19,7 +19,7 @@ import copy
 from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QBrush
 from PySide6.QtWidgets import (
     QDialog,
     QGroupBox,
@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
 )
 
 from media_core.av_capture.capabilities import CaptureCapabilities
+from app_constance.styles import error_color
 
 from ..device_status import DeviceStatusChecker
 from ..dialogs import SessionDialog, SourceWizard
@@ -42,9 +43,6 @@ from ..registries import SessionRegistry, SourceRegistry
 from ..settings import MultiDeviceCaptureSettings
 
 _ROLE_ID = Qt.ItemDataRole.UserRole
-_DISCONNECTED_COLOR = QColor(200, 90, 70)
-
-
 class ConfigureView(QWidget):
     start_capture_requested = Signal(object, list)  # Session, list[CaptureSource]
     settings_requested = Signal()
@@ -415,7 +413,7 @@ class ConfigureView(QWidget):
                 item.setForeground(self.source_list.palette().text())
             else:
                 item.setText(f"{base_text}  -  {_('device not found')}")
-                item.setForeground(_DISCONNECTED_COLOR)
+                item.setForeground(QBrush(error_color()))
 
     # -- transport handoff --------------------------------------------
 

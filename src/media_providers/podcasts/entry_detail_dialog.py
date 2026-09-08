@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 
 import html
+from app_constance.styles import border_color, secondary_text_color
 
 
 class EntryDetailDialog(QDialog):
@@ -62,11 +63,11 @@ class EntryDetailDialog(QDialog):
         palette = self.browser.palette()
         heading_color = palette.text().color().name()
         value_color = palette.windowText().color().name()
-        muted_color = palette.placeholderText().color().name()
-        rule_color = palette.mid().color().name()
+        muted_color = secondary_text_color()
+        rule_color = border_color()
 
         html_parts = []
-        html_parts.append("<div style='font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;'>")
+        html_parts.append("<div style='padding: 20px; line-height: 1.6;'>")
         html_parts.append(
             f"<h2 style='color: {heading_color}; border-bottom: 2px solid {rule_color};'>"
             f"{html.escape(_('Full Entry Data'))}</h2>"

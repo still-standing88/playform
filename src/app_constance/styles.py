@@ -29,6 +29,14 @@ def error_label_style() -> str:
     return f"QLabel {{ color: {error_color()}; }}"
 
 
+def secondary_text_color(theme_name: str | None = None) -> str:
+    return theme_color("COLOR_TEXT_3", theme_name)
+
+
+def border_color(theme_name: str | None = None) -> str:
+    return theme_color("COLOR_BACKGROUND_4", theme_name)
+
+
 def secondary_label_style(font_size: int | None = None, italic: bool = False) -> str:
     palette = get_theme_palette()
     declarations = [f"color: {palette.COLOR_TEXT_3}"]
