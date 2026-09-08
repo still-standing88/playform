@@ -3,6 +3,11 @@ QVBoxLayout, QHBoxLayout, QSizePolicy, QFrame, QSpacerItem
 , QListView, QAbstractItemView)
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QFont
+from app_constance.styles import (
+    get_theme_palette,
+    legacy_list_header_style,
+    legacy_list_item_style,
+)
 
 
 class HeaderWidget(QWidget):
@@ -18,16 +23,14 @@ class HeaderWidget(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.setFixedHeight(50)
         
-        self.setStyleSheet("""
-            background-color: #3498db;
-            color: #fff;
-            font-weight: bold;
-            border-bottom: 2px solid #2980b9;
-        """)
-        self.headerStyle = """
-            color: #fff;
-            font-weight: bold;
-        """
+        self.apply_theme_styles()
+
+    def apply_theme_styles(self):
+        palette = get_theme_palette()
+        self.setStyleSheet(legacy_list_header_style())
+        self.headerStyle = f"color: {palette.COLOR_TEXT_1}; font-weight: bold;"
+        for label in self.labels.values():
+            label.setStyleSheet(self.headerStyle)
 
     def sizeHint(self):
         return self._layout.sizeHint()
@@ -76,17 +79,14 @@ class ItemWidget(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.setMinimumHeight(50)
 
-        self.setStyleSheet("""
-            background-color: #ecf0f1;
-            border-left: 1px solid lightgray;
-            border-right: 1px solid lightgray;
-            border-top: 1px solid lightgray;
-            border-bottom: 1px solid #bdc3c7;
-        """)
-        self.columnStyle = """
-            color: #333;
-            font-weight: bold;
-        """
+        self.apply_theme_styles()
+
+    def apply_theme_styles(self):
+        palette = get_theme_palette()
+        self.setStyleSheet(legacy_list_item_style())
+        self.columnStyle = f"color: {palette.COLOR_TEXT_1}; font-weight: bold;"
+        for label in self.labels.values():
+            label.setStyleSheet(self.columnStyle)
 
     def sizeHint(self):
         return self._layout.sizeHint()
