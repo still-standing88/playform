@@ -1,266 +1,248 @@
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtGui import QColor
+from qdarkstyle.dark.palette import DarkPalette
+from qdarkstyle.light.palette import LightPalette
 
-COLORS = {
-    'background_dark': QColor("#1e1e1e"),
-    'progress_blue': QColor("#4e9cff"),
-    'progress_blue_alpha': QColor("#4e9cff80"),
-    'progress_orange_alpha': QColor("#ff9f4080"),
-    'marker_yellow_alpha': QColor("#ffff0080"),
-    'white': QColor("#ffffff"),
-    'white_alpha': QColor("#ffffff80"),
-    'black': QColor(0, 0, 0),
-    'red': QColor("red"),
-    'orange': QColor("orange"),
-    'lightgray': QColor("lightgray"),
-    'video_bg': QColor("#2c3e50"),
-    'video_border': QColor("#34495e"),
-    'loading_bg_alpha': QColor("rgba(0, 0, 0, 180)"),
-    'subtitle_bg': QColor("#f8f9fa"),
-    'subtitle_border': QColor("#dee2e6"),
-    'subtitle_item_border': QColor("#e9ecef"),
-    'subtitle_selected': QColor("#007bff"),
-    'button_primary': "#3498db",
-    'button_hover': "#2980b9",
-    'button_pressed': "#21618c",
-    'button_disabled': "#bdc3c7",
-    'button_repeat_active': "#e74c3c",
-    'player_bg': "#ecf0f1",
-    'player_border': "#bdc3c7",
-    'slider_groove_border': "#bbb",
-    'slider_sub_page_border': "#777",
-}
 
-APP_PALETTE_COLORS = {
-    'window': QColor(30, 30, 30),
-    'window_text': QColor(255, 255, 255),
-    'base': QColor(42, 42, 42),
-    'alternate_base': QColor(66, 66, 66),
-    'tooltip_base': QColor(50, 50, 50),
-    'tooltip_text': QColor(220, 220, 220),
-    'text': QColor(255, 255, 255),
-    'button': QColor(80, 80, 80),
-    'button_text': QColor(255, 255, 255),
-    'disabled_text': QColor(120, 120, 120),
-    'link': QColor(42, 130, 218),
-    'highlight': QColor(42, 130, 218),
-    'highlighted_text': QColor(0, 0, 0),
-}
+def get_theme_palette(theme_name: str | None = None):
+    if theme_name is None:
+        from utilities.theme_manager import get_current_theme
+        theme_name = get_current_theme()
+    return LightPalette if theme_name == "light" else DarkPalette
+
+
+def theme_color(name: str, theme_name: str | None = None) -> str:
+    return getattr(get_theme_palette(theme_name), name)
+
+
+def theme_qcolor(name: str, alpha: int | None = None, theme_name: str | None = None) -> QColor:
+    color = QColor(theme_color(name, theme_name))
+    if alpha is not None:
+        color.setAlpha(alpha)
+    return color
+
+
+def button_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QPushButton {{
+            background-color: {palette.COLOR_ACCENT_3};
+            border: 1px solid {palette.COLOR_ACCENT_4};
+            border-radius: 18px;
+            color: {palette.COLOR_TEXT_1};
+            font-weight: bold;
+        }}
+        QPushButton:hover {{ background-color: {palette.COLOR_ACCENT_4}; }}
+        QPushButton:pressed {{ background-color: {palette.COLOR_ACCENT_2}; }}
+        QPushButton:disabled {{
+            background-color: {palette.COLOR_BACKGROUND_3};
+            border-color: {palette.COLOR_BACKGROUND_4};
+            color: {palette.COLOR_DISABLED};
+        }}
+    """
+
+
+def toolbutton_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QToolButton {{
+            background-color: transparent;
+            border: 2px solid transparent;
+            color: {palette.COLOR_TEXT_1};
+            font-weight: bold;
+            padding: 2px;
+        }}
+        QToolButton:hover {{
+            background-color: {palette.COLOR_ACCENT_1};
+            border-radius: {palette.SIZE_BORDER_RADIUS};
+        }}
+        QToolButton:focus {{
+            background-color: {palette.COLOR_ACCENT_1};
+            border: 2px solid {palette.COLOR_ACCENT_4};
+            border-radius: {palette.SIZE_BORDER_RADIUS};
+        }}
+        QToolButton:pressed {{ background-color: {palette.COLOR_ACCENT_2}; }}
+        QToolButton:disabled {{ color: {palette.COLOR_DISABLED}; }}
+    """
+
+
+def slider_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QSlider::groove:horizontal {{
+            border: 1px solid {palette.COLOR_BACKGROUND_4};
+            background: {palette.COLOR_BACKGROUND_2};
+            height: 8px;
+            border-radius: 4px;
+        }}
+        QSlider::sub-page:horizontal {{
+            background: {palette.COLOR_ACCENT_3};
+            border: 1px solid {palette.COLOR_ACCENT_4};
+            height: 8px;
+            border-radius: 4px;
+        }}
+        QSlider::add-page:horizontal {{
+            background: {palette.COLOR_BACKGROUND_2};
+            border: 1px solid {palette.COLOR_BACKGROUND_4};
+            height: 8px;
+            border-radius: 4px;
+        }}
+        QSlider::handle:horizontal {{
+            background: {palette.COLOR_ACCENT_4};
+            border: 2px solid {palette.COLOR_ACCENT_3};
+            width: 18px;
+            margin: -2px 0;
+            border-radius: 9px;
+        }}
+        QSlider::handle:horizontal:hover {{ background: {palette.COLOR_ACCENT_5}; }}
+    """
+
+
+def controls_separator_style() -> str:
+    palette = get_theme_palette()
+    return f"QFrame {{ background-color: {palette.COLOR_BACKGROUND_5}; border: none; }}"
+
 
 PLAYER_CONTROLS_STYLE = "background-color: transparent;"
-
-CONTROLS_SEPARATOR_STYLE = "QFrame { background-color: rgba(255, 255, 255, 0.25); border: none; }"
-
-BUTTON_STYLE = f"""
-    QPushButton {{
-        background-color: {COLORS['button_primary']}; border: none; border-radius: 20px;
-        color: white; font-size: 16px; font-weight: bold;
-    }}
-    QPushButton:hover {{ background-color: {COLORS['button_hover']}; }}
-    QPushButton:pressed {{ background-color: {COLORS['button_pressed']}; }}
-    QPushButton:disabled {{ background-color: {COLORS['button_disabled']}; }}
-"""
-
-TOOLBUTTON_STYLE = """
-    QToolButton {
-        background-color: transparent;
-        border: 2px solid transparent;
-        color: white;
-        font-size: 14px;
-        font-weight: bold;
-        padding: 2px;
-    }
-    QToolButton:hover {
-        background-color: rgba(255, 165, 0, 0.3);
-        border-radius: 4px;
-    }
-    QToolButton:focus {
-        background-color: rgba(255, 165, 0, 0.2);
-        border: 2px solid rgba(255, 165, 0, 0.9);
-        border-radius: 4px;
-    }
-    QToolButton:pressed {
-        background-color: rgba(255, 165, 0, 0.5);
-    }
-    QToolButton:disabled {
-        color: rgba(255, 255, 255, 0.3);
-    }
-"""
-
-SLIDER_STYLE = f"""
-    QSlider::groove:horizontal {{ border: 1px solid {COLORS['slider_groove_border']}; background: white; height: 8px; border-radius: 4px; }}
-    QSlider::sub-page:horizontal {{ background: {COLORS['button_primary']}; border: 1px solid {COLORS['slider_sub_page_border']}; height: 8px; border-radius: 4px; }}
-    QSlider::add-page:horizontal {{ background: #fff; border: 1px solid {COLORS['slider_sub_page_border']}; height: 8px; border-radius: 4px; }}
-    QSlider::handle:horizontal {{ background: {COLORS['button_primary']}; border: 2px solid {COLORS['slider_sub_page_border']}; width: 18px; margin: -2px 0; border-radius: 9px; }}
-    QSlider::handle:horizontal:hover {{ background: {COLORS['button_hover']}; }}
-"""
-
-# No explicit color - these sit on the themed player background, so the
-# active QDarkStyle palette's text color has to win.
 TIME_LABEL_STYLE = "QLabel { font-weight: bold; }"
+TRACK_LABEL_STYLE = ""
+TITLE_LABEL_STYLE = "font-weight: bold;"
 
-TRACK_LABEL_STYLE = "QLabel { font-size: 14px; }"
 
-VIDEO_PLACEHOLDER_STYLE = f"""
-    QLabel {{
-        background-color: {COLORS['video_bg']};
-        color: white;
-        font-size: 24px;
-        font-weight: bold;
-        border: 2px dashed {COLORS['video_border']};
-    }}
-"""
+def video_placeholder_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QLabel {{
+            background-color: {palette.COLOR_BACKGROUND_2};
+            color: {palette.COLOR_TEXT_1};
+            font-weight: bold;
+            border: 2px dashed {palette.COLOR_BACKGROUND_5};
+        }}
+    """
+
 
 VIDEO_LOADING_STYLE = """
     QLabel {
         background-color: rgba(0, 0, 0, 180);
         color: white;
-        font-size: 18px;
         font-weight: bold;
         border-radius: 10px;
         padding: 20px;
     }
 """
 
-SUBTITLES_LIST_STYLE = f"""
-    QListWidget {{
-        background-color: {COLORS['subtitle_bg']};
-        border: 1px solid {COLORS['subtitle_border']};
-        border-radius: 4px;
-        padding: 5px;
-    }}
-    QListWidget::item {{
-        padding: 5px;
-        border-bottom: 1px solid {COLORS['subtitle_item_border']};
-    }}
-    QListWidget::item:selected {{
-        background-color: {COLORS['subtitle_selected']};
-        color: white;
-    }}
-"""
 
-PLAYER_WIDGET_STYLE = f"""
-    PlayerWidget {{ background-color: {COLORS['player_bg']}; border: 1px solid {COLORS['player_border']}; border-radius: 8px; }}
-"""
+def subtitles_list_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QListWidget {{
+            background-color: {palette.COLOR_BACKGROUND_1};
+            color: {palette.COLOR_TEXT_1};
+            border: 1px solid {palette.COLOR_BACKGROUND_4};
+            border-radius: {palette.SIZE_BORDER_RADIUS};
+            padding: 5px;
+        }}
+        QListWidget::item {{
+            padding: 5px;
+            border-bottom: 1px solid {palette.COLOR_BACKGROUND_3};
+        }}
+        QListWidget::item:selected {{
+            background-color: {palette.COLOR_ACCENT_2};
+            color: {palette.COLOR_TEXT_1};
+        }}
+    """
 
-TITLE_LABEL_STYLE = "font-weight: bold; font-size: 14px;"
 
-SECTION_LABEL_STYLE = "font-weight: bold; font-size: 14px;"
+def player_widget_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        PlayerWidget {{
+            background-color: {palette.COLOR_BACKGROUND_1};
+            border: 1px solid {palette.COLOR_BACKGROUND_4};
+            border-radius: 8px;
+        }}
+    """
 
-def get_repeat_button_active_style(base_style):
-    return base_style + f"QPushButton {{ background-color: {COLORS['button_repeat_active']}; }}"
 
-RADIO_GROUP_BOX_STYLE = """
-    QGroupBox {
-        font-weight: bold;
-        border: 2px solid #555;
-        border-radius: 5px;
-        margin-top: 10px;
-        padding-top: 10px;
-    }
-    QGroupBox::title {
-        subcontrol-origin: margin;
-        left: 10px;
-        padding: 0 5px;
-    }
-"""
+def get_repeat_button_active_style(base_style: str) -> str:
+    palette = get_theme_palette()
+    return base_style + f"QToolButton {{ background-color: {palette.COLOR_ACCENT_3}; }}"
 
-RADIO_TREE_STYLE = """
-    QTreeWidget {
-        alternate-row-colors: true;
-        selection-background-color: #2980b9;
-    }
-    QTreeWidget::item {
-        padding: 5px;
-    }
-    QTreeWidget::item:hover {
-        background-color: #34495e;
-    }
-"""
 
-RADIO_COMBO_STYLE = """
-    QComboBox {
-        padding: 5px;
-        border: 1px solid #555;
-        border-radius: 3px;
-    }
-    QComboBox::drop-down {
-        border: none;
-    }
-    QComboBox::down-arrow {
-        image: none;
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        border-top: 6px solid #aaa;
-        margin-right: 5px;
-    }
-"""
+def radio_group_box_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QGroupBox {{
+            font-weight: bold;
+            border: 1px solid {palette.COLOR_BACKGROUND_4};
+            border-radius: {palette.SIZE_BORDER_RADIUS};
+            margin-top: 10px;
+            padding-top: 10px;
+        }}
+        QGroupBox::title {{
+            subcontrol-origin: margin;
+            left: 10px;
+            padding: 0 5px;
+        }}
+    """
 
-RADIO_LINE_EDIT_STYLE = """
-    QLineEdit {
-        padding: 5px;
-        border: 1px solid #555;
-        border-radius: 3px;
-        background-color: #2a2a2a;
-    }
-    QLineEdit:focus {
-        border: 1px solid #2980b9;
-    }
-"""
 
-RADIO_BUTTON_STYLE = """
-    QPushButton {
-        background-color: #3498db;
-        border: none;
-        border-radius: 4px;
-        color: white;
-        padding: 6px 12px;
-        font-weight: bold;
-    }
-    QPushButton:hover {
-        background-color: #2980b9;
-    }
-    QPushButton:pressed {
-        background-color: #21618c;
-    }
-    QPushButton:disabled {
-        background-color: #7f8c8d;
-        color: #bdc3c7;
-    }
-"""
+def radio_tree_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QTreeWidget {{ alternate-row-colors: true; }}
+        QTreeWidget::item {{ padding: 5px; }}
+        QTreeWidget::item:selected {{
+            background-color: {palette.COLOR_ACCENT_2};
+            color: {palette.COLOR_TEXT_1};
+        }}
+        QTreeWidget::item:hover {{ background-color: {palette.COLOR_BACKGROUND_3}; }}
+    """
 
-def get_dark_palette():
-    dark_palette = QPalette()
-    dark_palette.setColor(QPalette.ColorRole.Window, APP_PALETTE_COLORS['window'])
-    dark_palette.setColor(QPalette.ColorRole.WindowText, APP_PALETTE_COLORS['window_text'])
-    dark_palette.setColor(QPalette.ColorRole.Base, APP_PALETTE_COLORS['base'])
-    dark_palette.setColor(QPalette.ColorRole.AlternateBase, APP_PALETTE_COLORS['alternate_base'])
-    dark_palette.setColor(QPalette.ColorRole.ToolTipBase, APP_PALETTE_COLORS['tooltip_base'])
-    dark_palette.setColor(QPalette.ColorRole.ToolTipText, APP_PALETTE_COLORS['tooltip_text'])
-    dark_palette.setColor(QPalette.ColorRole.Text, APP_PALETTE_COLORS['text'])
-    dark_palette.setColor(QPalette.ColorRole.Button, APP_PALETTE_COLORS['button'])
-    dark_palette.setColor(QPalette.ColorRole.ButtonText, APP_PALETTE_COLORS['button_text'])
-    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, APP_PALETTE_COLORS['disabled_text'])
-    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, APP_PALETTE_COLORS['disabled_text'])
-    dark_palette.setColor(QPalette.ColorRole.Link, APP_PALETTE_COLORS['link'])
-    dark_palette.setColor(QPalette.ColorRole.Highlight, APP_PALETTE_COLORS['highlight'])
-    dark_palette.setColor(QPalette.ColorRole.HighlightedText, APP_PALETTE_COLORS['highlighted_text'])
-    return dark_palette
 
-def get_light_palette():
-    light_palette = QPalette()
-    light_palette.setColor(QPalette.ColorRole.Window, QColor(240, 240, 240))
-    light_palette.setColor(QPalette.ColorRole.WindowText, QColor(0, 0, 0))
-    light_palette.setColor(QPalette.ColorRole.Base, QColor(255, 255, 255))
-    light_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(245, 245, 245))
-    light_palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 220))
-    light_palette.setColor(QPalette.ColorRole.ToolTipText, QColor(0, 0, 0))
-    light_palette.setColor(QPalette.ColorRole.Text, QColor(0, 0, 0))
-    light_palette.setColor(QPalette.ColorRole.Button, QColor(240, 240, 240))
-    light_palette.setColor(QPalette.ColorRole.ButtonText, QColor(0, 0, 0))
-    light_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, QColor(120, 120, 120))
-    light_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, QColor(120, 120, 120))
-    light_palette.setColor(QPalette.ColorRole.Link, QColor(0, 0, 255))
-    light_palette.setColor(QPalette.ColorRole.Highlight, QColor(0, 120, 215))
-    light_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
-    return light_palette
+def radio_combo_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QComboBox {{
+            padding: 5px;
+            border: 1px solid {palette.COLOR_BACKGROUND_4};
+            border-radius: 3px;
+        }}
+        QComboBox:focus {{ border-color: {palette.COLOR_ACCENT_4}; }}
+        QComboBox::drop-down {{ border: none; }}
+    """
+
+
+def radio_line_edit_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QLineEdit {{
+            padding: 5px;
+            border: 1px solid {palette.COLOR_BACKGROUND_4};
+            border-radius: 3px;
+            background-color: {palette.COLOR_BACKGROUND_1};
+            color: {palette.COLOR_TEXT_1};
+        }}
+        QLineEdit:focus {{ border-color: {palette.COLOR_ACCENT_4}; }}
+    """
+
+
+def radio_button_style() -> str:
+    palette = get_theme_palette()
+    return f"""
+        QPushButton {{
+            background-color: {palette.COLOR_ACCENT_3};
+            border: 1px solid {palette.COLOR_ACCENT_4};
+            border-radius: {palette.SIZE_BORDER_RADIUS};
+            color: {palette.COLOR_TEXT_1};
+            padding: 6px 12px;
+            font-weight: bold;
+        }}
+        QPushButton:hover {{ background-color: {palette.COLOR_ACCENT_4}; }}
+        QPushButton:pressed {{ background-color: {palette.COLOR_ACCENT_2}; }}
+        QPushButton:disabled {{
+            background-color: {palette.COLOR_BACKGROUND_3};
+            border-color: {palette.COLOR_BACKGROUND_4};
+            color: {palette.COLOR_DISABLED};
+        }}
+    """
 

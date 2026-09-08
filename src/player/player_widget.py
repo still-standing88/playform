@@ -34,7 +34,7 @@ from .core.timeline_sync import TimelineSyncController
 from .core.track_metadata_loader import TrackMetadataLoader
 from .core.track_info_dialogs import TrackInfoDialogs
 from .dialogs.playback_views_dialog import PlaybackQueueDialog, PlaylistViewDialog
-from app_constance.styles import PLAYER_WIDGET_STYLE
+from app_constance.styles import player_widget_style
 
 from utilities.functions import get_app_path, get_parent_dir
 from utilities.media_utils import format_time, seconds_to_microseconds, get_media_files_from_directory
@@ -311,8 +311,10 @@ class PlayerWidget(QWidget):
         self.subtitles_widget.visibilityToggled.connect(self._track_loader.on_subtitle_visibility_toggled)
         self.subtitles_widget.seekRequested.connect(self._track_loader.on_subtitle_seek)
 
-    def apply_styles(self):
-        self.setStyleSheet(PLAYER_WIDGET_STYLE)
+    def apply_theme_styles(self):
+        self.setStyleSheet(player_widget_style())
+
+    apply_styles = apply_theme_styles
 
     @Slot(bool)
     def _on_accordion_panel_toggled(self, hidden):

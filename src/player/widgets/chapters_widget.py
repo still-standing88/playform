@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, Signal, QItemSelectionModel
 from PySide6.QtGui import QColor
 
 from gui_controls.player_key_event_filter import KeyEventFilter
-from app_constance.styles import SUBTITLES_LIST_STYLE
+from app_constance.styles import subtitles_list_style
 
 
 class ChaptersWidget(QWidget):
@@ -27,9 +27,12 @@ class ChaptersWidget(QWidget):
         self.chapters_list.setAccessibleDescription(_("Chapters for the current media"))
         self.chapters_list.setAlternatingRowColors(True)
         self.chapters_list.setMaximumHeight(150)
-        self.chapters_list.setStyleSheet(SUBTITLES_LIST_STYLE)
+        self.chapters_list.setStyleSheet(subtitles_list_style())
 
         layout.addWidget(self.chapters_list)
+
+    def apply_theme_styles(self):
+        self.chapters_list.setStyleSheet(subtitles_list_style())
 
     def connect_signals(self):
         self.chapters_list.itemClicked.connect(self._on_item_activated)

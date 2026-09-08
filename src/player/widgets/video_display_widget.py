@@ -2,7 +2,7 @@ from typing import Callable, Optional
 from PySide6.QtWidgets import QWidget, QLayout, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy
 from PySide6.QtGui import QCloseEvent, QPalette, QColor
 from PySide6.QtCore import Qt
-from app_constance.styles import COLORS, VIDEO_PLACEHOLDER_STYLE, VIDEO_LOADING_STYLE
+from app_constance.styles import video_placeholder_style, VIDEO_LOADING_STYLE
 
 LayoutType = QVBoxLayout | QHBoxLayout 
 
@@ -26,7 +26,7 @@ class VideoDisplayWidget(QWidget):
         # this widget ends up with.
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.vid_palette = self.palette()
-        self.vid_palette.setColor(QPalette.ColorRole.Window, COLORS['black'])
+        self.vid_palette.setColor(QPalette.ColorRole.Window, Qt.GlobalColor.black)
         self.setPalette(self.vid_palette)
         self.setAutoFillBackground(True)
 
@@ -42,7 +42,7 @@ class VideoDisplayWidget(QWidget):
         
         self.placeholder_label = QLabel(_("Video Display Area"), self)
         self.placeholder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.placeholder_label.setStyleSheet(VIDEO_PLACEHOLDER_STYLE)
+        self.placeholder_label.setStyleSheet(video_placeholder_style())
         # This used to be 640x360 - a hardcoded floor with no documented
         # reason, dating to before the accordion needed to share this same
         # docked column. In a height-constrained dock, Qt satisfies this
@@ -63,6 +63,10 @@ class VideoDisplayWidget(QWidget):
         
         layout.addWidget(self.placeholder_label)
         layout.addWidget(self.loading_label)
+
+    def apply_theme_styles(self):
+        self.placeholder_label.setStyleSheet(video_placeholder_style())
+        self.loading_label.setStyleSheet(VIDEO_LOADING_STYLE)
 
     # Recomputed fresh on every clamp_to_screen() pass (see DockManager) -
     # never mutated cumulatively, so a bigger screen restores the full,

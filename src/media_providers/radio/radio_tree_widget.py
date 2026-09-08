@@ -2,7 +2,7 @@ from typing import List, Dict, Any, Optional
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QMenu, QMessageBox, QApplication, QHeaderView
 from PySide6.QtCore import Qt, Signal
 from media_providers.radio.radio_browser_types import Station
-from app_constance.styles import RADIO_TREE_STYLE
+from app_constance.styles import radio_tree_style
 
 
 class RadioTreeWidget(QTreeWidget):
@@ -22,7 +22,7 @@ class RadioTreeWidget(QTreeWidget):
         self.setHeaderLabels([_("Name"), _("Country"), _("Language(s)"), _("Codec"), _("Bitrate")])
         self.setAlternatingRowColors(True)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.setStyleSheet(RADIO_TREE_STYLE)
+        self.setStyleSheet(radio_tree_style())
         
         header = self.header()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
@@ -36,6 +36,9 @@ class RadioTreeWidget(QTreeWidget):
         
         self.customContextMenuRequested.connect(self._show_context_menu)
         self.itemDoubleClicked.connect(self._on_item_double_clicked)
+
+    def apply_theme_styles(self):
+        self.setStyleSheet(radio_tree_style())
 
     def display_stations(self, stations: List[Station]) -> None:
         self.clear()

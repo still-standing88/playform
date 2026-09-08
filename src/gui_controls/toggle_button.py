@@ -1,7 +1,9 @@
 import shiboken6
 from PySide6.QtWidgets import QPushButton, QGraphicsOpacityEffect, QGraphicsDropShadowEffect
 from PySide6.QtCore import Signal, QPropertyAnimation, QEasingCurve, QRect, Qt, QParallelAnimationGroup, QSize
-from PySide6.QtGui import QFont, QColor
+from PySide6.QtGui import QColor
+
+from app_constance.styles import get_theme_palette
 
 class ToggleButton(QPushButton):
     actuated = Signal(bool)
@@ -47,7 +49,7 @@ class ToggleButton(QPushButton):
         self.shadowEffect = QGraphicsDropShadowEffect()
         self.shadowEffect.setBlurRadius(8)
         self.shadowEffect.setOffset(0, 4)
-        self.shadowEffect.setColor(QColor(46, 204, 113, 76))
+        self.shadowEffect.setColor(self._shadow_color())
         self.shadowEffect.setEnabled(False)
         
         self.shadowAnimation = QPropertyAnimation(self.shadowEffect, b"blurRadius")
@@ -67,56 +69,65 @@ class ToggleButton(QPushButton):
             self.shadowEffect = QGraphicsDropShadowEffect()
             self.shadowEffect.setBlurRadius(8)
             self.shadowEffect.setOffset(0, 4)
-            self.shadowEffect.setColor(QColor(46, 204, 113, 76))
+            self.shadowEffect.setColor(self._shadow_color())
             self.shadowEffect.setEnabled(False)
             self.shadowAnimation.setTargetObject(self.shadowEffect)
 
+    @staticmethod
+    def _shadow_color():
+        color = QColor(get_theme_palette().COLOR_ACCENT_4)
+        color.setAlpha(76)
+        return color
+
     def setupStyle(self):
-        self.base_style = """
+        palette = get_theme_palette()
+        self.base_style = f"""
             QPushButton {
                 background-color: transparent;
-                border: 2px solid rgba(46, 204, 113, 0.6);
+                border: 2px solid {palette.COLOR_ACCENT_3};
                 border-radius: 8px;
                 padding: 8px 16px;
-                font-family: "Segoe UI", Roboto, sans-serif;
-                font-size: 13px;
-                font-weight: 500;
-                color: #2c3e50;
+                font-weight: bold;
+                color: {palette.COLOR_TEXT_1};
                 text-align: center;
             }
             
             QPushButton:hover {
-                border-color: rgba(46, 204, 113, 0.8);
-                background-color: rgba(46, 204, 113, 0.05);
+                border-color: {palette.COLOR_ACCENT_4};
+                background-color: {palette.COLOR_ACCENT_1};
             }
             
             QPushButton:pressed {
-                background-color: rgba(46, 204, 113, 0.1);
+                background-color: {palette.COLOR_ACCENT_2};
             }
         """
         
-        self.activated_style = """
+        self.activated_style = f"""
             QPushButton {
-                background-color: #2ecc71;
-                border: 2px solid #27ae60;
+                background-color: {palette.COLOR_ACCENT_3};
+                border: 2px solid {palette.COLOR_ACCENT_4};
                 border-radius: 8px;
                 padding: 8px 16px;
-                font-family: "Segoe UI", Roboto, sans-serif;
-                font-size: 13px;
-                font-weight: 600;
-                color: white;
+                font-weight: bold;
+                color: {palette.COLOR_TEXT_1};
                 text-align: center;
             }
             
             QPushButton:hover {
-                background-color: #27ae60;
-                border-color: #229954;
+                background-color: {palette.COLOR_ACCENT_4};
+                border-color: {palette.COLOR_ACCENT_5};
             }
             
             QPushButton:pressed {
-                background-color: #229954;
+                background-color: {palette.COLOR_ACCENT_2};
             }
         """
+
+    def apply_theme_styles(self):
+        self.setupStyle()
+        self._ensure_shadow_effect()
+        self.shadowEffect.setColor(self._shadow_color())
+        self.updateStyle()
         
     def updateStyle(self):
         if self.activated:

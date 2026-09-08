@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal
 from media_providers.radio.radio_browser_types import Order, Country, Language, Tag
 from app_constance.styles import (
-    RADIO_GROUP_BOX_STYLE, RADIO_COMBO_STYLE, 
-    RADIO_LINE_EDIT_STYLE, RADIO_BUTTON_STYLE
+    radio_group_box_style, radio_combo_style,
+    radio_line_edit_style, radio_button_style,
 )
 
 
@@ -32,7 +32,8 @@ class RadioFilterWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         
         search_group = QGroupBox(_("Search and Filter"))
-        search_group.setStyleSheet(RADIO_GROUP_BOX_STYLE)
+        self.search_group = search_group
+        search_group.setStyleSheet(radio_group_box_style())
         search_layout = QGridLayout()
         search_layout.setSpacing(8)
         
@@ -41,14 +42,14 @@ class RadioFilterWidget(QWidget):
         self.search_input.setPlaceholderText(_("Enter station name..."))
         self.search_input.setAccessibleName(_("Station name search"))
         self.search_input.setAccessibleDescription(_("Type a station name and press Enter to search"))
-        self.search_input.setStyleSheet(RADIO_LINE_EDIT_STYLE)
+        self.search_input.setStyleSheet(radio_line_edit_style())
         self.search_input.returnPressed.connect(self._on_search)
         search_layout.addWidget(self.search_input, 0, 1, 1, 2)
         
         self.search_button = QPushButton(_("Search"))
         self.search_button.setAccessibleName(_("Search button"))
         self.search_button.setAccessibleDescription(_("Click to search by station name"))
-        self.search_button.setStyleSheet(RADIO_BUTTON_STYLE)
+        self.search_button.setStyleSheet(radio_button_style())
         self.search_button.clicked.connect(self._on_search)
         search_layout.addWidget(self.search_button, 0, 3)
         
@@ -57,7 +58,7 @@ class RadioFilterWidget(QWidget):
         self.filter_combo.addItems([_("None"), _("Country"), _("Language"), _("Tag"), _("Codec")])
         self.filter_combo.setAccessibleName(_("Filter type"))
         self.filter_combo.setAccessibleDescription(_("Select how to filter stations"))
-        self.filter_combo.setStyleSheet(RADIO_COMBO_STYLE)
+        self.filter_combo.setStyleSheet(radio_combo_style())
         self.filter_combo.currentTextChanged.connect(self._on_filter_changed)
         search_layout.addWidget(self.filter_combo, 1, 1)
         
@@ -67,7 +68,7 @@ class RadioFilterWidget(QWidget):
         self.filter_value.setEnabled(False)
         self.filter_value.setAccessibleName(_("Filter value"))
         self.filter_value.setAccessibleDescription(_("Select or type a filter value"))
-        self.filter_value.setStyleSheet(RADIO_COMBO_STYLE)
+        self.filter_value.setStyleSheet(radio_combo_style())
         search_layout.addWidget(self.filter_value, 1, 3)
         
         search_layout.addWidget(QLabel(_("Sort By:")), 2, 0)
@@ -75,13 +76,13 @@ class RadioFilterWidget(QWidget):
         self.order_combo.addItems([_("Name"), _("Votes"), _("Country"), _("Language"), _("Bitrate"), _("Click Count")])
         self.order_combo.setAccessibleName(_("Sort order"))
         self.order_combo.setAccessibleDescription(_("Select how to sort results"))
-        self.order_combo.setStyleSheet(RADIO_COMBO_STYLE)
+        self.order_combo.setStyleSheet(radio_combo_style())
         search_layout.addWidget(self.order_combo, 2, 1)
         
         self.apply_filter_button = QPushButton(_("Apply Filters"))
         self.apply_filter_button.setAccessibleName(_("Apply filters button"))
         self.apply_filter_button.setAccessibleDescription(_("Click to apply selected filters"))
-        self.apply_filter_button.setStyleSheet(RADIO_BUTTON_STYLE)
+        self.apply_filter_button.setStyleSheet(radio_button_style())
         self.apply_filter_button.clicked.connect(self._on_apply_filter)
         self.apply_filter_button.setEnabled(False)
         search_layout.addWidget(self.apply_filter_button, 2, 2, 1, 2)
@@ -92,14 +93,14 @@ class RadioFilterWidget(QWidget):
         self.favorites_button = QPushButton(_("Show Favorites"))
         self.favorites_button.setAccessibleName(_("Show favorites button"))
         self.favorites_button.setAccessibleDescription(_("Click to view favorite stations"))
-        self.favorites_button.setStyleSheet(RADIO_BUTTON_STYLE)
+        self.favorites_button.setStyleSheet(radio_button_style())
         self.favorites_button.clicked.connect(self._on_show_favorites)
         button_layout.addWidget(self.favorites_button)
         
         self.clear_cache_button = QPushButton(_("Clear Cache"))
         self.clear_cache_button.setAccessibleName(_("Clear cache button"))
         self.clear_cache_button.setAccessibleDescription(_("Click to clear cached data"))
-        self.clear_cache_button.setStyleSheet(RADIO_BUTTON_STYLE)
+        self.clear_cache_button.setStyleSheet(radio_button_style())
         self.clear_cache_button.clicked.connect(self._on_clear_cache)
         button_layout.addWidget(self.clear_cache_button)
         
@@ -109,6 +110,17 @@ class RadioFilterWidget(QWidget):
         
         search_group.setLayout(search_layout)
         layout.addWidget(search_group)
+
+    def apply_theme_styles(self):
+        self.search_group.setStyleSheet(radio_group_box_style())
+        self.search_input.setStyleSheet(radio_line_edit_style())
+        combo_qss = radio_combo_style()
+        for combo in (self.filter_combo, self.filter_value, self.order_combo):
+            combo.setStyleSheet(combo_qss)
+        button_qss = radio_button_style()
+        for button in (self.search_button, self.apply_filter_button,
+                       self.favorites_button, self.clear_cache_button):
+            button.setStyleSheet(button_qss)
 
     def _on_filter_changed(self, filter_type: str):
         self.filter_value.clear()

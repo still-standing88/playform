@@ -8,7 +8,7 @@ from media_providers.radio.radio_service import RadioService
 from media_providers.radio.radio_worker import RadioWorker
 from media_providers.radio.radio_filter_widget import RadioFilterWidget
 from media_providers.radio.radio_tree_widget import RadioTreeWidget
-from app_constance.styles import RADIO_GROUP_BOX_STYLE
+from app_constance.styles import radio_group_box_style
 
 
 class RadioBrowserWidget(QWidget):
@@ -39,7 +39,8 @@ class RadioBrowserWidget(QWidget):
         layout.addWidget(self.filter_widget)
         
         results_group = QGroupBox(_("Results"))
-        results_group.setStyleSheet(RADIO_GROUP_BOX_STYLE)
+        self.results_group = results_group
+        results_group.setStyleSheet(radio_group_box_style())
         results_layout = QVBoxLayout()
         results_layout.setContentsMargins(5, 5, 5, 5)
         
@@ -51,6 +52,9 @@ class RadioBrowserWidget(QWidget):
         self.status_bar = QStatusBar()
         layout.addWidget(self.status_bar)
         self.status_bar.showMessage(_("Ready - Enter search term or select filters"))
+
+    def apply_theme_styles(self):
+        self.results_group.setStyleSheet(radio_group_box_style())
 
     def _connect_signals(self):
         self.filter_widget.search_requested.connect(self._perform_search)

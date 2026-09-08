@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt, Signal, QItemSelectionModel
 from PySide6.QtGui import QColor
 
 from gui_controls.player_key_event_filter import KeyEventFilter
-from app_constance.styles import SUBTITLES_LIST_STYLE
+from app_constance.styles import subtitles_list_style
 
 # Distinguishes "an mpv track id was chosen" from a yt-dlp language string,
 # since one combo carries both kinds of entry.
@@ -45,7 +45,7 @@ class SubtitlesWidget(QWidget):
         self.subtitles_list.setAlternatingRowColors(True)
         self.subtitles_list.setMaximumHeight(150)
 
-        self.subtitles_list.setStyleSheet(SUBTITLES_LIST_STYLE)
+        self.subtitles_list.setStyleSheet(subtitles_list_style())
 
         layout.addWidget(self.subtitles_list)
 
@@ -76,6 +76,9 @@ class SubtitlesWidget(QWidget):
             _("Controls MPV's own on-video rendering; the list above is unaffected")
         )
         layout.addWidget(self.visibility_check)
+
+    def apply_theme_styles(self):
+        self.subtitles_list.setStyleSheet(subtitles_list_style())
 
     def connect_signals(self):
         self.language_combo.currentIndexChanged.connect(self._on_selection_changed)

@@ -1,6 +1,5 @@
 import sys
 from typing import Optional
-from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QApplication
 from app_config import prefs
 
@@ -114,8 +113,12 @@ def _repolish_all_widgets(app: QApplication) -> None:
     QStyle::polish() and QStyle::unpolish().
     """
     for widget in app.allWidgets():
+        apply_theme_styles = getattr(widget, "apply_theme_styles", None)
+        if callable(apply_theme_styles):
+            apply_theme_styles()
         widget.style().unpolish(widget)
         widget.style().polish(widget)
+        widget.update()
 
 
 def get_current_theme() -> str:

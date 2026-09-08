@@ -15,9 +15,9 @@ from app_config import prefs
 from .dialogs.bookmarks_dialog import BookmarksDialog
 from .dialogs.goto_dialog import GoToDialog
 from app_constance.misc import video_resolutions, video_speeds, video_aspect_ratios, video_scales
-from app_constance.styles import (PLAYER_CONTROLS_STYLE, BUTTON_STYLE, SLIDER_STYLE,
-                                   TIME_LABEL_STYLE, TRACK_LABEL_STYLE, TOOLBUTTON_STYLE,
-                                   CONTROLS_SEPARATOR_STYLE,
+from app_constance.styles import (PLAYER_CONTROLS_STYLE, button_style, slider_style,
+                                   TIME_LABEL_STYLE, TRACK_LABEL_STYLE, toolbutton_style,
+                                   controls_separator_style,
                                    get_repeat_button_active_style)
 from utilities.functions import get_app_path
 from .core.playback_state_manager import PlaybackStateManager
@@ -332,27 +332,31 @@ class PlayerControls(QWidget):
 
         self.toggle_controls_btn.actuated.connect(self.toggle_controls)
 
-    def apply_styles(self):
+    def apply_theme_styles(self):
         self.setStyleSheet(PLAYER_CONTROLS_STYLE)
+        tool_style = toolbutton_style()
 
         # Apply QToolButton style to media control buttons
         for btn in [self.play_pause_btn, self.previous_btn, self.backward_btn,
                    self.forward_btn, self.next_btn, self.repeat_btn, self.shuffle_btn,
                    self.bookmarks_btn, self.goto_btn, self.screenshot_btn,
                    self.playlist_view_btn, self.queue_view_btn, self.mute_btn]:
-            btn.setStyleSheet(TOOLBUTTON_STYLE)
+            btn.setStyleSheet(tool_style)
 
         # Apply QPushButton style to more button
-        self.more_btn.setStyleSheet(BUTTON_STYLE)
+        self.more_btn.setStyleSheet(button_style())
 
         for separator in (self.separator1, self.separator2, self.separator3):
-            separator.setStyleSheet(CONTROLS_SEPARATOR_STYLE)
+            separator.setStyleSheet(controls_separator_style())
 
-        self.seek_slider.setStyleSheet(SLIDER_STYLE)
-        self.volume_slider.setStyleSheet(SLIDER_STYLE)
+        slider_qss = slider_style()
+        self.seek_slider.setStyleSheet(slider_qss)
+        self.volume_slider.setStyleSheet(slider_qss)
 
         self.time_label.setStyleSheet(TIME_LABEL_STYLE)
         self.current_track_label.setStyleSheet(TRACK_LABEL_STYLE)
+
+    apply_styles = apply_theme_styles
 
     def _resync_buttons_container_height(self):
         # Nested heightForWidth widgets inside a plain QVBoxLayout are a
@@ -495,7 +499,7 @@ class PlayerControls(QWidget):
     def set_repeat_state(self, is_repeat_on):
         if self.is_repeat_on == is_repeat_on: return
         self.is_repeat_on = is_repeat_on
-        base_style = BUTTON_STYLE
+        base_style = toolbutton_style()
         if is_repeat_on:
             self.repeat_btn.setStyleSheet(get_repeat_button_active_style(base_style))
         else:
@@ -519,7 +523,7 @@ class PlayerControls(QWidget):
     def set_shuffle_state(self, is_shuffle_on):
         if self.is_shuffle_on == is_shuffle_on: return
         self.is_shuffle_on = is_shuffle_on
-        base_style = BUTTON_STYLE
+        base_style = toolbutton_style()
         if is_shuffle_on:
             self.shuffle_btn.setStyleSheet(get_repeat_button_active_style(base_style))
         else:
