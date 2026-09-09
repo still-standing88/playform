@@ -1,0 +1,49 @@
+PlayForm Revision Notes
+
+Direction
+
+PlayForm has reached the point where adding another isolated tool would probably make the application worse rather than better. Playback, downloads, podcasts, radio, conversion, extraction, subtitles, tagging, audiobooks, speech, and multi-device capture are already covered.
+
+Future development should be approximately 70% refinement and integration and 30% genuinely new product layers. The main weakness is no longer missing functionality; it is that the existing capabilities can feel like separate subsystems instead of one coherent application.
+
+Best Product Layers to Add
+
+1. A real media library
+
+The metadata database already supports full-text search, ranking, categories, creators, formats, and duration filters, but Explorer exposes only a fraction of it. Add smart collections, metadata facets, saved searches, richer results, and bulk queue or playlist actions on top of the existing index.
+
+2. A visible Up Next queue
+
+The backend can already queue media, and downloads can send items to it, but users cannot properly inspect, reorder, remove, or save the current session. A first-class queue would connect Explorer, podcasts, downloads, radio, and playlists.
+
+3. A unified background-job center
+
+Downloads, conversion, cataloging, feed refreshes, and capture all manage progress separately. Create one Jobs surface with consistent pause, cancellation, history, error reporting, and completion notifications.
+
+4. A complete podcast lifecycle
+
+Add played and unplayed status, episode progress, new-episode indicators, automatic download rules, and retention cleanup. The feed and download engines already exist; what is missing is the product layer around them.
+
+5. Complete media-track handling
+
+Subtitle selection exists, but explicit audio-track selection appears to be a gap. Add track inspection and selection for multilingual films, commentary tracks, and other multi-stream media.
+
+Refinement Priorities
+
+- Establish meaningful automated coverage. There is effectively no conventional test suite protecting the application's large feature surface.
+- Audit cancellation, shutdown, retry, recovery, and threading behavior across background operations.
+- Remove remaining GUI-thread blocking, including download throttling that sleeps during network handling.
+- Improve discoverability through task-oriented onboarding or a searchable command/action palette.
+- Bring the documentation back in sync with the expanded interface.
+- Remove or relax the one-tool-window-at-a-time constraint and make tools feel like integrated workflows.
+
+Recommended Order
+
+1. Build the reliability and testing foundation.
+2. Add unified background jobs and a visible Up Next queue.
+3. Expose the existing metadata index as a complete media-library experience.
+4. Complete the podcast lifecycle and remaining playback gaps.
+
+The next major milestone should not be adding several more tools. It should be turning PlayForm from a feature-rich application into a cohesive one.
+
+If choosing exactly one additive feature, prioritize the media-library layer. If choosing the quickest high-impact improvement, prioritize Up Next.
