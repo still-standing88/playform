@@ -520,6 +520,39 @@ class MPVMediaInterface(AVMediaInterface):
             self._mpv().time_pos = offset
         self._submit(seek, wait=False)
 
+    def seek_percent(self, fraction: float):
+        """Seek to a fraction (0.0-1.0) of the current file. The duration
+        read and the time_pos write happen as one job on the mpv thread, so
+        there is no cross-thread get_length() round-trip whose 0.5s timeout
+        silently yielded 0 and turned the seek into a seek-to-start.
+        duration is None while mpv is still opening the file, so the job
+        retries on a short timer until the open completes (bounded); the
+        seek token fences both retries and races with set_position().
+        percent-pos property writes and absolute-percent seek commands are
+        silent no-ops in this libmpv build (verified empirically), which is
+        why the fraction is converted to seconds via duration instead."""
+        self._check_initialized()
+        token = object()
+        self.__seek_token = token
+        fraction = min(1.0, max(0.0, float(fraction)))
+
+        def attempt(tries):
+            def job():
+                if self.__seek_token is not token:
+                    return
+                mpv_instance = self._mpv()
+                duration = mpv_instance.duration
+                if duration:
+                    mpv_instance.time_pos = fraction * duration
+                elif tries > 0:
+                    threading.Timer(0.15, lambda: attempt(tries - 1)).start()
+            try:
+                self._submit(job, wait=False)
+            except AVError:
+                pass
+
+        attempt(6)
+
     def set_loop(self, id: int, loop: bool):
         self._check_instance(id)
         gen = self.__generation
@@ -762,6 +795,9 @@ class MPVVideoPlayer(AVPlayer):
         # See set_position()'s comment: time_pos writes are race-safe
         # right after a load in a way .seek() commands aren't.
         self.__mpv_interface.run_on_mpv(lambda m: setattr(m, 'time_pos', (m.time_pos or 0.0) + offset), wait=False)
+
+    def seek_percent(self, fraction: float):
+        self.__mpv_interface.seek_percent(fraction)
 
     def backward(self, offset):
         self.__mpv_interface.run_on_mpv(lambda m: setattr(m, 'time_pos', max(0.0, (m.time_pos or 0.0) - offset)), wait=False)

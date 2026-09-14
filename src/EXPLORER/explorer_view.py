@@ -460,7 +460,11 @@ class ExplorerView(QListWidget):
     @Slot(float)
     def on_playbar_seek(self, position: float):
         if self._instance is not None:
-            self._instance.set_position(int(position * self._instance.get_length()))
+            # seek_percent, not position * get_length(): the blocking
+            # duration read times out to 0 during mpv's open window, which
+            # sent the seek to the start of the file instead of the
+            # clicked position.
+            self._player.seek_percent(position)
 
     def _execute_callback(self, callback_name:str, param:str = "", with_param :bool = True):
         callback:Optional[Callable[[str], None]] = self._callbacks.get(callback_name, None)
