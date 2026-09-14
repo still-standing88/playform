@@ -263,6 +263,9 @@ class ExplorerView(QListWidget):
             _announce(_("Couldn't open {error}").format(error=error))
 
     def change_path(self, path:str):
+        # Cancels any in-flight search so its results can't land after the
+        # navigation and yank the view back into SEARCH_RESULTS mode.
+        self._search_worker.cancel()
         self._explorer.set_current_path(path)
         self.relist_contents()
         self.update_path()
@@ -394,6 +397,11 @@ class ExplorerView(QListWidget):
 
     @Slot(str, str, list)
     def _on_search_results(self, root_path, query, paths):
+        # A navigation since the search started clears search_query; a
+        # result that was already queued on the event loop when the cancel
+        # landed is stale and must not yank the view back into search mode.
+        if self._explorer.search_query is None:
+            return
         self._explorer.apply_search_results(paths)
         self.relist_contents()
         self.update_path()

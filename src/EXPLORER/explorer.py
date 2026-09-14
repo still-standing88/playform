@@ -165,6 +165,15 @@ class Explorer:
             self._current_path = self.default_path
         self._root_path = self.get_root(self._current_path)
         self._prev_path = self._current_path
+        # Explicit navigation (library click, path bar) always ends the
+        # search session. Without this, set_current_path during
+        # SEARCH_RESULTS changed the path but left the mode alone, so
+        # relist kept rendering the old search results and the navigation
+        # appeared dead until backward() reset the mode.
+        self.mode = ExplorerMode.NORMAL
+        self._pre_search_path = None
+        self._search_query = None
+        self.search_results = []
         self.__retrieve_listing()
 
     def forward(self, path):
