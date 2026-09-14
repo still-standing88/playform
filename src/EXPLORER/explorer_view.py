@@ -416,6 +416,7 @@ class ExplorerView(QListWidget):
         if self._explorer.mode == ExplorerMode.SEARCH_RESULTS and self._explorer.search_query:
             self.perform_search(self._explorer.search_query)
         else:
+            self._explorer.rescan()
             self.relist_contents()
             self.update_path()
 

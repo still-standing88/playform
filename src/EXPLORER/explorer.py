@@ -118,6 +118,12 @@ class Explorer:
         self._sort_mode = mode
         self.__retrieve_listing()
 
+    def rescan(self):
+        """Re-run the directory listing for the current path. relist_contents()
+        alone just re-renders the cached folders/files, so refresh needs this
+        to actually pick up files added/removed/renamed on disk."""
+        self.__retrieve_listing()
+
     def set_filter(self, mode: str, fmt: str = ""):
         self._filter_mode = mode
         self._filter_format = (fmt or "").lower().lstrip(".")
