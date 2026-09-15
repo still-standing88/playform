@@ -573,6 +573,12 @@ class ExplorerWidget(QWidget):
                 continue
             shortcut = QShortcut(QKeySequence(key_sequence), self)
             shortcut.setContext(qt.ShortcutContext.WidgetWithChildrenShortcut)
+            # Same rationale as player_shortcuts.py's setAutoRepeat(False):
+            # QShortcut defaults to autoRepeat=True, so an event-loop hiccup
+            # under load (e.g. the main player decoding video at the same
+            # time) re-fires a transport control off a single physical
+            # press.
+            shortcut.setAutoRepeat(False)
             shortcut.activated.connect(callback)
             self._shortcuts[action] = shortcut
 
