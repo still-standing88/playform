@@ -520,6 +520,23 @@ class MPVMediaInterface(AVMediaInterface):
             self._mpv().time_pos = offset
         self._submit(seek, wait=False)
 
+    def seek_relative(self, offset: float):
+        # mpv's own arrow-key seek: relative, keyframes precision. A time_pos
+        # write is an absolute/exact seek instead, which has to decode
+        # through to the exact sample -- on WASAPI output that leaves the AO
+        # stalled with time_pos pinned at the seek target, so every later
+        # forward()/backward() reads that same pinned position and seeks to
+        # the same place again.
+        def seek():
+            if not self._mpv().path:
+                return
+            try:
+                self._mpv().seek(offset, reference="relative")
+            except Exception:
+                # mpv rejects the seek while it is still opening the file.
+                pass
+        self._submit(seek, wait=False)
+
     def set_loop(self, id: int, loop: bool):
         self._check_instance(id)
         gen = self.__generation
@@ -759,12 +776,10 @@ class MPVVideoPlayer(AVPlayer):
         self.__mpv_interface.run_on_mpv(lambda m: m._set_property("wid", str(int(window))), wait=False)
 
     def forward(self, offset):
-        # See set_position()'s comment: time_pos writes are race-safe
-        # right after a load in a way .seek() commands aren't.
-        self.__mpv_interface.run_on_mpv(lambda m: setattr(m, 'time_pos', (m.time_pos or 0.0) + offset), wait=False)
+        self.__mpv_interface.seek_relative(offset)
 
     def backward(self, offset):
-        self.__mpv_interface.run_on_mpv(lambda m: setattr(m, 'time_pos', max(0.0, (m.time_pos or 0.0) - offset)), wait=False)
+        self.__mpv_interface.seek_relative(-offset)
 
     def set_volume_relative(self, direction, offset):
         def adjust(m):
