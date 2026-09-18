@@ -1,14 +1,28 @@
 # is going to b deprecated in the future, don't use in future widgets.
 from PySide6.QtCore import QObject, Qt, QEvent
 from PySide6.QtGui import QKeySequence
-from PySide6.QtWidgets import (QApplication, QPushButton, QToolButton, QListWidget, QTreeWidget, QLineEdit, QTextEdit, QPlainTextEdit, 
-                               QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox, QRadioButton, QSlider, QScrollBar, 
+from PySide6.QtWidgets import (QApplication, QPushButton, QToolButton, QListWidget, QTreeWidget, QLineEdit, QTextEdit, QPlainTextEdit,
+                               QDialog, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox, QRadioButton, QSlider, QScrollBar,
                                QListView, QTreeView, QTableWidget, QTableView, QAbstractItemView, QAbstractSpinBox,
                                QDial, QProgressBar, QTabWidget, QTabBar, QSplitter, QGroupBox, QFrame)
 from typing import Dict, Callable, Union, List, Optional, Set
 import logging
 
 from app_constance.key_names import KEY_NAME_ALIASES, key_name
+
+
+def dialog_is_open() -> bool:
+    """Any dialog the user could be driving, not only the ones that block the
+    main window -- a window that is open is a window the main window's own
+    hotkeys do not belong to. Naming the app's dialogs here instead would
+    mean updating the list every time one is added."""
+    if QApplication.activeModalWidget() is not None:
+        return True
+    return any(
+        isinstance(widget, QDialog) and widget.isVisible()
+        for widget in QApplication.topLevelWidgets()
+    )
+
 
 class ShortcutScope:
     GLOBAL = "global"
@@ -152,12 +166,12 @@ class ShortcutManager(QObject):
                         self.logger.error(f"Error in global shortcut: {e}")
                         
             elif scope == ShortcutScope.CONTEXT_AWARE:
-                # A modal dialog means the main window's own hotkeys are not
+                # An open dialog means the main window's own hotkeys are not
                 # what the user is driving -- and a chord typed into the
                 # hotkeys editor has to reach the editor instead of firing
                 # the action it names. Returning False lets the key through
                 # to whatever the dialog has focused.
-                if QApplication.activeModalWidget() is not None:
+                if dialog_is_open():
                     return False
                 if self._should_allow_context_shortcut(key_combo, focused_widget):
                     try:
