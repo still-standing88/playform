@@ -192,6 +192,7 @@ class HotkeysDialog(QDialog):
         self.setMinimumSize(600, 400)
         self.setup_ui()
         self.populate_tree()
+        key_config.suspend_global_hotkeys()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -561,6 +562,13 @@ class HotkeysDialog(QDialog):
         self.commit_pending()
         self.apply_changes()
         super().accept()
+
+    def done(self, result):
+        # Covers accept, reject and the window's own close button. Apply runs
+        # while the hooks are still suspended, so the new Global sequences
+        # only take effect here.
+        key_config.resume_global_hotkeys()
+        super().done(result)
 
     def reject(self):
         # Set before the dialog tears down so a pending invalid-input warning

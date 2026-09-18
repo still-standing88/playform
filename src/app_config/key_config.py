@@ -146,7 +146,10 @@ def load_keys():
         saveConfig()
 
 
-def apply_global_hotkeys():
+global_hotkeys_suspended = False
+
+
+def _clear_global_hotkeys():
     import keyboard
     for hid in list(hotkeys.values()):
         try:
@@ -155,6 +158,28 @@ def apply_global_hotkeys():
             pass
     hotkeys.clear()
 
+
+def suspend_global_hotkeys():
+    """Unhook the Global hotkeys so they stop firing while the user is
+    editing them. They are OS-level hooks, so the app's own event filters
+    never see the key and cannot hold them back."""
+    global global_hotkeys_suspended
+    global_hotkeys_suspended = True
+    _clear_global_hotkeys()
+
+
+def resume_global_hotkeys():
+    global global_hotkeys_suspended
+    global_hotkeys_suspended = False
+    apply_global_hotkeys()
+
+
+def apply_global_hotkeys():
+    _clear_global_hotkeys()
+    if global_hotkeys_suspended:
+        return
+
+    import keyboard
     if "Global" in key_config:
         global_section = key_config["Global"]
     else:
