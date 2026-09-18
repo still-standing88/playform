@@ -617,7 +617,7 @@ class PlayerControls(QWidget):
 
 
 
-    def set_current_file(self, file_path: str):
+    def set_current_file(self, file_path: Optional[str]):
         # load_file()/load_playlist() both call this once directly (with the
         # requested path) and again moments later via _update_current_file()
         # (with the now-loaded instance's file_path, normally the same
@@ -627,7 +627,7 @@ class PlayerControls(QWidget):
         # for the file that was just opened, using whatever the seek slider
         # still showed (0, since nothing had played yet) -- clobbering its
         # real saved resume position on disk before mpv had even loaded it.
-        if self._current_file and self._current_file != file_path:
+        if file_path and self._current_file and self._current_file != file_path:
             self.save_last_position()
 
         self._current_file = file_path
@@ -638,6 +638,15 @@ class PlayerControls(QWidget):
         self._state.bookmarks = self._bookmarks
         self._state.repeat_loops = self._repeat_loops
         self._state.last_positions = self._last_positions
+
+    def clear_current_file(self):
+        """Forget the file whose media just closed, so nothing reading
+        _current_file keeps acting on it (bookmarks, repeat loops, go-to-time
+        all still fire from hotkeys). Clearing saves nothing on purpose: the
+        position was already saved by close_current_media() before the close,
+        and _reset_ui_to_default() has zeroed the seek range by now, so a save
+        here would store 0 over it."""
+        self.set_current_file(None)
 
     @Slot()
     def show_bookmarks_dialog(self):

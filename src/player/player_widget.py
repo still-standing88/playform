@@ -645,6 +645,7 @@ class PlayerWidget(QWidget):
                 self._reset_ui_to_default()
                 self._had_media = False
                 self.player_controls._source_url = None
+                self.player_controls.clear_current_file()
                 self.mediaAvailable.emit(False)
         except Exception as e:
             pass
