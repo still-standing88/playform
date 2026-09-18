@@ -180,6 +180,10 @@ class SpeechEngine(QObject):
     def stop(self):
         if self._using_sapi_direct and self._sapi_voice is not None:
             try:
+                # A purge while the voice is paused leaves it stuck paused in
+                # SAPI's own bookkeeping: the status reads idle, but every
+                # later Speak() is silently dropped.
+                self._sapi_voice.Resume()
                 self._sapi_voice.Speak("", 2)  # PurgeBeforeSpeak
                 self._set_state("ready")
             except Exception as error:
