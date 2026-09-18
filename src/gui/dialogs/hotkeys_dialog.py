@@ -268,8 +268,8 @@ class HotkeysDialog(QDialog):
         button_layout.addWidget(self.reset_button)
         button_layout.addStretch()
         button_layout.addWidget(self.apply_button)
-        button_layout.addWidget(self.cancel_button)
         button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.cancel_button)
         layout.addLayout(button_layout)
 
     def _set_action_item_text(self, item, action, category, shortcut):
