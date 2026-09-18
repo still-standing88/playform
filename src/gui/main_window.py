@@ -87,7 +87,6 @@ class MainWindow(QMainWindow):
         self._player_warmup_started = False
         self._pending_external_paths = []
         self._pending_player_actions = []
-        self._dialog_open = False
         self.tool_dialogs = {}
         self.active_tool_name = None
         self.show_tool_button: QPushButton
@@ -721,10 +720,6 @@ class MainWindow(QMainWindow):
 
     def open_preferences(self):
 
-        if self._dialog_open:
-            return
-        self._dialog_open = True
-
         audio_devices = []
         try:
             if hasattr(self.player_widget, 'player') and self.player_widget.player:
@@ -738,7 +733,6 @@ class MainWindow(QMainWindow):
             pass
 
         dialog = PreferencesDialog(self, audio_devices, self.apply_audio_device)
-        dialog.finished.connect(lambda: setattr(self, '_dialog_open', False))
         dialog.preferences_saved.connect(self._apply_subtitle_style_prefs)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             _announce_dialogs(_("Preferences saved"))
@@ -755,11 +749,7 @@ class MainWindow(QMainWindow):
             pass
             
     def open_hotkeys(self):
-        if self._dialog_open:
-            return
-        self._dialog_open = True
         dialog = HotkeysDialog(self, reset_callback=self.reset_shortcuts_callback)
-        dialog.finished.connect(lambda: setattr(self, '_dialog_open', False))
         if dialog.exec() == QDialog.DialogCode.Accepted:
             _announce_dialogs(_("Hotkeys updated"))
 

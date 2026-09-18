@@ -17,11 +17,6 @@ class BookmarksController:
         bookmarks = c._bookmarks[c._current_file]
         if not bookmarks:
             return
-        mw = getattr(c._player_widget, "_main_window", None) or c.window()
-        if hasattr(mw, '_dialog_open') and mw._dialog_open:
-            return
-        if hasattr(mw, '_dialog_open'):
-            mw._dialog_open = True
         c._bookmarks_dialog = BookmarksDialog(bookmarks, c)
         dlg = c._bookmarks_dialog
         dlg.deleteRequested.connect(self.delete_bookmark_at)
@@ -31,8 +26,6 @@ class BookmarksController:
             if selected_index is not None:
                 self.jump_to_mark(selected_index)
         c._bookmarks_dialog = None
-        if hasattr(mw, '_dialog_open'):
-            mw._dialog_open = False
 
     def add_bookmark_at_current_position(self):
         c = self._c

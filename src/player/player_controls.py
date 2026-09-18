@@ -647,18 +647,11 @@ class PlayerControls(QWidget):
     def show_goto_dialog(self):
         if not self._current_file:
             return
-        mw = getattr(self._player_widget, "_main_window", None) or self.window()
-        if hasattr(mw, '_dialog_open') and mw._dialog_open:
-            return
-        if hasattr(mw, '_dialog_open'):
-            mw._dialog_open = True
         dlg = GoToDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             seconds = dlg.get_seconds()
             if seconds is not None:
                 self.jump_to_time(seconds)
-        if hasattr(mw, '_dialog_open'):
-            mw._dialog_open = False
 
     def jump_to_time(self, seconds: float):
         position = int(seconds)
