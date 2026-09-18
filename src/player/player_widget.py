@@ -536,6 +536,18 @@ class PlayerWidget(QWidget):
                 msg = _("Seek error: {details}").format(details=getattr(e, 'message', str(e)))
                 QMessageBox.critical(self, _("Seek Error"), msg)
 
+    def _seek_to_percent(self, percent: int):
+        instance = self.player.primary_instance
+        if instance:
+            try:
+                length = instance.get_length()
+                if length <= 0:
+                    return
+                instance.set_position(int(length * percent / 100))
+            except av_play.AVError as e:
+                msg = _("Seek error: {details}").format(details=getattr(e, 'message', str(e)))
+                QMessageBox.critical(self, _("Seek Error"), msg)
+
     @Slot()
     def _on_stop(self):
         instance = self.player.primary_instance
