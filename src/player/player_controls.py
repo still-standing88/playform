@@ -30,6 +30,10 @@ from .core.path_context_menu import build_path_context_menu as _build_path_conte
 from .core.playback_options_menu import build_more_options_menu
 
 
+MIN_RESUME_DURATION = 30
+RESUME_TAIL_SECONDS = 5
+
+
 class PlayerControls(QWidget):
     fullscreenToggled = Signal(bool)
     speedChanged = Signal(float)
@@ -751,8 +755,13 @@ class PlayerControls(QWidget):
         if not self._current_file:
             return
 
+        duration = int(self.seek_slider.maximum() or 0)
         current_pos = self.get_seek_position()
-        self._last_positions[self._current_file] = current_pos
+        if duration > 0 and (duration < MIN_RESUME_DURATION
+                             or current_pos > duration - RESUME_TAIL_SECONDS):
+            self._last_positions.pop(self._current_file, None)
+        else:
+            self._last_positions[self._current_file] = current_pos
 
         self._state.last_positions = self._last_positions
         self._state.save_last_positions()
