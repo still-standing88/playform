@@ -98,3 +98,6 @@ image_extensions: set[str] = {
     ".svg", ".svgz",
     ".webp",
 }
+
+# Dotted, because callers compare these against os.path.splitext(path)[1].
+media_extensions: set[str] = {f".{ext}" for ext in formats["audio"] + formats["video"]}

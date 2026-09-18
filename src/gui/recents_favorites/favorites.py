@@ -5,6 +5,7 @@ from PySide6.QtGui import QAction
 from app_db import UserFiles
 from app_db.user_db import FileCategory
 from utilities.util_gui import contextMenu, messageBox
+from utilities.formats import media_extensions
 
 
 class FavoritesWidget(QListWidget):
@@ -95,18 +96,19 @@ class FavoritesWidget(QListWidget):
         if item is None:
             return
         path = self.path_mapping.get(item.text())
-        if path:
+        if path and os.path.splitext(path)[1].lower() in media_extensions:
             self.queueRequested.emit(path)
 
     def show_context_menu(self, position):
         menu = QMenu(self)
 
-        queue_action = QAction(_("Add to Queue"), self)
-        queue_action.setEnabled(self.currentItem() is not None)
-        queue_action.triggered.connect(self.add_to_queue)
-        menu.addAction(queue_action)
-
-        menu.addSeparator()
+        item = self.currentItem()
+        path = self.path_mapping.get(item.text()) if item is not None else None
+        if path and os.path.splitext(path)[1].lower() in media_extensions:
+            queue_action = QAction(_("Add to Queue"), self)
+            queue_action.triggered.connect(self.add_to_queue)
+            menu.addAction(queue_action)
+            menu.addSeparator()
 
         remove_action = QAction(_("Remove from Favorites"), self)
         remove_action.setEnabled(self.currentItem() is not None)

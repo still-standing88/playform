@@ -10,9 +10,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt as qt, Slot, QSize, QRect
 import utilities.mpv_bootstrap
 from media_core.av_play import AVMediaInstance, VideoPlayer, AVPlaybackState
-from utilities.formats import image_extensions, formats as media_formats
-
-media_file_extensions = {f".{ext}" for ext in media_formats["audio"] + media_formats["video"]}
+from utilities.formats import image_extensions, media_extensions, formats as media_formats
 
 from app_config import prefs
 from utilities.functions import copyText, open_file_location
@@ -483,7 +481,7 @@ class ExplorerView(QListWidget):
             menuItem(menu, _("Open"), self.open_file, self)
             menuItem(menu, _("copy path"), self.copy_path, self)
             menuItem(menu, _("Add to playlist"), self.add_to_playlist, self)
-            if os.path.splitext(full_path or "")[1].lower() in media_file_extensions:
+            if os.path.splitext(full_path or "")[1].lower() in media_extensions:
                 menuItem(menu, _("Add to Queue"), self.add_selection_to_queue, self)
             menuItem(menu, _("Open in Explorer"), self.open_in_explorer, self)
             menuItem(menu, _("Add to favorites"), self.add_to_favorites, self)
@@ -517,7 +515,7 @@ class ExplorerView(QListWidget):
                 menuItem(menu, _("Add to Database"), self.add_to_database, self)
         elif item_info.type == PathType.FILE:
                 menuItem(menu, _("Add to playlist"), self.add_to_playlist, self)
-                if os.path.splitext(self._focused_item_path or "")[1].lower() in media_file_extensions:
+                if os.path.splitext(self._focused_item_path or "")[1].lower() in media_extensions:
                     menuItem(menu, _("Add to Queue"), self.add_selection_to_queue, self)
                 menuItem(menu, _("Open in Explorer"), self.open_in_explorer, self)
                 menuItem(menu, _("Add to favorites"), self.add_to_favorites, self)
@@ -620,7 +618,7 @@ class ExplorerView(QListWidget):
                 path = self._explorer.items[name].path
             else:
                 path = os.path.join(self._explorer.current_path, name)
-            if path and os.path.isfile(path) and os.path.splitext(path)[1].lower() in media_file_extensions:
+            if path and os.path.isfile(path) and os.path.splitext(path)[1].lower() in media_extensions:
                 paths.append(path)
         return paths
 
