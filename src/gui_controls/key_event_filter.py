@@ -152,6 +152,13 @@ class ShortcutManager(QObject):
                         self.logger.error(f"Error in global shortcut: {e}")
                         
             elif scope == ShortcutScope.CONTEXT_AWARE:
+                # A modal dialog means the main window's own hotkeys are not
+                # what the user is driving -- and a chord typed into the
+                # hotkeys editor has to reach the editor instead of firing
+                # the action it names. Returning False lets the key through
+                # to whatever the dialog has focused.
+                if QApplication.activeModalWidget() is not None:
+                    return False
                 if self._should_allow_context_shortcut(key_combo, focused_widget):
                     try:
                         shortcut_info['callback']()
