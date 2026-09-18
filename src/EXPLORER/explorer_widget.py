@@ -273,6 +273,7 @@ class ExplorerWidget(QWidget):
         controls_layout.addWidget(volume_label)
         self.volume_spinbox = QSpinBox()
         self.volume_spinbox.setRange(0, 300)
+        self.volume_spinbox.setSingleStep(prefs.prefs["offset"]["volume"])
         self.volume_spinbox.setValue(prefs.prefs.get("explorer_volume", 120))
         self.volume_spinbox.setSuffix("%")
         self.volume_spinbox.setAccessibleName(_("volume"))
@@ -344,6 +345,16 @@ class ExplorerWidget(QWidget):
                      self._instance.set_volume(value)
                  except:
                      pass
+
+    @Slot()
+    def volume_up(self):
+        offset = prefs.prefs["offset"]["volume"]
+        self.volume_spinbox.setValue(min(300, self.volume_spinbox.value() + offset))
+
+    @Slot()
+    def volume_down(self):
+        offset = prefs.prefs["offset"]["volume"]
+        self.volume_spinbox.setValue(max(0, self.volume_spinbox.value() - offset))
 
     @Slot(int)
     def autoplayState(self, state):
@@ -565,6 +576,8 @@ class ExplorerWidget(QWidget):
             "Stop": self.explorer_view.media_stop,
             "Forward": self.explorer_view.media_forward,
             "Backward": self.explorer_view.media_backward,
+            "Volume up": self.volume_up,
+            "Volume down": self.volume_down,
             "Search files/folders": self._focus_search,
         }
         for action, callback in mapping.items():

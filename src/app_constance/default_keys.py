@@ -37,6 +37,8 @@ key_dict = {
 "Backward": "left",
 "Forward": "right",
 "Stop": "Ctrl+Space",
+"Volume up": "Ctrl+Up",
+"Volume down": "Ctrl+Down",
 "Search files/folders": "F3",
 },
 "Player": {
