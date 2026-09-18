@@ -1,106 +1,161 @@
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
-    QPushButton, QLineEdit, QMessageBox, QHeaderView, QMenu
+    QDialog, QVBoxLayout, QHBoxLayout, QWidget, QLabel, QTreeWidget,
+    QTreeWidgetItem, QPushButton, QLineEdit, QMessageBox, QHeaderView, QMenu
 )
-from PySide6.QtCore import Qt, Slot, Signal
+from PySide6.QtCore import Qt, QTimer, Slot, Signal
 from PySide6.QtGui import QKeySequence
+
 from app_config import key_config
+from app_constance.key_names import key_name
 
 
-class HotkeyCaptureEdit(QLineEdit):
-    """Captures a single key combination and finalizes it on key-release,
-    instead of QKeySequenceEdit's press-then-Enter-to-accept model.
-    QKeySequenceEdit records Return as part of the chord itself -- pressing
-    Q then Enter to "confirm" actually got recorded as the two-key chord
-    "Q, Return" rather than accepting "Q". Release IS accept here: holding
-    modifiers doesn't finalize anything by itself, but releasing the first
-    non-modifier key immediately commits the combo captured up to that
-    point, so there's no separate confirm keystroke to be ambiguous about.
-    Escape cancels without committing.
-    """
+_WIN_MODIFIER_TOKENS = {"win", "windows", "super", "cmd"}
 
-    sequenceCaptured = Signal(str)
-    cancelled = Signal()
+
+def canonical_shortcut_text(modifiers, key=None):
+    """Spell a chord the way ShortcutManager reports a live press: Ctrl, Alt,
+    Shift, Win in that order, then the key's own name. QKeySequence
+    .toString() cannot be used for this -- it renders a Win chord as an
+    empty string, and spells Escape/Delete/Page Up as Esc/Del/PgUp, none of
+    which a stored hotkey would ever match."""
+    parts = []
+    flags = int(getattr(modifiers, "value", modifiers) or 0)
+    for flag, name in (
+        (Qt.KeyboardModifier.ControlModifier.value, "Ctrl"),
+        (Qt.KeyboardModifier.AltModifier.value, "Alt"),
+        (Qt.KeyboardModifier.ShiftModifier.value, "Shift"),
+        (Qt.KeyboardModifier.MetaModifier.value, "Win"),
+    ):
+        if flags & flag:
+            parts.append(name)
+
+    if key is not None:
+        name = key_name(key)
+        if not name:
+            return ""
+        parts.append(name)
+
+    return "+".join(parts)
+
+
+def normalize_shortcut_text(text):
+    """Canonical text for a typed shortcut, "" for an empty field (which
+    unbinds the key), or None when Qt cannot read it as a single chord."""
+    text = text.strip()
+    if not text:
+        return ""
+
+    parts = []
+    for part in text.split("+"):
+        # Qt knows the Windows modifier only as "Meta"; everywhere else --
+        # default keys, the keyboard library, ShortcutManager -- it is "Win".
+        token = part.strip().casefold()
+        parts.append("Meta" if token in _WIN_MODIFIER_TOKENS else part)
+
+    sequence = QKeySequence.fromString("+".join(parts), QKeySequence.SequenceFormat.NativeText)
+    if sequence.count() != 1:
+        return None
+
+    combination = sequence[0]
+    key = combination.key()
+    if int(key) == int(Qt.Key.Key_unknown):
+        return None
+
+    return canonical_shortcut_text(combination.keyboardModifiers(), key)
+
+
+class ShortcutEdit(QLineEdit):
+    """The editing panel's shortcut field. Normally editable, so a
+    combination can just be typed; Capture key arms it to read the chord off
+    the keyboard instead, accepting on key-release. Holding modifiers
+    commits nothing by itself, and releasing the first real key commits the
+    combo captured up to that point, so there is no separate confirm
+    keystroke to be ambiguous about (which is what made QKeySequenceEdit
+    record "Q then Return" as a two-key chord). Escape cancels a capture."""
+
+    captured = Signal(str)
+    captureCancelled = Signal()
 
     _MODIFIER_KEYS = {
         Qt.Key.Key_Control, Qt.Key.Key_Shift, Qt.Key.Key_Alt,
         Qt.Key.Key_Meta, Qt.Key.Key_AltGr,
     }
 
-    def __init__(self, initial_sequence="", parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.setReadOnly(True)
-        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self._armed = False
         self._captured_key = None
         self._captured_modifiers = Qt.KeyboardModifier.NoModifier
-        self._finalized = False
         self._context_action = ""
         self._context_category = ""
-        if initial_sequence:
-            self.setText(initial_sequence)
 
-    def set_capture_context(self, action, category):
-        # Screen readers announce this editor by its own Name/Description
-        # while it holds focus -- without these it reads as a bare
-        # "Ctrl+Win+F7 edit" with no hint of which hotkey is being edited
-        # (the reported "info confusion"). Same pattern as the tree rows:
-        # "{action} in {category}, current shortcut: {seq}".
+    def set_shortcut_context(self, action, category):
         self._context_action = action
         self._context_category = category
+        self._refresh_accessible_text(self.text())
+
+    def is_capture_armed(self):
+        return self._armed
+
+    def set_capture_armed(self, armed):
+        armed = bool(armed)
+        if armed == self._armed:
+            return
+        self._armed = armed
+        self._captured_key = None
+        self.setReadOnly(armed)
         self._refresh_accessible_text(self.text())
 
     def _refresh_accessible_text(self, sequence):
         shortcut_display = sequence if sequence else _("none")
         self.setAccessibleName(_("{action} in {category}").format(
             action=self._context_action, category=self._context_category))
-        self.setAccessibleDescription(
-            _("current shortcut: {shortcut}. Press the desired key combination; releasing it accepts. Escape cancels.").format(
-                shortcut=shortcut_display))
+        if self._armed:
+            self.setAccessibleDescription(_(
+                "Recording for {action}. Press the desired key combination; "
+                "releasing it accepts. Escape cancels.").format(action=self._context_action))
+        else:
+            self.setAccessibleDescription(_(
+                "current shortcut: {shortcut}. Type a combination such as Ctrl+Shift+P, "
+                "or use Capture key to record one.").format(shortcut=shortcut_display))
 
     def keyPressEvent(self, event):
-        if self._finalized:
+        if not self._armed:
+            super().keyPressEvent(event)
             return
+
+        # Accepted in both branches: an unhandled Return or Space would
+        # otherwise reach the dialog and activate a button.
+        event.accept()
         key = event.key()
         if key == Qt.Key.Key_Escape:
-            self.cancelled.emit()
+            self.captureCancelled.emit()
             return
         if key in self._MODIFIER_KEYS or key == Qt.Key.Key_unknown:
-            preview = self._preview_text(event.modifiers(), None)
-            self.setText(preview)
-            self._refresh_accessible_text(preview)
+            text = canonical_shortcut_text(event.modifiers())
+            self.setText(text)
+            self._refresh_accessible_text(text)
             return
         self._captured_key = key
         self._captured_modifiers = event.modifiers()
-        preview = self._preview_text(event.modifiers(), key)
-        self.setText(preview)
-        self._refresh_accessible_text(preview)
+        text = canonical_shortcut_text(event.modifiers(), key)
+        self.setText(text)
+        self._refresh_accessible_text(text)
 
     def keyReleaseEvent(self, event):
-        key = event.key()
-        if key in self._MODIFIER_KEYS:
+        if not self._armed:
+            super().keyReleaseEvent(event)
             return
-        if self._captured_key is None or self._finalized:
+        if event.key() in self._MODIFIER_KEYS or self._captured_key is None:
             return
-        self._finalized = True
-        text = self._preview_text(self._captured_modifiers, self._captured_key)
+        text = canonical_shortcut_text(self._captured_modifiers, self._captured_key)
+        self._captured_key = None
         self.setText(text)
-        self.sequenceCaptured.emit(text)
-
-    @staticmethod
-    def _preview_text(modifiers, key):
-        # PySide6's Qt.KeyboardModifier flag object doesn't convert via
-        # int() directly in every binding version -- .value is the
-        # reliable way to get the underlying integer to OR with the key.
-        seq_int = int(getattr(modifiers, "value", modifiers))
-        if key is not None:
-            seq_int |= key
-        if seq_int == 0:
-            return ""
-        return QKeySequence(seq_int).toString(QKeySequence.SequenceFormat.PortableText) or ""
+        self.captured.emit(text)
 
 
 class HotkeysTree(QTreeWidget):
-    """QTreeWidget subclass so Enter-on-a-row starts editing reliably --
+    """QTreeWidget subclass so Enter-on-a-row opens the editor reliably --
     assigning tree.keyPressEvent on the instance never overrides Qt's C++
     virtual dispatch, so the old monkey-patch was dead code."""
 
@@ -125,8 +180,11 @@ class HotkeysDialog(QDialog):
     def __init__(self, parent=None, reset_callback=None):
         super().__init__(parent)
         self.reset_callback = reset_callback
-        self.current_editor = None
-        self.current_editor_item = None
+        self._edit_item = None
+        self._edit_category = ""
+        self._edit_action = ""
+        self._dirty = False
+        self._closing = False
         self._committed_config = self._snapshot_config()
         self.setWindowTitle(_("Hotkeys Configuration"))
         self.setWindowModality(Qt.WindowModality.WindowModal)
@@ -152,7 +210,8 @@ class HotkeysDialog(QDialog):
         self.tree.itemChanged.connect(self.on_item_changed)
         self.tree.itemClicked.connect(self.on_item_clicked)
         self.tree.itemDoubleClicked.connect(self.on_item_double_clicked)
-        self.tree.enter_pressed.connect(self.start_editing)
+        self.tree.currentItemChanged.connect(self.on_current_item_changed)
+        self.tree.enter_pressed.connect(self.focus_editor)
         self.tree.toggle_requested.connect(self.toggle_item_enabled)
         self.tree.setEditTriggers(QTreeWidget.EditTrigger.NoEditTriggers)
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -160,6 +219,37 @@ class HotkeysDialog(QDialog):
         self.tree.header().setSectionsMovable(False)
         self.tree.header().setSectionsClickable(False)
         layout.addWidget(self.tree)
+
+        # A real widget panel rather than a widget dropped into the Shortcut
+        # cell: setItemWidget children are not in the tree's accessibility
+        # tree at all, and this field and button have to be reachable with a
+        # screen reader.
+        self.edit_panel = QWidget()
+        panel_layout = QVBoxLayout(self.edit_panel)
+        panel_layout.setContentsMargins(0, 6, 0, 0)
+        panel_layout.setSpacing(4)
+        self.edit_label = QLabel()
+        panel_layout.addWidget(self.edit_label)
+
+        field_row = QHBoxLayout()
+        self.edit_field = ShortcutEdit()
+        self.edit_label.setBuddy(self.edit_field)
+        self.edit_field.textEdited.connect(self.on_field_edited)
+        self.edit_field.editingFinished.connect(self.commit_pending)
+        self.edit_field.captured.connect(self.on_shortcut_captured)
+        self.edit_field.captureCancelled.connect(self.on_capture_cancelled)
+        field_row.addWidget(self.edit_field, 1)
+
+        self.capture_button = QPushButton(_("Capture key"))
+        self.capture_button.setCheckable(True)
+        self.capture_button.setAccessibleDescription(_(
+            "Record the next key combination you press instead of typing it."))
+        self.capture_button.toggled.connect(self.on_capture_toggled)
+        field_row.addWidget(self.capture_button)
+        panel_layout.addLayout(field_row)
+
+        self.edit_panel.setVisible(False)
+        layout.addWidget(self.edit_panel)
 
         button_layout = QHBoxLayout()
         self.reset_button = QPushButton(_("Reset to Default"))
@@ -170,6 +260,10 @@ class HotkeysDialog(QDialog):
         self.cancel_button.clicked.connect(self.reject)
         self.ok_button = QPushButton(_("OK"))
         self.ok_button.clicked.connect(self.accept)
+        for button in (self.reset_button, self.apply_button, self.cancel_button, self.ok_button):
+            # Otherwise Return inside the shortcut field clicks whichever
+            # button Qt made the default, closing the dialog mid-edit.
+            button.setAutoDefault(False)
         button_layout.addWidget(self.reset_button)
         button_layout.addStretch()
         button_layout.addWidget(self.apply_button)
@@ -183,8 +277,7 @@ class HotkeysDialog(QDialog):
         # reads identically whichever cell has focus ("Play/Pause ...").
         # AccessibleTextRole overrides the announced Name: without it,
         # column 1's Name is its display text -- the bare shortcut -- and
-        # after an edit (focus left where the inline editor was) rows led
-        # with "A" instead of the action name.
+        # after an edit rows led with "A" instead of the action name.
         shortcut_display = shortcut if shortcut else _("none")
         description = _("{action} in {category}, current shortcut: {shortcut}").format(
             action=action, category=category, shortcut=shortcut_display)
@@ -207,6 +300,7 @@ class HotkeysDialog(QDialog):
         self.tree.blockSignals(was_blocked)
 
     def populate_tree(self):
+        self.reset_panel()
         self.tree.blockSignals(True)
         self.tree.clear()
         for category_name in key_config.key_dict.keys():
@@ -247,12 +341,12 @@ class HotkeysDialog(QDialog):
     @Slot(object, int)
     def on_item_clicked(self, item, column):
         if item.parent() is not None and column == 1:
-            self.start_editing(item, column)
+            self.focus_editor(item, column)
 
     @Slot(object, int)
     def on_item_double_clicked(self, item, column):
         if item.parent() is not None and column == 1:
-            self.start_editing(item, column)
+            self.focus_editor(item, column)
 
     @Slot(object)
     def toggle_item_enabled(self, item):
@@ -262,6 +356,121 @@ class HotkeysDialog(QDialog):
             if item.checkState(0) == Qt.CheckState.Checked
             else Qt.CheckState.Checked,
         )
+
+    @Slot(object, object)
+    def on_current_item_changed(self, current, previous):
+        self.commit_pending()
+        if current is not None and current.parent() is not None:
+            self.load_panel(current)
+        else:
+            self.reset_panel()
+
+    @Slot(object, int)
+    def focus_editor(self, item, column=1):
+        if item is None or item.parent() is None:
+            return
+        self.commit_pending()
+        if self.tree.currentItem() is not item:
+            self.tree.setCurrentItem(item)
+        if self._edit_item is not item:
+            self.load_panel(item)
+        self.edit_field.setFocus()
+
+    def load_panel(self, item):
+        self.disarm_capture(restore_text=False)
+        self._edit_item = item
+        self._edit_category = item.parent().text(0)
+        self._edit_action = item.text(0)
+        self._dirty = False
+        self.edit_field.setText(item.text(1))
+        self.edit_field.set_shortcut_context(self._edit_action, self._edit_category)
+        self.edit_label.setText(_("Editing: {action} in {category}").format(
+            action=self._edit_action, category=self._edit_category))
+        self.edit_panel.setVisible(True)
+
+    def reset_panel(self):
+        self.disarm_capture(restore_text=False)
+        self._edit_item = None
+        self._edit_category = ""
+        self._edit_action = ""
+        self._dirty = False
+        self.edit_field.clear()
+        self.edit_panel.setVisible(False)
+
+    @Slot(str)
+    def on_field_edited(self, text):
+        self._dirty = True
+
+    @Slot()
+    def commit_pending(self):
+        item = self._edit_item
+        if item is None or not self._dirty or self._closing:
+            return
+        if self.edit_field.is_capture_armed():
+            return
+
+        text = self.edit_field.text()
+        action = self._edit_action
+        self._dirty = False
+        normalized = normalize_shortcut_text(text)
+        if normalized is None:
+            self.edit_field.setText(item.text(1))
+            self.edit_field.set_shortcut_context(action, self._edit_category)
+            # Deferred: running a modal warning straight out of the field's
+            # focus-out would nest an event loop inside that event.
+            QTimer.singleShot(0, lambda: self.warn_invalid(text, action))
+            return
+
+        self.edit_field.setText(normalized)
+        self.apply_edit(item, normalized)
+
+    def warn_invalid(self, text, action):
+        if self._closing:
+            return
+        QMessageBox.warning(
+            self,
+            _("Invalid shortcut"),
+            _("{text} is not a valid key combination for {action}. Enter something like "
+              "Ctrl+Shift+P, or use Capture key.").format(text=text, action=action),
+        )
+
+    def apply_edit(self, item, sequence):
+        category = item.parent().text(0)
+        action = item.text(0)
+        key_config.set_hotkey_sequence(category, action, sequence)
+        self._set_action_item_text(item, action, category, sequence)
+        self.edit_field.set_shortcut_context(action, category)
+
+    @Slot(bool)
+    def on_capture_toggled(self, armed):
+        if armed:
+            self.edit_field.set_capture_armed(True)
+            self.edit_field.setFocus()
+        else:
+            self.disarm_capture(restore_text=True)
+
+    @Slot(str)
+    def on_shortcut_captured(self, sequence):
+        item = self._edit_item
+        self.disarm_capture(restore_text=False)
+        if item is None:
+            return
+        self.edit_field.setText(sequence)
+        self._dirty = False
+        self.apply_edit(item, sequence)
+
+    @Slot()
+    def on_capture_cancelled(self):
+        self.disarm_capture(restore_text=True)
+
+    def disarm_capture(self, restore_text=True):
+        self.edit_field.set_capture_armed(False)
+        was_blocked = self.capture_button.blockSignals(True)
+        self.capture_button.setChecked(False)
+        self.capture_button.blockSignals(was_blocked)
+        if restore_text:
+            self.edit_field.setText(self._edit_item.text(1) if self._edit_item is not None else "")
+            self.edit_field.set_shortcut_context(self._edit_action, self._edit_category)
 
     @Slot(object)
     def filter_hotkeys(self, query):
@@ -276,6 +485,9 @@ class HotkeysDialog(QDialog):
                 has_match = has_match or matches
             category_item.setHidden(not has_match)
             category_item.setExpanded(bool(query) and has_match)
+        if self._edit_item is not None and self._edit_item.isHidden():
+            self.commit_pending()
+            self.reset_panel()
 
     @Slot(object)
     def open_context_menu(self, position):
@@ -309,58 +521,8 @@ class HotkeysDialog(QDialog):
             )
             self._set_action_item_enabled(item, category, action)
 
-    def start_editing(self, item, column):
-        if column != 1 or item.parent() is None:
-            return
-
-        if self.current_editor is not None:
-            self.finish_editing()
-
-        existing_text = item.text(1)
-        editor = HotkeyCaptureEdit(existing_text)
-        editor.set_capture_context(item.text(0), item.parent().text(0))
-        editor_tooltip = _("Shortcut editor. Press the desired key combination; releasing it accepts the shortcut. Press Escape to cancel.")
-        editor.setToolTip(editor_tooltip)
-        editor.sequenceCaptured.connect(self.finish_editing)
-        editor.cancelled.connect(self.cancel_editing)
-
-        self.current_editor = editor
-        self.current_editor_item = item
-        self.tree.setItemWidget(item, 1, editor)
-        editor.setFocus()
-
-    def finish_editing(self, new_seq=None):
-        if self.current_editor is None or self.current_editor_item is None:
-            return
-
-        if new_seq is None:
-            new_seq = self.current_editor.text()
-        item = self.current_editor_item
-        parent = item.parent()
-
-        if parent is not None:
-            category = parent.text(0)
-            action_text = item.text(0)
-            key_config.set_hotkey_sequence(category, action_text, new_seq)
-            self._set_action_item_text(item, action_text, category, new_seq)
-
-        self._teardown_editor(item)
-
-    def cancel_editing(self):
-        if self.current_editor is None or self.current_editor_item is None:
-            return
-        self._teardown_editor(self.current_editor_item)
-
-    def _teardown_editor(self, item):
-        try:
-            self.tree.setItemWidget(item, 1, None)
-        except Exception:
-            pass
-
-        if self.current_editor is not None:
-            self.current_editor.deleteLater()
-        self.current_editor = None
-        self.current_editor_item = None
+        if self._edit_item is item:
+            self.load_panel(item)
 
     @staticmethod
     def _snapshot_config():
@@ -396,13 +558,13 @@ class HotkeysDialog(QDialog):
             self.reset_callback()
 
     def accept(self):
-        if self.current_editor:
-            self.finish_editing()
+        self.commit_pending()
         self.apply_changes()
         super().accept()
 
     def reject(self):
-        if self.current_editor:
-            self.cancel_editing()
+        # Set before the dialog tears down so a pending invalid-input warning
+        # does not pop over the window the user just decided to leave.
+        self._closing = True
         self._restore_committed_config()
         super().reject()
