@@ -7,6 +7,7 @@ from .recents import RecentsWidget
 
 class RecentsAndFavoritesWidget(QWidget):
     itemRequested = Signal(str)
+    queueRequested = Signal(str)
     
     def __init__(self, user_db: UserFiles, parent=None):
         super().__init__(parent)
@@ -23,10 +24,12 @@ class RecentsAndFavoritesWidget(QWidget):
         
         self.favorites_widget = FavoritesWidget(self.user_db, self)
         self.favorites_widget.itemRequested.connect(self.itemRequested.emit)
+        self.favorites_widget.queueRequested.connect(self.queueRequested.emit)
         self.tab_widget.addTab(self.favorites_widget, _("Favorites"))
-        
+
         self.recents_widget = RecentsWidget(self.user_db, self)
         self.recents_widget.itemRequested.connect(self.itemRequested.emit)
+        self.recents_widget.queueRequested.connect(self.queueRequested.emit)
         self.tab_widget.addTab(self.recents_widget, _("Recents"))
         
         layout.addWidget(self.tab_widget)

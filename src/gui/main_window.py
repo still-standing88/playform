@@ -32,7 +32,6 @@ from gui_controls.key_event_filter import ShortcutManager
 from app_constance.file_filter import file_filter
 from tools.logs_viewer_dialog import LogsViewerDialog
 from tools.debug_console_dock import DebugConsoleDock
-from app_constance.styles import SECTION_LABEL_STYLE
 from utilities.session import dock_session
 from app_config.toolbar_config import toolbar_config
 from .dialogs.toolbar_customize_dialog import ToolbarCustomizeDialog
@@ -379,6 +378,9 @@ class MainWindow(QMainWindow):
         
     def connect_signals(self):
         self.recents_and_favorites_widget.itemRequested.connect(self.play_file)
+        self.recents_and_favorites_widget.queueRequested.connect(
+            lambda path: self.enqueue_files([path])
+        )
 
         if self.explorer_dock and hasattr(self.explorer_dock, 'visibilityChanged'):
             self.explorer_dock.visibilityChanged.connect(self.menu_manager.update_explorer_menu)

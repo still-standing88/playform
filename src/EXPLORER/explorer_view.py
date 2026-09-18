@@ -480,6 +480,8 @@ class ExplorerView(QListWidget):
             menuItem(menu, _("copy path"), self.copy_path, self)
             menuItem(menu, _("Add to playlist"), self.add_to_playlist, self)
             menuItem(menu, _("Add to favorites"), self.add_to_favorites, self)
+            if os.path.splitext(full_path or "")[1].lower() in media_file_extensions:
+                menuItem(menu, _("Add to Queue"), self.add_selection_to_queue, self)
             menu.addSeparator()
             self._add_view_and_filter_submenus(menu)
             menu.addSeparator()

@@ -9,6 +9,7 @@ from utilities.util_gui import contextMenu, messageBox
 
 class RecentsWidget(QListWidget):
     itemRequested = Signal(str)
+    queueRequested = Signal(str)
     
     def __init__(self, user_db: UserFiles, parent=None):
         super().__init__(parent)
@@ -102,8 +103,24 @@ class RecentsWidget(QListWidget):
         except Exception as e:
             messageBox(_("Error"), _("Failed to prune recents: {error}").format(error=e))
 
+    @Slot()
+    def add_to_queue(self):
+        item = self.currentItem()
+        if item is None:
+            return
+        path = self.path_mapping.get(item.text())
+        if path:
+            self.queueRequested.emit(path)
+
     def show_context_menu(self, position):
         menu = QMenu(self)
+
+        queue_action = QAction(_("Add to Queue"), self)
+        queue_action.setEnabled(self.currentItem() is not None)
+        queue_action.triggered.connect(self.add_to_queue)
+        menu.addAction(queue_action)
+
+        menu.addSeparator()
 
         remove_action = QAction(_("Remove This Track"), self)
         remove_action.setEnabled(self.currentItem() is not None)
