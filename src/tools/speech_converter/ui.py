@@ -73,6 +73,16 @@ class SpeechConverterUI(QWidget):
         self._apply_parameters()
         self._update_buttons("ready")
 
+    def hideEvent(self, event):
+        # A hidden tool leaves no reachable Stop button and no F8, so speech
+        # must not outlive the dialog that started it. During teardown Qt has
+        # already deleted the speech objects by the time this runs.
+        try:
+            self.engine.stop()
+        except RuntimeError:
+            pass
+        super().hideEvent(event)
+
     def _build_ui(self):
         layout = QVBoxLayout(self)
 
@@ -82,19 +92,17 @@ class SpeechConverterUI(QWidget):
         layout.addWidget(self.text_edit, stretch=1)
 
         button_row = QHBoxLayout()
-        self.speak_button = QPushButton(_("Speak"), self)
-        self.pause_button = QPushButton(_("Pause"), self)
+        self.speak_pause_button = QPushButton(_("Speak"), self)
         self.stop_button = QPushButton(_("Stop"), self)
         self.save_button = QPushButton(_("Save..."), self)
         self.parameters_button = QPushButton(_("Parameters..."), self)
 
-        self.speak_button.clicked.connect(self._on_speak)
-        self.pause_button.clicked.connect(self._on_pause_resume)
+        self.speak_pause_button.clicked.connect(self._on_speak_pause)
         self.stop_button.clicked.connect(self._on_stop)
         self.save_button.clicked.connect(self._save_as)
         self.parameters_button.clicked.connect(self._open_parameters)
 
-        for button in (self.speak_button, self.pause_button, self.stop_button,
+        for button in (self.speak_pause_button, self.stop_button,
                        self.save_button, self.parameters_button):
             button_row.addWidget(button)
         layout.addLayout(button_row)
@@ -107,7 +115,7 @@ class SpeechConverterUI(QWidget):
         self._shortcuts = []
 
         callbacks = {
-            "Speak/Pause": self._on_speak_pause_shortcut,
+            "Speak/Pause": self._on_speak_pause,
             "Stop speaking": self._on_stop,
             "Open text file": self._open_text_file,
             "Save as audio": self._save_as,
@@ -152,11 +160,12 @@ class SpeechConverterUI(QWidget):
             self.parameters = dialog.values()
             self._apply_parameters()
 
-    def _on_speak_pause_shortcut(self):
+    def _on_speak_pause(self):
         state = self.engine.state()
-        from PySide6.QtTextToSpeech import QTextToSpeech
-        if state == QTextToSpeech.State.Speaking:
-            self._on_pause_resume()
+        if state == "paused":
+            self.engine.resume()
+        elif state == "speaking" and self.engine.supports_pause_resume():
+            self.engine.pause()
         else:
             self._on_speak()
 
@@ -165,14 +174,6 @@ class SpeechConverterUI(QWidget):
         if not text:
             return
         self.engine.speak(text, self.parameters["use_pitch_xml"], self.parameters["pitch_xml_middle"])
-
-    def _on_pause_resume(self):
-        from PySide6.QtTextToSpeech import QTextToSpeech
-        state = self.engine.state()
-        if state == QTextToSpeech.State.Speaking:
-            self.engine.pause()
-        elif state == QTextToSpeech.State.Paused:
-            self.engine.resume()
 
     def _on_stop(self):
         self.engine.stop()
@@ -243,7 +244,12 @@ class SpeechConverterUI(QWidget):
     def _update_buttons(self, state: str):
         speaking = state == "speaking"
         paused = state == "paused"
-        self.pause_button.setText(_("Resume") if paused else _("Pause"))
-        self.pause_button.setEnabled((speaking or paused) and self.engine.supports_pause_resume())
+        if paused:
+            label = _("Resume")
+        elif speaking and self.engine.supports_pause_resume():
+            label = _("Pause")
+        else:
+            label = _("Speak")
+        self.speak_pause_button.setText(label)
         self.stop_button.setEnabled(speaking or paused)
         self.save_button.setEnabled(self.engine.can_save_to_file())
