@@ -106,13 +106,19 @@ class HotkeysTree(QTreeWidget):
     virtual dispatch, so the old monkey-patch was dead code."""
 
     enter_pressed = Signal(object, int)
+    toggle_requested = Signal(object)
 
     def keyPressEvent(self, event):
-        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            current_item = self.currentItem()
-            if current_item is not None and current_item.parent() is not None:
-                self.enter_pressed.emit(current_item, 1)
-                return
+        current_item = self.currentItem()
+        is_action_row = current_item is not None and current_item.parent() is not None
+        # The Enabled cell is an item widget, not a checkable item, so Qt's
+        # built-in Space-toggles-the-check behaviour never reaches it.
+        if event.key() == Qt.Key.Key_Space and is_action_row:
+            self.toggle_requested.emit(current_item)
+            return
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and is_action_row:
+            self.enter_pressed.emit(current_item, 1)
+            return
         super().keyPressEvent(event)
 
 
@@ -148,6 +154,7 @@ class HotkeysDialog(QDialog):
         self.tree.itemClicked.connect(self.on_item_clicked)
         self.tree.itemDoubleClicked.connect(self.on_item_double_clicked)
         self.tree.enter_pressed.connect(self.start_editing)
+        self.tree.toggle_requested.connect(self.toggle_item_enabled)
         self.tree.setEditTriggers(QTreeWidget.EditTrigger.NoEditTriggers)
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self.open_context_menu)
@@ -257,6 +264,13 @@ class HotkeysDialog(QDialog):
     def _set_hotkey_enabled(self, item, category, action, enabled):
         key_config.set_hotkey_enabled(category, action, enabled)
         self._set_action_item_enabled(item, category, action)
+
+    @Slot(object)
+    def toggle_item_enabled(self, item):
+        checkbox_container = self.tree.itemWidget(item, 2)
+        checkbox = checkbox_container.findChild(QCheckBox) if checkbox_container else None
+        if checkbox is not None:
+            checkbox.toggle()
 
     @Slot(object)
     def filter_hotkeys(self, query):
