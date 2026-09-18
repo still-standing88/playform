@@ -24,10 +24,38 @@ def wrap_pitch_xml(text: str, pitch_middle: int) -> str:
     return f'<pitch middle="{pitch_middle}">\n{text}\n</pitch>'
 
 
+def utf16_index(text: str, offset: int) -> int:
+    """Windows' speech APIs count offsets in UTF-16 code units, one unit more
+    than a Python character for every astral character (emoji, rare CJK)
+    above the offset, so they have to be counted down before slicing text."""
+    if offset <= 0:
+        return 0
+    units = 0
+    for index, char in enumerate(text):
+        if units >= offset:
+            return index
+        units += 2 if ord(char) > 0xFFFF else 1
+    return len(text)
+
+
+def resolve_word_index(text: str, word: str, start: int):
+    """The offset the engine reported as an index into `text`. Windows reports
+    UTF-16 units while other engines report characters, and they only differ
+    once an astral character (emoji, rare CJK) precedes the word, so the word
+    itself decides which reading is the right one."""
+    if not word:
+        return None
+    for index in (start, utf16_index(text, start)):
+        if 0 <= index and text[index:index + len(word)] == word:
+            return index
+    return None
+
+
 def remaining_text(text: str, position: int, rewind_words: int = RESUME_REWIND_WORDS) -> str:
-    """The text from `position` on, backed up a few words. SAPI synthesizes
-    roughly a second ahead of what is audible, so the words at the cut point
-    were never heard and resuming exactly at `position` would skip them."""
+    """The text from `position` on, backed up a few words. The engines
+    synthesize roughly a second ahead of what is audible, so the words at the
+    cut point were never heard and resuming exactly at `position` would skip
+    them."""
     position = max(0, min(position, len(text)))
     starts = [match.start() for match in re.finditer(r"\S+", text)]
     if not starts:
@@ -201,7 +229,10 @@ class SpeechEngine(QObject):
                 # the remainder is spoken again on resume.
                 self._direct_remainder = remaining_text(
                     self._direct_text,
-                    self._sapi_voice.Status.InputWordPosition - self._direct_prefix,
+                    utf16_index(
+                        self._direct_text,
+                        self._sapi_voice.Status.InputWordPosition - self._direct_prefix,
+                    ),
                 )
                 self._sapi_voice.Speak("", 2)  # PurgeBeforeSpeak
                 self._set_state("paused")
@@ -361,11 +392,10 @@ class SpeechEngine(QObject):
         # Offsets are only trusted where the word really sits: an engine that
         # reports something else, or an event still in flight from a purged
         # utterance, would otherwise cut the text in the wrong place.
-        if not 0 <= start < len(self._qt_text):
+        index = resolve_word_index(self._qt_text, word, start)
+        if index is None:
             return
-        if self._qt_text[start:start + len(word)] != word:
-            return
-        self._qt_word_start = start
+        self._qt_word_start = index
 
     def _on_state_changed(self, state):
         if self._using_sapi_direct:
