@@ -1,4 +1,6 @@
+import bisect
 import os
+import re
 import sys
 import tempfile
 
@@ -7,6 +9,7 @@ from PySide6.QtTextToSpeech import QTextToSpeech
 
 ENGINE_PRIORITY = ["sapi", "macos", "speechd", "flite", "mock"]
 IS_WINDOWS = sys.platform == "win32"
+RESUME_REWIND_WORDS = 2
 
 
 def pick_engine_name() -> str:
@@ -21,6 +24,18 @@ def wrap_pitch_xml(text: str, pitch_middle: int) -> str:
     return f'<pitch middle="{pitch_middle}">\n{text}\n</pitch>'
 
 
+def remaining_text(text: str, position: int, rewind_words: int = RESUME_REWIND_WORDS) -> str:
+    """The text from `position` on, backed up a few words. SAPI synthesizes
+    roughly a second ahead of what is audible, so the words at the cut point
+    were never heard and resuming exactly at `position` would skip them."""
+    position = max(0, min(position, len(text)))
+    starts = [match.start() for match in re.finditer(r"\S+", text)]
+    if not starts:
+        return text
+    index = max(0, bisect.bisect_right(starts, position) - 1 - rewind_words)
+    return text[starts[index]:]
+
+
 class SpeechEngine(QObject):
     state_changed = Signal(str)
     error_occurred = Signal(str)
@@ -33,6 +48,10 @@ class SpeechEngine(QObject):
 
         self._using_sapi_direct = False
         self._sapi_voice = None
+        self._direct_text = ""
+        self._direct_prefix = 0
+        self._direct_pitch = 0
+        self._direct_remainder = ""
         self._voice_name = self.tts.voice().name()
         self._enumerator = None
         self._state = "ready"
@@ -145,11 +164,8 @@ class SpeechEngine(QObject):
             return
 
         if use_pitch_xml and self._sapi_voice is not None:
-            xml_text = wrap_pitch_xml(text, pitch_middle)
             try:
-                self._sapi_voice.Speak(xml_text, 1 | 2 | 8)  # Async | PurgeBeforeSpeak | IsXML
-                self._using_sapi_direct = True
-                self._set_state("speaking")
+                self._speak_direct(text, pitch_middle)
             except Exception as error:
                 self.error_occurred.emit(str(error))
             return
@@ -157,10 +173,30 @@ class SpeechEngine(QObject):
         self._using_sapi_direct = False
         self.tts.say(text)
 
+    def _speak_direct(self, text: str, pitch_middle: int):
+        xml_text = wrap_pitch_xml(text, pitch_middle)
+        self._sapi_voice.Speak(xml_text, 1 | 2 | 8)  # Async | PurgeBeforeSpeak | IsXML
+        self._direct_text = text
+        # The XML markup is part of the spoken string, so SAPI reports word
+        # positions as offsets into it, not into the plain text.
+        self._direct_prefix = xml_text.find(text)
+        self._direct_pitch = pitch_middle
+        self._direct_remainder = ""
+        self._using_sapi_direct = True
+        self._set_state("speaking")
+
     def pause(self):
         if self._using_sapi_direct and self._sapi_voice is not None:
             try:
-                self._sapi_voice.Pause()
+                # SAPI's own Pause() lets the ~1 s of already-synthesized audio
+                # play out first, which for a short sentence is the whole rest
+                # of it. Purging cuts the audio at the device buffer instead;
+                # the remainder is spoken again on resume.
+                self._direct_remainder = remaining_text(
+                    self._direct_text,
+                    self._sapi_voice.Status.InputWordPosition - self._direct_prefix,
+                )
+                self._sapi_voice.Speak("", 2)  # PurgeBeforeSpeak
                 self._set_state("paused")
             except Exception as error:
                 self.error_occurred.emit(str(error))
@@ -169,9 +205,14 @@ class SpeechEngine(QObject):
 
     def resume(self):
         if self._using_sapi_direct and self._sapi_voice is not None:
+            remainder = self._direct_remainder
+            self._direct_remainder = ""
             try:
-                self._sapi_voice.Resume()
-                self._set_state("speaking")
+                if remainder:
+                    self._speak_direct(remainder, self._direct_pitch)
+                else:
+                    self._using_sapi_direct = False
+                    self._set_state("ready")
             except Exception as error:
                 self.error_occurred.emit(str(error))
             return
@@ -189,6 +230,7 @@ class SpeechEngine(QObject):
             except Exception as error:
                 self.error_occurred.emit(str(error))
             self._using_sapi_direct = False
+            self._direct_remainder = ""
             return
         self.tts.stop()
 
@@ -216,6 +258,7 @@ class SpeechEngine(QObject):
             return
         if running_state == 1:  # SRSEDone: not speaking and not paused
             self._using_sapi_direct = False
+            self._direct_remainder = ""
             self._set_state("ready")
 
     def can_save_to_file(self) -> bool:
