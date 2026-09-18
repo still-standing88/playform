@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (QApplication, QPushButton, QToolButton, QListWidg
 from typing import Dict, Callable, Union, List, Optional, Set
 import logging
 
+from app_constance.key_names import KEY_NAME_ALIASES, key_name
+
 class ShortcutScope:
     GLOBAL = "global"
     CONTEXT_AWARE = "context_aware" 
@@ -248,9 +250,9 @@ class ShortcutManager(QObject):
         if modifiers & Qt.MetaModifier:
             parts.append("Win")
         
-        key_name = self._get_key_name(key)
-        if key_name:
-            parts.append(key_name)
+        name = key_name(key)
+        if name:
+            parts.append(name)
         
         return "+".join(parts)
 
@@ -279,12 +281,13 @@ class ShortcutManager(QObject):
             else:
                 if part in ["[", "]"]:
                     main_key = part
-                elif part.lower() == "backspace":
-                    main_key = "Backspace"
                 elif len(part) == 1:
                     main_key = part.upper()
                 else:
-                    main_key = part.title()
+                    # Aliased spellings ("PgUp", "Esc") have to land on the
+                    # exact name key_name() reports for a live press, which
+                    # .title() alone cannot do ("SysReq" -> "Sysreq").
+                    main_key = KEY_NAME_ALIASES.get(part.casefold(), part.title())
         
         for modifier in modifier_order:
             if modifier in found_modifiers:
@@ -294,49 +297,4 @@ class ShortcutManager(QObject):
             normalized_parts.append(main_key)
         
         return "+".join(normalized_parts)
-
-    def _get_key_name(self, key) -> str:
-        special_keys = {
-            Qt.Key_Escape: "Escape",
-            Qt.Key_Tab: "Tab",
-            Qt.Key_Backtab: "Backtab",
-            Qt.Key_Backspace: "Backspace",
-            Qt.Key_Return: "Return",
-            Qt.Key_Enter: "Enter",
-            Qt.Key_Insert: "Insert",
-            Qt.Key_Delete: "Delete",
-            Qt.Key_Pause: "Pause",
-            Qt.Key_Print: "Print",
-            Qt.Key_SysReq: "SysReq",
-            Qt.Key_Clear: "Clear",
-            Qt.Key_Home: "Home",
-            Qt.Key_End: "End",
-            Qt.Key_Left: "Left",
-            Qt.Key_Up: "Up",
-            Qt.Key_Right: "Right",
-            Qt.Key_Down: "Down",
-            Qt.Key_PageUp: "PageUp",
-            Qt.Key_PageDown: "PageDown",
-            Qt.Key_Space: "Space",
-            Qt.Key_BracketLeft: "[",
-            Qt.Key_BracketRight: "]",
-        }
-        
-        if key in special_keys:
-            return special_keys[key]
-        
-        if Qt.Key_F1 <= key <= Qt.Key_F35:
-            return f"F{key - Qt.Key_F1 + 1}"
-        
-        if 32 <= key <= 126:
-            return chr(key).upper()
-        
-        if Qt.Key_0 <= key <= Qt.Key_9:
-            return chr(key)
-        
-        try:
-            sequence = QKeySequence(key)
-            return sequence.toString()
-        except:
-            return f"Key_{key}"
 
