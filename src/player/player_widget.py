@@ -651,8 +651,7 @@ class PlayerWidget(QWidget):
 
 
     def show_path_context_menu(self, position):
-        current_file = self.player_controls._current_file
-        if not current_file:
+        if not self.player_controls.has_loaded_media():
             return
         menu = self.player_controls.build_path_context_menu(self)
         menu.exec(self.mapToGlobal(position))

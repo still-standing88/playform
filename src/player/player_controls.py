@@ -792,9 +792,16 @@ class PlayerControls(QWidget):
     def _check_current_position(self):
         self._repeat_loop_ctrl.check_current_position()
 
+    def has_loaded_media(self) -> bool:
+        """Whether a media instance is really loaded. _current_file alone can't
+        answer that: close_current_media() releases the instance but leaves the
+        last path behind, so the path outlives the media it points at."""
+        instance = getattr(self._player_widget, "player", None)
+        return bool(self._current_file) and getattr(instance, "primary_instance", None) is not None
+
     def show_path_context_menu(self, position):
         """Show dynamic context menu for current file/URL"""
-        if not self._current_file:
+        if not self.has_loaded_media():
             return
         menu = self.build_path_context_menu(self)
         menu.exec(self.current_track_label.mapToGlobal(position))
