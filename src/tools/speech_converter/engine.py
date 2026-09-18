@@ -2,7 +2,7 @@ import os
 import sys
 import tempfile
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtTextToSpeech import QTextToSpeech
 
 ENGINE_PRIORITY = ["sapi", "macos", "speechd", "flite", "mock"]
@@ -35,6 +35,10 @@ class SpeechEngine(QObject):
         self._sapi_voice = None
         self._voice_name = self.tts.voice().name()
         self._enumerator = None
+        self._state = "ready"
+        self._direct_poll = QTimer(self)
+        self._direct_poll.setInterval(250)
+        self._direct_poll.timeout.connect(self._poll_direct_speech)
         if IS_WINDOWS and self.engine_name == "sapi":
             self._init_sapi()
             self._select_sapi_voice(self._sapi_voice, self._voice_name)
@@ -145,7 +149,7 @@ class SpeechEngine(QObject):
             try:
                 self._sapi_voice.Speak(xml_text, 1 | 2 | 8)  # Async | PurgeBeforeSpeak | IsXML
                 self._using_sapi_direct = True
-                self.state_changed.emit("speaking")
+                self._set_state("speaking")
             except Exception as error:
                 self.error_occurred.emit(str(error))
             return
@@ -157,7 +161,7 @@ class SpeechEngine(QObject):
         if self._using_sapi_direct and self._sapi_voice is not None:
             try:
                 self._sapi_voice.Pause()
-                self.state_changed.emit("paused")
+                self._set_state("paused")
             except Exception as error:
                 self.error_occurred.emit(str(error))
             return
@@ -167,7 +171,7 @@ class SpeechEngine(QObject):
         if self._using_sapi_direct and self._sapi_voice is not None:
             try:
                 self._sapi_voice.Resume()
-                self.state_changed.emit("speaking")
+                self._set_state("speaking")
             except Exception as error:
                 self.error_occurred.emit(str(error))
             return
@@ -177,7 +181,7 @@ class SpeechEngine(QObject):
         if self._using_sapi_direct and self._sapi_voice is not None:
             try:
                 self._sapi_voice.Speak("", 2)  # PurgeBeforeSpeak
-                self.state_changed.emit("ready")
+                self._set_state("ready")
             except Exception as error:
                 self.error_occurred.emit(str(error))
             self._using_sapi_direct = False
@@ -185,7 +189,30 @@ class SpeechEngine(QObject):
         self.tts.stop()
 
     def state(self):
-        return self.tts.state()
+        return self._state
+
+    def _set_state(self, state: str):
+        self._state = state
+        if state == "speaking" and self._using_sapi_direct:
+            self._direct_poll.start()
+        else:
+            self._direct_poll.stop()
+        self.state_changed.emit(state)
+
+    def _poll_direct_speech(self):
+        # SpVoice reports the utterance's own progress, which is the only
+        # signal the direct path has that the speech ended -- Qt's engine
+        # stays Ready throughout it, so nothing else would clear "speaking".
+        try:
+            running_state = self._sapi_voice.Status.RunningState
+        except Exception as error:
+            self.error_occurred.emit(str(error))
+            self._using_sapi_direct = False
+            self._set_state("ready")
+            return
+        if running_state == 1:  # SRSEDone: not speaking and not paused
+            self._using_sapi_direct = False
+            self._set_state("ready")
 
     def can_save_to_file(self) -> bool:
         return IS_WINDOWS and self._sapi_voice is not None
@@ -254,12 +281,16 @@ class SpeechEngine(QObject):
         ffmpeg.execute()
 
     def _on_state_changed(self, state):
+        if self._using_sapi_direct:
+            # SpVoice is the one speaking, so Qt's Ready for a queued-up Qt
+            # utterance would otherwise end the direct one's state mid-sentence.
+            return
         labels = {
             QTextToSpeech.State.Ready: "ready",
             QTextToSpeech.State.Speaking: "speaking",
             QTextToSpeech.State.Paused: "paused",
             QTextToSpeech.State.Error: "error",
         }
-        self.state_changed.emit(labels.get(state, "ready"))
+        self._set_state(labels.get(state, "ready"))
         if state == QTextToSpeech.State.Error:
             self.error_occurred.emit(self.tts.errorString())
