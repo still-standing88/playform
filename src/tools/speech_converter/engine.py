@@ -52,6 +52,10 @@ class SpeechEngine(QObject):
         self._direct_prefix = 0
         self._direct_pitch = 0
         self._direct_remainder = ""
+        self._qt_text = ""
+        self._qt_word_start = None
+        self._qt_remainder = ""
+        self.tts.sayingWord.connect(self._on_saying_word)
         self._voice_name = self.tts.voice().name()
         self._enumerator = None
         self._state = "ready"
@@ -171,6 +175,9 @@ class SpeechEngine(QObject):
             return
 
         self._using_sapi_direct = False
+        self._qt_text = text
+        self._qt_word_start = None
+        self._qt_remainder = ""
         self.tts.say(text)
 
     def _speak_direct(self, text: str, pitch_middle: int):
@@ -201,7 +208,14 @@ class SpeechEngine(QObject):
             except Exception as error:
                 self.error_occurred.emit(str(error))
             return
-        self.tts.pause()
+        if self._qt_word_start is None:
+            # An engine that reports no word positions cannot be resumed from a
+            # cut point, so Qt's own pause is all this one can have.
+            self.tts.pause()
+            return
+        self._qt_remainder = remaining_text(self._qt_text, self._qt_word_start)
+        self.tts.stop()
+        self._set_state("paused")
 
     def resume(self):
         if self._using_sapi_direct and self._sapi_voice is not None:
@@ -216,7 +230,16 @@ class SpeechEngine(QObject):
             except Exception as error:
                 self.error_occurred.emit(str(error))
             return
-        self.tts.resume()
+        remainder = self._qt_remainder
+        if not remainder:
+            self.tts.resume()
+            return
+        self._qt_remainder = ""
+        self._qt_text = remainder
+        self._qt_word_start = None
+        # The state stays "paused" until Qt reports it speaking again, so the
+        # Ready the purge reports late cannot end the resumed utterance.
+        self.tts.say(remainder)
 
     def stop(self):
         if self._using_sapi_direct and self._sapi_voice is not None:
@@ -232,7 +255,12 @@ class SpeechEngine(QObject):
             self._using_sapi_direct = False
             self._direct_remainder = ""
             return
+        self._qt_remainder = ""
+        self._qt_word_start = None
         self.tts.stop()
+        # Qt reports Ready for this one only once its engine gets there, and a
+        # purge-pause has already claimed the paused state; stopping ends it.
+        self._set_state("ready")
 
     def state(self):
         return self._state
@@ -327,10 +355,26 @@ class SpeechEngine(QObject):
         ffmpeg.input(wav_path).output(output_path)
         ffmpeg.execute()
 
+    def _on_saying_word(self, word, _id, start, _length):
+        if self._using_sapi_direct:
+            return
+        # Offsets are only trusted where the word really sits: an engine that
+        # reports something else, or an event still in flight from a purged
+        # utterance, would otherwise cut the text in the wrong place.
+        if not 0 <= start < len(self._qt_text):
+            return
+        if self._qt_text[start:start + len(word)] != word:
+            return
+        self._qt_word_start = start
+
     def _on_state_changed(self, state):
         if self._using_sapi_direct:
             # SpVoice is the one speaking, so Qt's Ready for a queued-up Qt
             # utterance would otherwise end the direct one's state mid-sentence.
+            return
+        if state == QTextToSpeech.State.Ready and self._state == "paused":
+            # Qt reports Ready for the purge that implements pause; pausing is
+            # ours to end, on resume or stop.
             return
         labels = {
             QTextToSpeech.State.Ready: "ready",
