@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
-    QPushButton, QLineEdit, QMessageBox, QHeaderView, QMenu, QCheckBox,
-    QWidget
+    QPushButton, QLineEdit, QMessageBox, QHeaderView, QMenu
 )
 from PySide6.QtCore import Qt, Slot, Signal
 from PySide6.QtGui import QKeySequence
@@ -111,8 +110,8 @@ class HotkeysTree(QTreeWidget):
     def keyPressEvent(self, event):
         current_item = self.currentItem()
         is_action_row = current_item is not None and current_item.parent() is not None
-        # The Enabled cell is an item widget, not a checkable item, so Qt's
-        # built-in Space-toggles-the-check behaviour never reaches it.
+        # Qt only toggles the check state of the current cell's own column,
+        # so Space on the Shortcut cell would do nothing without this.
         if event.key() == Qt.Key.Key_Space and is_action_row:
             self.toggle_requested.emit(current_item)
             return
@@ -145,12 +144,12 @@ class HotkeysDialog(QDialog):
         layout.addWidget(self.search_edit)
 
         self.tree = HotkeysTree()
-        self.tree.setColumnCount(3)
-        self.tree.setHeaderLabels([_("Action"), _("Shortcut"), _("Enabled")])
+        self.tree.setColumnCount(2)
+        self.tree.setHeaderLabels([_("Action"), _("Shortcut")])
         self.tree.setAlternatingRowColors(True)
         self.tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.tree.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.tree.header().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.tree.itemChanged.connect(self.on_item_changed)
         self.tree.itemClicked.connect(self.on_item_clicked)
         self.tree.itemDoubleClicked.connect(self.on_item_double_clicked)
         self.tree.enter_pressed.connect(self.start_editing)
@@ -197,24 +196,21 @@ class HotkeysDialog(QDialog):
 
     def _set_action_item_enabled(self, item, category, action):
         is_enabled = key_config.is_hotkey_enabled(category, action)
-        item.setData(2, Qt.ItemDataRole.AccessibleTextRole, action)
-        item.setData(
-            2,
-            Qt.ItemDataRole.AccessibleDescriptionRole,
-            _("Hotkey is {state}").format(
-                state=_("enabled") if is_enabled else _("disabled"),
-            ),
+        # Must run even when the value already matches: a QTreeWidgetItem
+        # reads Unchecked without a CheckStateRole set, and an item with no
+        # role gets no checkbox drawn (nor exposed to screen readers).
+        was_blocked = self.tree.blockSignals(True)
+        item.setCheckState(
+            0,
+            Qt.CheckState.Checked if is_enabled else Qt.CheckState.Unchecked,
         )
-        checkbox_container = self.tree.itemWidget(item, 2)
-        checkbox = checkbox_container.findChild(QCheckBox) if checkbox_container else None
-        if checkbox is not None:
-            checkbox.setChecked(is_enabled)
+        self.tree.blockSignals(was_blocked)
 
     def populate_tree(self):
         self.tree.blockSignals(True)
         self.tree.clear()
         for category_name in key_config.key_dict.keys():
-            category_item = QTreeWidgetItem(self.tree, [category_name, "", ""])
+            category_item = QTreeWidgetItem(self.tree, [category_name, ""])
             # Selectable so screen-reader/keyboard users can actually reach
             # and read category rows -- stripping ItemIsSelectable made
             # arrow-key navigation skip them entirely (unreadable).
@@ -223,33 +219,30 @@ class HotkeysDialog(QDialog):
                                   _("Category: {category}").format(category=category_name))
             if category_name in key_config.key_config:
                 for action, shortcut in key_config.key_config[category_name].items():
-                    action_item = QTreeWidgetItem(category_item, [action, shortcut, ""])
+                    action_item = QTreeWidgetItem(category_item, [action, shortcut])
                     action_item.setData(0, Qt.ItemDataRole.UserRole, category_name)
                     self._set_action_item_text(action_item, action, category_name, shortcut)
                     action_item.setFlags(
-                        action_item.flags() & ~Qt.ItemFlag.ItemIsEditable
+                        (action_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                        | Qt.ItemFlag.ItemIsUserCheckable
                     )
                     self._set_action_item_enabled(action_item, category_name, action)
-                    checkbox = QCheckBox()
-                    checkbox.setAccessibleName(action)
-                    checkbox.setToolTip(_("Enable or disable this hotkey"))
-                    checkbox.setChecked(key_config.is_hotkey_enabled(category_name, action))
-                    checkbox.toggled.connect(
-                        lambda enabled, section=category_name, name=action, row=action_item:
-                        self._set_hotkey_enabled(row, section, name, enabled)
-                    )
-                    checkbox_container = QWidget()
-                    checkbox_layout = QHBoxLayout(checkbox_container)
-                    checkbox_layout.setContentsMargins(0, 0, 0, 0)
-                    checkbox_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                    checkbox_layout.addWidget(checkbox)
-                    self.tree.setItemWidget(action_item, 2, checkbox_container)
             self.tree.addTopLevelItem(category_item)
             category_item.setExpanded(False)
         self.tree.header().setSectionsMovable(False)
         self.tree.header().setSectionsClickable(False)
         self.tree.blockSignals(False)
         self.filter_hotkeys(self.search_edit.text())
+
+    @Slot(object, int)
+    def on_item_changed(self, item, column):
+        if column != 0 or item.parent() is None:
+            return
+        key_config.set_hotkey_enabled(
+            item.parent().text(0),
+            item.text(0),
+            item.checkState(0) == Qt.CheckState.Checked,
+        )
 
     @Slot(object, int)
     def on_item_clicked(self, item, column):
@@ -261,16 +254,14 @@ class HotkeysDialog(QDialog):
         if item.parent() is not None and column == 1:
             self.start_editing(item, column)
 
-    def _set_hotkey_enabled(self, item, category, action, enabled):
-        key_config.set_hotkey_enabled(category, action, enabled)
-        self._set_action_item_enabled(item, category, action)
-
     @Slot(object)
     def toggle_item_enabled(self, item):
-        checkbox_container = self.tree.itemWidget(item, 2)
-        checkbox = checkbox_container.findChild(QCheckBox) if checkbox_container else None
-        if checkbox is not None:
-            checkbox.toggle()
+        item.setCheckState(
+            0,
+            Qt.CheckState.Unchecked
+            if item.checkState(0) == Qt.CheckState.Checked
+            else Qt.CheckState.Checked,
+        )
 
     @Slot(object)
     def filter_hotkeys(self, query):
