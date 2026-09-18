@@ -734,8 +734,7 @@ class MainWindow(QMainWindow):
 
         dialog = PreferencesDialog(self, audio_devices, self.apply_audio_device)
         dialog.preferences_saved.connect(self._apply_subtitle_style_prefs)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            _announce_dialogs(_("Preferences saved"))
+        dialog.exec()
 
     def _apply_subtitle_style_prefs(self, _saved_prefs):
         from player.core.subtitle_style import apply_saved_subtitle_style

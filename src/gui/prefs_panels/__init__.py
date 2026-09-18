@@ -1,10 +1,14 @@
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QTabWidget, QDialogButtonBox)
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QTabWidget,
+                               QPushButton, QMessageBox)
 from PySide6.QtCore import Qt, Signal, QTimer
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app_config import prefs
+from app_constance import prefs_dict
+from utilities import signal_manager
+from utilities.announcement_categories import AnnouncementCategory
 from .general_panel import GeneralPanel
 from .media_panel import MediaPanel
 from .subtitles_panel import SubtitlesPanel
@@ -56,13 +60,28 @@ class PreferencesDialog(QDialog):
         self.downloads_panel = DownloadsPanel(self)
         self.tab_widget.addTab(self.downloads_panel, _("Downloads"))
 
-        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
-        layout.addWidget(button_box)
+        button_layout = QHBoxLayout()
+        self.reset_button = QPushButton(_("Reset to Default"))
+        self.reset_button.clicked.connect(self.reset_to_default)
+        self.apply_button = QPushButton(_("Apply"))
+        self.apply_button.clicked.connect(self.apply_changes)
+        self.ok_button = QPushButton(_("OK"))
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button = QPushButton(_("Cancel"))
+        self.cancel_button.clicked.connect(self.reject)
+        for button in (self.reset_button, self.apply_button, self.ok_button, self.cancel_button):
+            # The panels' own fields use Return for their edits; without this
+            # Qt makes whichever button is default close the dialog on Return.
+            button.setAutoDefault(False)
+        button_layout.addWidget(self.reset_button)
+        button_layout.addStretch()
+        button_layout.addWidget(self.apply_button)
+        button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.cancel_button)
+        layout.addLayout(button_layout)
 
-    def load_preferences(self):
-        current_prefs = prefs.prefs
+    def load_preferences(self, values: dict = None):
+        current_prefs = prefs.prefs if values is None else values
 
         self.general_panel.load_settings(current_prefs)
         self.media_panel.load_settings(current_prefs)
@@ -73,7 +92,6 @@ class PreferencesDialog(QDialog):
         self.downloads_panel.load_settings(current_prefs)
             
     def save_preferences(self) -> bool:
-        from PySide6.QtWidgets import QMessageBox
         from utilities.theme_manager import apply_theme
         from utilities.functions import set_restart_flag
         restart_requested = False
@@ -154,12 +172,34 @@ class PreferencesDialog(QDialog):
         app = QApplication.instance()
         if app is not None:
             app.closeAllWindows()
-        
-    def accept(self):
-        if not self.advanced_panel.validate_mpv_options():
+
+    def reset_to_default(self):
+        reply = QMessageBox.question(
+            self,
+            _("Reset to Default"),
+            _("Reset every preference on these tabs to its default value?"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        if reply != QMessageBox.StandardButton.Yes:
             return
-            
+        # Only the panels are reloaded, so a reset is still a pending edit the
+        # user can review, Cancel out of, or commit with Apply/OK like any
+        # other change.
+        self.load_preferences(prefs_dict.prefs)
+
+    def apply_changes(self) -> bool:
+        if not self.advanced_panel.validate_mpv_options():
+            return False
         restart_requested = self.save_preferences()
-        super().accept()
+        # Apply and OK both end up here, so this is the one place that reports
+        # a save: main_window used to announce it after exec() returned, which
+        # an Apply never does.
+        signal_manager.announce(_("Preferences saved"), AnnouncementCategory.DIALOGS)
         if restart_requested:
             QTimer.singleShot(0, self._request_application_restart)
+        return True
+
+    def accept(self):
+        if not self.apply_changes():
+            return
+        super().accept()
