@@ -177,7 +177,7 @@ Preferences are stored in `data/prefs.json`. If the file is missing or corrupted
 
 | Setting | Description |
 |---|---|
-| **Cookies File** | Path to a `cookies.txt` file exported from your browser, used for accessing authenticated content on YouTube and other sites. Browse to select the file. |
+| **Cookies File** | Path to a `cookies.txt` file exported from your browser, used for accessing authenticated content on YouTube and other sites. Browse to select the file. The file is copied into the app's data folder, and yt-dlp is given a temporary copy of that, refreshed on every run — your own file is never modified. |
 | **yt-dlp Path** | Directory where yt-dlp binary is located. Normally managed automatically via the utility downloader, but can be set manually. |
 | **Enable yt-dlp Logging** | Toggle to enable debug output from yt-dlp. When on, a **Verbose Output** checkbox appears for full detail. |
 | **FFmpeg Path** | Directory where FFmpeg binary is located. Normally managed automatically, but can be set manually if you have a custom FFmpeg installation. |
