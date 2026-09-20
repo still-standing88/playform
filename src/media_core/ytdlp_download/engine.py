@@ -25,6 +25,8 @@ from dataclasses import dataclass, field
 from typing import Callable, Optional
 from urllib.parse import urlparse, parse_qs
 
+from .cookies import cookie_args
+
 logger = logging.getLogger(__name__)
 
 CATEGORY_YOUTUBE_VIDEOS = "youtube_videos"
@@ -233,13 +235,7 @@ def find_ytdlp_binary() -> str:
 
 
 def _cookies_args() -> list:
-    cookies_file = _pref("youtube_cookies")
-    if not cookies_file:
-        return []
-    if not os.path.isfile(cookies_file):
-        logger.warning("Configured YouTube cookies file not found, ignoring: %s", cookies_file)
-        return []
-    return ["--cookies", cookies_file]
+    return cookie_args()
 
 
 def _ffmpeg_location_args() -> list:

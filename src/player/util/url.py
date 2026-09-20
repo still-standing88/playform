@@ -1,5 +1,4 @@
 import subprocess
-import logging
 import os
 import json
 import sys
@@ -9,7 +8,6 @@ from typing import Optional, List
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
 headers={ "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" }
-logger = logging.getLogger(__name__)
 YTDLP_PATH = 'yt-dlp'
 YTDLP_LOG_FILE = None
 YTDLP_VERBOSE = False
@@ -40,15 +38,8 @@ def set_ytdlp_log(log_file: Optional[str] = None, verbose: bool = False):
     YTDLP_VERBOSE = verbose
 
 def _get_cookies_arg(cookies: Optional[str] = None) -> List[str]:
-    if not cookies:
-        from app_config import prefs
-        cookies = prefs.prefs.get("youtube_cookies") or ""
-    if not cookies:
-        return []
-    if not os.path.isfile(cookies):
-        logger.warning("Configured YouTube cookies file not found, ignoring: %s", cookies)
-        return []
-    return ['--cookies', cookies]
+    from media_core.ytdlp_download.cookies import cookie_args
+    return cookie_args(cookies or "")
 
 def get_yt_video_info(url: str, cookies: Optional[str] = None) -> dict:
     command = [YTDLP_PATH, '--dump-json', '--no-playlist'] \
