@@ -1,7 +1,3 @@
-import os
-
-from utilities.functions import get_ir_dir
-
 # Factory presets seeded into data/presets/audio_effects/<effect_id>/ the
 # first time mpv_effect_presets.list_presets(effect_id) is called for a
 # freshly-installed effect id (see _seed_defaults_if_empty there). After
@@ -11,8 +7,6 @@ from utilities.functions import get_ir_dir
 # Keys must match the effect's MPVAudioFilter subclass's own
 # mpv_param_map keys 1:1 (see media_core.av_play.mpv_audio_filter and the
 # matching entry in mpv_effects_catalog.MPV_EFFECTS).
-
-_ir_path = lambda name: os.path.join(get_ir_dir(), name)
 
 DEFAULT_EFFECT_PRESETS: dict[str, list] = {
     "echo": [
@@ -56,26 +50,6 @@ DEFAULT_EFFECT_PRESETS: dict[str, list] = {
         ("Gymnasium", {"in_gain": 0.85, "out_gain": 0.7, "decay": 0.6, "room_size": 3.0}),
         ("Whisper Chamber", {"in_gain": 0.7, "out_gain": 0.4, "decay": 0.25, "room_size": 0.55}),
         ("Cavern", {"in_gain": 0.9, "out_gain": 0.85, "decay": 0.8, "room_size": 4.5}),
-    ],
-    "convolution_reverb": [
-        ("Small Speaker (Close)", {"impulse_response_path": _ir_path("Small-Speaker1.wav"), "dry": 1.0, "wet": 0.6}),
-        ("Small Speaker (Distant)", {"impulse_response_path": _ir_path("Small-Speaker3.wav"), "dry": 0.8, "wet": 0.9}),
-        ("Car Interior", {"impulse_response_path": _ir_path("car1.wav"), "dry": 1.0, "wet": 0.7}),
-        ("Car Interior (Alt)", {"impulse_response_path": _ir_path("car2.wav"), "dry": 1.0, "wet": 0.7}),
-        ("Speaker Subtle", {"impulse_response_path": _ir_path("Small-Speaker2.wav"), "dry": 1.0, "wet": 0.4}),
-        ("Speaker Warm", {"impulse_response_path": _ir_path("Small-Speaker4.wav"), "dry": 0.9, "wet": 0.8}),
-        ("Speaker Bright", {"impulse_response_path": _ir_path("Small-Speaker5.wav"), "dry": 0.9, "wet": 0.9}),
-        ("Car Cabin Dry", {"impulse_response_path": _ir_path("car1.wav"), "dry": 1.2, "wet": 0.4}),
-        ("Car Cabin Wet", {"impulse_response_path": _ir_path("car2.wav"), "dry": 0.7, "wet": 1.1}),
-        ("Radio Speaker", {"impulse_response_path": _ir_path("Small-Speaker1.wav"), "dry": 0.8, "wet": 1.2}),
-        ("Vintage Radio", {"impulse_response_path": _ir_path("Small-Speaker3.wav"), "dry": 0.7, "wet": 1.3}),
-        ("Studio Monitor", {"impulse_response_path": _ir_path("Small-Speaker4.wav"), "dry": 1.1, "wet": 0.5}),
-        ("Portable Speaker", {"impulse_response_path": _ir_path("Small-Speaker5.wav"), "dry": 1.0, "wet": 0.7}),
-        ("Hatchback", {"impulse_response_path": _ir_path("car1.wav"), "dry": 0.9, "wet": 0.9}),
-        ("Sedan Cabin", {"impulse_response_path": _ir_path("car2.wav"), "dry": 1.0, "wet": 0.8}),
-        ("Compact Speaker", {"impulse_response_path": _ir_path("Small-Speaker2.wav"), "dry": 1.0, "wet": 0.6}),
-        ("Loud Speaker", {"impulse_response_path": _ir_path("Small-Speaker1.wav"), "dry": 0.9, "wet": 1.0}),
-        ("Deep Cabin", {"impulse_response_path": _ir_path("car1.wav"), "dry": 0.8, "wet": 1.0}),
     ],
     "lowpass": [
         ("Telephone", {"frequency": 3000.0, "poles": 2, "width": 0.707, "mix": 1.0}),

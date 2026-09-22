@@ -10,7 +10,6 @@ from gui_controls.param_widgets import make_param_widget, read_param_widget, con
 from gui_controls.effect_dialogs import EffectSelectionDialog, EffectEditDialog
 from media_core.av_play.mpv_effects_catalog import MPV_EFFECTS, get_mpv_effect
 from media_core.av_play import mpv_effect_presets
-from utilities.functions import get_ir_dir
 
 EFFECT_ID_ROLE = Qt.ItemDataRole.UserRole
 
@@ -254,7 +253,6 @@ class AudioFiltersWidget(QWidget):
         dialog = EffectEditDialog(
             effect, values, parent=self,
             preset_backend=mpv_effect_presets,
-            default_file_dir=get_ir_dir(),
             on_param_changed=_apply_live,
         )
         accepted = dialog.exec() == QDialog.DialogCode.Accepted

@@ -848,8 +848,7 @@ class MPVEarwaxFilter(MPVAudioFilter):
 
 class MPVConvolutionReverbFilter(MPVAudioFilter):
     """Real convolution reverb via ffmpeg's `afir`, driven by a user-picked
-    (or bundled, see media_core.av_play.mpv_effects_catalog) impulse-
-    response .wav file.
+    impulse-response .wav file.
 
     `afir` is a 2-input filter (dry signal + a separate IR stream) -- the
     same shape that made the naive attempt at MPVReverbFilter above fail

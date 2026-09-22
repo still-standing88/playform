@@ -155,9 +155,6 @@ def get_assets_dir() -> str:
         return str(Path(get_app_path()) / "assets")
     return str(Path(__file__).parent.parent.parent / "assets")
 
-def get_ir_dir() -> str:
-    return os.path.join(get_assets_dir(), "IR")
-
 def get_exe_parent_dir():
     return Path(sys.argv[0]).resolve().parent if is_frozen() else Path(sys.executable).parent
 
