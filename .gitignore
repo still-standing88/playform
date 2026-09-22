@@ -17,3 +17,6 @@ archive/
 
 src/public_key.py
 src/assets_rc.py
+
+/release_gh.py
+/change-log.md
