@@ -140,20 +140,15 @@ def get_app_path() -> str:
     if is_frozen():
         BASE_DIR = Path(sys.argv[0]).resolve().parent
     else:
-        BASE_DIR = Path(__file__).parent.parent
+        #BASE_DIR = Path(__file__).parent.parent
+        BASE_DIR = Path(get_parent_dir())
     return str(BASE_DIR)
 
 def get_script_parent_dir():
     return Path(__file__).parent.parent.parent
 
 def get_assets_dir() -> str:
-    # get_app_path() is "src" in dev mode (not the repo root) but the app's
-    # own install/dist directory when frozen, and assets/ is bundled
-    # straight into that dist directory (see tasks.py's compile/bundle
-    # tasks) -- so frozen and dev mode need different traversal.
-    if is_frozen():
-        return str(Path(get_app_path()) / "assets")
-    return str(Path(__file__).parent.parent.parent / "assets")
+    return str(Path(get_app_path()) / "assets")
 
 def get_exe_parent_dir():
     return Path(sys.argv[0]).resolve().parent if is_frozen() else Path(sys.executable).parent
