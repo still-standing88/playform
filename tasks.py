@@ -31,6 +31,15 @@ def clear_cache(c):
 
 
 @task
+def clear_src_cache(c):
+    removed = 0
+    for cache_dir in SRC_DIR.rglob("__pycache__"):
+        shutil.rmtree(str(cache_dir), ignore_errors=True)
+        removed += 1
+    print(f"Removed {removed} __pycache__ dir(s) under {SRC_DIR}")
+
+
+@task
 def run_app(c):
     if sys.platform == "win32":
         c.run(r'python src\app.py', pty=False, in_stream=False)
@@ -243,6 +252,7 @@ namespace = Collection(build, dist)
 namespace.add_task(install_req)
 namespace.add_task(dev_install)
 namespace.add_task(clear_cache)
+namespace.add_task(clear_src_cache)
 namespace.add_task(run_app)
 namespace.add_task(translate_gen)
 namespace.add_task(translate_compile)
