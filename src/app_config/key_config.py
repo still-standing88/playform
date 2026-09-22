@@ -8,7 +8,7 @@ from app_constance import default_keys
 key_dict = default_keys.key_dict.copy()
 hotkeys = {}
 hotkeys_funcs = {}
-key_config = cfgp.ConfigParser()
+key_config = cfgp.ConfigParser(delimiters=("=",))
 key_config.optionxform = str
 DISABLED_HOTKEYS_SECTION = "Disabled hotkeys"
 
