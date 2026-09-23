@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="PlayForm" Language="1033" Version="1.0.0"
-           Manufacturer="JoyBytes" UpgradeCode="78a1de45-299d-4be2-810c-d409c5db1ebc">
+  <!-- ProductVersion is passed by build-msi.ps1 (from dist.py, which reads
+       APP_VERSION out of src/app_info.py). -->
+  <Product Id="*" Name="PlayForm" Language="1033" Version="$(var.ProductVersion)"
+           Manufacturer="Joybytes" UpgradeCode="78a1de45-299d-4be2-810c-d409c5db1ebc">
 
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perUser"
-             Description="PlayForm - Media Player by JoyBytes"
-             Comments="A versatile media player." />
+             Description="PlayForm - Media Player by Joybytes"
+             Comments="A modern, accessible media player for audio and video files." />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of PlayForm is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
-    <!-- WixUI_InstallDir includes the License Agreement dialog automatically -->
-    <UIRef Id="WixUI_InstallDir" />
+    <!-- Feature tree: Licence Agreement, then the Customize page where the
+         user picks feature and (through WIXUI_INSTALLDIR) install folder. -->
+    <UIRef Id="WixUI_FeatureTree" />
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-    <WixVariable Id="WixUILicenseRtf" Value="installer\windows\License.rtf" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
 
     <!-- Optional: uncomment to add branding bitmaps
     <WixVariable Id="WixUIBannerBmp" Value="installer\windows\banner.bmp" />
@@ -21,21 +24,28 @@
 
     <Property Id="APPLICATIONFOLDER">
       <RegistrySearch Id="ApplicationFolderRegistry" Root="HKCU"
-                      Key="Software\JoyBytes\PlayForm" Name="InstallDir" Type="raw" />
+                      Key="Software\Joybytes\PlayForm" Name="InstallDir" Type="raw" />
     </Property>
 
-    <Feature Id="ProductFeature" Title="PlayForm" Level="1"
-             Description="Main application files">
+    <Feature Id="MainFeature" Title="PlayForm" Level="1" Absent="disallow"
+             Description="The application itself.">
       <ComponentGroupRef Id="HarvestedFiles" />
-      <ComponentRef Id="ApplicationShortcut" />
-      <ComponentRef Id="DesktopShortcut" />
-      <ComponentRef Id="ProgramMenuFolder" />
-      <ComponentRef Id="FileAssociations" />
+      <ComponentRef Id="InstallDirRegistration" />
     </Feature>
 
-    <Feature Id="DesktopShortcutFeature" Title="Desktop Shortcut" Level="1"
-             Description="Create a shortcut on the desktop">
+    <Feature Id="StartMenuShortcutFeature" Title="Start Menu shortcut" Level="1"
+             Description="Add a PlayForm shortcut to the Start Menu.">
+      <ComponentRef Id="ApplicationShortcut" />
+    </Feature>
+
+    <Feature Id="DesktopShortcutFeature" Title="Desktop shortcut" Level="1"
+             Description="Add a PlayForm shortcut to the desktop.">
       <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+
+    <Feature Id="FileAssociationsFeature" Title="File associations" Level="1"
+             Description="Open the audio and video formats the app supports with PlayForm from Explorer.">
+      <ComponentRef Id="FileAssociations" />
     </Feature>
   </Product>
 
@@ -69,7 +79,7 @@
                   Icon="PlayForm.exe" />
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
         <RegistryValue Root="HKCU"
-                       Key="Software\JoyBytes\PlayForm"
+                       Key="Software\Joybytes\PlayForm"
                        Name="installed"
                        Type="integer"
                        Value="1"
@@ -88,7 +98,7 @@
                   WorkingDirectory="INSTALLFOLDER"
                   Icon="PlayForm.exe" />
         <RegistryValue Root="HKCU"
-                       Key="Software\JoyBytes\PlayForm"
+                       Key="Software\Joybytes\PlayForm"
                        Name="DesktopShortcut"
                        Type="integer"
                        Value="1"
@@ -99,70 +109,30 @@
 
   <Fragment>
     <DirectoryRef Id="INSTALLFOLDER">
-      <Component Id="FileAssociations" Guid="4664aae0-7a97-4f7f-b54b-2bc48603588f">
-
-        <!-- Video formats -->
-        <RegistryValue Root="HKCU" Key="Software\Classes\.mp4\OpenWithProgids"  Name="PlayForm.mp4"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.mkv\OpenWithProgids"  Name="PlayForm.mkv"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.avi\OpenWithProgids"  Name="PlayForm.avi"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.mov\OpenWithProgids"  Name="PlayForm.mov"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.wmv\OpenWithProgids"  Name="PlayForm.wmv"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.flv\OpenWithProgids"  Name="PlayForm.flv"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.webm\OpenWithProgids" Name="PlayForm.webm" Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.ts\OpenWithProgids"   Name="PlayForm.ts"   Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.m4v\OpenWithProgids"  Name="PlayForm.m4v"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.3gp\OpenWithProgids"  Name="PlayForm.3gp"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.ogv\OpenWithProgids"  Name="PlayForm.ogv"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.mpg\OpenWithProgids"  Name="PlayForm.mpg"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.mpeg\OpenWithProgids" Name="PlayForm.mpeg" Value="" Type="string" />
-
-        <!-- Audio formats -->
-        <RegistryValue Root="HKCU" Key="Software\Classes\.mp3\OpenWithProgids"  Name="PlayForm.mp3"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.flac\OpenWithProgids" Name="PlayForm.flac" Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.aac\OpenWithProgids"  Name="PlayForm.aac"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.ogg\OpenWithProgids"  Name="PlayForm.ogg"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.wav\OpenWithProgids"  Name="PlayForm.wav"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.m4a\OpenWithProgids"  Name="PlayForm.m4a"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.wma\OpenWithProgids"  Name="PlayForm.wma"  Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.opus\OpenWithProgids" Name="PlayForm.opus" Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.aiff\OpenWithProgids" Name="PlayForm.aiff" Value="" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\.ape\OpenWithProgids"  Name="PlayForm.ape"  Value="" Type="string" />
-
-        <!-- ProgID for open command (mp4 as primary example; replicate for others as needed) -->
-        <RegistryValue Root="HKCU" Key="Software\Classes\PlayForm.mp4"
-                       Value="PlayForm Media File" Type="string" />
-        <RegistryValue Root="HKCU" Key="Software\Classes\PlayForm.mp4\shell\open\command"
-                       Value="&quot;[INSTALLFOLDER]PlayForm.exe&quot; &quot;%1&quot;" Type="string" />
-
+      <!-- Remembers where the app went so upgrades and maintenance runs can
+           find it again. -->
+      <Component Id="InstallDirRegistration" Guid="a1bc5585-319e-481e-b498-14b1d31f4f83">
         <RegistryValue Root="HKCU"
-                       Key="Software\JoyBytes\PlayForm"
-                       Name="FileAssociations"
-                       Type="integer"
-                       Value="1"
-                       KeyPath="yes" />
-      </Component>
-    </DirectoryRef>
-  </Fragment>
-
-  <Fragment>
-    <DirectoryRef Id="ProgramMenuFolder">
-      <Component Id="ProgramMenuFolder" Guid="a1bc5585-319e-481e-b498-14b1d31f4f83">
-        <RemoveFolder Id="ProgramMenuFolder" On="uninstall" />
-        <RegistryValue Root="HKCU"
-                       Key="Software\JoyBytes\PlayForm"
+                       Key="Software\Joybytes\PlayForm"
                        Name="InstallDir"
                        Type="string"
                        Value="[INSTALLFOLDER]"
                        KeyPath="yes" />
+        <RemoveFolder Id="INSTALLFOLDER" On="uninstall" />
       </Component>
     </DirectoryRef>
   </Fragment>
 
-  <Icon Id="PlayForm.exe" SourceFile="PlayForm.exe" />
-  <Property Id="ARPPRODUCTICON" Value="PlayForm.exe" />
+  <?include file_associations.wxi?>
 
-  <Property Id="ARPHELPLINK"    Value="https://joybytes.com/playform" />
-  <Property Id="ARPURLINFOABOUT" Value="https://joybytes.com" />
-  <Property Id="ARPNOREPAIR"    Value="1" />
-  <Property Id="ARPNOMODIFY"    Value="1" />
+  <Fragment>
+    <Icon Id="PlayForm.exe" SourceFile="PlayForm.exe" />
+    <Property Id="ARPPRODUCTICON" Value="PlayForm.exe" />
+
+    <Property Id="ARPCOMMENTS"    Value="A modern, accessible media player for audio and video files." />
+    <Property Id="ARPCONTACT"     Value="support@joybytes.dev" />
+    <Property Id="ARPHELPLINK"    Value="https://joybytes.dev" />
+    <Property Id="ARPURLINFOABOUT" Value="https://joybytes.dev" />
+    <Property Id="ARPNOREPAIR"    Value="1" />
+  </Fragment>
 </Wix>
