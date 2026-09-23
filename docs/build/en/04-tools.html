@@ -64,12 +64,12 @@
 <p><strong>Source tab:</strong><br>
 - <strong>Add Files...</strong> — multi-select file dialog filtered to PlayForm's known audio/video extensions.<br>
 - <strong>Add Folder...</strong> — adds a folder, with <strong>Include all subfolders</strong> and a format-scope choice (<strong>Audio formats</strong> [default], <strong>Video formats</strong>, <strong>All formats</strong>, or a <strong>Custom format</strong>); only files matching the chosen scope are picked up per folder when the job runs.<br>
-- <strong>Remove Selected</strong> / <strong>Clear All</strong>, plus the same actions via right-click and the Delete key.</p>
+- Right-click an entry for <strong>Add ▶</strong> (<strong>Add File(s)...</strong>, <strong>Add Folder...</strong>), <strong>Remove</strong>, and <strong>Clear All</strong>; pressing Delete removes the selected entries.</p>
 <p><strong>Convert tab</strong> — a mode switch between <strong>Audio</strong> (default) and <strong>Video</strong>:<br>
 - <strong>Audio:</strong> <strong>Format</strong> (MP3, Ogg Vorbis, Opus, AAC, M4A, M4B, FLAC, WAV, AIFF, WMA, AC-3, WavPack, MP2, AMR-NB, ALAC), <strong>Sample Rate</strong> ("Keep Original" or a rate ladder appropriate to the format), <strong>Bit Rate</strong> ("Keep Original" or a kbps ladder — hidden for lossless-only formats), <strong>Use Variable Bit Rate (Quality)</strong> (where the format supports VBR), <strong>Bit Depth</strong> (for FLAC/WAV/AIFF/WavPack/ALAC), and a <strong>Codec Options</strong> panel that rebuilds itself per format (e.g. MP3's encoder quality and joint-stereo toggle, Opus's VBR mode/complexity/application/frame duration, FLAC's compression level, AC-3's dialogue normalization, and so on).<br>
 - <strong>Video:</strong> <strong>Format</strong> (MP4/H.264, MKV/H.264, WebM/VP9, AVI/MPEG-4, MOV/H.264), <strong>Resolution</strong> ("Keep Original" or 3840×2160/1920×1080/1280×720/854×480), <strong>Video Bit Rate</strong> ("Keep Original" or 500k–12000k), <strong>Frame Rate</strong> ("Keep Original" or 24/25/30/50/60).</p>
 <p><strong>Processing tab</strong> — builds an ordered effects chain applied during conversion:<br>
-- Shows the list of <strong>applied</strong> effects in order, with <strong>Add Edit...</strong>, <strong>Add Filter...</strong>, <strong>Edit Selected...</strong>, and <strong>Remove Selected</strong> (double-click also edits).<br>
+- The list shows the <strong>applied</strong> effects in order. <strong>Add Edit...</strong> and <strong>Add Filter...</strong> are the only buttons; everything else is done on the entry itself — right-click for <strong>Edit...</strong>, <strong>Remove</strong>, <strong>Move Up</strong>, <strong>Move Down</strong>, and <strong>Clear All</strong>, or double-click to edit and press Delete to remove the selected entry.<br>
 - <strong>Add Edit...</strong> / <strong>Add Filter...</strong> open a categorized picker over the built-in effects catalog:<br>
   - <strong>Edits:</strong> Loudness (Normalize Peak, Normalize RMS, EBU R128/loudnorm, ReplayGain), Volume (increase/decrease/multiply), Silence (remove leading/trailing/all silence, trim below threshold), Fade (in/out), Trim (start/end/duration), Reverse.<br>
   - <strong>Filters:</strong> EQ (10-band, 3-band parametric, high/low/band-pass, notch), Dynamics (compressor, limiter, expander, noise gate), Pitch (speed without pitch, pitch without speed), Time-Based (delay, echo, algorithmic reverb, chorus, flanger, phaser, and convolution reverb — the one effect that needs a secondary Impulse Response File plus dry/wet gain).<br>
@@ -291,29 +291,7 @@
 <li><strong>Cancel</strong> actually means <strong>Stop and finalize</strong> — despite the label, anything already captured is kept, not discarded.</li>
 <li>When the capture stops, the view automatically switches back to the Configure view.</li>
 </ul>
-<p>Three transport hotkeys are active only while the tool's dialog has focus (remappable in <strong>Options &gt; Manage Hotkeys</strong>, under a "Multi Device Capture" section — see <a href="03-customization-options.html#31-shortcuts">Section 3.1</a>):</p>
-<table>
-<thead>
-<tr>
-<th>Action</th>
-<th>Default Key</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Start capture</td>
-<td>Ctrl+Alt+R</td>
-</tr>
-<tr>
-<td>Pause/Resume capture</td>
-<td>Ctrl+Alt+P</td>
-</tr>
-<tr>
-<td>Stop capture</td>
-<td>Ctrl+Alt+S</td>
-</tr>
-</tbody>
-</table>
+<p>Three transport hotkeys (start, pause/resume, and stop capture) are active only while the tool's dialog has focus; they're remappable under the "Multi Device Capture" category in <strong>Options &gt; Manage Hotkeys</strong> — see <a href="03-customization-options.html#multi-device-capture-shortcuts">Section 3.1</a>.</p>
 <h3 id="how-pauseresume-works-and-output-files">How pause/resume works, and output files</h3>
 <p>Each enabled source records through its own capture process. Pausing gracefully finalizes each source's current segment; resuming starts a new segment for the same device. When you stop, a source's segment(s) are losslessly joined into one final file named <code>{source name}_{date}_{time}.{container}</code> in the session's output folder. The intermediate segment files created by a pause/resume cycle are deleted after joining, unless <strong>Keep intermediate segment files after a paused session</strong> is enabled in Settings.</p>
 <h3 id="platform-notes">Platform notes</h3>
@@ -326,10 +304,10 @@
 <h2 id="47-other-tools">4.7. Other Tools</h2>
 <h3 id="logs-viewer">Logs Viewer</h3>
 <p><strong>Access:</strong> Tools &gt; Debug &gt; View Logs…</p>
-<p>The Logs Viewer opens a dialog showing all log files in the <code>logs/</code> directory. The left panel lists every log file; selecting one displays its contents in the right panel. Useful for troubleshooting or reviewing application activity.</p>
+<p>The Logs Viewer opens a dialog (titled "Logs Viewer") listing every log file in the <code>logs/</code> directory on the left; selecting one displays its contents in a read-only view on the right. A <strong>Close</strong> button dismisses the dialog. Useful for troubleshooting or reviewing application activity.</p>
 <h3 id="debug-console-dock">Debug Console Dock</h3>
 <p><strong>Access:</strong> Tools &gt; Debug &gt; Show Console Dock</p>
-<p>The Debug Console is a dockable panel that displays real-time application output, including logging messages and system output. It can be docked anywhere in the main window or floated as a separate window. This tool is intended for developers and advanced troubleshooting.</p>
+<p>The Debug Console is a dockable panel that displays real-time application output, including logging messages and system output. It starts tabbed together with the Player at the bottom of the main window; it can be moved and floated, but not closed — use <strong>Show Console Dock</strong> to toggle it. This tool is intended for developers and advanced troubleshooting.</p>
 <hr>
 <p><strong>Previous:</strong> <a href="03-customization-options.html">← 3. Customization and Options</a> | <strong>Next:</strong> <a href="05-legal.html">5. Legal →</a></p>
 </body>

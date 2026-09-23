@@ -16,7 +16,7 @@ The window is divided into dockable panels (see [Section 2.1.4](#214-docking-pan
 
 ### 2.1.1. Menubar
 
-The menubar contains five menus: **File**, **Media**, **View**, **Tools**, and **Options**. Each is detailed below.
+The menubar contains six menus: **File**, **Media**, **View**, **Tools**, **Downloads**, and **Options**. Each is detailed below.
 
 #### File Menu
 
@@ -47,20 +47,21 @@ The menubar contains five menus: **File**, **Media**, **View**, **Tools**, and *
 | **Next** | Jumps to the next track in the playlist. |
 | *separator* | |
 | **Toggle Repeat** | Cycles the repeat mode through three states. The menu label updates to show the current state: **Toggle Repeat: Off**, **Toggle Repeat: All**, or **Toggle Repeat: One**. |
+| **Bookmarks…** | Opens the Bookmarks dialog for the current file (see [Bookmarks](#bookmarks)). |
+| **Go to Time…** | Jumps to a specific playback position; opens a small dialog where you enter a timestamp. |
 
 #### View Menu
 
-All View menu items are checkable, reflecting whether the corresponding panel is currently visible.
-
 | Menu Item | Description |
 |---|---|
-| **Show Recents/Favorites** | Shows or hides the Recents & Favorites dock panel. |
-| **Show Explorer** | Shows or hides the File Explorer dock panel. |
-| **Minimize Player** | When checked, the Player panel is hidden. |
-| **Show Playlists** | Shows or hides the Playlists dock panel. |
+| **Zoom In** | Scales the entire user interface up. The zoom level is remembered between sessions. |
+| **Zoom Out** | Scales the entire user interface down. |
 | *separator* | |
-| **Show Radio Browser** | Shows or hides the Radio Browser dock panel. |
-| **Show Podcasts** | Shows or hides the Podcasts dock panel. |
+| **Minimize Player** | Checkable — hides the Player panel entirely (see [Player Panel Minimization](#player-panel-minimization)). |
+| *separator* | |
+| **Panels ▶** | Checkable toggles for each panel: **Show Recents/Favorites**, **Show Explorer**, **Show Playlists**, **Show Radio Browser**, and **Show Podcasts**. |
+| *separator* | |
+| **Window ▶** | Checkable toggles for the **Toolbar**, **Status Bar**, and **Panels Bar**. All three are remembered between sessions. |
 
 #### Tools Menu
 
@@ -75,10 +76,17 @@ All View menu items are checkable, reflecting whether the corresponding panel is
 | **Speech Converter** | Opens the Speech Converter text-to-speech tool. |
 | **Multi Device Capture** | Opens the Multi Device Capture tool for recording several cameras, screens, and audio devices at once. |
 | *separator* | |
-| **Download Manager** | Opens or restores the Download Manager dialog. |
-| **Debug ▶** | Submenu with two entries: **View Logs…** (opens the log viewer dialog) and **Show Console Dock** (toggles a developer console panel for troubleshooting). |
+| **Debug ▶** | Submenu with **View Logs…** (opens the log viewer dialog), **Show Console Dock** (checkable — toggles a developer console panel for troubleshooting), **Restart Application**, and **Restart in Debug Mode…** (restarts PlayForm in debug mode). |
 
-See [Section 4](04-tools.md) for a full walkthrough of every tool.
+#### Downloads Menu
+
+| Menu Item | Description |
+|---|---|
+| **Add Download…** | Opens the Add Download dialog: enter a direct http(s) link, a destination folder, and an optional filename. A link whose filename doesn't end in a media extension PlayForm recognizes is routed to the yt-dlp Download Manager automatically. |
+| **Download From Link File…** | Imports every link found in a text file into the yt-dlp Download Manager, after a review step. |
+| *separator* | |
+| **Download Center…** | Opens the Download Manager (see [Section 2.7.1](#271-download-manager)). |
+| **yt-dlp Download Manager…** | Opens the yt-dlp Download Manager (see [Section 2.7.2](#272-yt-dlp-download-manager)). |
 
 #### Options Menu
 
@@ -92,6 +100,10 @@ See [Section 4](04-tools.md) for a full walkthrough of every tool.
 | *separator* | |
 | **Check for Updates…** | Checks for a newer version of PlayForm. |
 | **Get/Update Utilities…** | Opens the utility download dialog (for downloading or updating FFmpeg and yt-dlp). |
+| *separator* | |
+| **Documentation…** | Opens this documentation in your web browser. |
+
+See [Section 4](04-tools.md) for a full walkthrough of every tool.
 
 ---
 
@@ -110,7 +122,7 @@ Right-clicking anywhere on the toolbar shows a context menu with the **Customize
 
 Between the two lists, four buttons allow you to add, remove, move up, and move down tools. Both lists support multi-selection (Ctrl+Click or Shift+Click). The **Reset to Default** button clears all tools from the toolbar. Click **OK** to save your changes, or **Cancel** to discard them. The configuration is kept between sessions.
 
-> **Note:** The top-right corner of the menu bar shows restore buttons — Show Tool, Show Downloader, Show Cataloging, Show Manage Database — whenever the corresponding window has been minimized.
+> **Note:** The top-right corner of the menu bar shows restore buttons — Show Tool, Show Downloader, Show yt-dlp Downloader, Show Cataloging, Show Manage Database — whenever the corresponding window has been minimized.
 
 ---
 
@@ -127,7 +139,7 @@ The status bar runs along the bottom of the main window and displays context-sen
 
 PlayForm uses a dockable panel system that lets you arrange the workspace to your liking. You can drag a panel by its title bar to undock it, move it to a different edge of the window, or stack it on top of another panel. Panels can also be resized by dragging their borders.
 
-Panels cannot be closed — they can only be toggled on and off through the **View** menu or their keyboard shortcuts.
+Panels cannot be closed — they can only be toggled on and off through the **View** menu, the Panels toolbar, or their keyboard shortcuts. Closing a *floated* panel redocks and hides it rather than removing it.
 
 #### Panel Reference
 
@@ -135,21 +147,21 @@ Panels cannot be closed — they can only be toggled on and off through the **Vi
 |---|---|---|
 | **Recents & Favorites** | Left | Ctrl+4 |
 | **Explorer** | Left | Ctrl+E |
-| **Playlists** | Right | Ctrl+L |
-| **Player** | Bottom | Ctrl+H (minimize) |
-| **Radio Browser** | Right | Ctrl+3 |
-| **Podcasts** | Right | Ctrl+2 |
-| **Debug Console** | Bottom | (Tools menu) |
+| **Playlists** | Left, tabbed with Recents & Favorites | Ctrl+L |
+| **Player** | Bottom | Ctrl+H |
+| **Radio Browser** | Left, tabbed with Recents & Favorites | Ctrl+3 |
+| **Podcasts** | Left, tabbed with Recents & Favorites | Ctrl+2 |
+| **Debug Console** | Bottom, tabbed with the Player | Tools > Debug > Show Console Dock |
 
 > **Note:** The Radio Browser and Podcasts panels are created only when you first toggle them on — they do not consume resources until needed.
 
 #### Panels Toolbar
 
-A dedicated toolbar below the main toolbar gives each panel — Player, Recents/Favorites, Explorer, Playlists, Radio, Podcasts, and Console — a **Show/Hide** button and a **Float** button. Float detaches the panel into its own window; toggle it again to redock. Float is only available while the panel is visible.
+A dedicated toolbar below the main toolbar lists every panel — Player, Recents/Favorites, Explorer, Playlists, Radio, Podcasts, and Console. Each entry has a Show button (labeled **Minimize** for the Player) and a **Float** checkbox. Checking **Float** detaches the panel into its own window; the checkbox is only enabled while the panel is visible.
 
 #### Player Panel Minimization
 
-The Player panel behaves slightly differently from the others. The **View > Minimize Player** menu item (Ctrl+H) collapses the player to show only the Play/Pause button and the minimize toggle. Pressing Ctrl+H again or clicking the toggle button restores the full player controls. This is useful when you want to listen to audio without the full player taking up screen space.
+The Player panel behaves slightly differently from the others. The **View > Minimize Player** menu item (Ctrl+H) hides the entire Player panel, leaving more room for the video. Pressing Ctrl+H again or unchecking the menu item brings the full player back. This is useful when you want to listen to audio without the player taking up screen space.
 
 Keyboard shortcuts are available for toggling each panel's visibility and for moving keyboard focus directly to a panel. See [Section 3.1](03-customization-options.md#31-shortcuts) for the complete shortcut reference.
 
@@ -162,62 +174,55 @@ The dock layout (positions and visibility state) is saved automatically and rest
 The Player panel is the heart of PlayForm. It is divided into these areas, from top to bottom:
 
 1. **Video Display** — The area where video content is rendered. For audio-only files, this area remains black. A loading overlay appears while online media is being resolved.
-2. **Segment Timeline** — A visual timeline bar that shows the current playback progress, loop segments (as highlighted blocks), and bookmark markers (as vertical lines). You can click and drag to add or move loop segments and bookmarks directly.
+2. **Segment Timeline** — A bar for managing loop segments and bookmarks. It shows no playback position: click a segment to select it, drag a segment's edge to resize it, or drag a bookmark marker left or right to move it. Clicking an empty spot creates a new loop segment around that point, while Shift- or Ctrl-clicking adds a bookmark instead. See [Bookmarks & Repeat Loops](#bookmarks--repeat-loops).
 3. **Player Controls** — The main transport bar with all playback buttons, the seek slider, volume controls, and more.
-4. **Side Panel** — A collapsible accordion of six sections, toggled with the **Show/Hide Side Panel** button. Click a section's header to open it; only one is open at a time.
+4. **Side Panel** — A collapsible accordion of seven sections, toggled with the **Show/Hide Side Panel** button. Click a section's header to open it; only one is open at a time.
 
 | Section | Contents |
 |---|---|
-| **Chapters** | Lists chapters for the current media; click one to jump to it. |
-| **Subtitles** | Current subtitle text, with the active line highlighted. |
+| **Chapters** | Lists chapters embedded in the current media; click one to jump to it. |
+| **Subtitles** | Subtitle track choice, the current subtitle text, and on-video rendering settings (see [Subtitles](#subtitles)). |
 | **Equalizer** | Enable toggle, presets, preamp, and per-band gain sliders. |
 | **Color Adjustments** | Brightness, Contrast, Gamma, Hue, and Saturation sliders. |
 | **Video Effects** | Deinterlace and Deband toggles. |
-| **Audio Filters** | Enable and configure available mpv audio filters, each with its own parameters. |
+| **Audio Filters** | Build a chain of mpv audio effects, each with its own parameters. |
+| **Audio Sync** | Audio delay plus ReplayGain settings. |
 
-- **Chapters** — Populated from the file's embedded chapter markers, if any. Click an entry to jump to it; the current chapter is highlighted.
-- **Color Adjustments** — Brightness, Contrast, Gamma, Hue, and Saturation sliders for video playback.
-- **Video Effects** — **Deinterlace** and **Deband** toggles.
-- **Audio Filters** — Twelve mpv filters, each enabled and configured independently: Echo, Reverb, Low Pass, High Pass, Band Pass, Compressor, Limiter, Gate, Flanger, Chorus, Pitch Shift, Tempo Scale.
+**Audio Filters** works as a list you build up: click **Add Effect…** to append an effect from the available catalog, then double-click any entry in the "Added audio effects" list to edit its parameters. Right-click the list for **Add Effect…**, **Edit Parameters…**, **Delete**, and **Clear All**. The parameter dialog has a **Preset** row: keep **Custom** for your own values, save the current ones under a name with **New…**, or load and delete previously saved presets for that effect.
+
+**Audio Sync** holds timing and loudness fixes: **Audio Delay (seconds)** (from –10 to 10, with a Reset button) shifts the soundtrack against the video, and **ReplayGain** can be switched between **Off**, **Track**, and **Album** with a preamp in dB (–15 to 15) and an **Allow ReplayGain clipping** checkbox.
 
 ### Player Controls (Transport Bar)
 
-The transport bar is organized into two rows:
+The transport bar is organized into three rows:
 
-**Row 1 — Track Info:** The current track's filename is displayed on the left. Right-clicking it — or the video display — opens a context menu: **Copy Path**, **Open in Explorer** (local files), and for YouTube sources **Show YouTube Info**, **Download Subtitle…**, and **View Comments…**; **View Media Metadata…** is available for local files and other supported sources.
+**Row 1 — Track Info:** The current track's filename is displayed on the left. Right-clicking it — or the video display — opens a context menu: **Copy Path** and **Open in Explorer** (local files only); for YouTube sources **Show YouTube Info**, **Download Subtitle…**, and **View Comments…**; and for local files or supported URLs, **View Media Metadata ▶** with **From File (ffprobe)…** for on-disk metadata or **From Playback (MPV)…** for what the player knows about the stream.
 
-**Row 2 — Controls** (left to right):
+**Row 2 — Seek bar:** A full-width slider showing the playback position. Drag it to seek anywhere in the track.
 
-- **Previous** — Jumps to the previous track.
-- **Rewind** — Seeks backward by the configured offset.
-- **Play/Pause** — Toggles playback. Icon and label switch between play and pause.
-- **Forward** — Seeks forward by the configured offset.
-- **Next** — Jumps to the next track.
-- **Repeat** — Cycles repeat mode: **Off** → **Repeat: All** → **Repeat: One** → **Off**.
-- **Shuffle** — Toggles shuffle mode: **Shuffle: Off** ↔ **Shuffle: On**.
-- **Bookmarks** — Opens the Bookmarks dialog for the current file.
-- **Screenshot** — Takes a screenshot of the current video frame.
-- **Seek slider** — Draggable slider showing playback position. Drag to seek to any point.
-- **Mute button** — Toggles mute (icon shows muted/unmuted state).
-- **Volume slider** — Horizontal slider from 0 to 200.
-- **Time display** — Shows current position and total length as MM:SS / MM:SS.
-- **More (…)** — Opens a popup menu with additional options (see below).
-- **Minimize** — Toggles the minimize-controls mode.
+**Row 3 — Buttons:** A wrapping row of icon-only buttons, each with a tooltip. They include: minimize/restore the control area; previous track, backward, play/pause, forward, next track; the repeat-mode and shuffle toggles; show playlist and show queue; bookmarks, go to time, and screenshot; and finally mute/unmute followed by a volume slider (0–300), the time display, and the **⋯** button that opens the More Options menu.
+
+**Show playlist** opens a window listing the current playlist with a "Now playing" header; **Show queue** opens the playback queue, where tracks added through the various **Add to Queue** actions wait their turn — queued tracks play before the playlist order resumes. Double-click any entry to jump to it.
+
+PlayForm remembers where you stopped: reopening a file resumes from its last playback position.
 
 #### The "More" (…) Menu
 
-Clicking the **…** button opens a popup with the following submenus and actions:
+Clicking the **⋯** button opens a popup with the following submenus and actions:
 
 | Submenu / Action | Options |
 |---|---|
-| **Speed** ▶ | 0.25×, 0.50×, 0.75×, 1.0×, 1.25×, 1.5×, 1.75×, 2.0×, 2.5×, 3.0× (1.0× is default) |
-| **Aspect Ratio** ▶ | 16:9, 4:3, 1:1, 16:10, 5:4, 21:9, 32:9, 2.35:1, 2.39:1 |
-| **Scale** ▶ | 0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5 |
-| **Rotate** ▶ | 0°, 90°, 180°, 270° |
+| **Speed ▶** | 0.25×, 0.50×, 0.75×, 1.0×, 1.25×, 1.5×, 1.75×, 2.0×, 2.5×, 3.0× (1.0× is default) |
+| **Aspect Ratio ▶** | 16:9, 4:3, 1:1, 16:10, 5:4, 21:9, 32:9, 2.35:1, 2.39:1 |
+| **Scale ▶** | 0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5 |
+| **Rotate ▶** | 0° (Normal), 90°, 180°, 270° |
 | **Flip Horizontal** | Checkable — mirrors the video horizontally. |
 | **Flip Vertical** | Checkable — mirrors the video vertically. |
+| **Video Quality ▶** | Eight per-option submenus for tuning the video pipeline: **Hardware Decoding** (takes effect on the next loaded file), **Upscaler**, **Downscaler**, **Chroma Scaler**, **Interpolation Scaler**, **Frame Dropping**, **HDR Tone Mapping**, and **Video Sync**. Below them sit a **Motion Interpolation** toggle and a **Sharpen** submenu (**Off**, 0.2, 0.4, 0.6, 0.8, 1.0). |
 | **Fullscreen** | Toggle checkable — enters or exits fullscreen mode. |
 | **Reverse Playback** | Checkable — plays audio in reverse. Only available for audio-only media. |
+
+Aspect Ratio, Scale, Rotate, the two flips, and Video Quality are disabled while the current media has no video track.
 
 #### Fullscreen
 
@@ -233,7 +238,7 @@ The Player supports two navigation features that help you mark and revisit posit
 
 #### Bookmarks
 
-A bookmark is a saved position within a file. You can add as many bookmarks as you want per file. Add a bookmark at the current position, navigate between bookmarks, delete them, and jump to the 1st through 10th bookmark — all via keyboard shortcuts listed in [Section 3.1](03-customization-options.md#31-shortcuts). The Bookmarks dialog (also opened via shortcut) lists all bookmarks by timestamp. Right-click a bookmark to delete it individually, or choose to clear all bookmarks for the current file. Bookmarks are also displayed as vertical markers on the Segment Timeline.
+A bookmark is a saved position within a file. You can add as many bookmarks as you want per file; up to ten of them can be captured as numbered marks (Ctrl+1 … Ctrl+0) for quick access. Add and navigate between bookmarks, delete them, and jump between them using the keyboard shortcuts listed in [Section 3.1](03-customization-options.md#31-shortcuts). The Bookmarks dialog (Ctrl+B) lists all bookmarks by timestamp. Right-click a bookmark to delete it individually, or choose to clear all bookmarks for the current file. Bookmarks are also displayed as markers on the [Segment Timeline](#22-player).
 
 #### A-B Repeat Loops
 
@@ -243,11 +248,16 @@ Loop segments and bookmarks are saved per-file and restored automatically when y
 
 ### Subtitles
 
-When a video file is loaded, PlayForm automatically searches the same folder for a subtitle file with a matching filename. Supported subtitle formats loaded during playback include: .srt, .vtt, .smi, .sami, .scc, .dfxp, .ttml, .sub, and .ass.
+When media is loaded, PlayForm looks for a subtitle file next to it with the same base name (for example `movie.srt` for `movie.mkv`). These formats are tried in order: .idx, .sub, .srt, .rt, .ssa, .ass, .mks, .vtt, .sup, .scc, .smi, .lrc, and .pgs.
 
-Subtitle text appears in the **Subtitles** section of the side panel, with the currently active line highlighted in yellow.
+The **Subtitles** section of the side panel contains:
 
-**Subtitle language** is configurable in Preferences. If text-to-speech is enabled (also in Preferences), PlayForm will read each subtitle aloud using the Windows SAPI5 engine.
+- **Track list** — choose **Off**, an embedded subtitle track (listed as "Track N", with a language tag and a "[forced]" marker when applicable), or a yt-dlp-provided language for online media.
+- **Subtitle text** — the running subtitle text, with the active line highlighted as it plays. The list stays available whether or not subtitles are drawn on the video; the **Previous Line** and **Next Line** buttons jump to the previous or next subtitle line.
+- **Subtitle Delay (seconds)** — shifts subtitle timing earlier or later (–60 to 60).
+- **Show subtitles on video** — whether subtitles are rendered over the video.
+
+Font, colors, outline, and positioning of on-video subtitles are configured in the Subtitles tab of Preferences (see [Section 3.2](03-customization-options.md#32-preferences)).
 
 The Player has a comprehensive set of keyboard shortcuts covering playback control, seeking, volume, fullscreen, bookmarks, repeat loops, and screenshots. All shortcuts are configurable and can be remapped via **Options > Manage Hotkeys** (F4). See [Section 3.1](03-customization-options.md#31-shortcuts) for the complete Player shortcut reference.
 
@@ -255,7 +265,7 @@ The Player has a comprehensive set of keyboard shortcuts covering playback contr
 
 ## 2.3. Explorer
 
-The Explorer panel is a full-featured file browser integrated into PlayForm. Toggle it with Ctrl+E or **View > Show Explorer**.
+The Explorer panel is a full-featured file browser integrated into PlayForm. Toggle it with Ctrl+E or **View > Panels > Show Explorer**.
 
 ### Layout
 
@@ -268,10 +278,12 @@ The Explorer panel is split into two main sections:
 | Sub-panel | Description |
 |---|---|
 | **Path bar** | Displays the current directory path. You can type or paste a new path and press Enter to navigate there directly. The **Parent Directory** button moves up one folder level. |
-| **Search box** | Searches cataloged folders (see [Section 3.3](03-customization-options.md#33-manage-database)) for matching files. |
-| **Files list** | Lists all folders first, then all supported media files. Double-click a folder to enter it; double-click a file to play it in the main player. Press Space to play/pause a selected file, and Backspace to navigate up one directory. |
+| **Search box** | Searches the current folder (and its subfolders) for matching files; if the folder has been cataloged, the database is used for the search (see [Section 3.3](03-customization-options.md#33-manage-database)). |
+| **Files list** | Lists all folders first, then all supported media files. Double-click a folder to enter it; double-click a media file to play it in the main player, or an image to open it in an image preview dialog (titled "Image Preview"). Press Space to play/pause a selected file, and Backspace to navigate up one directory. |
 | **Image preview** | When a file with an image extension (.png, .jpg, .bmp, etc.) is selected, a scaled preview is shown to the right. Hidden when a non-image file is selected. |
 | **Media preview** | A small preview player that can play audio and video files directly within the Explorer panel without affecting the main player. |
+
+The panel's toolbar offers **List View** and **Icon View** buttons, a **Refresh** action (F5), and **Add Current Folder to Database**, which queues the currently open folder for cataloging so its files become searchable (see [Section 3.3](03-customization-options.md#33-manage-database)).
 
 ### Navigation
 
@@ -284,19 +296,11 @@ The Explorer panel is split into two main sections:
 
 Right-clicking a file or folder opens a context menu:
 
-**For files:**
-- **Open** — Plays the file in the main player.
-- **Copy Path** — Copies the full file path to the clipboard.
-- **Add to playlist** — Adds the file to the currently active playlist.
-- **Add to favorites** — Marks the file as a favorite.
+**For files:** **Open**, **Copy Path**, **Add to playlist**, **Add to Queue** (media files only), **Open in Explorer**, and **Add to favorites**.
 
-**For folders:**
-- **Navigate to folder** — Enters the folder.
-- **Add to library** — Saves the folder in the Library panel for quick access.
-- **Create playlist from folder** — Creates a new playlist containing all media files from that folder.
-- **Add Current Folder to Database** (toolbar) — Queues the currently open folder for cataloging, so its files become searchable (see [Section 3.3](03-customization-options.md#33-manage-database)).
+**For folders:** **Navigate to folder**, **Add to library**, **Create playlist from folder**, and **Add to Database** — which is shown disabled as "Already in Database" if the folder is already cataloged.
 
-**Sort options:** Files can be sorted by **Name (A–Z / Z–A)** or by **Date (Newest first / Oldest first)**.
+Both menus continue with **View ▶** (**Detail View** / **Icon View**), **Sort by ▶** (**Name (A–Z)**, **Name (Z–A)**, **Newest first**, **Oldest first**), **Filter ▶** (**All Files**, **Audio**, **Video**, **Images**, or **Custom Format…** — which prompts for an extension to show only files of that format), and **Refresh**. Search results use the same menu, except that Sort by is not offered there.
 
 ### File Info
 
@@ -311,30 +315,26 @@ The Player Bar at the bottom of the Explorer is a compact transport control for 
 - **Click right of center:** Seek forward.
 - **Click the bottom bar:** Seek to that position (percentage-based).
 
-An **Auto Play** checkbox (on by default) controls whether selecting a file automatically starts preview playback. A **Volume** spinbox (0–100%) controls the preview player's volume independently of the main player.
+An **Auto Play** checkbox (on by default) controls whether selecting a file automatically starts preview playback, a **Loop** checkbox repeats it, and a **Volume** spinbox (0–300%) controls the preview player's volume independently of the main player.
 
 ---
 
 ## 2.4. Playlists
 
-The Playlists panel lets you create, manage, and switch between multiple playlists. Toggle it with Ctrl+L or **View > Show Playlists**.
+The Playlists panel lets you create, manage, and switch between multiple playlists. Toggle it with Ctrl+L or **View > Panels > Show Playlists**.
 
 ### Layout
 
 The panel is split horizontally:
+
 - **Left side — Playlist list:** Shows all your playlists by name. Double-click a playlist name to rename it.
-- **Right side — Track view:** Displays the tracks in the currently selected playlist as a table with four columns: **File Name**, **Title**, **Artist**, and **Album**.
+- **Right side — Track view:** Displays the tracks in the currently selected playlist as a table with five columns: **#**, **File Name**, **Title**, **Artist**, and **Album**.
 
 ### Managing Playlists
 
-| Action | How |
-|---|---|
-| **Create a new playlist** | Click the **Create Playlist** button, enter a name, and click OK. |
-| **Rename a playlist** | Double-click its name in the playlist list. |
-| **Import a playlist** | Click the **Import Playlist** button and select a .json, .m3u, .m3u8, .pls, or .xspf file. |
-| **Delete a playlist** | Right-click the playlist name and choose the remove option. |
+Right-click a playlist in the left list for **Rename**, **Delete**, **Split Playlist…** (splits its tracks into two playlists via a dialog), and **Merge Playlists…** (combines it with another playlist of your choosing).
 
-If a playlist file is missing on disk at startup, you will be prompted to confirm its removal from the list.
+To create a playlist, click the **Create Playlist** button, enter a name, and click OK. To import one, click **Import Playlist** and select a .json, .m3u, .m3u8, .pls, or .xspf file. If a playlist file is missing on disk at startup, you will be prompted to confirm its removal from the list.
 
 ### Managing Tracks
 
@@ -342,21 +342,19 @@ Right-click anywhere in the track view to access the context menu:
 
 | Action | Description |
 |---|---|
-| **Add Tracks** | Opens a multi-file selection dialog. Choose individual audio or video files to append to the playlist. |
+| **Add Tracks** | Opens a multi-file selection dialog for audio files to append to the playlist. |
+| **Move Up** / **Move Down** | Moves the selected track(s) one row up or down. |
+| **Sort ▶** | Sorts the playlist by File Name, Title, Artist, or Album, ascending or descending. |
 | **Delete Selected** | Removes the selected track(s) from the playlist after confirmation. Multi-selection is supported. |
 | **Clear Tracks** | Removes all tracks from the playlist after confirmation. |
 
-**Reordering tracks:**
-- Drag and drop tracks within the list to change their order.
-- Use Shift+Up and Shift+Down to move the selected track(s) up or down.
-
-**Sorting tracks:** Right-click > **Sort By** offers sorting by File Name, Title, Artist, or Album, each in ascending or descending order.
+**Reordering tracks:** Drag and drop tracks within the list, press Shift+Up / Shift+Down, or use Move Up/Move Down from the context menu.
 
 **Playing a track:** Double-click a track row or press Enter on a selected track to start playing the playlist from that position.
 
 ### Storage
 
-Playlists are saved in the `data/playlists/` directory. An index file maps playlist names to their file paths. Playlists are automatically saved when you switch between them and when the application closes.
+Playlists are saved in the `data/playlists/` directory, one file per playlist; the registry that maps playlist names to their file paths is kept in the application database. Playlists are automatically saved when you switch between them and when the application closes.
 
 ---
 
@@ -371,15 +369,20 @@ Lists all files you have explicitly marked as favorites. Items are displayed by 
 **Adding favorites:** From the Explorer, right-click a file and choose **Add to favorites**.
 
 **Managing favorites:**
-- Right-click a favorite and choose **Remove from Favorites** to remove that single item.
-- Right-click anywhere and choose **Clear All Favorites** to remove everything (after confirmation).
+- **Remove from Favorites** removes the single item you right-clicked.
+- **Add to Queue** sends the file to the playback queue (see [Player Controls](#player-controls-transport-bar)).
+- **Clear Nonexistent Tracks** removes entries whose files can no longer be found.
+- **Clear All Favorites** removes everything (after confirmation).
 
 ### Recents Tab
 
 Maintains a list of up to 50 recently played files, with the most recent at the top. This list is updated automatically whenever you play a file.
 
 **Managing recents:**
-- Right-click anywhere in the Recents tab and choose **Clear All Recent Files** to empty the list (after confirmation).
+- **Remove This Track** removes the single entry you right-clicked.
+- **Add to Queue** sends the file to the playback queue.
+- **Clear Nonexistent Tracks** removes entries whose files can no longer be found.
+- **Clear All Recent Files** empties the list (after confirmation).
 
 The same recent files (up to 10) also appear in the **File > Recent Files** submenu in the menubar.
 
@@ -395,7 +398,7 @@ PlayForm includes two built-in online media sources: Podcasts and Internet Radio
 
 ### 2.6.1. Podcasts
 
-The Podcasts panel lets you subscribe to podcast RSS or Atom feeds and browse their episodes within PlayForm. Toggle it with Ctrl+2 or **View > Show Podcasts**.
+The Podcasts panel lets you subscribe to podcast RSS or Atom feeds and browse their episodes within PlayForm. Toggle it with Ctrl+2 or **View > Panels > Show Podcasts**.
 
 #### Layout
 
@@ -416,20 +419,24 @@ Right-click in the Feeds list area to access these actions:
 | **Refresh Feed** | Reloads the selected feed from its source URL. A progress dialog is shown while fetching. |
 | **Update Feed URL** | Changes the URL of the selected feed. Useful if a podcast changes its feed address. |
 | **Remove Feed** | Removes the selected feed after confirmation. |
+| **Download All Episodes** | Queues every episode of the selected feed for download in the Download Manager (see [Section 2.7](#27-downloads)). |
 | **Refresh All Feeds** | Refreshes every subscribed feed. Cancelable via the progress dialog. |
 | **Clear All Feeds** | Removes all feeds and cached data after confirmation. |
 
 #### Browsing and Playing Episodes
 
-Select a feed to see its episodes in the entries tree. Episodes are sorted chronologically by default. Right-click an episode to:
+Select a feed to see its episodes in the entries tree, listed with the newest first by default. Right-click an episode to:
 
 | Action | Description |
 |---|---|
+| **Sort By ▶** | Sort episodes by Title (A–Z / Z–A) or Date (Newest first / Oldest first). |
+| **Copy ▶** | Copies the **Title**, **Page Link**, or **Direct Media Link** to the clipboard. |
 | **Play Entry** | Extracts the media URL from the episode's enclosure or media link and plays it in the main player. |
+| **Download Episode** | Sends the episode to the Download Manager for download. |
 | **View Full Entry Dump** | Opens a dialog showing all raw metadata fields for the episode. |
 | **Open Link in Browser** | Opens the episode's webpage link in your system web browser. |
-| **Copy > Title / Page Link / Direct Media Link** | Copies the corresponding value to the clipboard. |
-| **Sort By** ▶ | Sort episodes by Title (A–Z / Z–A) or Date (Newest first / Oldest first). |
+
+Downloaded episodes are saved to the Podcasts Folder (each feed gets its own subfolder) — see the [Downloads preferences](03-customization-options.md#downloads-tab).
 
 Keyboard shortcuts for navigating the entries tree (select, page, jump to first/last, play) are listed in [Section 3.1](03-customization-options.md#31-shortcuts).
 
@@ -437,7 +444,7 @@ Keyboard shortcuts for navigating the entries tree (select, page, jump to first/
 
 ### 2.6.2. Radio
 
-The Radio Browser panel connects to the [Radio Browser](https://www.radio-browser.info/) community directory, which catalogs thousands of free internet radio stations worldwide. Toggle it with Ctrl+3 or **View > Show Radio Browser**.
+The Radio Browser panel connects to the [Radio Browser](https://www.radio-browser.info/) community directory, which catalogs thousands of free internet radio stations worldwide. Toggle it with Ctrl+3 or **View > Panels > Show Radio Browser**.
 
 #### Layout
 
@@ -474,6 +481,35 @@ The results tree displays stations in five columns: **Name**, **Country**, **Lan
 | **Copy Stream URL** | Copies the resolved stream URL to the clipboard. |
 
 **Double-clicking** a station row immediately plays it.
+
+---
+
+## 2.7. Downloads
+
+PlayForm manages its downloads through two windows, both reachable from the **Downloads** menu.
+
+### 2.7.1. Download Manager
+
+The Download Manager (**Downloads > Download Center…**) handles file downloads: podcast episodes, direct links added via **Downloads > Add Download…**, and anything else sent to it. It has no window close button — instead it offers **Minimize** (tucks the window away and leaves a **Show Downloader** restore button in the menu-bar corner) and **Close**. Closing while downloads are still in progress shows a "Downloads in Progress" warning, where you can abort the downloads or cancel the close.
+
+A category list on the left filters the table: **All**, **Queued**, **Downloading**, **Paused**, **Completed**, **Failed**, and **Podcast Queue**. The table shows each download's **Filename**, **Size**, and **Status**, and a **Download Info** area below offers ("Show more info") additional detail about the selected download.
+
+Right-click a download for **Play**, **Add to Player Queue**, **Open File Location**, **Properties…**, **Remove**, **Copy URL**, and **Copy Destination**, plus the state-dependent **Pause Download**, **Cancel Download**, **Resume Download**, and **Retry Download** actions.
+
+### 2.7.2. yt-dlp Download Manager
+
+The yt-dlp Download Manager (**Downloads > yt-dlp Download Manager…**) queues downloads from YouTube and other yt-dlp-supported sites. It can also be reached automatically: a link added through **Add Download…** whose filename lacks a recognized media extension is routed here.
+
+The left pane groups downloads by category — **YouTube Videos**, **YouTube Playlists**, **YouTube Channels**, and **Other Videos** — with per-category counts; playlists and channels expand to show their individual videos. Each entry shows its title and status, including download percentage, speed, and time remaining; double-click a completed video to play it. A **Pause** button and a status line sit at the bottom, above a log pane.
+
+There are two ways to add work:
+
+- **Add Download…** — enter a URL. If the link could be either a single video or a playlist, the manager asks which one you meant. Channel links additionally ask whether you want **Videos**, **Shorts**, or **Both**.
+- **Add From Link File…** — pick a text file of links.
+
+Playlists, channels, and link files first open a review dialog where you can select exactly which videos to download.
+
+Closing the window while downloads are running offers to keep them going minimized — the queue is preserved.
 
 ---
 

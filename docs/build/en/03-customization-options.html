@@ -50,39 +50,43 @@
 <hr>
 <h1 id="3-customization-and-options">3. Customization and Options</h1>
 <h2 id="31-shortcuts">3.1. Shortcuts</h2>
-<p>PlayForm has <strong>72 configurable keyboard shortcuts</strong> organized into four categories: <strong>Global</strong>, <strong>Main Interface</strong>, <strong>Explorer</strong>, and <strong>Player</strong>. All shortcuts can be remapped via the Hotkeys dialog (<strong>Options &gt; Manage Hotkeys</strong>, F4).</p>
+<p>PlayForm has <strong>99 configurable keyboard shortcuts</strong> organized into six categories: <strong>Global</strong>, <strong>Main interface</strong>, <strong>Explorer</strong>, <strong>Player</strong>, <strong>Multi Device Capture</strong>, and <strong>Speech Converter</strong>. All shortcuts can be remapped via the Hotkeys dialog (<strong>Options &gt; Manage Hotkeys</strong>, F4).</p>
 <blockquote>
-<p><strong>Note:</strong> Multi Device Capture's three transport hotkeys (Start/Pause-Resume/Stop capture) are dialog-scoped rather than global, and are configured separately in the same Hotkeys dialog under a <strong>Multi Device Capture</strong> section. See <a href="04-tools.html#46-multi-device-capture">Section 4.6</a>.</p>
+<p><strong>Note:</strong> The Multi Device Capture and Speech Converter shortcuts are dialog-scoped: they only work while that tool's window has focus, unlike the Global shortcuts.</p>
 </blockquote>
 <h3 id="managing-shortcuts">Managing Shortcuts</h3>
-<p>Open the Hotkeys dialog via <strong>Options &gt; Manage Hotkeys</strong> or press F4. The dialog shows a tree view with the four shortcut categories at the top level and individual actions underneath. Each row displays the action name and its current key binding.</p>
+<p>Open the Hotkeys dialog via <strong>Options &gt; Manage Hotkeys</strong> or press F4. Use the <strong>Search hotkeys</strong> box at the top to filter the tree down to matching actions.</p>
+<p>The tree lists the six categories with their actions underneath, each showing its current key in the <strong>Shortcut</strong> column. The checkbox on an action row enables or disables that shortcut. To change a shortcut:</p>
+<ol>
+<li>Click its Shortcut cell (double-clicking, or selecting the row and pressing Enter, works too) — an editing panel opens below the tree.</li>
+<li>Type the combination you want (for example <code>Ctrl+Shift+P</code>), or click <strong>Capture key</strong> and press the keys; press Esc while capturing to cancel. Clearing the field unbinds the shortcut.</li>
+<li>Press Enter or click elsewhere to accept.</li>
+</ol>
+<p>You can also right-click an action for <strong>Disable</strong>/<strong>Enable</strong>, <strong>Unbind shortcut</strong>, and <strong>Reset hotkey</strong>.</p>
+<p>The buttons along the bottom behave as follows:</p>
 <table>
 <thead>
 <tr>
-<th>Action</th>
-<th>How</th>
+<th>Button</th>
+<th>Effect</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Change a shortcut</strong></td>
-<td>Click the Shortcut column for an action, then press the desired key combination. Press Enter or move focus to accept.</td>
-</tr>
-<tr>
 <td><strong>Reset to Default</strong></td>
-<td>Click the <strong>Reset to Default</strong> button. All shortcuts revert to their factory defaults after confirmation.</td>
+<td>Restores every shortcut to its factory default, after a confirmation.</td>
 </tr>
 <tr>
 <td><strong>Apply</strong></td>
-<td>Click <strong>Apply</strong> to save changes and activate them immediately without closing the dialog.</td>
+<td>Saves your changes and activates them immediately, without closing the dialog.</td>
 </tr>
 <tr>
 <td><strong>OK</strong></td>
-<td>Saves changes and closes the dialog.</td>
+<td>Saves your changes and closes the dialog.</td>
 </tr>
 <tr>
 <td><strong>Cancel</strong></td>
-<td>Discards any uncommitted edits and closes the dialog.</td>
+<td>Discards changes made since the last Apply and closes the dialog.</td>
 </tr>
 </tbody>
 </table>
@@ -90,7 +94,7 @@
 <hr>
 <h3 id="default-shortcut-reference">Default Shortcut Reference</h3>
 <h4 id="global-shortcuts">Global Shortcuts</h4>
-<p>These shortcuts work regardless of which panel has focus.</p>
+<p>These shortcuts are registered with the operating system, so they work even when PlayForm is not the active window.</p>
 <table>
 <thead>
 <tr>
@@ -125,9 +129,6 @@
 </tr>
 </tbody>
 </table>
-<blockquote>
-<p><strong>Note:</strong> Global shortcuts work when PlayForm has the application focus.</p>
-</blockquote>
 <h4 id="main-interface-shortcuts">Main Interface Shortcuts</h4>
 <p>These shortcuts control the main window, menus, and panel visibility.</p>
 <table>
@@ -223,8 +224,12 @@
 <td>F4</td>
 </tr>
 <tr>
-<td>Preferences Dialog</td>
+<td>Preferences dialog</td>
 <td>Ctrl+P</td>
+</tr>
+<tr>
+<td>Restart application</td>
+<td>Ctrl+Shift+R</td>
 </tr>
 </tbody>
 </table>
@@ -253,6 +258,14 @@
 <tr>
 <td>Stop</td>
 <td>Ctrl+Space</td>
+</tr>
+<tr>
+<td>Volume up</td>
+<td>Ctrl+Up</td>
+</tr>
+<tr>
+<td>Volume down</td>
+<td>Ctrl+Down</td>
 </tr>
 <tr>
 <td>Search files/folders</td>
@@ -307,6 +320,18 @@
 <td>End</td>
 </tr>
 <tr>
+<td>Jump to 10% / 30% / 50% / 70% / 90%</td>
+<td>1 / 2 / 3 / 4 / 5</td>
+</tr>
+<tr>
+<td>Show playlist dialog</td>
+<td>Ctrl+Shift+P</td>
+</tr>
+<tr>
+<td>Show queue dialog</td>
+<td>Ctrl+Shift+L</td>
+</tr>
+<tr>
 <td>Toggle repeat mode</td>
 <td>Ctrl+R</td>
 </tr>
@@ -333,6 +358,10 @@
 <tr>
 <td>Bookmarks list</td>
 <td>Ctrl+B</td>
+</tr>
+<tr>
+<td>Go to time</td>
+<td>Ctrl+G</td>
 </tr>
 <tr>
 <td>New mark at current position</td>
@@ -371,268 +400,166 @@
 <td>Ctrl+Right</td>
 </tr>
 <tr>
-<td>Mark 1 position</td>
-<td>Ctrl+1</td>
+<td>Mark 1–10 position</td>
+<td>Ctrl+1 … Ctrl+9, Ctrl+0 (mark 10)</td>
 </tr>
 <tr>
-<td>Mark 2 position</td>
-<td>Ctrl+2</td>
+<td>Pan up / down / left / right</td>
+<td>Shift+Up / Shift+Down / Shift+Left / Shift+Right</td>
 </tr>
 <tr>
-<td>Mark 3 position</td>
-<td>Ctrl+3</td>
+<td>Rotate video</td>
+<td>T</td>
 </tr>
 <tr>
-<td>Mark 4 position</td>
-<td>Ctrl+4</td>
+<td>Flip horizontal</td>
+<td>H</td>
 </tr>
 <tr>
-<td>Mark 5 position</td>
-<td>Ctrl+5</td>
+<td>Flip vertical</td>
+<td>V</td>
 </tr>
 <tr>
-<td>Mark 6 position</td>
-<td>Ctrl+6</td>
+<td>Speed up</td>
+<td>F</td>
 </tr>
 <tr>
-<td>Mark 7 position</td>
-<td>Ctrl+7</td>
+<td>Speed down</td>
+<td>D</td>
 </tr>
 <tr>
-<td>Mark 8 position</td>
-<td>Ctrl+8</td>
+<td>Reverse playback</td>
+<td>R</td>
 </tr>
 <tr>
-<td>Mark 9 position</td>
-<td>Ctrl+9</td>
+<td>Previous subtitle line</td>
+<td>Alt+Left</td>
 </tr>
 <tr>
-<td>Mark 10 position</td>
-<td>Ctrl+0</td>
+<td>Next subtitle line</td>
+<td>Alt+Right</td>
+</tr>
+</tbody>
+</table>
+<h4 id="multi-device-capture-shortcuts">Multi Device Capture Shortcuts</h4>
+<p>These shortcuts only work while the Multi Device Capture window has focus. See <a href="04-tools.html#46-multi-device-capture">Section 4.6</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Default Key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start capture</td>
+<td>Ctrl+Alt+R</td>
 </tr>
 <tr>
-<td>Close media</td>
-<td>Ctrl+W</td>
+<td>Pause/Resume capture</td>
+<td>Ctrl+Alt+P</td>
+</tr>
+<tr>
+<td>Stop capture</td>
+<td>Ctrl+Alt+S</td>
+</tr>
+</tbody>
+</table>
+<h4 id="speech-converter-shortcuts">Speech Converter Shortcuts</h4>
+<p>These shortcuts only work while the Speech Converter window has focus. See <a href="04-tools.html#45-speech-converter">Section 4.5</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Default Key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Speak / Pause</td>
+<td>F7</td>
+</tr>
+<tr>
+<td>Stop speaking</td>
+<td>F8</td>
+</tr>
+<tr>
+<td>Open text file</td>
+<td>Ctrl+O</td>
+</tr>
+<tr>
+<td>Save as audio</td>
+<td>Ctrl+S</td>
+</tr>
+<tr>
+<td>Parameters</td>
+<td>Ctrl+F</td>
 </tr>
 </tbody>
 </table>
 <hr>
 <h2 id="32-preferences">3.2. Preferences</h2>
-<p>The Preferences dialog (<strong>Options &gt; Manage Preferences</strong>, Ctrl+P) allows you to configure PlayForm's behavior. Settings are organized into five tabs: <strong>General</strong>, <strong>Media</strong>, <strong>Accessibility</strong>, <strong>Advanced</strong>, and <strong>Database</strong>.</p>
-<p>Preferences are stored in <code>data/prefs.json</code>. If the file is missing or corrupted, PlayForm automatically restores the factory defaults. Changes to certain settings (language, MPV logging, MPV arguments, or debug level) require an application restart, which PlayForm will prompt you to perform.</p>
+<p>The Preferences dialog (<strong>Options &gt; Manage Preferences</strong>, Ctrl+P) allows you to configure PlayForm's behavior. Settings are organized into seven tabs: <strong>General</strong>, <strong>Media</strong>, <strong>Subtitles</strong>, <strong>Accessibility</strong>, <strong>Advanced</strong>, <strong>Database</strong>, and <strong>Downloads</strong>.</p>
+<p>Preferences are stored in <code>data/prefs.json</code>. If the file is missing or corrupted, PlayForm automatically restores the factory defaults. Changes to certain settings (language, MPV logging, extra MPV options, or debug level) require an application restart, which PlayForm will prompt you to perform.</p>
 <h3 id="general-tab">General Tab</h3>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Options</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Language</strong></td>
-<td>EN, FR, AR, ES</td>
-<td>EN</td>
-<td>User interface language. Requires restart to apply.</td>
-</tr>
-<tr>
-<td><strong>Screenshot Format</strong></td>
-<td>JPG, PNG, TIFF</td>
-<td>PNG</td>
-<td>File format for screenshots taken with Ctrl+S.</td>
-</tr>
-<tr>
-<td><strong>Color Theme</strong></td>
-<td>System, Light, Dark</td>
-<td>System</td>
-<td>UI color scheme. Changes apply immediately without restart.</td>
-</tr>
-<tr>
-<td><strong>Auto Check for Updates</strong></td>
-<td>On / Off</td>
-<td>On</td>
-<td>Automatically checks for newer versions of PlayForm at startup.</td>
-</tr>
-<tr>
-<td><strong>Save URLs</strong></td>
-<td>On / Off</td>
-<td>Off</td>
-<td>Saves entered URLs across sessions for quick re-access.</td>
-</tr>
-</tbody>
-</table>
+<ul>
+<li><strong>Language</strong> — the user interface language (English, French, Arabic, Spanish). Requires a restart.</li>
+<li><strong>Screenshot Format</strong> — JPG, PNG, or TIFF (PNG by default) for screenshots taken with Ctrl+S.</li>
+<li><strong>Theme</strong> — System, Light, or Dark. Changes apply immediately, without a restart.</li>
+<li><strong>Auto Check for Updates</strong> — automatically checks for newer versions of PlayForm at startup (on by default).</li>
+<li><strong>Save URLs</strong> — keeps URLs you enter across sessions for quick re-access (off by default).</li>
+</ul>
 <h3 id="media-tab">Media Tab</h3>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Range</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Volume Offset</strong></td>
-<td>1–20</td>
-<td>5</td>
-<td>Amount by which volume changes per step (via shortcuts or menu).</td>
-</tr>
-<tr>
-<td><strong>Seek Offset</strong></td>
-<td>1–60 seconds</td>
-<td>5</td>
-<td>Amount by which forward/backward seeking jumps per step.</td>
-</tr>
-<tr>
-<td><strong>Audio Device</strong></td>
-<td>(list)</td>
-<td>0</td>
-<td>Output audio device. Populated with all available devices on your system.</td>
-</tr>
-</tbody>
-</table>
+<ul>
+<li><strong>Volume Offset</strong> — how much the volume changes per step when adjusted via shortcuts or the menu (1–20, default 5).</li>
+<li><strong>Seek Offset</strong> — how far seeking forward/backward jumps per step, in seconds (1–60, default 5).</li>
+<li><strong>Audio Device</strong> — the output audio device, populated with all available devices on your system.</li>
+</ul>
+<h3 id="subtitles-tab">Subtitles Tab</h3>
+<p><strong>Source:</strong><br>
+- <strong>Preferred Language</strong> — the subtitle language to prefer for online (yt-dlp) sources.</p>
+<p><strong>On-Video Rendering:</strong><br>
+- <strong>Draw subtitles on the video</strong> — master switch for rendering subtitles over the video. The Subtitles section of the player's side panel shows its text list either way. Every other setting in this group is only enabled while this is on.<br>
+- <strong>Font</strong> (any installed font; generic families such as <code>sans-serif</code> are accepted), <strong>Font Size</strong> (8–200, default 38), <strong>Bold</strong>, and <strong>Scale</strong> (a multiplier applied on top of the font size).<br>
+- <strong>Text Colour</strong>, <strong>Background Colour</strong>, and <strong>Outline Colour</strong>.<br>
+- <strong>Outline Thickness</strong> and <strong>Shadow Offset</strong>, both 0–20.<br>
+- <strong>Vertical Position</strong> — 0 is the top of the video, 100 (the default) the bottom.<br>
+- <strong>ASS/SSA Styling</strong> — whether the settings above override the styling embedded in ASS/SSA subtitle files (they usually carry their own styling).</p>
 <h3 id="accessibility-tab">Accessibility Tab</h3>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Options</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Enable Speech Feedback</strong></td>
-<td>On / Off</td>
-<td>Off</td>
-<td>Master toggle for text-to-speech accessibility. When enabled, status bar messages and subtitle text are spoken aloud.</td>
-</tr>
-<tr>
-<td><strong>Interrupt Previous Speech</strong></td>
-<td>On / Off</td>
-<td>On</td>
-<td>When enabled, a new utterance stops the currently playing one. When disabled, speech is queued.</td>
-</tr>
-<tr>
-<td><strong>Voice</strong></td>
-<td>(list)</td>
-<td>(system default)</td>
-<td>TTS voice selection.</td>
-</tr>
-<tr>
-<td><strong>Volume</strong></td>
-<td>0.0–100.0</td>
-<td>80.0</td>
-<td>Speech volume.</td>
-</tr>
-<tr>
-<td><strong>Rate</strong></td>
-<td>0.1–10.0</td>
-<td>1.0</td>
-<td>Speech rate, where 1.0 is normal speed.</td>
-</tr>
-</tbody>
-</table>
+<ul>
+<li><strong>Enable speech accessibility feedback</strong> — master toggle for spoken announcements (off by default). Status-bar messages that carry an announcement category are also read aloud when their category is enabled; the status-bar text itself always shows regardless of this setting.</li>
+<li><strong>Interrupt previous speech</strong> — when on (default), a new announcement stops the one currently being spoken instead of queueing behind it.</li>
+<li><strong>Spoken Events: Announcements…</strong> — opens a dialog with a checkable list of event categories (Playback, File Explorer, Playlists, Tools, Dialogs &amp; Windows, Downloads, Database &amp; Cataloging, Podcasts &amp; Radio, Subtitles, Multi Device Capture, General), plus <strong>Enable All</strong> and <strong>Disable All</strong> buttons.</li>
+<li>On macOS and Linux, <strong>Configure Voice: Voice Settings…</strong> opens a dialog for choosing the <strong>Voice</strong> and adjusting its <strong>Volume</strong> and <strong>Rate</strong>. This row isn't shown on Windows.</li>
+</ul>
 <h3 id="advanced-tab">Advanced Tab</h3>
-<p><strong>MPV Settings:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Options</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Enable MPV Logging</strong></td>
-<td>On / Off</td>
-<td>On</td>
-<td>Enables debug logging from the media engine.</td>
-</tr>
-<tr>
-<td><strong>Debug Level</strong></td>
-<td>0–2</td>
-<td>0</td>
-<td>Debug verbosity (0 = minimal, 2 = most verbose). Only shown when logging is enabled.</td>
-</tr>
-<tr>
-<td><strong>Extra MPV Options</strong></td>
-<td>(text)</td>
-<td><em>(empty)</em></td>
-<td>Custom options passed to the media backend.</td>
-</tr>
-</tbody>
-</table>
-<p><strong>yt-dlp Settings:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Cookies File</strong></td>
-<td>Path to a <code>cookies.txt</code> file exported from your browser, used for accessing authenticated content on YouTube and other sites. Browse to select the file. The file is copied into the app's data folder, and yt-dlp is given a temporary copy of that, refreshed on every run — your own file is never modified.</td>
-</tr>
-<tr>
-<td><strong>yt-dlp Path</strong></td>
-<td>Directory where yt-dlp binary is located. Normally managed automatically via the utility downloader, but can be set manually.</td>
-</tr>
-<tr>
-<td><strong>Enable yt-dlp Logging</strong></td>
-<td>Toggle to enable debug output from yt-dlp. When on, a <strong>Verbose Output</strong> checkbox appears for full detail.</td>
-</tr>
-<tr>
-<td><strong>FFmpeg Path</strong></td>
-<td>Directory where FFmpeg binary is located. Normally managed automatically, but can be set manually if you have a custom FFmpeg installation.</td>
-</tr>
-</tbody>
-</table>
+<p><strong>MPV Settings:</strong><br>
+- <strong>MPV Logging</strong> — enables debug logging from the media engine (on by default). While it's on, a <strong>Debug Level</strong> field (0–2, where 2 is the most verbose) appears.<br>
+- <strong>Extra MPV Options</strong> — custom command-line options passed to the media backend; the syntax is checked when you leave the field.</p>
+<p><strong>yt-dlp Settings:</strong><br>
+- <strong>Path Setting</strong> — a list of the three configurable paths; select one to edit it in the <strong>Path</strong> field below, filled in with <strong>Browse</strong> (a file picker for the cookies file, a folder picker for the two paths):<br>
+  - <strong>YouTube Cookies File</strong> — a <code>cookies.txt</code> file exported from your browser, used for accessing authenticated content on YouTube and other sites. The file is copied into the app's data folder, and each yt-dlp run is given a throwaway copy of that — your own file is never modified.<br>
+  - <strong>yt-dlp Path</strong> — the yt-dlp binary's folder. Normally managed automatically via the utility downloader, but can be set manually.<br>
+  - <strong>FFmpeg Path</strong> — the FFmpeg binary's folder. Normally managed automatically, but can be set manually if you have a custom FFmpeg installation.<br>
+- <strong>yt-dlp Logging</strong> — enables debug output from yt-dlp. While it's on, a <strong>Verbose Output</strong> checkbox appears for full detail.</p>
 <h3 id="database-tab">Database Tab</h3>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Options</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Catalog audio files</strong></td>
-<td>On / Off</td>
-<td>On</td>
-<td>Include audio files when a folder is cataloged for search.</td>
-</tr>
-<tr>
-<td><strong>Catalog video files</strong></td>
-<td>On / Off</td>
-<td>On</td>
-<td>Include video files when a folder is cataloged for search.</td>
-</tr>
-<tr>
-<td><strong>Remember Explorer search history</strong></td>
-<td>On / Off</td>
-<td>On</td>
-<td>Keeps a history of Explorer search terms across sessions.</td>
-</tr>
-<tr>
-<td><strong>Clear Search History</strong></td>
-<td>button</td>
-<td>—</td>
-<td>Clears the stored Explorer search history immediately.</td>
-</tr>
-</tbody>
-</table>
+<ul>
+<li><strong>Catalog audio files</strong> / <strong>Catalog video files</strong> — which file types are indexed when a folder is cataloged for search (both on by default).</li>
+<li><strong>Remember Explorer search history</strong> — keeps a history of Explorer search terms across sessions (on by default).</li>
+<li><strong>Clear Search History</strong> — clears the stored Explorer search history immediately.</li>
+</ul>
+<h3 id="downloads-tab">Downloads Tab</h3>
+<p><strong>Transfers:</strong><br>
+- <strong>Max Parallel Downloads</strong> — how many downloads run at once (1–10, default 2).<br>
+- <strong>Speed Limit</strong> — a cap in KB/s, where 0 shows "Unlimited" (the default).<br>
+- <strong>Retry Count</strong> (0–20, default 3) and <strong>Retry Delay</strong> (250–60000 ms, default 2000) — how many times a failed download is retried, and how long to wait between attempts.</p>
+<p><strong>Notifications:</strong><br>
+- <strong>Notify when a download finishes</strong> — shows a system tray notification when a download completes or fails (on by default).</p>
+<p><strong>Locations:</strong><br>
+- <strong>Default Download Folder</strong> — where new downloads are saved. Leave empty to use the application's own downloads folder.<br>
+- <strong>Podcasts Folder</strong> — where podcast episodes are saved, each feed in its own subfolder. Leave empty to use the application's own podcasts folder.</p>
+<p><strong>Network:</strong><br>
+- <strong>Proxy Settings…</strong> — opens the network proxy dialog; the current proxy is summarized next to the button ("No proxy" while disabled).</p>
 <hr>
 <h2 id="33-manage-database">3.3. Manage Database</h2>
 <p>The Manage Database dialog (<strong>Options &gt; Manage Database…</strong>) lists every folder cataloged for Explorer search, with its file count and last-scanned time. Folders are added here or via Explorer's <strong>Add Current Folder to Database</strong> action.</p>

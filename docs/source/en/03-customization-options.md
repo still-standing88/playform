@@ -6,21 +6,30 @@
 
 ## 3.1. Shortcuts
 
-PlayForm has **72 configurable keyboard shortcuts** organized into four categories: **Global**, **Main Interface**, **Explorer**, and **Player**. All shortcuts can be remapped via the Hotkeys dialog (**Options > Manage Hotkeys**, F4).
+PlayForm has **99 configurable keyboard shortcuts** organized into six categories: **Global**, **Main interface**, **Explorer**, **Player**, **Multi Device Capture**, and **Speech Converter**. All shortcuts can be remapped via the Hotkeys dialog (**Options > Manage Hotkeys**, F4).
 
-> **Note:** Multi Device Capture's three transport hotkeys (Start/Pause-Resume/Stop capture) are dialog-scoped rather than global, and are configured separately in the same Hotkeys dialog under a **Multi Device Capture** section. See [Section 4.6](04-tools.md#46-multi-device-capture).
+> **Note:** The Multi Device Capture and Speech Converter shortcuts are dialog-scoped: they only work while that tool's window has focus, unlike the Global shortcuts.
 
 ### Managing Shortcuts
 
-Open the Hotkeys dialog via **Options > Manage Hotkeys** or press F4. The dialog shows a tree view with the four shortcut categories at the top level and individual actions underneath. Each row displays the action name and its current key binding.
+Open the Hotkeys dialog via **Options > Manage Hotkeys** or press F4. Use the **Search hotkeys** box at the top to filter the tree down to matching actions.
 
-| Action | How |
+The tree lists the six categories with their actions underneath, each showing its current key in the **Shortcut** column. The checkbox on an action row enables or disables that shortcut. To change a shortcut:
+
+1. Click its Shortcut cell (double-clicking, or selecting the row and pressing Enter, works too) — an editing panel opens below the tree.
+2. Type the combination you want (for example `Ctrl+Shift+P`), or click **Capture key** and press the keys; press Esc while capturing to cancel. Clearing the field unbinds the shortcut.
+3. Press Enter or click elsewhere to accept.
+
+You can also right-click an action for **Disable**/**Enable**, **Unbind shortcut**, and **Reset hotkey**.
+
+The buttons along the bottom behave as follows:
+
+| Button | Effect |
 |---|---|
-| **Change a shortcut** | Click the Shortcut column for an action, then press the desired key combination. Press Enter or move focus to accept. |
-| **Reset to Default** | Click the **Reset to Default** button. All shortcuts revert to their factory defaults after confirmation. |
-| **Apply** | Click **Apply** to save changes and activate them immediately without closing the dialog. |
-| **OK** | Saves changes and closes the dialog. |
-| **Cancel** | Discards any uncommitted edits and closes the dialog. |
+| **Reset to Default** | Restores every shortcut to its factory default, after a confirmation. |
+| **Apply** | Saves your changes and activates them immediately, without closing the dialog. |
+| **OK** | Saves your changes and closes the dialog. |
+| **Cancel** | Discards changes made since the last Apply and closes the dialog. |
 
 Shortcut settings are saved to `data/key_config.cfg`. If this file is missing or corrupted, PlayForm automatically restores the factory defaults.
 
@@ -30,7 +39,7 @@ Shortcut settings are saved to `data/key_config.cfg`. If this file is missing or
 
 #### Global Shortcuts
 
-These shortcuts work regardless of which panel has focus.
+These shortcuts are registered with the operating system, so they work even when PlayForm is not the active window.
 
 | Action | Default Key |
 |---|---|
@@ -40,8 +49,6 @@ These shortcuts work regardless of which panel has focus.
 | Volume Up | Ctrl+Win+F8 |
 | Previous | Ctrl+Win+F9 |
 | Next | Ctrl+Win+F10 |
-
-> **Note:** Global shortcuts work when PlayForm has the application focus.
 
 #### Main Interface Shortcuts
 
@@ -70,7 +77,8 @@ These shortcuts control the main window, menus, and panel visibility.
 | Focus player | Alt+P |
 | Documentation | F1 |
 | Hotkeys dialog | F4 |
-| Preferences Dialog | Ctrl+P |
+| Preferences dialog | Ctrl+P |
+| Restart application | Ctrl+Shift+R |
 
 #### Explorer Shortcuts
 
@@ -82,6 +90,8 @@ These shortcuts are active when the Explorer panel has focus.
 | Backward | Left |
 | Forward | Right |
 | Stop | Ctrl+Space |
+| Volume up | Ctrl+Up |
+| Volume down | Ctrl+Down |
 | Search files/folders | F3 |
 
 #### Player Shortcuts
@@ -99,6 +109,9 @@ These shortcuts are active when the Player panel has focus.
 | Next track | Page Down |
 | Jump to beginning | Home |
 | Jump to the end | End |
+| Jump to 10% / 30% / 50% / 70% / 90% | 1 / 2 / 3 / 4 / 5 |
+| Show playlist dialog | Ctrl+Shift+P |
+| Show queue dialog | Ctrl+Shift+L |
 | Toggle repeat mode | Ctrl+R |
 | Volume up | Up |
 | Volume down | Down |
@@ -106,6 +119,7 @@ These shortcuts are active when the Player panel has focus.
 | Exit fullscreen | Esc |
 | Take snapshot | Ctrl+S |
 | Bookmarks list | Ctrl+B |
+| Go to time | Ctrl+G |
 | New mark at current position | K |
 | Repeat loop start | [ |
 | Repeat loop end | ] |
@@ -115,81 +129,116 @@ These shortcuts are active when the Player panel has focus.
 | Delete current bookmark | Delete |
 | Previous bookmark | Ctrl+Left |
 | Next bookmark | Ctrl+Right |
-| Mark 1 position | Ctrl+1 |
-| Mark 2 position | Ctrl+2 |
-| Mark 3 position | Ctrl+3 |
-| Mark 4 position | Ctrl+4 |
-| Mark 5 position | Ctrl+5 |
-| Mark 6 position | Ctrl+6 |
-| Mark 7 position | Ctrl+7 |
-| Mark 8 position | Ctrl+8 |
-| Mark 9 position | Ctrl+9 |
-| Mark 10 position | Ctrl+0 |
-| Close media | Ctrl+W |
+| Mark 1–10 position | Ctrl+1 … Ctrl+9, Ctrl+0 (mark 10) |
+| Pan up / down / left / right | Shift+Up / Shift+Down / Shift+Left / Shift+Right |
+| Rotate video | T |
+| Flip horizontal | H |
+| Flip vertical | V |
+| Speed up | F |
+| Speed down | D |
+| Reverse playback | R |
+| Previous subtitle line | Alt+Left |
+| Next subtitle line | Alt+Right |
+
+#### Multi Device Capture Shortcuts
+
+These shortcuts only work while the Multi Device Capture window has focus. See [Section 4.6](04-tools.md#46-multi-device-capture).
+
+| Action | Default Key |
+|---|---|
+| Start capture | Ctrl+Alt+R |
+| Pause/Resume capture | Ctrl+Alt+P |
+| Stop capture | Ctrl+Alt+S |
+
+#### Speech Converter Shortcuts
+
+These shortcuts only work while the Speech Converter window has focus. See [Section 4.5](04-tools.md#45-speech-converter).
+
+| Action | Default Key |
+|---|---|
+| Speak / Pause | F7 |
+| Stop speaking | F8 |
+| Open text file | Ctrl+O |
+| Save as audio | Ctrl+S |
+| Parameters | Ctrl+F |
 
 ---
 
 ## 3.2. Preferences
 
-The Preferences dialog (**Options > Manage Preferences**, Ctrl+P) allows you to configure PlayForm's behavior. Settings are organized into five tabs: **General**, **Media**, **Accessibility**, **Advanced**, and **Database**.
+The Preferences dialog (**Options > Manage Preferences**, Ctrl+P) allows you to configure PlayForm's behavior. Settings are organized into seven tabs: **General**, **Media**, **Subtitles**, **Accessibility**, **Advanced**, **Database**, and **Downloads**.
 
-Preferences are stored in `data/prefs.json`. If the file is missing or corrupted, PlayForm automatically restores the factory defaults. Changes to certain settings (language, MPV logging, MPV arguments, or debug level) require an application restart, which PlayForm will prompt you to perform.
+Preferences are stored in `data/prefs.json`. If the file is missing or corrupted, PlayForm automatically restores the factory defaults. Changes to certain settings (language, MPV logging, extra MPV options, or debug level) require an application restart, which PlayForm will prompt you to perform.
 
 ### General Tab
 
-| Setting | Options | Default | Description |
-|---|---|---|---|
-| **Language** | EN, FR, AR, ES | EN | User interface language. Requires restart to apply. |
-| **Screenshot Format** | JPG, PNG, TIFF | PNG | File format for screenshots taken with Ctrl+S. |
-| **Color Theme** | System, Light, Dark | System | UI color scheme. Changes apply immediately without restart. |
-| **Auto Check for Updates** | On / Off | On | Automatically checks for newer versions of PlayForm at startup. |
-| **Save URLs** | On / Off | Off | Saves entered URLs across sessions for quick re-access. |
+- **Language** — the user interface language (English, French, Arabic, Spanish). Requires a restart.
+- **Screenshot Format** — JPG, PNG, or TIFF (PNG by default) for screenshots taken with Ctrl+S.
+- **Theme** — System, Light, or Dark. Changes apply immediately, without a restart.
+- **Auto Check for Updates** — automatically checks for newer versions of PlayForm at startup (on by default).
+- **Save URLs** — keeps URLs you enter across sessions for quick re-access (off by default).
 
 ### Media Tab
 
-| Setting | Range | Default | Description |
-|---|---|---|---|
-| **Volume Offset** | 1–20 | 5 | Amount by which volume changes per step (via shortcuts or menu). |
-| **Seek Offset** | 1–60 seconds | 5 | Amount by which forward/backward seeking jumps per step. |
-| **Audio Device** | (list) | 0 | Output audio device. Populated with all available devices on your system. |
+- **Volume Offset** — how much the volume changes per step when adjusted via shortcuts or the menu (1–20, default 5).
+- **Seek Offset** — how far seeking forward/backward jumps per step, in seconds (1–60, default 5).
+- **Audio Device** — the output audio device, populated with all available devices on your system.
+
+### Subtitles Tab
+
+**Source:**
+- **Preferred Language** — the subtitle language to prefer for online (yt-dlp) sources.
+
+**On-Video Rendering:**
+- **Draw subtitles on the video** — master switch for rendering subtitles over the video. The Subtitles section of the player's side panel shows its text list either way. Every other setting in this group is only enabled while this is on.
+- **Font** (any installed font; generic families such as `sans-serif` are accepted), **Font Size** (8–200, default 38), **Bold**, and **Scale** (a multiplier applied on top of the font size).
+- **Text Colour**, **Background Colour**, and **Outline Colour**.
+- **Outline Thickness** and **Shadow Offset**, both 0–20.
+- **Vertical Position** — 0 is the top of the video, 100 (the default) the bottom.
+- **ASS/SSA Styling** — whether the settings above override the styling embedded in ASS/SSA subtitle files (they usually carry their own styling).
 
 ### Accessibility Tab
 
-| Setting | Options | Default | Description |
-|---|---|---|---|
-| **Enable Speech Feedback** | On / Off | Off | Master toggle for text-to-speech accessibility. When enabled, status bar messages and subtitle text are spoken aloud. |
-| **Interrupt Previous Speech** | On / Off | On | When enabled, a new utterance stops the currently playing one. When disabled, speech is queued. |
-| **Voice** | (list) | (system default) | TTS voice selection. |
-| **Volume** | 0.0–100.0 | 80.0 | Speech volume. |
-| **Rate** | 0.1–10.0 | 1.0 | Speech rate, where 1.0 is normal speed. |
+- **Enable speech accessibility feedback** — master toggle for spoken announcements (off by default). Status-bar messages that carry an announcement category are also read aloud when their category is enabled; the status-bar text itself always shows regardless of this setting.
+- **Interrupt previous speech** — when on (default), a new announcement stops the one currently being spoken instead of queueing behind it.
+- **Spoken Events: Announcements…** — opens a dialog with a checkable list of event categories (Playback, File Explorer, Playlists, Tools, Dialogs & Windows, Downloads, Database & Cataloging, Podcasts & Radio, Subtitles, Multi Device Capture, General), plus **Enable All** and **Disable All** buttons.
+- On macOS and Linux, **Configure Voice: Voice Settings…** opens a dialog for choosing the **Voice** and adjusting its **Volume** and **Rate**. This row isn't shown on Windows.
 
 ### Advanced Tab
 
 **MPV Settings:**
-
-| Setting | Options | Default | Description |
-|---|---|---|---|
-| **Enable MPV Logging** | On / Off | On | Enables debug logging from the media engine. |
-| **Debug Level** | 0–2 | 0 | Debug verbosity (0 = minimal, 2 = most verbose). Only shown when logging is enabled. |
-| **Extra MPV Options** | (text) | *(empty)* | Custom options passed to the media backend. |
+- **MPV Logging** — enables debug logging from the media engine (on by default). While it's on, a **Debug Level** field (0–2, where 2 is the most verbose) appears.
+- **Extra MPV Options** — custom command-line options passed to the media backend; the syntax is checked when you leave the field.
 
 **yt-dlp Settings:**
-
-| Setting | Description |
-|---|---|
-| **Cookies File** | Path to a `cookies.txt` file exported from your browser, used for accessing authenticated content on YouTube and other sites. Browse to select the file. The file is copied into the app's data folder, and yt-dlp is given a temporary copy of that, refreshed on every run — your own file is never modified. |
-| **yt-dlp Path** | Directory where yt-dlp binary is located. Normally managed automatically via the utility downloader, but can be set manually. |
-| **Enable yt-dlp Logging** | Toggle to enable debug output from yt-dlp. When on, a **Verbose Output** checkbox appears for full detail. |
-| **FFmpeg Path** | Directory where FFmpeg binary is located. Normally managed automatically, but can be set manually if you have a custom FFmpeg installation. |
+- **Path Setting** — a list of the three configurable paths; select one to edit it in the **Path** field below, filled in with **Browse** (a file picker for the cookies file, a folder picker for the two paths):
+  - **YouTube Cookies File** — a `cookies.txt` file exported from your browser, used for accessing authenticated content on YouTube and other sites. The file is copied into the app's data folder, and each yt-dlp run is given a throwaway copy of that — your own file is never modified.
+  - **yt-dlp Path** — the yt-dlp binary's folder. Normally managed automatically via the utility downloader, but can be set manually.
+  - **FFmpeg Path** — the FFmpeg binary's folder. Normally managed automatically, but can be set manually if you have a custom FFmpeg installation.
+- **yt-dlp Logging** — enables debug output from yt-dlp. While it's on, a **Verbose Output** checkbox appears for full detail.
 
 ### Database Tab
 
-| Setting | Options | Default | Description |
-|---|---|---|---|
-| **Catalog audio files** | On / Off | On | Include audio files when a folder is cataloged for search. |
-| **Catalog video files** | On / Off | On | Include video files when a folder is cataloged for search. |
-| **Remember Explorer search history** | On / Off | On | Keeps a history of Explorer search terms across sessions. |
-| **Clear Search History** | button | — | Clears the stored Explorer search history immediately. |
+- **Catalog audio files** / **Catalog video files** — which file types are indexed when a folder is cataloged for search (both on by default).
+- **Remember Explorer search history** — keeps a history of Explorer search terms across sessions (on by default).
+- **Clear Search History** — clears the stored Explorer search history immediately.
+
+### Downloads Tab
+
+**Transfers:**
+- **Max Parallel Downloads** — how many downloads run at once (1–10, default 2).
+- **Speed Limit** — a cap in KB/s, where 0 shows "Unlimited" (the default).
+- **Retry Count** (0–20, default 3) and **Retry Delay** (250–60000 ms, default 2000) — how many times a failed download is retried, and how long to wait between attempts.
+
+**Notifications:**
+- **Notify when a download finishes** — shows a system tray notification when a download completes or fails (on by default).
+
+**Locations:**
+- **Default Download Folder** — where new downloads are saved. Leave empty to use the application's own downloads folder.
+- **Podcasts Folder** — where podcast episodes are saved, each feed in its own subfolder. Leave empty to use the application's own podcasts folder.
+
+**Network:**
+- **Proxy Settings…** — opens the network proxy dialog; the current proxy is summarized next to the button ("No proxy" while disabled).
 
 ---
 

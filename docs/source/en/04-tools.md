@@ -29,14 +29,14 @@ The dialog has a **Preset** row at the top (an editable name combo plus **Save**
 **Source tab:**
 - **Add Files...** — multi-select file dialog filtered to PlayForm's known audio/video extensions.
 - **Add Folder...** — adds a folder, with **Include all subfolders** and a format-scope choice (**Audio formats** [default], **Video formats**, **All formats**, or a **Custom format**); only files matching the chosen scope are picked up per folder when the job runs.
-- **Remove Selected** / **Clear All**, plus the same actions via right-click and the Delete key.
+- Right-click an entry for **Add ▶** (**Add File(s)...**, **Add Folder...**), **Remove**, and **Clear All**; pressing Delete removes the selected entries.
 
 **Convert tab** — a mode switch between **Audio** (default) and **Video**:
 - **Audio:** **Format** (MP3, Ogg Vorbis, Opus, AAC, M4A, M4B, FLAC, WAV, AIFF, WMA, AC-3, WavPack, MP2, AMR-NB, ALAC), **Sample Rate** ("Keep Original" or a rate ladder appropriate to the format), **Bit Rate** ("Keep Original" or a kbps ladder — hidden for lossless-only formats), **Use Variable Bit Rate (Quality)** (where the format supports VBR), **Bit Depth** (for FLAC/WAV/AIFF/WavPack/ALAC), and a **Codec Options** panel that rebuilds itself per format (e.g. MP3's encoder quality and joint-stereo toggle, Opus's VBR mode/complexity/application/frame duration, FLAC's compression level, AC-3's dialogue normalization, and so on).
 - **Video:** **Format** (MP4/H.264, MKV/H.264, WebM/VP9, AVI/MPEG-4, MOV/H.264), **Resolution** ("Keep Original" or 3840×2160/1920×1080/1280×720/854×480), **Video Bit Rate** ("Keep Original" or 500k–12000k), **Frame Rate** ("Keep Original" or 24/25/30/50/60).
 
 **Processing tab** — builds an ordered effects chain applied during conversion:
-- Shows the list of **applied** effects in order, with **Add Edit...**, **Add Filter...**, **Edit Selected...**, and **Remove Selected** (double-click also edits).
+- The list shows the **applied** effects in order. **Add Edit...** and **Add Filter...** are the only buttons; everything else is done on the entry itself — right-click for **Edit...**, **Remove**, **Move Up**, **Move Down**, and **Clear All**, or double-click to edit and press Delete to remove the selected entry.
 - **Add Edit...** / **Add Filter...** open a categorized picker over the built-in effects catalog:
   - **Edits:** Loudness (Normalize Peak, Normalize RMS, EBU R128/loudnorm, ReplayGain), Volume (increase/decrease/multiply), Silence (remove leading/trailing/all silence, trim below threshold), Fade (in/out), Trim (start/end/duration), Reverse.
   - **Filters:** EQ (10-band, 3-band parametric, high/low/band-pass, notch), Dynamics (compressor, limiter, expander, noise gate), Pitch (speed without pitch, pitch without speed), Time-Based (delay, echo, algorithmic reverb, chorus, flanger, phaser, and convolution reverb — the one effect that needs a secondary Impulse Response File plus dry/wet gain).
@@ -281,13 +281,7 @@ Click **Start capture** to switch to the Capture view, which shows a status labe
 - **Cancel** actually means **Stop and finalize** — despite the label, anything already captured is kept, not discarded.
 - When the capture stops, the view automatically switches back to the Configure view.
 
-Three transport hotkeys are active only while the tool's dialog has focus (remappable in **Options > Manage Hotkeys**, under a "Multi Device Capture" section — see [Section 3.1](03-customization-options.md#31-shortcuts)):
-
-| Action | Default Key |
-|---|---|
-| Start capture | Ctrl+Alt+R |
-| Pause/Resume capture | Ctrl+Alt+P |
-| Stop capture | Ctrl+Alt+S |
+Three transport hotkeys (start, pause/resume, and stop capture) are active only while the tool's dialog has focus; they're remappable under the "Multi Device Capture" category in **Options > Manage Hotkeys** — see [Section 3.1](03-customization-options.md#multi-device-capture-shortcuts).
 
 ### How pause/resume works, and output files
 
@@ -307,13 +301,13 @@ Each enabled source records through its own capture process. Pausing gracefully 
 
 **Access:** Tools > Debug > View Logs…
 
-The Logs Viewer opens a dialog showing all log files in the `logs/` directory. The left panel lists every log file; selecting one displays its contents in the right panel. Useful for troubleshooting or reviewing application activity.
+The Logs Viewer opens a dialog (titled "Logs Viewer") listing every log file in the `logs/` directory on the left; selecting one displays its contents in a read-only view on the right. A **Close** button dismisses the dialog. Useful for troubleshooting or reviewing application activity.
 
 ### Debug Console Dock
 
 **Access:** Tools > Debug > Show Console Dock
 
-The Debug Console is a dockable panel that displays real-time application output, including logging messages and system output. It can be docked anywhere in the main window or floated as a separate window. This tool is intended for developers and advanced troubleshooting.
+The Debug Console is a dockable panel that displays real-time application output, including logging messages and system output. It starts tabbed together with the Player at the bottom of the main window; it can be moved and floated, but not closed — use **Show Console Dock** to toggle it. This tool is intended for developers and advanced troubleshooting.
 
 ---
 
