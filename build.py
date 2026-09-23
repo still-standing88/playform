@@ -5,12 +5,16 @@ import platform as _platform
 from invoke.tasks import task
 from invoke_config import *
 
+sys.path.insert(0, str(SRC_DIR))
 
-APP_NAME        = "PlayForm"
-APP_VERSION     = "1.2.0"
-APP_PUBLISHER   = "JoyBytes"
-APP_DESCRIPTION = "PlayForm Media Player"
-APP_COPYRIGHT   = f"Copyright (c) 2026 {APP_PUBLISHER}"
+from app_info import (
+    APP_NAME,
+    APP_VERSION,
+    APP_PUBLISHER,
+    APP_DESCRIPTION,
+    APP_COPYRIGHT,
+)
+
 ENTRY_POINT     = SRC_DIR / "app.py"
 UPDATER_ENTRY   = SRC_DIR / "updater.py"
 
