@@ -214,8 +214,6 @@ def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, com
                 shutil.move(str(pyd_file), str(dest_pyd))
                 print(f"Moved {pyd_file.name} -> {dest_pyd}")
 
-        (app_dist_dir / "bin").mkdir(exist_ok=True)
-
         if plat == "windows":
             for pdb in app_dist_dir.rglob("*.pdb"):
                 pdb.unlink()

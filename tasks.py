@@ -197,7 +197,6 @@ def compile(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_
     _copy_speechcore_dlls(app_dist_dir)
 
     _sync_translation_files(app_dist_dir)
-    _copy_dir(ROOT_DIR / "bin",  app_dist_dir / "bin")
     _copy_dir(ROOT_DIR / "lib",  app_dist_dir / "lib")
 
     build_docs(c)
