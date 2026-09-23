@@ -121,6 +121,11 @@ def package_windows(c, version=build.APP_VERSION, source_dir=None, output_dir=No
 
     os.makedirs(out_dir, exist_ok=True)
 
+    # Regenerate the installer's association list and license RTF from the app
+    # itself so they can never drift from the formats and metadata it ships.
+    for generator in ("gen_file_associations.py", "gen_license_rtf.py"):
+        c.run(f"python {SCRIPTS_DIR / generator}", pty=False, in_stream=False)
+
     script = ROOT_DIR / "installer" / "windows" / "build-msi.ps1"
     cmd = (
         f'powershell -ExecutionPolicy Bypass -File "{script}"'

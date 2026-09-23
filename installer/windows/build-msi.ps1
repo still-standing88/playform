@@ -1,7 +1,7 @@
 param(
     [string]$SourceDir,
     [string]$OutputDir,
-    [string]$Version = "1.0.0"
+    [string]$Version = "1.3.0"
 )
 
 if (-not (Get-Command "candle.exe" -ErrorAction SilentlyContinue)) {
@@ -25,12 +25,10 @@ Write-Host "Version: $Version" -ForegroundColor Gray
 Write-Host ""
 
 # Create required directories
-$installerDir = "installer\windows"
-New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
 New-Item -ItemType Directory -Force -Path $AbsoluteOutputDir | Out-Null
 
 # Check License.rtf exists
-$licenseFile = "$installerDir\License.rtf"
+$licenseFile = Join-Path $PSScriptRoot "License.rtf"
 if (-not (Test-Path $licenseFile)) {
     Write-Error "License.rtf not found at: $licenseFile"
     Write-Error "Please place your License.rtf in the installer\windows folder before building."
@@ -71,7 +69,7 @@ Write-Host ""
 Write-Host "Building MSI package..." -ForegroundColor Cyan
 
 # WiX build process
-$mainWxsFile  = "$installerDir\product.wxs"
+$mainWxsFile  = Join-Path $PSScriptRoot "product.wxs"
 $harvestedFile = "$AbsoluteOutputDir\harvested.wxs"
 $harvestedObj  = "$AbsoluteOutputDir\harvested.wixobj"
 $productObj    = "$AbsoluteOutputDir\product.wixobj"
@@ -97,7 +95,14 @@ Write-Host " v Harvested files compiled"
 
 # Step 3: Compile main WiX file
 Write-Host "Step 3: Compiling main installer file..." -ForegroundColor Yellow
-& candle.exe -out $productObj $mainWxsFile
+$candleArgs = @(
+    "-dProductVersion=$Version"
+    "-dLicenseRtf=$licenseFile"
+    "-out"
+    $productObj
+    $mainWxsFile
+)
+& candle.exe $candleArgs
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Candle compilation of main file failed with exit code $LASTEXITCODE"
     exit 1
@@ -106,7 +111,11 @@ Write-Host " v Main installer file compiled"
 
 # Step 4: Link everything together
 Write-Host "Step 4: Linking MSI package..." -ForegroundColor Yellow
-& light.exe -ext WixUIExtension -b $AbsoluteSourceDir -out $msiFile $productObj $harvestedObj
+# ICE38/64/91 want per-user components to be tracked by HKCU keypaths and want
+# every profile folder in the RemoveFile table - heat-harvested files can't carry
+# either, and this package only ships a per-user install, so those rules are
+# suppressed. The install folder itself is removed by its RemoveFolder entry.
+& light.exe -ext WixUIExtension -sice:ICE38 -sice:ICE64 -sice:ICE91 -b $AbsoluteSourceDir -out $msiFile $productObj $harvestedObj
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Light linking failed with exit code $LASTEXITCODE"
     exit 1
@@ -122,10 +131,10 @@ Write-Host "MSI package created: $msiFile" -ForegroundColor Green
 Write-Host ""
 Write-Host "Package Features:" -ForegroundColor Cyan
 Write-Host " * License Agreement step (EULA) during install"
+Write-Host " * Pick the install folder in the wizard"
+Write-Host " * Optional: Start Menu shortcut, desktop shortcut, file associations"
 Write-Host " * Installs to %LocalAppData%\PlayForm (per-user, no elevation needed)"
-Write-Host " * Start menu shortcut"
-Write-Host " * Desktop shortcut (optional)"
-Write-Host " * File associations for 23+ video/audio formats"
+Write-Host " * File associations offered for every audio/video format the app supports"
 Write-Host " * Proper uninstall support"
 Write-Host ""
 
