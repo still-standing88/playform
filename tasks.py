@@ -233,6 +233,18 @@ def release(c, version=build.APP_VERSION, target_platform=None, app_name=build.A
 
 
 @task
+def package_windows(c, version=build.APP_VERSION, source_dir=None, output_dir=None):
+    """Package the compiled app into a Windows MSI installer
+
+    Args:
+        version: Version string (e.g., 1.0.0)
+        source_dir: Compiled app dist folder (default: dist/app.dist)
+        output_dir: Folder where the .msi will be placed (default: dist/installer)
+    """
+    dist.package_windows(c, version=version, source_dir=source_dir, output_dir=output_dir)
+
+
+@task
 def bundle(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_VERSION):
     plat = _detect_plat(target_platform)
     app_dist_dir = _app_dist_dir(plat)
@@ -261,3 +273,4 @@ namespace.add_task(build_docs)
 namespace.add_task(compile)
 namespace.add_task(bundle)
 namespace.add_task(release)
+namespace.add_task(package_windows)
