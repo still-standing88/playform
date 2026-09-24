@@ -51,6 +51,8 @@ foreach ($dll in $unwantedDlls) {
     }
 }
 
+<# UPX compression disabled - packing rewrote the compiled binaries in
+   dist/app.dist in place.
 # Compress executables with UPX if available
 $upxPath = (Get-Command -ErrorAction SilentlyContinue upx).Source
 if ($upxPath) {
@@ -64,6 +66,7 @@ if ($upxPath) {
 } else {
     Write-Host "UPX not found, skipping compression" -ForegroundColor Yellow
 }
+#>
 
 Write-Host ""
 Write-Host "Building MSI package..." -ForegroundColor Cyan
