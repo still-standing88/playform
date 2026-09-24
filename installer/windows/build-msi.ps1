@@ -136,7 +136,7 @@ Write-Host "Package Features:" -ForegroundColor Cyan
 Write-Host " * License Agreement step (EULA) during install"
 Write-Host " * Pick the install folder in the wizard"
 Write-Host " * Optional: Start Menu shortcut, desktop shortcut, file associations"
-Write-Host " * Installs to %LocalAppData%\PlayForm (per-user, no elevation needed)"
+Write-Host " * Installs to %LocalAppData%\Joybytes (per-user, no elevation needed)"
 Write-Host " * File associations offered for every audio/video format the app supports"
 Write-Host " * Proper uninstall support"
 Write-Host ""

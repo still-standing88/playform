@@ -52,7 +52,7 @@
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="LocalAppDataFolder">
-        <Directory Id="INSTALLFOLDER" Name="PlayForm" />
+        <Directory Id="INSTALLFOLDER" Name="Joybytes" />
       </Directory>
 
       <!-- Uncomment for system-wide install (requires elevation):
