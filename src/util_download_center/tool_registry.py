@@ -16,6 +16,8 @@ class ToolDef:
     binary_name_posix: str = ""
     binary_name_win: str = ""
     direct_urls: dict = field(default_factory=dict)
+    release_tag: str = ""
+    asset_regex: dict = field(default_factory=dict)
 
 
 def current_machine() -> str:
@@ -92,33 +94,47 @@ FFMPEG = ToolDef(
     description=N_(
         "FFmpeg provides ffmpeg and ffprobe binaries used by PlayForm tools for "
         "media conversion, extraction, and thumbnail generation. The download "
-        "installs only the ffmpeg and ffprobe executables into PlayForm's bin folder."
+        "installs the full ffmpeg package into PlayForm's bin folder."
     ),
-    github_repo="",
+    github_repo="BtbN/FFmpeg-Builds",
+    # BtbN keeps only the last 14 daily releases, but the floating "latest"
+    # tag always carries a build for each release branch it still supports
+    # (n8.1, n9.0, ...). Resolving the asset there by pattern keeps the
+    # download current as branches are added or dropped; the regex prefers
+    # the newest numbered branch and falls back to master.
+    release_tag="latest",
     asset_patterns={},
+    asset_regex={
+        "windows": {
+            "x86_64":  r"^ffmpeg-(?P<ver>n\d+\.\d+|master)-latest-win64-gpl-shared(?:-[\d.]+)?\.zip$",
+            "aarch64": r"^ffmpeg-(?P<ver>n\d+\.\d+|master)-latest-winarm64-gpl-shared(?:-[\d.]+)?\.zip$",
+        },
+        "linux": {
+            "x86_64":  r"^ffmpeg-(?P<ver>n\d+\.\d+|master)-latest-linux64-gpl(?:-[\d.]+)?\.tar\.xz$",
+            "aarch64": r"^ffmpeg-(?P<ver>n\d+\.\d+|master)-latest-linuxarm64-gpl(?:-[\d.]+)?\.tar\.xz$",
+        },
+    },
     is_zip=True,
     binary_name_posix="ffmpeg",
     binary_name_win="ffmpeg.exe",
-    # Windows and macOS aarch64 deliberately reuse the x86_64 builds: neither
-    # GyanD nor evermeet publishes native arm64 6.0 binaries, and both run
-    # under the OS's own x64 emulation. Linux has a real arm64 static build.
+    # Windows takes the shared build (its bin/ holds the DLLs next to the
+    # executables); Linux takes the static one, whose binaries are
+    # self-contained, so bin/ alone is enough there.
     direct_urls={
-        "windows": {
-            "x86_64": ["https://github.com/GyanD/codexffmpeg/releases/download/6.0/ffmpeg-6.0-essentials_build.7z"],
-            "aarch64": ["https://github.com/GyanD/codexffmpeg/releases/download/6.0/ffmpeg-6.0-essentials_build.7z"],
-        },
-        "linux": {
-            "x86_64": ["https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-6.0-amd64-static.tar.xz"],
-            "aarch64": ["https://www.johnvansickle.com/ffmpeg/old-releases/ffmpeg-6.0-arm64-static.tar.xz"],
-        },
+        # macOS keeps evermeet, whose version-pinned URLs are pruned as soon
+        # as a new build ships; the getrelease endpoints always serve the
+        # current one. They carry no filename of their own, so each is paired
+        # with the extension the extractor needs. aarch64 reuses the x86_64
+        # build: evermeet publishes no native arm64 build, and Rosetta runs
+        # the x86_64 one.
         "macos": {
             "x86_64": [
-                "https://evermeet.cx/ffmpeg/ffmpeg-6.0.7z",
-                "https://evermeet.cx/ffmpeg/ffprobe-6.0.7z",
+                ("https://evermeet.cx/ffmpeg/getrelease/7z", "ffmpeg.7z"),
+                ("https://evermeet.cx/ffmpeg/getrelease/ffprobe/7z", "ffprobe.7z"),
             ],
             "aarch64": [
-                "https://evermeet.cx/ffmpeg/ffmpeg-6.0.7z",
-                "https://evermeet.cx/ffmpeg/ffprobe-6.0.7z",
+                ("https://evermeet.cx/ffmpeg/getrelease/7z", "ffmpeg.7z"),
+                ("https://evermeet.cx/ffmpeg/getrelease/ffprobe/7z", "ffprobe.7z"),
             ],
         },
     },

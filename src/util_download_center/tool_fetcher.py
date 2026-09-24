@@ -1,5 +1,6 @@
 import json
 import platform as _platform_mod
+import re
 
 from PySide6.QtCore import QObject, Signal, QUrl, Slot
 from PySide6.QtNetwork import (
@@ -9,9 +10,33 @@ from PySide6.QtNetwork import (
 from .tool_registry import ToolDef, current_machine
 
 
+_VERSION_RE = re.compile(r"^n(\d+)(?:\.(\d+))?$")
+
+
 def _current_platform() -> str:
     s = _platform_mod.system().lower()
     return "macos" if s == "darwin" else ("windows" if s == "windows" else "linux")
+
+
+def _version_rank(version: str) -> tuple:
+    """Release branches outrank master, which is what a project falls back to
+    when no numbered branch matches."""
+    match = _VERSION_RE.match(version)
+    if match is None:
+        return (0, 0, 0)
+    return (1, int(match.group(1)), int(match.group(2) or 0))
+
+
+def _pick_asset(assets: list, pattern: str) -> dict | None:
+    best: tuple | None = None
+    for asset in assets:
+        match = re.match(pattern, asset.get("name", ""))
+        if match is None:
+            continue
+        rank = _version_rank(match.group("ver"))
+        if best is None or rank > best[0]:
+            best = (rank, asset)
+    return best[1] if best else None
 
 
 class ToolFetcher(QObject):
@@ -40,10 +65,11 @@ class ToolFetcher(QObject):
             self._fetch_one(tool)
 
     def _fetch_one(self, tool: ToolDef):
-        if tool.direct_urls:
+        if tool.direct_urls.get(self._platform):
             self._resolve_direct_urls(tool)
             return
-        url = f"https://api.github.com/repos/{tool.github_repo}/releases/latest"
+        base = f"https://api.github.com/repos/{tool.github_repo}/releases"
+        url = f"{base}/tags/{tool.release_tag}" if tool.release_tag else f"{base}/latest"
         req = QNetworkRequest(QUrl(url))
         req.setHeader(QNetworkRequest.KnownHeaders.UserAgentHeader, "PlayForm")
         req.setRawHeader(b"Accept", b"application/vnd.github+json")
@@ -62,8 +88,9 @@ class ToolFetcher(QObject):
                 return
 
             results = []
-            for url in urls:
-                filename = url.rstrip("/").split("/")[-1]
+            for entry in urls:
+                url, filename = entry if isinstance(entry, tuple) else (entry, "")
+                filename = filename or url.rstrip("/").split("/")[-1]
                 results.append(
                     {
                         "tool_name": tool.name,
@@ -96,26 +123,9 @@ class ToolFetcher(QObject):
                 self._emit_error(tool, reply.errorString())
                 return
 
-            assets        = release.get("assets", [])
-            pattern_map   = tool.asset_patterns.get(self._platform, {})
-            target        = pattern_map.get(self._arch) or next(iter(pattern_map.values()), None)
-
-            if not target:
-                self._emit_error(
-                    tool,
-                    f"No asset pattern defined for {self._platform}/{self._arch}",
-                )
-                return
-
-            asset = next((a for a in assets if a["name"] == target), None)
+            asset, err = self._match_asset(tool, release.get("assets", []), release)
             if asset is None:
-                asset = next((a for a in assets if target in a["name"]), None)
-
-            if asset is None:
-                self._emit_error(
-                    tool,
-                    f"Asset '{target}' not found in release {release.get('tag_name', '')}",
-                )
+                self._emit_error(tool, err)
                 return
 
             result = {
@@ -135,6 +145,31 @@ class ToolFetcher(QObject):
             self._active -= 1
             if self._active == 0:
                 self.all_done.emit(list(self._results))
+
+    def _match_asset(self, tool: ToolDef, assets: list, release: dict) -> tuple:
+        regex = tool.asset_regex.get(self._platform, {}).get(self._arch, "")
+        if regex:
+            asset = _pick_asset(assets, regex)
+            if asset is None:
+                return None, (
+                    f"No {self._platform}/{self._arch} build matching this "
+                    f"machine in release {release.get('tag_name', '')}"
+                )
+            return asset, ""
+
+        pattern_map = tool.asset_patterns.get(self._platform, {})
+        target = pattern_map.get(self._arch) or next(iter(pattern_map.values()), None)
+        if not target:
+            return None, f"No asset pattern defined for {self._platform}/{self._arch}"
+
+        asset = next((a for a in assets if a["name"] == target), None)
+        if asset is None:
+            asset = next((a for a in assets if target in a["name"]), None)
+        if asset is None:
+            return None, (
+                f"Asset '{target}' not found in release {release.get('tag_name', '')}"
+            )
+        return asset, ""
 
     def _emit_error(self, tool: ToolDef, msg: str):
         self._errors.append((tool.name, msg))
