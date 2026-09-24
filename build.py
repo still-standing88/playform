@@ -68,9 +68,16 @@ def _base_args(output_dir, debug_build=False) -> list[str]:
         "--nofollow-import-to=ffmpeg_binary",
         "--nofollow-import-to=assets_rc",
         "--nofollow-import-to=media_core",
+        # media_core is nofollow'd (built separately as media_core.pyd), so
+        # packages that only it imports have to be listed here explicitly.
         "--include-package=mpv",
         "--include-package=lxml",
         "--include-package=mutagen",
+        "--include-package=pyee",
+        "--include-package=feedparser",
+        "--include-module=sgmllib",
+        "--include-package=chardet",
+        "--include-module=typing_extensions",
         "--nofollow-import-to=pygments",
         "--nofollow-import-to=sqlalchemy.ext",
         "--nofollow-import-to=sqlalchemy.dialects.mssql",
