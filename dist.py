@@ -139,6 +139,42 @@ def package_windows(c, version=build.APP_VERSION, source_dir=None, output_dir=No
 
 
 @task
+def publish_windows(c, version=build.APP_VERSION, repo=None, installer_dir=None, clobber=True):
+    """Upload the built Windows MSI to the GitHub release for this version
+
+    Args:
+        version: Version string (default: APP_VERSION from src/app_info.py)
+        repo: GitHub repository as owner/name (default: APP_GITHUB_REPO from src/app_info.py)
+        installer_dir: Folder holding the .msi (default: dist/installer)
+        clobber: Replace the release asset if it already exists
+    """
+    repo = repo or build.APP_GITHUB_REPO
+    tag = f"v{version}"
+    msi = os.path.join(installer_dir or str(ROOT_DIR / "dist" / "installer"),
+                       f"{build.APP_NAME}-{version}.msi")
+
+    if not os.path.isfile(msi):
+        print(f"Error: {msi} not found. Run 'inv package-windows' first.")
+        return
+
+    release = c.run(f"gh release view {tag} --repo {repo}", pty=False, in_stream=False,
+                    warn=True, hide=True)
+    if release.exited != 0:
+        print(f"Error: no GitHub release found for tag {tag} in {repo}.")
+        print(release.stderr.strip())
+        print("Create the release first, then re-run this task.")
+        return
+
+    size_mb = os.path.getsize(msi) / (1024 * 1024)
+    print(f"Uploading {os.path.basename(msi)} ({size_mb:.1f} MB) to {repo} release {tag}...")
+    cmd = f'gh release upload {tag} "{msi}" --repo {repo}'
+    if clobber:
+        cmd += " --clobber"
+    c.run(cmd, pty=False, in_stream=False)
+    print(f"Uploaded: https://github.com/{repo}/releases/tag/{tag}")
+
+
+@task
 def package_macos(c, version=build.APP_VERSION, app_name=build.APP_NAME, arch=None, output_dir=None):
     """Create a macOS DMG installer using create-dmg
 

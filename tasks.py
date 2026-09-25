@@ -245,6 +245,19 @@ def package_windows(c, version=build.APP_VERSION, source_dir=None, output_dir=No
 
 
 @task
+def publish_windows(c, version=build.APP_VERSION, repo=None, installer_dir=None, clobber=True):
+    """Upload the built Windows MSI to the GitHub release for this version
+
+    Args:
+        version: Version string (default: APP_VERSION from src/app_info.py)
+        repo: GitHub repository as owner/name (default: APP_GITHUB_REPO from src/app_info.py)
+        installer_dir: Folder holding the .msi (default: dist/installer)
+        clobber: Replace the release asset if it already exists
+    """
+    dist.publish_windows(c, version=version, repo=repo, installer_dir=installer_dir, clobber=clobber)
+
+
+@task
 def bundle(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_VERSION):
     plat = _detect_plat(target_platform)
     app_dist_dir = _app_dist_dir(plat)
@@ -274,3 +287,4 @@ namespace.add_task(compile)
 namespace.add_task(bundle)
 namespace.add_task(release)
 namespace.add_task(package_windows)
+namespace.add_task(publish_windows)

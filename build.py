@@ -13,6 +13,7 @@ from app_info import (
     APP_PUBLISHER,
     APP_DESCRIPTION,
     APP_COPYRIGHT,
+    APP_GITHUB_REPO,
 )
 
 ENTRY_POINT     = SRC_DIR / "app.py"
