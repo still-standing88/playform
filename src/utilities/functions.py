@@ -156,6 +156,14 @@ def get_exe_parent_dir():
 def get_parent_dir():
     return str(get_exe_parent_dir() if is_frozen() else get_script_parent_dir())
 
+def get_exe_path() -> str:
+    # Nuitka standalone reports sys.executable as the build interpreter's
+    # basename joined with the distribution dir ("<install dir>\python.exe"),
+    # a file the shipped app never contains.
+    if is_frozen() and not os.path.isfile(sys.executable):
+        return str(Path(sys.argv[0]).resolve())
+    return sys.executable
+
 def get_debug_level() -> int:
     from app_config import prefs
     debug_level = prefs.prefs.get("debug_level", 2)
@@ -206,7 +214,8 @@ def restart_app():
     if debug == "1":
         args.append("--debug")
     if is_frozen():
-        os.execl(sys.executable, sys.executable, *args)
+        exe = get_exe_path()
+        os.execl(exe, exe, *args)
     else:
         python = sys.executable
         os.execl(python, python, sys.argv[0], *args)
