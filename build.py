@@ -33,6 +33,11 @@ QT_PLUGINS = [
     # monitor/window/audio) does not need this - media_core.av_capture
     # shells out to ffmpeg directly, it doesn't touch QtMultimedia at all.
     "multimedia",
+    # tools/speech_converter drives QTextToSpeech; without this the standalone
+    # build ships no plugins/texttospeech/*.dll (notably qtexttospeech_sapi.dll
+    # on Windows), so Qt falls back to the mock engine and every engine query
+    # fails with 'Text-to-speech plug-in "mock" is not supported'.
+    "texttospeech",
 ]
 
 
