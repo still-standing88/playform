@@ -81,7 +81,9 @@ def _base_args(output_dir, debug_build=False) -> list[str]:
         "--include-package=mutagen",
         "--include-package=pyee",
         "--include-package=feedparser",
-        "--include-module=sgmllib",
+        # feedparser 6.x's sgml.py does `import feedparser_sgmllib as sgmllib`
+        # (the top-level `sgmllib` module from the old sgmllib3k package is gone).
+        "--include-module=feedparser_sgmllib",
         "--include-package=chardet",
         "--include-module=typing_extensions",
         "--nofollow-import-to=pygments",
