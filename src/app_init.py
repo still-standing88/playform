@@ -69,7 +69,9 @@ def _deliver_path(window, path: str) -> None:
 
 
 def setup_environment():
-    from utilities.functions import get_parent_dir
+    from utilities.functions import get_parent_dir, ensure_windows_console
+
+    ensure_windows_console()
 
     bin_dir = os.path.join(get_parent_dir(), "bin")
     if os.path.isdir(bin_dir):
