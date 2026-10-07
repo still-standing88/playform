@@ -28,6 +28,11 @@ class PlaylistEntry:
     artist: Optional[str] = None
     album: Optional[str] = None
     metadata: Dict[str, Any]|None = None
+    audio_url: Optional[str] = None
+    """Carries a separately streamed audio track for `location`, for sources
+    that offer no muxed stream (e.g. YouTube's video-only + audio-only DASH
+    tracks). The player opens both together; None means `location` already
+    has its own audio."""
     
     def __post_init__(self):
         if self.metadata is None:

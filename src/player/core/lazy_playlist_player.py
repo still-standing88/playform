@@ -15,8 +15,9 @@ from PySide6.QtCore import QObject, Signal, QThread
 from app_config import prefs
 
 from ..util.url import (
+    ResolvedStream,
     is_url_supported,
-    resolve_webpage_url,
+    resolve_stream,
     run_ytdlp_flat_playlist,
     run_ytdlp,
     get_yt_video_info,
@@ -77,7 +78,7 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
         self.signals = LazyPlaylistSignals()
 
         self._webpage_urls: List[str] = []
-        self._resolved: dict[int, str] = {}
+        self._resolved: dict[int, ResolvedStream] = {}
         self._resolving: Set[int] = set()
         self._resolve_lock = threading.RLock()
         self._preload_window: int = 3
@@ -398,7 +399,7 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             self._webpage_urls.append(location)
             if location and av_play.is_path(location):
                 with self._resolve_lock:
-                    self._resolved[idx] = location
+                    self._resolved[idx] = ResolvedStream(location)
 
         target_index = max(0, min(start_index, len(playlist) - 1))
         if not self._ensure_resolved_blocking(target_index):
@@ -471,7 +472,7 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             return self._webpage_urls[index]
         return None
 
-    def get_streaming_url(self, index: int) -> Optional[str]:
+    def get_streaming_url(self, index: int) -> Optional[ResolvedStream]:
         with self._resolve_lock:
             return self._resolved.get(index)
 
@@ -522,7 +523,8 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             with self._resolve_lock:
                 streaming = self._resolved.get(idx)
             if streaming:
-                self._current_playlist.entries[idx].location = streaming
+                self._current_playlist.entries[idx].location = streaming.url
+                self._current_playlist.entries[idx].audio_url = streaming.audio_url
 
         super()._play_playlist_track()
         self._schedule_preload_ahead(self._current_playlist_index)
@@ -600,15 +602,15 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
 
         try:
             if av_play.is_path(webpage):
-                resolved = webpage
+                resolved = ResolvedStream(webpage)
             elif is_url_supported(webpage):
                 try:
-                    resolved = resolve_webpage_url(webpage)
+                    resolved = resolve_stream(webpage)
                 except Exception as e:
                     logger.warning(f"Extraction failed for supported URL, passing directly: {e}")
-                    resolved = webpage
+                    resolved = ResolvedStream(webpage)
             else:
-                resolved = webpage
+                resolved = ResolvedStream(webpage)
             with self._resolve_lock:
                 self._resolved[index] = resolved
                 self._resolving.discard(index)

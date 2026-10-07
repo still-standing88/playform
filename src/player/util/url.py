@@ -4,7 +4,7 @@ import json
 import sys
 import re
 import threading
-from typing import Optional, List
+from typing import Optional, List, NamedTuple
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
 headers={ "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" }
@@ -68,7 +68,7 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
         cmd.append('--no-playlist')
 
     # No --format constraint: this only dumps JSON, and the caller
-    # (get_best_format) picks the stream itself. Constraining it made yt-dlp
+    # (select_streams) picks the stream itself. Constraining it made yt-dlp
     # hard-fail ("Requested format is not available") on videos that offer no
     # progressive/muxed HTTP format - same reason fetch_full_info and
     # get_yt_video_info below run without one.
@@ -204,34 +204,41 @@ def strip_playlist_params(url: str) -> str:
     new_query = urlencode(params, doseq=True)
     return urlunparse(parsed._replace(query=new_query))
 
-def get_best_format(info) -> str:
+class ResolvedStream(NamedTuple):
+    """What to play for one extracted entry.
+
+    `audio_url` is set only when the site offers no muxed stream at all (now
+    the norm on YouTube: every format is video-only or audio-only), in which
+    case the best video-only and audio-only tracks are chosen here and the
+    player opens both together. Resolving this ourselves - rather than handing
+    the webpage over for the player's own ytdl hook to sort out - keeps format
+    selection in one place and off whatever yt-dlp happens to be on PATH."""
+
+    url: str
+    audio_url: Optional[str] = None
+
+
+def _has_track(stream: dict, key: str) -> bool:
+    # yt-dlp reports a missing track as "none" and an unknown one as None.
+    return stream.get(key) not in (None, "none")
+
+
+def select_streams(info) -> ResolvedStream:
     formats = info.get("formats", [])
 
     if not formats and "url" in info:
-        return info["url"]
+        return ResolvedStream(info["url"])
 
-    http_formats = [f for f in formats if f.get("protocol", "").startswith(("http", "https"))]
-    muxed = [f for f in http_formats if f.get("acodec") != "none" and f.get("vcodec") != "none"]
-    if not muxed:
-        muxed = [f for f in formats if f.get("acodec") != "none" and f.get("vcodec") != "none"]
+    muxed = [f for f in formats if _has_track(f, "acodec") and _has_track(f, "vcodec")]
     if muxed:
-        return muxed[-1]["url"]
+        return ResolvedStream(muxed[-1]["url"])
 
-    # No muxed stream at all (common on YouTube now - video-only + audio-only
-    # DASH tracks, nothing progressive). A single separate track would play
-    # with no picture or no sound, so hand mpv the webpage URL instead and let
-    # its own ytdl hook resolve and merge both streams.
-    webpage = info.get("webpage_url") or info.get("original_url")
-    if webpage:
-        return webpage
-
-    audio = [f for f in http_formats if f.get("acodec") != "none" and f.get("vcodec") == "none"]
-    if audio:
-        return audio[-1]["url"]
-
-    video = [f for f in http_formats if f.get("vcodec") != "none"]
+    video = [f for f in formats if _has_track(f, "vcodec") and not _has_track(f, "acodec")]
+    audio = [f for f in formats if _has_track(f, "acodec") and not _has_track(f, "vcodec")]
     if video:
-        return video[-1]["url"]
+        return ResolvedStream(video[-1]["url"], audio[-1]["url"] if audio else None)
+    if audio:
+        return ResolvedStream(audio[-1]["url"])
 
     raise ValueError(_("No playable formats found"))
 
@@ -310,11 +317,11 @@ def is_url_supported(url: str) -> bool:
     return False
 
 
-def resolve_webpage_url(url: str, cookies: Optional[str] = None) -> str:
+def resolve_stream(url: str, cookies: Optional[str] = None) -> ResolvedStream:
     info = run_ytdlp(url, as_playlist=False, cookies=cookies)
     if isinstance(info, list):
         info = info[0]
-    return get_best_format(info)
+    return select_streams(info)
 
 
 def run_ytdlp_flat_playlist(url: str, cookies: Optional[str] = None) -> List[dict]:

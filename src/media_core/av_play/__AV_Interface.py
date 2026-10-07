@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any, List, Optional
 from .__AV_Common import *
 
 
@@ -29,7 +29,7 @@ class AVMediaInterface(ABC):
         pass
 
     @abstractmethod
-    def load_url(self, id:int, url:str):
+    def load_url(self, id:int, url:str, audio_url:Optional[str] = None):
         pass
 
     @abstractmethod

@@ -220,6 +220,8 @@ class MPVMediaInterface(AVMediaInterface):
         self.__end_reached = False
         self.__fresh_load_pending = False
         self.__generation = 0
+        self.__pending_audio: Optional[tuple[int, str]] = None
+        self.__audio_hook_registered = False
         self.__seek_token: object | None = None
         self.__volume_token: object | None = None
         self.__command_count = 0
@@ -356,6 +358,7 @@ class MPVMediaInterface(AVMediaInterface):
         self.__stopped = False
         self.__end_reached = False
         self.__fresh_load_pending = True
+        self.__pending_audio = None
 
         def do_load():
             if gen != self.__generation:
@@ -365,7 +368,7 @@ class MPVMediaInterface(AVMediaInterface):
         self._submit(do_load, wait=False)
         self._load_subtitles(path, gen)
 
-    def load_url(self, id: int, url: str):
+    def load_url(self, id: int, url: str, audio_url: Optional[str] = None):
         self._check_initialized()
         if not (url and is_url(url)):
             return
@@ -377,6 +380,7 @@ class MPVMediaInterface(AVMediaInterface):
         self.__stopped = False
         self.__end_reached = False
         self.__fresh_load_pending = True
+        self.__pending_audio = (gen, audio_url) if audio_url and is_url(audio_url) else None
 
         def do_load():
             if gen != self.__generation:
@@ -384,6 +388,34 @@ class MPVMediaInterface(AVMediaInterface):
             self._mpv().command("loadfile", url)
 
         self._submit(do_load, wait=False)
+        if self.__pending_audio is not None:
+            self._register_audio_hook()
+
+    def _register_audio_hook(self):
+        """Attach a separately streamed audio track once the video is loaded.
+
+        Deliberately not loadfile's own per-file options: those are passed as
+        a single comma-separated string, and real stream URLs are full of
+        commas (googlevideo's carry dozens), which mpv then rejects outright.
+        The audio-add command takes the URL as its own argument instead."""
+        if self.__audio_hook_registered:
+            return
+        self.__audio_hook_registered = True
+
+        def register(m):
+            @m.event_callback('file-loaded')
+            def attach_audio(event):
+                pending = self.__pending_audio
+                if not pending or pending[0] != self.__generation:
+                    return
+                self.__pending_audio = None
+                audio_url = pending[1]
+                self.run_on_mpv(
+                    lambda mm: mm.command("audio-add", audio_url), wait=False
+                )
+            return attach_audio
+
+        self.run_on_mpv(register, wait=False)
 
     def _load_subtitles(self, path: str, gen: int):
         subtitle_formats = ["idx", "sub", "srt", "rt", "ssa", "ass", "mks", "vtt", "sup", "scc", "smi", "lrc", "pgs"]

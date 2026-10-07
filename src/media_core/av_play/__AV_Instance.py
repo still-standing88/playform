@@ -48,12 +48,12 @@ class AVMediaInstance:
             self.__file_path = file_path
             self.__controler.load_file(self.__id, file_path)
 
-    def load_url(self, url:str):
+    def load_url(self, url:str, audio_url:str = ""):
         #if self.get_playback_state() == AVPlaybackState.AV_STATE_PLAYING:
             #self.stop()
         if url != "" and is_url(url):
             self.__file_path = url
-            self.__controler.load_url(self.__id, url)
+            self.__controler.load_url(self.__id, url, audio_url or None)
 
     def play(self):
         self.__controler.play(self.__id)

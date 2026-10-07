@@ -416,13 +416,14 @@ class AVPlayer(ABC):
             self._primary_instance = AVMediaInstance(self._controler)
         
         if self._current_playlist and 0 <= self._current_playlist_index < len(self._current_playlist):
-            instance_path = self._current_playlist.entries[self._current_playlist_index].location
+            entry = self._current_playlist.entries[self._current_playlist_index]
+            instance_path = entry.location
             self._track_loading = True
             self._track_load_started_at = time.monotonic()
             if is_path(instance_path):
                 self._primary_instance.load_file(instance_path)
             else:
-                self._primary_instance.load_url(instance_path)
+                self._primary_instance.load_url(instance_path, entry.audio_url)
             self._primary_instance.play()
             self._playlist_state = AVPlaylistState.PLAYING
 
