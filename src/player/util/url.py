@@ -66,9 +66,13 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
     
     if not as_playlist:
         cmd.append('--no-playlist')
-    
-    cmd.extend(['--format', 'best[protocol^=http]'])
-    
+
+    # No --format constraint: this only dumps JSON, and the caller
+    # (get_best_format) picks the stream itself. Constraining it made yt-dlp
+    # hard-fail ("Requested format is not available") on videos that offer no
+    # progressive/muxed HTTP format - same reason fetch_full_info and
+    # get_yt_video_info below run without one.
+
     cmd.extend(_get_cookies_arg(cookies))
     
     if YTDLP_VERBOSE:
@@ -207,29 +211,25 @@ def get_best_format(info) -> str:
         return info["url"]
 
     http_formats = [f for f in formats if f.get("protocol", "").startswith(("http", "https"))]
-
-    if http_formats:
-        muxed = [f for f in http_formats if f.get("acodec") != "none" and f.get("vcodec") != "none"]
-        if muxed:
-            return muxed[-1]["url"]
-
-        audio = [f for f in http_formats if f.get("acodec") != "none" and f.get("vcodec") == "none"]
-        if audio:
-            return audio[-1]["url"]
-
-        video = [f for f in http_formats if f.get("vcodec") != "none"]
-        if video:
-            return video[-1]["url"]
-
-    muxed = [f for f in formats if f.get("acodec") != "none" and f.get("vcodec") != "none"]
+    muxed = [f for f in http_formats if f.get("acodec") != "none" and f.get("vcodec") != "none"]
+    if not muxed:
+        muxed = [f for f in formats if f.get("acodec") != "none" and f.get("vcodec") != "none"]
     if muxed:
         return muxed[-1]["url"]
 
-    audio = [f for f in formats if f.get("acodec") != "none"]
+    # No muxed stream at all (common on YouTube now - video-only + audio-only
+    # DASH tracks, nothing progressive). A single separate track would play
+    # with no picture or no sound, so hand mpv the webpage URL instead and let
+    # its own ytdl hook resolve and merge both streams.
+    webpage = info.get("webpage_url") or info.get("original_url")
+    if webpage:
+        return webpage
+
+    audio = [f for f in http_formats if f.get("acodec") != "none" and f.get("vcodec") == "none"]
     if audio:
         return audio[-1]["url"]
 
-    video = [f for f in formats if f.get("vcodec") != "none"]
+    video = [f for f in http_formats if f.get("vcodec") != "none"]
     if video:
         return video[-1]["url"]
 
