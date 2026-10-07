@@ -224,7 +224,28 @@ class FFmpeg(EventEmitter):
             sigterm = signal.CTRL_BREAK_EVENT  # type: ignore
 
         self._terminated = True
-        self._process.send_signal(sigterm)
+        try:
+            self._process.send_signal(sigterm)
+        except OSError:
+            # CTRL_BREAK_EVENT needs the *calling* process to have a console
+            # (GenerateConsoleCtrlEvent routes through it); the frozen
+            # windowed build has none, so it fails with WinError 6 and the
+            # child would otherwise run on forever. CREATE_NEW_PROCESS_GROUP
+            # in utils.create_subprocess only covers the child's side.
+            self._process.terminate()
+
+    def kill(self):
+        """Force-terminate the running FFmpeg process, skipping the graceful
+        finalize a signal-based terminate would let it perform. Never raises,
+        so it is safe to use as a last resort from a cleanup path."""
+        self._terminated = True
+        process = getattr(self, "_process", None)
+        if process is None:
+            return
+        try:
+            process.kill()
+        except Exception:
+            pass
 
     def _write_stdin(self, stream: Optional[IO[bytes]]):
         if stream is None:
