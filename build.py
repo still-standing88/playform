@@ -81,9 +81,11 @@ def _base_args(output_dir, debug_build=False) -> list[str]:
         "--include-package=mutagen",
         "--include-package=pyee",
         "--include-package=feedparser",
-        # feedparser 6.x's sgml.py does `import feedparser_sgmllib as sgmllib`
-        # (the top-level `sgmllib` module from the old sgmllib3k package is gone).
-        "--include-module=feedparser_sgmllib",
+        # feedparser's sgml.py/html.py `import sgmllib` - the top-level module
+        # supplied by the separate sgmllib3k package, not a name inside the
+        # feedparser package, so it has to be named explicitly (Nuitka aborts
+        # the whole build if it cannot locate an --include-module).
+        "--include-module=sgmllib",
         "--include-package=chardet",
         "--include-module=typing_extensions",
         "--nofollow-import-to=pygments",
