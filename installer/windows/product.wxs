@@ -52,7 +52,9 @@
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="LocalAppDataFolder">
-        <Directory Id="INSTALLFOLDER" Name="Joybytes" />
+        <Directory Id="PublisherFolder" Name="Joybytes">
+          <Directory Id="INSTALLFOLDER" Name="PlayForm" />
+        </Directory>
       </Directory>
 
       <!-- Uncomment for system-wide install (requires elevation):
@@ -119,6 +121,11 @@
                        Value="[INSTALLFOLDER]"
                        KeyPath="yes" />
         <RemoveFolder Id="INSTALLFOLDER" On="uninstall" />
+        <!-- INSTALLFOLDER is now nested under the publisher folder, so the
+             empty parent left behind on uninstall needs removing too.
+             RemoveFolder defaults to the parent component's own directory,
+             hence the explicit Directory. -->
+        <RemoveFolder Id="RemovePublisherFolder" Directory="PublisherFolder" On="uninstall" />
       </Component>
     </DirectoryRef>
   </Fragment>
