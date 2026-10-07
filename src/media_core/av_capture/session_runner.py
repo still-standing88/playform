@@ -152,12 +152,20 @@ class CaptureSessionRunner:
             for runtime in self._runtimes.values():
                 if runtime.running:
                     self._stop_segment(runtime)
-        for source_id, runtime in self._runtimes.items():
-            final_path = self._finalize(runtime)
-            self._on_source_stopped(source_id, final_path or "")
+        runtimes = list(self._runtimes.items())
         self._runtimes.clear()
         self._active = False
         self._paused = False
+        # Per-source finalize, after clearing active state: a failure joining
+        # one source's segments must not leave the runner (and therefore the
+        # UI's close-gate) stuck active for every other source.
+        for source_id, runtime in runtimes:
+            try:
+                final_path = self._finalize(runtime)
+            except Exception as exc:
+                self._on_source_error(source_id, str(exc))
+                final_path = None
+            self._on_source_stopped(source_id, final_path or "")
         self._on_state_changed("stopped")
 
     # -- per-segment lifecycle ------------------------------------------
@@ -234,10 +242,16 @@ class CaptureSessionRunner:
         if ffmpeg is not None:
             try:
                 ffmpeg.terminate()
-            except FFmpegError:
+            except Exception:
+                # Never let a failed terminate abort the whole stop/pause -
+                # that left the runner (and the UI's close-gate) stuck active
+                # with the ffmpeg process still recording.
                 pass
         if thread is not None:
             thread.join(timeout=_JOIN_TIMEOUT_SECONDS)
+            if thread.is_alive() and ffmpeg is not None:
+                ffmpeg.kill()
+                thread.join(timeout=_JOIN_TIMEOUT_SECONDS)
         # last_reported_seconds is already prior_seconds + this segment's own
         # elapsed time (see _on_progress above) - carry it forward as the
         # next segment's baseline so the displayed "recording time" keeps

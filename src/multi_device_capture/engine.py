@@ -20,6 +20,7 @@ calls .emit().
 from __future__ import annotations
 
 import concurrent.futures
+import logging
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon
@@ -30,6 +31,8 @@ from tools.ffmpeg_handler import FFmpegHandler
 
 from .models import CaptureSource, Session
 from .settings import MultiDeviceCaptureSettings
+
+logger = logging.getLogger(__name__)
 
 
 class CaptureEngine(QObject):
@@ -142,10 +145,17 @@ class CaptureEngine(QObject):
         runner = self._runner
         if runner is None:
             return
-        runner.stop()
+        # Cleared before runner.stop() runs: this runs on a fire-and-forget
+        # future whose exceptions nobody observes, so a raise inside stop()
+        # used to leave _active True forever - the tool dialog's close-gate
+        # then refused to close and the UI sat on "Stopping...".
         self._runner = None
         self._active = False
         self._paused = False
+        try:
+            runner.stop()
+        except Exception:
+            logger.exception("Capture stop failed")
 
     def _on_runner_state_changed(self, state: str) -> None:
         # Called directly by session_runner from the executor thread (not a
