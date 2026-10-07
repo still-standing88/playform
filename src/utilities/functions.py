@@ -174,7 +174,7 @@ def get_logs_dir() -> str:
 
     local_appdata = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA")
     if local_appdata:
-        candidates.append(Path(local_appdata) / "PlayForm" / "logs")
+        candidates.append(Path(local_appdata) / "Joybytes" / "PlayForm" / "logs")
 
     candidates.append(Path.home() / ".playform" / "logs")
     candidates.append(Path(tempfile.gettempdir()) / "PlayForm" / "logs")
