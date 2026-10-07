@@ -243,8 +243,12 @@ def compile(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, com
         print(f"[warn] Output dir not found: {app_dist_dir}, skipping post-compile moves.")
 
 
-@task
+@task(pre=[build_media_core_pyd, build_assets_pyd])
 def build(c, target_platform=None, app_name=APP_NAME, version=APP_VERSION, compiler=None):
+    # pre= has to be repeated here rather than inherited: calling compile()
+    # as a plain function skips invoke's pre-task machinery, so without this
+    # `inv build` produced a dist missing media_core.pyd/assets_rc.pyd - the
+    # main build nofollows both, so the app could not import them at all.
     compile(c, target_platform=target_platform, app_name=app_name, version=version, compiler=compiler)
 
 
