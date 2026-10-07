@@ -57,6 +57,16 @@ class SystemTrayIcon:
         else:
             self.window.showMinimized()
     
+    def show_window(self):
+        if self.window.isMinimized():
+            self.window.showNormal()
+        self.window.show()
+        self.window.raise_()
+        self.window.activateWindow()
+        self.window.dock_manager.restore_floating_docks()
+        if self.show_hide_action:
+            self.show_hide_action.setText(_("Hide"))
+
     def toggle_window_visibility(self):
         if self.window.isVisible() and not self.window.isMinimized():
             self.window.dock_manager.hide_floating_docks()
@@ -64,12 +74,7 @@ class SystemTrayIcon:
             if self.show_hide_action:
                 self.show_hide_action.setText(_("Show"))
         else:
-            self.window.show()
-            self.window.raise_()
-            self.window.activateWindow()
-            self.window.dock_manager.restore_floating_docks()
-            if self.show_hide_action:
-                self.show_hide_action.setText(_("Hide"))
+            self.show_window()
     
     def _on_tray_activated(self, reason):
         if reason == QSystemTrayIcon.ActivationReason.DoubleClick:

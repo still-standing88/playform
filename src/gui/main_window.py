@@ -891,6 +891,21 @@ class MainWindow(QMainWindow):
                 self.show()
                 self.raise_()
                 self.activateWindow()
+
+    def bring_to_front(self):
+        # Called when a path arrives from outside the app (file association
+        # launch, a second instance handing this one a file): without this the
+        # file played invisibly behind whatever else is on screen, or stayed
+        # hidden in the tray. Deliberately Qt-level rather than AppGuard's
+        # native focus_window, which is what used to do (or fail to do) this.
+        if self.tray and self.tray.is_available():
+            self.tray.show_window()
+            return
+        if self.isMinimized():
+            self.showNormal()
+        self.show()
+        self.raise_()
+        self.activateWindow()
     
     def has_active_tools(self):
         # Multi Device Capture is a normal ToolDialog now (see

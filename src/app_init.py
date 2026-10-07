@@ -44,6 +44,30 @@ def _send_via_local_socket(path: str) -> bool:
     return True
 
 
+def _allow_foreground() -> None:
+    """Grant the already-running instance permission to take the foreground
+    when it handles the path this process is handing it.
+
+    Windows refuses SetForegroundWindow from a process the user did not just
+    interact with, which is why the receiving instance's raise/activate could
+    silently do nothing. As the process the user *did* just launch (a file
+    association launch or a second instance), this process can grant that
+    permission on its behalf. No-op elsewhere - Qt's activateWindow is
+    sufficient on macOS/Linux."""
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        ctypes.windll.user32.AllowSetForegroundWindow(-1)  # ASFW_ANY
+    except Exception:
+        pass
+
+
+def _deliver_path(window, path: str) -> None:
+    window.load_external_path(path)
+    window.bring_to_front()
+
+
 def setup_environment():
     from utilities.functions import get_parent_dir
 
@@ -88,6 +112,7 @@ def initialize_app_guard(cli_args):
     app_instance.init("PlayForm", lambda: None, False)
 
     if not app_instance.is_primary_instance():
+        _allow_foreground()
         for raw_arg in cli_args[1:]:
             path = _clean_path_arg(raw_arg)
             if not path:
@@ -95,7 +120,6 @@ def initialize_app_guard(cli_args):
             _log(f"[PlayForm IPC] Secondary sending: {path}\n")
             if not _send_via_local_socket(path):
                 app_instance.send_msg_request("cli-args", path)
-        app_instance.focus_window("PlayForm")
         app_instance.release()
         return None, True
 
@@ -172,7 +196,7 @@ def _read_client(client, window):
     client.disconnectFromServer()
     for path in paths:
         _log(f"[PlayForm IPC] Primary local: received '{path}'\n")
-        QTimer.singleShot(0, lambda p=path: window.load_external_path(p))
+        QTimer.singleShot(0, lambda p=path: _deliver_path(window, p))
 
 
 def setup_ipc_handlers(app_instance, window):
@@ -182,7 +206,7 @@ def setup_ipc_handlers(app_instance, window):
         _log(f"[PlayForm IPC] AppGuard received: {data}\n")
         path = data.get("msg_data", "") if isinstance(data, dict) else ""
         if path:
-            QTimer.singleShot(0, lambda p=path: window.load_external_path(p))
+            QTimer.singleShot(0, lambda p=path: _deliver_path(window, p))
 
     cli_args_msg = app_instance.create_ipc_msg("cli-args", handle_cli_args)
     app_instance.register_msg(cli_args_msg)

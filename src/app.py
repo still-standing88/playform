@@ -74,8 +74,8 @@ def main():
         splash.finish(window)
         window.show_or_maximize()
         window.start_player_warmup()
-        if len(cli_args) > 1 and app_instance:
-            app_instance.focus_window("PlayForm")
+        if len(cli_args) > 1:
+            window.bring_to_front()
         
         exit_code = app.exec()
     except Exception as e:
