@@ -7,6 +7,8 @@ logs/
 Screenshots/
 __pycache__/
 venv/
+vnv/
+.venv/
 tst/
 test/
 .kilocode/
