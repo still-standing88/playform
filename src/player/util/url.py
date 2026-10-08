@@ -229,12 +229,22 @@ def select_streams(info) -> ResolvedStream:
     if not formats and "url" in info:
         return ResolvedStream(info["url"])
 
-    muxed = [f for f in formats if _has_track(f, "acodec") and _has_track(f, "vcodec")]
+    def direct(candidates: List[dict]) -> List[dict]:
+        # Direct http(s) streams in preference to anything else. m3u8_native
+        # entries are HLS manifests, and a manifest picked as the primary
+        # stream leaves playback with no audio track at all even when the
+        # separate audio URL is handed over alongside it (verified) - the
+        # original format selector's http/https filter kept them out of the
+        # running for that reason.
+        http = [f for f in candidates if f.get("protocol", "").startswith(("http", "https"))]
+        return http or candidates
+
+    muxed = direct([f for f in formats if _has_track(f, "acodec") and _has_track(f, "vcodec")])
     if muxed:
         return ResolvedStream(muxed[-1]["url"])
 
-    video = [f for f in formats if _has_track(f, "vcodec") and not _has_track(f, "acodec")]
-    audio = [f for f in formats if _has_track(f, "acodec") and not _has_track(f, "vcodec")]
+    video = direct([f for f in formats if _has_track(f, "vcodec") and not _has_track(f, "acodec")])
+    audio = direct([f for f in formats if _has_track(f, "acodec") and not _has_track(f, "vcodec")])
     if video:
         return ResolvedStream(video[-1]["url"], audio[-1]["url"] if audio else None)
     if audio:
