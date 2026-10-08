@@ -264,7 +264,7 @@ def bundle(c, target_platform=None, app_name=build.APP_NAME, version=build.APP_V
 
     _sync_translation_files(app_dist_dir)
 
-    if not (app_dist_dir / f"{app_name}-{version}-{plat}").exists():
+    if not list(app_dist_dir.glob("*.sig")):
         print(f"[warn] No .sig files found in {app_dist_dir}. Run 'inv release' first.")
 
     archive_name = BIN_DIR / f"{app_name}-{version}-{plat}"
