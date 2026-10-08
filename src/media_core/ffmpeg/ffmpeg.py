@@ -5,6 +5,7 @@ import io
 import os
 import signal
 import subprocess
+import threading
 from typing import IO, Optional, Union
 
 from pyee import EventEmitter
@@ -15,6 +16,46 @@ from media_core.ffmpeg.errors import FFmpegAlreadyExecuted, FFmpegError
 from media_core.ffmpeg.options import Options
 from media_core.ffmpeg.progress import Tracker
 from media_core.ffmpeg.utils import create_subprocess, ensure_io, is_windows, read_stream, readlines
+
+_console_lock = threading.Lock()
+
+
+def _ctrl_break_via_child_console(process) -> bool:
+    """Deliver CTRL_BREAK_EVENT to `process` by borrowing its own console.
+
+    GenerateConsoleCtrlEvent routes the event through the *calling* process's
+    console, so a console-less caller (the frozen windowed build, which Nuitka
+    compiles with --windows-console-mode=disable) gets WinError 6 and the child
+    never hears about it. Attaching to the child's console for the duration of
+    the call gives the event a console to travel through - which beats
+    allocating a console of our own just for this, both because that shows a
+    console window and because it changes the console every child inherits.
+
+    Serialised because AttachConsole/FreeConsole are per-process: two threads
+    detaching each other mid-call would fail the event. Never raises; False
+    just means the caller should fall back.
+    """
+    import ctypes
+
+    with _console_lock:
+        try:
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            if not kernel32.AttachConsole(process.pid):
+                # Already has a console (dev run from a terminal) or the child
+                # is gone - the plain send_signal path covers the former.
+                return False
+            try:
+                # The event also reaches us now that we share the console;
+                # ignore it rather than letting it interrupt this process.
+                kernel32.SetConsoleCtrlHandler(None, True)
+                try:
+                    return bool(kernel32.GenerateConsoleCtrlEvent(signal.CTRL_BREAK_EVENT, process.pid))
+                finally:
+                    kernel32.SetConsoleCtrlHandler(None, False)
+            finally:
+                kernel32.FreeConsole()
+        except Exception:
+            return False
 
 
 class FFmpeg(EventEmitter):
@@ -227,11 +268,10 @@ class FFmpeg(EventEmitter):
         try:
             self._process.send_signal(sigterm)
         except OSError:
-            # CTRL_BREAK_EVENT needs the *calling* process to have a console
-            # (GenerateConsoleCtrlEvent routes through it); the frozen
-            # windowed build has none, so it fails with WinError 6 and the
-            # child would otherwise run on forever. CREATE_NEW_PROCESS_GROUP
-            # in utils.create_subprocess only covers the child's side.
+            if is_windows() and _ctrl_break_via_child_console(self._process):
+                return
+            # Nothing graceful is deliverable - take the abrupt route rather
+            # than leaving the process (and its caller's join) running forever.
             self._process.terminate()
 
     def kill(self):

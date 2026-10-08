@@ -169,34 +169,6 @@ def get_debug_level() -> int:
     debug_level = prefs.prefs.get("debug_level", 2)
     return debug_level
 
-def ensure_windows_console():
-    """Give the process a hidden console on Windows, if it has none.
-
-    CTRL_BREAK_EVENT - how media_core.ffmpeg.FFmpeg.terminate() asks an ffmpeg
-    child to stop - is delivered through the *calling* process's console. The
-    frozen build has none (--windows-console-mode=disable), so every graceful
-    terminate raised OSError [WinError 6] and the child either had to be
-    hard-killed (losing the container's trailer) or kept running. Allocating a
-    console up front - hidden, and with this process itself ignoring console
-    control events - makes that delivery work; a no-op everywhere else and in
-    any process that already has a console."""
-    if sys.platform != "win32":
-        return
-    try:
-        import ctypes
-        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-        if kernel32.GetConsoleWindow():
-            return
-        if not kernel32.AllocConsole():
-            return
-        kernel32.SetConsoleCtrlHandler(None, True)
-        window = kernel32.GetConsoleWindow()
-        if window:
-            ctypes.windll.user32.ShowWindow(window, 0)  # SW_HIDE
-    except Exception:
-        pass
-
-
 def get_logs_dir() -> str:
     candidates = [Path(get_app_path()) / "logs"]
 
