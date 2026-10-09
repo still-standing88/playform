@@ -50,18 +50,30 @@ def _get_cookies_arg(cookies: Optional[str] = None) -> List[str]:
     from media_core.ytdlp_download.cookies import cookie_args
     return cookie_args(cookies or "")
 
+
+# yt-dlp runs unattended in a background thread, so a call that never returns
+# hangs that thread - and load_url() treats a busy extraction thread as "stash
+# this URL and come back later", so nothing ever played again and no error was
+# raised or logged. Every call therefore needs a hard bound.
+_YTDLP_TIMEOUT = 180.0
+_YTDLP_PLAYLIST_TIMEOUT = 420.0
+
+
+def _run_ytdlp(cmd: List[str], timeout: float = _YTDLP_TIMEOUT, **kwargs) -> "subprocess.CompletedProcess":
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                              **_NO_WINDOW, **kwargs)
+    except subprocess.TimeoutExpired as exc:
+        raise TimeoutError(
+            _("yt-dlp did not finish within {seconds} seconds").format(seconds=int(timeout))
+        ) from exc
+
+
 def get_yt_video_info(url: str, cookies: Optional[str] = None) -> dict:
     command = [YTDLP_PATH, '--dump-json', '--no-playlist'] \
         + _get_deno_arg() + _get_cookies_arg(cookies) + [url]
     try:
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            check=True,
-            encoding='utf-8',
-            **_NO_WINDOW,
-        )
+        result = _run_ytdlp(command, check=True, encoding='utf-8')
         return json.loads(result.stdout)
     except FileNotFoundError:
         raise RuntimeError(_("yt-dlp executable not found at '{path}'.").format(path=YTDLP_PATH))
@@ -91,13 +103,13 @@ def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None)
     
     if YTDLP_LOG_FILE:
         with open(YTDLP_LOG_FILE, 'a') as log:
-            result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
+            result = _run_ytdlp(cmd)
             log.write(f"Command: {' '.join(cmd)}\n")
             log.write(f"STDOUT:\n{result.stdout}\n")
             log.write(f"STDERR:\n{result.stderr}\n")
             log.write("-" * 80 + "\n")
     else:
-        result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
+        result = _run_ytdlp(cmd)
     
     if result.returncode != 0:
         raise ValueError(_("yt-dlp failed: {error}").format(error=result.stderr))
@@ -120,13 +132,13 @@ def fetch_full_info(url: str, cookies: Optional[str] = None):
     
     if YTDLP_LOG_FILE:
         with open(YTDLP_LOG_FILE, 'a') as log:
-            result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
+            result = _run_ytdlp(cmd)
             log.write(f"Command: {' '.join(cmd)}\n")
             log.write(f"STDOUT:\n{result.stdout}\n")
             log.write(f"STDERR:\n{result.stderr}\n")
             log.write("-" * 80 + "\n")
     else:
-        result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
+        result = _run_ytdlp(cmd)
     
     if result.returncode != 0:
         raise ValueError(_("Failed to fetch full info: {error}").format(error=result.stderr))
@@ -147,13 +159,13 @@ def fetch_video_comments(url: str, cookies: Optional[str] = None, max_comments: 
 
     if YTDLP_LOG_FILE:
         with open(YTDLP_LOG_FILE, 'a') as log:
-            result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
+            result = _run_ytdlp(cmd)
             log.write(f"Command: {' '.join(cmd)}\n")
             log.write(f"STDOUT:\n{result.stdout}\n")
             log.write(f"STDERR:\n{result.stderr}\n")
             log.write("-" * 80 + "\n")
     else:
-        result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
+        result = _run_ytdlp(cmd)
 
     if result.returncode != 0:
         raise ValueError(_("Failed to fetch comments: {error}").format(error=result.stderr))
@@ -264,10 +276,7 @@ def _load_extractor_names():
     global _supported_extractor_names
     if _supported_extractor_names is not None:
         return
-    result = subprocess.run(
-        [YTDLP_PATH, "--extractor-descriptions"],
-        capture_output=True, text=True, **_NO_WINDOW,
-    )
+    result = _run_ytdlp([YTDLP_PATH, "--extractor-descriptions"], timeout=60.0)
     names = set()
     for line in result.stdout.splitlines():
         name = line.split(":")[0].strip().lower()
@@ -347,13 +356,13 @@ def run_ytdlp_flat_playlist(url: str, cookies: Optional[str] = None) -> List[dic
 
     if YTDLP_LOG_FILE:
         with open(YTDLP_LOG_FILE, "a") as log:
-            result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
+            result = _run_ytdlp(cmd)
             log.write(f"Command: {' '.join(cmd)}\n")
             log.write(f"STDOUT:\n{result.stdout}\n")
             log.write(f"STDERR:\n{result.stderr}\n")
             log.write("-" * 80 + "\n")
     else:
-        result = subprocess.run(cmd, capture_output=True, text=True, **_NO_WINDOW)
+        result = _run_ytdlp(cmd)
 
     if result.returncode != 0:
         raise ValueError(_("yt-dlp failed: {error}").format(error=result.stderr))

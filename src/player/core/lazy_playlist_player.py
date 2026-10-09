@@ -417,14 +417,21 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
 
     def load_url(self, url: str):
         if not ensure_ytdlp_available(None, show_message=False):
+            logger.error(f"yt-dlp not available; cannot extract {url}")
             self.signals.extraction_failed.emit(_("yt-dlp is not available."))
             return
 
         if self._extract_worker and self._extract_worker.isRunning():
+            # Held until the in-flight extraction finishes (see
+            # _drain_extraction). Logged, because a request that lands here
+            # and is never drained looks exactly like "playback does nothing"
+            # with no error anywhere.
+            logger.info(f"Extraction busy; queueing {url} until it finishes")
             self._pending_url = url
             return
 
         self._pending_url = None
+        logger.info(f"Extracting {url}")
         self.signals.extraction_started.emit()
         self._start_extraction(url)
 
@@ -465,6 +472,7 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
         pending = self._pending_url
         self._pending_url = None
         if pending:
+            logger.info(f"Extraction free; starting queued {pending}")
             self.signals.extraction_started.emit()
             self._start_extraction(pending)
 
@@ -526,6 +534,11 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             if streaming:
                 self._current_playlist.entries[idx].location = streaming.url
                 self._current_playlist.entries[idx].audio_url = streaming.audio_url
+                logger.info(
+                    f"Playing entry {idx} "
+                    f"({len(self._current_playlist)} in playlist, "
+                    f"separate audio: {'yes' if streaming.audio_url else 'no'})"
+                )
 
         super()._play_playlist_track()
         self._schedule_preload_ahead(self._current_playlist_index)
