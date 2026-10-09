@@ -410,9 +410,17 @@ class MPVMediaInterface(AVMediaInterface):
                     return
                 self.__pending_audio = None
                 audio_url = pending[1]
-                self.run_on_mpv(
-                    lambda mm: mm.command("audio-add", audio_url), wait=False
-                )
+
+                def _add(mm):
+                    try:
+                        mm.command("audio-add", audio_url)
+                        logger.info("Attached separate audio track")
+                    except Exception as exc:
+                        # Silently losing this is what "plays but no sound"
+                        # looks like from the outside, so say so.
+                        logger.error("Could not attach separate audio track: %s", exc)
+
+                self.run_on_mpv(_add, wait=False)
             return attach_audio
 
         self.run_on_mpv(register, wait=False)

@@ -235,30 +235,25 @@ class ResolvedStream(NamedTuple):
     audio_url: Optional[str] = None
 
 
-def _has_track(stream: dict, key: str) -> bool:
-    # yt-dlp reports a missing track as "none" and an unknown one as None.
-    return stream.get(key) not in (None, "none")
-
-
 def select_streams(info) -> ResolvedStream:
     """What to open for one extracted entry, as chosen by yt-dlp.
 
-    The choosing happens in yt-dlp itself (the -f selector run_ytdlp passes);
-    this only reads the answer. `requested_formats` lists the formats yt-dlp
-    picked: one entry for a single stream, two for the video+audio pair it
-    falls back to when nothing is already muxed. Re-deriving that choice from
-    the raw format list here is what stopped playback working twice over
-    (once for videos with no muxed stream, once for ones whose last candidate
-    was an HLS manifest), so it is deliberately not attempted any more.
+    `requested_formats` is yt-dlp's own answer: one entry for a single stream,
+    or the video+audio pair it picked (video first) when nothing was already
+    muxed. Both are handed over as-is, in its order.
+
+    Deliberately no codec sniffing to decide which entry is the audio: yt-dlp
+    reports `acodec` as None (unknown) rather than "none" for some entries, and
+    reading that as "not an audio track" collapsed a perfectly good pair to
+    video-only - playback then had picture with no sound and nothing logged.
+    Whether the entries are audio/video is not in question here; yt-dlp only
+    ever pairs the two together.
     """
     requested = info.get("requested_formats") or []
+    if len(requested) >= 2:
+        return ResolvedStream(requested[0]["url"], requested[-1]["url"])
     if requested:
-        video = next((f for f in requested if _has_track(f, "vcodec")), None)
-        audio = next((f for f in requested if _has_track(f, "acodec")), None)
-        if video is not None and audio is not None and video is not audio:
-            return ResolvedStream(video["url"], audio["url"])
-        chosen = video or audio or requested[0]
-        return ResolvedStream(chosen["url"])
+        return ResolvedStream(requested[0]["url"])
 
     url = info.get("url")
     if url:
