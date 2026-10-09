@@ -23,6 +23,7 @@ from ..util.url import (
     get_yt_video_info,
     has_playlist_param,
     is_playlist,
+    strip_playlist_params,
 )
 from ..util.utilities import ensure_ytdlp_available
 
@@ -690,28 +691,22 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
 
     def _fetch_webpage_playlist(self, url: str) -> dict:
         if not is_playlist(url) and not has_playlist_param(url):
-            title = None
-            try:
-                info = run_ytdlp(url, as_playlist=False)
-                if isinstance(info, list):
-                    info = info[0]
-                title = info.get("title")
-            except Exception as e:
-                # run_ytdlp constrains --format, so it fails on sites where
-                # no single progressive stream matches even though the
-                # metadata is fine. Retry without that constraint rather
-                # than giving up on the title -- playback itself doesn't
-                # depend on this call (mpv's own ytdl hook resolves the
-                # stream), so a failure here used to silently degrade the
-                # title to the raw URL.
-                logger.warning(f"Metadata extraction failed for {url}: {e}")
-                try:
-                    title = get_yt_video_info(url).get("title")
-                except Exception as retry_error:
-                    logger.warning(f"Title retry failed for {url}: {retry_error}")
-            return {"title": title, "entries": [{"location": url, "title": title}]}
+            return self._single_video_playlist(url)
 
-        flat_entries = run_ytdlp_flat_playlist(url)
+        flat_entries = []
+        try:
+            flat_entries = run_ytdlp_flat_playlist(url)
+        except Exception as e:
+            # Playlist extraction can fail outright on auto-generated Mix/Radio
+            # playlists (yt-dlp raises its own internal errors there, and the
+            # list is built per-request, so it is intermittent). Retry once,
+            # then give up on the *playlist* - never on playback.
+            logger.warning(f"Playlist extraction failed for {url}: {e}")
+            try:
+                flat_entries = run_ytdlp_flat_playlist(url)
+            except Exception as retry_error:
+                logger.warning(f"Playlist extraction retry failed for {url}: {retry_error}")
+
         entries = []
         title = _("Extracted Playlist")
         for info in flat_entries:
@@ -720,6 +715,29 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
                 continue
             title = info.get("playlist_title") or info.get("playlist") or title
             entries.append({"location": webpage, "title": info.get("title")})
+
         if not entries:
-            raise ValueError(_("No playable entries found in playlist"))
+            # Nothing usable came back from the playlist: play the single video
+            # the link also names rather than failing the load entirely. A Mix
+            # /Radio link carries its own video id, so this is a real track.
+            single = strip_playlist_params(url)
+            logger.warning(f"No playlist entries for {url}; playing {single} instead")
+            return self._single_video_playlist(single)
         return {"title": title, "entries": entries}
+
+    def _single_video_playlist(self, url: str) -> dict:
+        title = None
+        try:
+            info = run_ytdlp(url, as_playlist=False)
+            if isinstance(info, list):
+                info = info[0]
+            title = info.get("title")
+        except Exception as e:
+            # Only the title is at stake: playback resolves the entry's own
+            # stream later, so a failure here should not lose the track.
+            logger.warning(f"Metadata extraction failed for {url}: {e}")
+            try:
+                title = get_yt_video_info(url).get("title")
+            except Exception as retry_error:
+                logger.warning(f"Title retry failed for {url}: {retry_error}")
+        return {"title": title, "entries": [{"location": url, "title": title}]}

@@ -12,6 +12,15 @@ YTDLP_PATH = 'yt-dlp'
 YTDLP_LOG_FILE = None
 YTDLP_VERBOSE = False
 
+# yt-dlp's own documented selector for "a stream a player can open": best video
+# that already carries audio served over plain HTTP/HTTPS (not a DASH/HLS
+# manifest), else the best video+audio pair. yt-dlp reports whichever it chose
+# in `requested_formats`, so the choice stays yt-dlp's - see select_streams.
+# The trailing b* is a catch-all (audio-only sites and anything else the first
+# two alternatives cannot match), so the selector can never fail to resolve.
+# Reference: the FORMAT SELECTION section of yt-dlp's manual.
+_FORMAT_SELECTOR = "(bv*+ba/b)[protocol^=http][protocol!*=dash] / (bv*+ba/b) / b*"
+
 _NO_WINDOW = {"creationflags": subprocess.CREATE_NO_WINDOW} if sys.platform == "win32" else {}
 
 
@@ -63,15 +72,11 @@ def get_yt_video_info(url: str, cookies: Optional[str] = None) -> dict:
 
 def run_ytdlp(url: str, as_playlist: bool = True, cookies: Optional[str] = None):
     cmd = [YTDLP_PATH, '--dump-json'] + _get_deno_arg()
-    
+
     if not as_playlist:
         cmd.append('--no-playlist')
 
-    # No --format constraint: this only dumps JSON, and the caller
-    # (select_streams) picks the stream itself. Constraining it made yt-dlp
-    # hard-fail ("Requested format is not available") on videos that offer no
-    # progressive/muxed HTTP format - same reason fetch_full_info and
-    # get_yt_video_info below run without one.
+    cmd.extend(['-f', _FORMAT_SELECTOR])
 
     cmd.extend(_get_cookies_arg(cookies))
     
@@ -224,31 +229,28 @@ def _has_track(stream: dict, key: str) -> bool:
 
 
 def select_streams(info) -> ResolvedStream:
-    formats = info.get("formats", [])
+    """What to open for one extracted entry, as chosen by yt-dlp.
 
-    if not formats and "url" in info:
-        return ResolvedStream(info["url"])
+    The choosing happens in yt-dlp itself (the -f selector run_ytdlp passes);
+    this only reads the answer. `requested_formats` lists the formats yt-dlp
+    picked: one entry for a single stream, two for the video+audio pair it
+    falls back to when nothing is already muxed. Re-deriving that choice from
+    the raw format list here is what stopped playback working twice over
+    (once for videos with no muxed stream, once for ones whose last candidate
+    was an HLS manifest), so it is deliberately not attempted any more.
+    """
+    requested = info.get("requested_formats") or []
+    if requested:
+        video = next((f for f in requested if _has_track(f, "vcodec")), None)
+        audio = next((f for f in requested if _has_track(f, "acodec")), None)
+        if video is not None and audio is not None and video is not audio:
+            return ResolvedStream(video["url"], audio["url"])
+        chosen = video or audio or requested[0]
+        return ResolvedStream(chosen["url"])
 
-    def direct(candidates: List[dict]) -> List[dict]:
-        # Direct http(s) streams in preference to anything else. m3u8_native
-        # entries are HLS manifests, and a manifest picked as the primary
-        # stream leaves playback with no audio track at all even when the
-        # separate audio URL is handed over alongside it (verified) - the
-        # original format selector's http/https filter kept them out of the
-        # running for that reason.
-        http = [f for f in candidates if f.get("protocol", "").startswith(("http", "https"))]
-        return http or candidates
-
-    muxed = direct([f for f in formats if _has_track(f, "acodec") and _has_track(f, "vcodec")])
-    if muxed:
-        return ResolvedStream(muxed[-1]["url"])
-
-    video = direct([f for f in formats if _has_track(f, "vcodec") and not _has_track(f, "acodec")])
-    audio = direct([f for f in formats if _has_track(f, "acodec") and not _has_track(f, "vcodec")])
-    if video:
-        return ResolvedStream(video[-1]["url"], audio[-1]["url"] if audio else None)
-    if audio:
-        return ResolvedStream(audio[-1]["url"])
+    url = info.get("url")
+    if url:
+        return ResolvedStream(url)
 
     raise ValueError(_("No playable formats found"))
 
