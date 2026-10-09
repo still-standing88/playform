@@ -385,7 +385,17 @@ class MPVMediaInterface(AVMediaInterface):
         def do_load():
             if gen != self.__generation:
                 return
-            self._mpv().command("loadfile", url)
+            if audio_url and is_url(audio_url):
+                # Attached by the load command itself, not after the fact:
+                # mpv opens both streams as one playback, so there is no
+                # window in which the video is playing without its audio.
+                # Commas must be percent-encoded - mpv's per-file options are
+                # one comma-separated string and a raw comma in the URL makes
+                # it reject the whole command.
+                options = f"audio-file={audio_url.replace(',', '%2C')}"
+                self._mpv().command("loadfile", url, "replace", -1, options)
+            else:
+                self._mpv().command("loadfile", url)
 
         self._submit(do_load, wait=False)
         if self.__pending_audio is not None:
@@ -411,16 +421,23 @@ class MPVMediaInterface(AVMediaInterface):
                 self.__pending_audio = None
                 audio_url = pending[1]
 
-                def _add(mm):
+                def _ensure_audio(mm):
+                    # The load command normally attached it already; this only
+                    # runs when the file came up without an audio track, and
+                    # forces the track on rather than leaving silent playback.
+                    try:
+                        tracks = mm.track_list or []
+                    except Exception:
+                        tracks = []
+                    if any(t.get("type") == "audio" for t in tracks):
+                        return
                     try:
                         mm.command("audio-add", audio_url)
-                        logger.info("Attached separate audio track")
+                        logger.info("Audio track was missing after load; added it")
                     except Exception as exc:
-                        # Silently losing this is what "plays but no sound"
-                        # looks like from the outside, so say so.
                         logger.error("Could not attach separate audio track: %s", exc)
 
-                self.run_on_mpv(_add, wait=False)
+                self.run_on_mpv(_ensure_audio, wait=False)
             return attach_audio
 
         self.run_on_mpv(register, wait=False)
