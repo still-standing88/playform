@@ -9,7 +9,16 @@
              Description="PlayForm - Media Player by Joybytes"
              Comments="A modern, accessible media player for audio and video files." />
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of PlayForm is already installed." />
+    <!-- AllowSameVersionUpgrades: lets a rebuild reissued at an already
+         installed version be treated as an upgrade rather than as an
+         unrelated product. Necessary but not sufficient - it only helps when
+         the earlier install is actually registered with Windows Installer,
+         and these per-user installs are not (no entry in Apps & features
+         either), so nothing is detected and the files are still left alone.
+         Reissue at a bumped version instead: a higher file version makes the
+         installer replace the files on its own. -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of PlayForm is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
     <!-- Feature tree: Licence Agreement, then the Customize page where the
