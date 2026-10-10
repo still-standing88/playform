@@ -222,6 +222,9 @@ class MPVMediaInterface(AVMediaInterface):
         self.__generation = 0
         self.__pending_audio: Optional[tuple[int, str]] = None
         self.__audio_hook_registered = False
+        # The separate audio belonging to whatever is loaded per instance, so
+        # that *any* reload - not just the original load - can carry it.
+        self.__instance_audio: dict[int, str] = {}
         self.__seek_token: object | None = None
         self.__volume_token: object | None = None
         self.__command_count = 0
@@ -359,6 +362,7 @@ class MPVMediaInterface(AVMediaInterface):
         self.__end_reached = False
         self.__fresh_load_pending = True
         self.__pending_audio = None
+        self.__instance_audio[id] = ""
 
         def do_load():
             if gen != self.__generation:
@@ -381,25 +385,31 @@ class MPVMediaInterface(AVMediaInterface):
         self.__end_reached = False
         self.__fresh_load_pending = True
         self.__pending_audio = (gen, audio_url) if audio_url and is_url(audio_url) else None
+        self.__instance_audio[id] = self.__pending_audio[1] if self.__pending_audio else ""
 
         def do_load():
             if gen != self.__generation:
                 return
-            if audio_url and is_url(audio_url):
-                # Attached by the load command itself, not after the fact:
-                # mpv opens both streams as one playback, so there is no
-                # window in which the video is playing without its audio.
-                # Commas must be percent-encoded - mpv's per-file options are
-                # one comma-separated string and a raw comma in the URL makes
-                # it reject the whole command.
-                options = f"audio-file={audio_url.replace(',', '%2C')}"
-                self._mpv().command("loadfile", url, "replace", -1, options)
-            else:
-                self._mpv().command("loadfile", url)
+            self._loadfile(url, audio_url)
 
         self._submit(do_load, wait=False)
         if self.__pending_audio is not None:
             self._register_audio_hook()
+
+    def _loadfile(self, url: str, audio_url: Optional[str] = None):
+        """Issue a load that carries its separate audio with it.
+
+        Attached by the load command itself rather than added afterwards, so
+        mpv opens both streams as one playback: there is no window where the
+        video is playing on its own, and no way for the audio to be missed.
+        Commas must be percent-encoded - mpv's per-file options are a single
+        comma-separated string and a raw comma in the URL makes it reject the
+        whole command."""
+        if audio_url and is_url(audio_url):
+            options = f"audio-file={audio_url.replace(',', '%2C')}"
+            self._mpv().command("loadfile", url, "replace", -1, options)
+        else:
+            self._mpv().command("loadfile", url)
 
     def _register_audio_hook(self):
         """Attach a separately streamed audio track once the video is loaded.
@@ -495,8 +505,16 @@ class MPVMediaInterface(AVMediaInterface):
                 return
             mpv_instance = self._mpv()
             if not skip_reload and (self.__end_reached or mpv_instance.time_pos is None):
+                audio_url = self.__instance_audio.get(id) or None
                 if instance_path:
-                    mpv_instance.command("loadfile", instance_path)
+                    # Replaying after the track ended re-loads the file, so it
+                    # has to carry the instance's separate audio again - a bare
+                    # loadfile here is what made a replay play video with no
+                    # sound.
+                    self.__pending_audio = (gen, audio_url) if audio_url else None
+                    self._loadfile(instance_path, audio_url)
+                    if self.__pending_audio is not None:
+                        self._register_audio_hook()
                 self.__end_reached = False
             mpv_instance.pause = False
             self.__stopped = False
