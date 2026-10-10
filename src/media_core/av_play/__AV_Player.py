@@ -417,7 +417,9 @@ class AVPlayer(ABC):
         
         if self._current_playlist and 0 <= self._current_playlist_index < len(self._current_playlist):
             entry = self._current_playlist.entries[self._current_playlist_index]
-            instance_path = entry.location
+            # The directly resolved stream when the resolver produced one for
+            # this play; the entry's own location is the page it came from.
+            instance_path = entry.stream_url or entry.location
             self._track_loading = True
             self._track_load_started_at = time.monotonic()
             if is_path(instance_path):

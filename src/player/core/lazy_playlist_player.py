@@ -532,7 +532,10 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
             with self._resolve_lock:
                 streaming = self._resolved.get(idx)
             if streaming:
-                self._current_playlist.entries[idx].location = streaming.url
+                # The resolved stream goes in its own field; the entry keeps
+                # the page it came from so saving/replaying the playlist
+                # re-resolves instead of reusing an expiring URL.
+                self._current_playlist.entries[idx].stream_url = streaming.url
                 self._current_playlist.entries[idx].audio_url = streaming.audio_url
                 logger.info(
                     f"Playing entry {idx} "

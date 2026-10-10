@@ -33,6 +33,15 @@ class PlaylistEntry:
     that offer no muxed stream (e.g. YouTube's video-only + audio-only DASH
     tracks). The player opens both together; None means `location` already
     has its own audio."""
+
+    stream_url: Optional[str] = None
+    """The direct stream resolved for this entry's `location`, valid only for
+    the play it was resolved for (signed, expiring URLs).
+
+    Deliberately separate from `location`: overwriting `location` with it
+    meant anything that saved the playlist - user playlists, recents - stored
+    an expiring URL instead of the page it came from, so replaying it later
+    had no usable (or no audio) stream. Never serialised."""
     
     def __post_init__(self):
         if self.metadata is None:
