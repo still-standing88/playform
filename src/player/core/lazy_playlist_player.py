@@ -415,7 +415,30 @@ class LazyPlaylistPlayer(av_play.VideoPlayer):
         self.reapply_audio_chain()
         self._schedule_preload_ahead(target_index)
 
+    def _requires_extraction(self, url: str) -> bool:
+        """Whether yt-dlp has anything to do with this URL at all.
+
+        is_url_supported is the same gate _ensure_resolved_blocking applies
+        to each entry, and is_playlist catches the list-shaped links whose
+        host the extractor-name match misses. Anything else - a radio
+        stream, a podcast enclosure, a plain media URL - is not yt-dlp's,
+        and only ever cost a title lookup that timed out against the stream
+        host while holding the load for the length of that timeout.
+        """
+        try:
+            return is_url_supported(url) or is_playlist(url)
+        except Exception as e:
+            logger.warning(f"Could not classify URL {url}, extracting: {e}")
+            return True
+
     def load_url(self, url: str):
+        if not self._requires_extraction(url):
+            playlist = av_play.Playlist(title=url)
+            playlist.add_entry(av_play.PlaylistEntry(location=url, title=None))
+            self.load_playlist(playlist, auto_play=True, start_index=0)
+            self.signals.extraction_complete.emit(playlist)
+            return
+
         if not ensure_ytdlp_available(None, show_message=False):
             logger.error(f"yt-dlp not available; cannot extract {url}")
             self.signals.extraction_failed.emit(_("yt-dlp is not available."))
