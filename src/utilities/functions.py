@@ -263,12 +263,40 @@ def open_file_location(path: str):
     if not is_local_file(path):
         return
 
+    path = os.path.abspath(path)
     if sys.platform == "win32":
-        sp.Popen(fr'explorer /select,"{path}"')
+        try:
+            _select_in_windows_explorer(path)
+        except OSError:
+            os.startfile(os.path.dirname(path))
     elif sys.platform == "darwin":
         sp.Popen(["open", "-R", path])
     else:
         sp.Popen(["xdg-open", os.path.dirname(path)])
+
+
+def _select_in_windows_explorer(path: str):
+    from ctypes import POINTER, byref, c_ulong, c_void_p, c_wchar_p
+
+    shell = ctypes.OleDLL("shell32")
+    parse_path = shell.SHParseDisplayName
+    parse_path.argtypes = (c_wchar_p, c_void_p, POINTER(c_void_p), c_ulong, c_void_p)
+    select_item = shell.SHOpenFolderAndSelectItems
+    select_item.argtypes = (c_void_p, ctypes.c_uint, c_void_p, c_ulong)
+
+    ole = ctypes.WinDLL("ole32")
+    initialized = ole.CoInitializeEx(None, 2)
+    if initialized < 0 and ctypes.c_uint(initialized).value != 0x80010106:
+        raise OSError(initialized, "Could not initialize COM")
+    item = c_void_p()
+    try:
+        parse_path(path, None, byref(item), 0, None)
+        select_item(item, 0, None, 0)
+    finally:
+        if item:
+            ole.CoTaskMemFree(item)
+        if initialized >= 0:
+            ole.CoUninitialize()
 
 
 def _mpv_lib_filename() -> str:
