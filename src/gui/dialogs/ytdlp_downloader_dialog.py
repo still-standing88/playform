@@ -397,18 +397,18 @@ class YtDlpDownloaderDialog(QDialog):
         menu.exec(self.category_tree.viewport().mapToGlobal(position))
 
     def _show_video_menu(self, position):
-        item = self.video_list.currentItem()
+        item = self.video_list.itemAt(position) or self.video_list.currentItem()
         if item is None:
             return
+        self.video_list.setCurrentItem(item)
         entry = self._engine.get_entry(item.data(Qt.ItemDataRole.UserRole))
         if entry is None:
             return
         menu = QMenu(self)
 
-        file_exists = bool(entry.filepath) and os.path.isfile(entry.filepath)
         play_action = menu.addAction(_("Play"))
-        play_action.setEnabled(entry.status == STATUS_COMPLETED and file_exists)
-        play_action.triggered.connect(lambda: self.play_requested.emit(entry.filepath))
+        play_action.setEnabled(entry.status == STATUS_COMPLETED and bool(entry.filepath))
+        play_action.triggered.connect(lambda: self._play_download(entry.id))
 
         if entry.status == STATUS_DOWNLOADING:
             pause_resume = menu.addAction(_("Pause"))
@@ -454,9 +454,11 @@ class YtDlpDownloaderDialog(QDialog):
                 return
 
     def _on_item_double_clicked(self, item):
-        entry = self._engine.get_entry(item.data(Qt.ItemDataRole.UserRole))
-        if entry is not None and entry.status == STATUS_COMPLETED \
-                and entry.filepath and os.path.isfile(entry.filepath):
+        self._play_download(item.data(Qt.ItemDataRole.UserRole))
+
+    def _play_download(self, entry_id):
+        entry = self._engine.get_entry(entry_id)
+        if entry is not None and entry.status == STATUS_COMPLETED and entry.filepath:
             self.play_requested.emit(entry.filepath)
 
     # ------------------------------------------------------------------

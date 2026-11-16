@@ -56,6 +56,7 @@ _PROGRESS_RE = re.compile(
 _DESTINATION_RE = re.compile(r"\[download\] Destination: (?P<path>.+)")
 _ALREADY_RE = re.compile(r"\[download\] (?P<path>.+) has already been downloaded")
 _MERGER_RE = re.compile(r"\[(?:Merger|ExtractAudio)\] Destination: (?P<path>.+)")
+_OUTPUT_PREFIX = "PlayForm output: "
 
 
 def classify_url(url: str) -> str:
@@ -610,6 +611,8 @@ class YtDlpDownloadEngine:
         cmd = [
             binary, "--newline", "--no-warnings", "--no-playlist",
             "--continue", "--retries", "3",
+            "--no-simulate", "--progress", "--no-quiet",
+            "--print", f"after_move:{_OUTPUT_PREFIX}%(filepath)j",
             "-o", output_template,
         ]
         if entry.format_mode == "audio":
@@ -636,6 +639,7 @@ class YtDlpDownloadEngine:
             entry.status = STATUS_DOWNLOADING
             entry.progress_pct = 0.0
             entry.speed = entry.eta = ""
+            entry.filepath = ""
             entry.error = ""
             self._persist()
         self.on_entry_updated(entry)
@@ -685,6 +689,14 @@ class YtDlpDownloadEngine:
         self.on_queue_changed()
 
     def _parse_progress(self, entry: YtDlpEntry, line: str):
+        if line.startswith(_OUTPUT_PREFIX):
+            try:
+                path = json.loads(line[len(_OUTPUT_PREFIX):])
+            except ValueError:
+                return
+            if isinstance(path, str) and os.path.isfile(path):
+                entry.filepath = os.path.abspath(path)
+            return
         match = _PROGRESS_RE.search(line)
         if match:
             entry.progress_pct = float(match.group("pct"))
@@ -701,7 +713,10 @@ class YtDlpDownloadEngine:
         try:
             candidates = [f for f in os.listdir(entry.destination) if f"[{entry.url.split('v=')[-1]}]" in f]
             if candidates:
-                return os.path.join(entry.destination, candidates[0])
+                files = [os.path.join(entry.destination, f) for f in candidates
+                         if not f.endswith((".part", ".ytdl", ".temp"))]
+                if len(files) == 1 and os.path.isfile(files[0]):
+                    return files[0]
         except OSError:
             pass
-        return entry.filepath
+        return ""
