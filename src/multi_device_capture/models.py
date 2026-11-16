@@ -9,7 +9,10 @@ Qt/gettext-free.
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
+
+from PySide6.QtCore import QStandardPaths
 
 from media_core.av_capture.models import (
     AUDIO_KINDS,
@@ -110,6 +113,11 @@ class CaptureSource(CaptureSourceConfig):
         }
 
 
+def default_capture_directory() -> str:
+    videos = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.MoviesLocation)
+    return str((Path(videos) if videos else Path.home() / "Videos") / "captures")
+
+
 class Session(CaptureSessionConfig):
     """CaptureSessionConfig with the previous `container_format` field name
     kept as the public attribute (persisted JSON already uses it)."""
@@ -117,7 +125,7 @@ class Session(CaptureSessionConfig):
     def __init__(self, id: str, name: str, source_ids: Optional[list] = None, output_dir: str = "",
                  container_format: str = "mkv", settings_override: Optional[dict] = None):
         super().__init__(
-            id=id, name=name, source_ids=source_ids or [], output_dir=output_dir,
+            id=id, name=name, source_ids=source_ids or [], output_dir=output_dir or default_capture_directory(),
             container=container_format, settings_override=settings_override,
         )
 

@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ..models import Session, new_id
+from ..models import Session, default_capture_directory, new_id
 
 
 class SessionDialog(QDialog):
@@ -42,7 +42,9 @@ class SessionDialog(QDialog):
         self.name_edit = QLineEdit(session.name if session else "")
         form.addRow(_("Name"), self.name_edit)
 
-        self.output_edit = QLineEdit(session.output_dir if session else default_output_dir)
+        self._default_output_dir = default_output_dir or default_capture_directory()
+        self.output_edit = QLineEdit(session.output_dir if session else self._default_output_dir)
+        self.output_edit.setPlaceholderText(self._default_output_dir)
         browse_row = QHBoxLayout()
         browse_row.addWidget(self.output_edit)
         browse_btn = QPushButton(_("Browse"))
@@ -68,13 +70,15 @@ class SessionDialog(QDialog):
         layout.addWidget(buttons)
 
     def _browse_output(self) -> None:
-        path = QFileDialog.getExistingDirectory(self, _("Select output directory"))
+        path = QFileDialog.getExistingDirectory(
+            self, _("Select output directory"), self.output_edit.text().strip() or self._default_output_dir
+        )
         if path:
             self.output_edit.setText(path)
 
     def result_session(self) -> Session:
         name = self.name_edit.text().strip()
-        output_dir = self.output_edit.text()
+        output_dir = self.output_edit.text().strip() or self._default_output_dir
         container = self.container_combo.currentText()
 
         if self._session:

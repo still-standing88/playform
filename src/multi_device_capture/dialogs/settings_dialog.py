@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..dialogs.forms import AudioSettingsForm
+from ..models import default_capture_directory
 from ..settings import MultiDeviceCaptureSettings
 
 
@@ -137,6 +138,7 @@ class SettingsDialog(QDialog):
 
     def _load_from_settings(self) -> None:
         self.output_dir_edit.setText(self.settings.get("default_output_dir", ""))
+        self.output_dir_edit.setPlaceholderText(default_capture_directory())
         self.container_combo.setCurrentText(self.settings.get("default_container", "mkv"))
         self.notify_checkbox.setChecked(bool(self.settings.get("notify_on_finish", True)))
         self.keep_segments_checkbox.setChecked(bool(self.settings.get("keep_segments_after_pause", False)))
