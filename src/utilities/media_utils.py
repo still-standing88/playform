@@ -1,5 +1,18 @@
 import os
 
+from utilities.formats import media_extensions
+
+
+def is_external_media_url(location: str) -> bool:
+    from media_core.av_play import is_url
+
+    if os.path.exists(location):
+        return False
+    extension = os.path.splitext(location)[1].lower()
+    if "://" not in location and not location.startswith("//") and extension in media_extensions:
+        return False
+    return is_url(location)
+
 def format_time(seconds: int) -> str:
     if not isinstance(seconds, (int, float)) or seconds < 0:
         seconds = 0

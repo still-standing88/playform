@@ -23,6 +23,7 @@ from .dialogs.hotkeys_dialog import HotkeysDialog
 from .dialogs.url_dialog import URLDialog
 from .dialogs.prefs_dialog import PreferencesDialog
 from utilities.util_gui import menuItem
+from utilities.media_utils import is_external_media_url
 from utilities.speech import speech_manager
 from utilities import signal_manager
 from utilities.announcement_categories import AnnouncementCategory
@@ -378,6 +379,7 @@ class MainWindow(QMainWindow):
         
     def connect_signals(self):
         self.recents_and_favorites_widget.itemRequested.connect(self.play_file)
+        self.recents_and_favorites_widget.recentRequested.connect(self.play_recent)
         self.recents_and_favorites_widget.queueRequested.connect(
             lambda path: self.enqueue_files([path])
         )
@@ -433,15 +435,35 @@ class MainWindow(QMainWindow):
         self.playlist_handler.load_folder_as_playlist(folder_path)
 
 
-    def play_file(self, file_path: str):
+    def play_recent(self, file_path: str):
+        self.play_file(file_path, from_recents=True)
+
+    def _show_missing_file(self, path: str, from_recents: bool = False):
+        box = QMessageBox(self)
+        box.setWindowTitle(_("File Not Found"))
+        box.setIcon(QMessageBox.Icon.Critical)
+        box.setTextFormat(Qt.TextFormat.PlainText)
+        box.setText(_("File not found: {path}").format(path=path))
+        box.setStandardButtons(QMessageBox.StandardButton.Close)
+        if from_recents:
+            remove = box.addButton(_("Remove from Recents"), QMessageBox.ButtonRole.DestructiveRole)
+        box.exec()
+        if from_recents and box.clickedButton() is remove:
+            self.recents_and_favorites_widget.remove_recent(path)
+            self.menu_manager.update_recent_files_menu()
+
+    def play_file(self, file_path: str, *, from_recents: bool = False):
+        if not os.path.isfile(file_path) and not is_external_media_url(file_path):
+            self._show_missing_file(file_path, from_recents)
+            return
         if not self.is_player_ready:
-            self._run_when_player_ready(lambda: self.play_file(file_path))
+            self._run_when_player_ready(lambda: self.play_file(file_path, from_recents=from_recents))
             return
         _announce_playback(f"{_("Loading:")} {os.path.basename(file_path)}")
         signal_manager.media_info_message.emit(file_path)
         self.add_to_recents(file_path)
         self.menu_manager.update_recent_files_menu()
-        self.fileOpened.emit(file_path)
+        self.fileOpened.emit(os.path.abspath(file_path) if os.path.isfile(file_path) else file_path)
         self.close_media_action.setEnabled(True)
 
     def enqueue_files(self, paths):
@@ -467,6 +489,9 @@ class MainWindow(QMainWindow):
             return
 
         entry = playlist[start_index]
+        if not os.path.isfile(entry.location) and not is_external_media_url(entry.location):
+            self._show_missing_file(entry.location)
+            return
         _announce_playback(
             _("Loading playlist: {title}").format(
                 title=playlist.title or _("Untitled")
@@ -1105,15 +1130,12 @@ class MainWindow(QMainWindow):
         if not self.is_player_ready:
             self._pending_external_paths.append(path)
             return
-        import media_core.av_play as av_play
-        if av_play.is_url(path):
+        if is_external_media_url(path):
             self.play_url(path)
         elif os.path.isdir(path):
             self.load_folder_as_playlist(path)
-        elif os.path.isfile(path):
-            self.play_file(path)
         else:
-            _announce_playback(_("Unrecognized path: {path}").format(path=path))
+            self.play_file(path)
 
     def _replay_pending_external_path(self):
         paths = self._pending_external_paths

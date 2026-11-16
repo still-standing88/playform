@@ -1,5 +1,5 @@
 import os
-from PySide6.QtWidgets import QListWidget, QMenu, QMessageBox
+from PySide6.QtWidgets import QListWidget, QListWidgetItem, QMenu, QMessageBox
 from PySide6.QtCore import Signal, Qt, Slot
 from PySide6.QtGui import QAction
 from app_db import UserFiles
@@ -16,7 +16,6 @@ class RecentsWidget(QListWidget):
         super().__init__(parent)
         self.user_db = user_db
         self.max_recent_files = 50
-        self.path_mapping = {}
         self.setAccessibleName(_("Recent files list"))
         self.setAccessibleDescription(_("List of recently opened media files"))
         self.setAlternatingRowColors(True)
@@ -26,42 +25,38 @@ class RecentsWidget(QListWidget):
         self.setToolTip(_("Double-click or press Enter on a file to open it"))
 
         contextMenu(self, self.show_context_menu)
-        self.itemDoubleClicked.connect(self.on_item_activated)
         self.itemActivated.connect(self.on_item_activated)
 
         self.load_recents()
         
     def load_recents(self):
         self.clear()
-        self.path_mapping.clear()
         try:
             recents = self.user_db.get_recents(self.max_recent_files)
             for recent_path in recents:
-                filename = os.path.basename(recent_path)
-                self.path_mapping[filename] = recent_path
-                self.addItem(filename)
+                self.addItem(self._make_item(recent_path))
         except Exception as e:
             messageBox(_("Error"), _("Error loading recents: {error}").format(error=e))
     
+    @staticmethod
+    def _make_item(path):
+        item = QListWidgetItem(os.path.basename(path))
+        item.setData(Qt.ItemDataRole.UserRole, path)
+        item.setToolTip(path)
+        return item
+
     def add_recent(self, file_path: str):
         try:
             self.user_db.add_recent(file_path)
-            filename = os.path.basename(file_path)
-            
             for i in range(self.count()):
-                if self.item(i).text() == filename:
-                    old_filename = self.takeItem(i).text()
-                    if old_filename in self.path_mapping:
-                        del self.path_mapping[old_filename]
+                if self.item(i).data(Qt.ItemDataRole.UserRole) == file_path:
+                    self.takeItem(i)
                     break
             
-            self.path_mapping[filename] = file_path
-            self.insertItem(0, filename)
+            self.insertItem(0, self._make_item(file_path))
             
             while self.count() > self.max_recent_files:
-                removed_item = self.takeItem(self.count() - 1)
-                if removed_item and removed_item.text() in self.path_mapping:
-                    del self.path_mapping[removed_item.text()]
+                self.takeItem(self.count() - 1)
                 
         except Exception as e:
             messageBox(_("Error"), _("Failed to add recent file: {error}").format(error=e))
@@ -75,23 +70,22 @@ class RecentsWidget(QListWidget):
             try:
                 self.user_db.clear_recents()
                 self.clear()
-                self.path_mapping.clear()
             except Exception as e:
                 messageBox(_("Error"), _("Failed to clear recent files: {error}").format(error=e))
 
     @Slot()
     def remove_current_recent(self):
         item = self.currentItem()
-        if item is None:
-            return
-        path = self.path_mapping.get(item.text())
-        if not path:
-            return
+        if item is not None:
+            self.remove_recent(item.data(Qt.ItemDataRole.UserRole))
+
+    def remove_recent(self, path):
         try:
             self.user_db.remove_recent(path)
-            self.takeItem(self.row(item))
-            if item.text() in self.path_mapping:
-                del self.path_mapping[item.text()]
+            for row in range(self.count()):
+                if self.item(row).data(Qt.ItemDataRole.UserRole) == path:
+                    self.takeItem(row)
+                    break
         except Exception as e:
             messageBox(_("Error"), _("Failed to remove recent file: {error}").format(error=e))
 
@@ -109,7 +103,7 @@ class RecentsWidget(QListWidget):
         item = self.currentItem()
         if item is None:
             return
-        path = self.path_mapping.get(item.text())
+        path = item.data(Qt.ItemDataRole.UserRole)
         if path and os.path.splitext(path)[1].lower() in media_extensions:
             self.queueRequested.emit(path)
 
@@ -117,7 +111,7 @@ class RecentsWidget(QListWidget):
         menu = QMenu(self)
 
         item = self.currentItem()
-        path = self.path_mapping.get(item.text()) if item is not None else None
+        path = item.data(Qt.ItemDataRole.UserRole) if item is not None else None
         if path and os.path.splitext(path)[1].lower() in media_extensions:
             queue_action = QAction(_("Add to Queue"), self)
             queue_action.triggered.connect(self.add_to_queue)
@@ -144,9 +138,7 @@ class RecentsWidget(QListWidget):
     @Slot(object)
     def on_item_activated(self, item):
         if item:
-            filename = item.text()
-            if filename in self.path_mapping:
-                self.itemRequested.emit(self.path_mapping[filename])
+            self.itemRequested.emit(item.data(Qt.ItemDataRole.UserRole))
     
     def get_recent_files_list(self):
-        return [self.path_mapping.get(self.item(i).text(), self.item(i).text()) for i in range(min(10, self.count())) if self.item(i).text() in self.path_mapping]
+        return [self.item(i).data(Qt.ItemDataRole.UserRole) for i in range(min(10, self.count()))]

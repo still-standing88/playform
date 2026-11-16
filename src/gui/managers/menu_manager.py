@@ -406,7 +406,7 @@ class MenuManager:
             for file_path in recent_files:
                 action = QAction(os.path.basename(file_path), self.main_window)
                 action.setToolTip(file_path)
-                action.triggered.connect(lambda checked=False, path=file_path: self.main_window.play_file(path))
+                action.triggered.connect(lambda checked=False, path=file_path: self.main_window.play_recent(path))
                 self.main_window.recent_files_menu.addAction(action)
 
     def update_recents_favorites_menu(self, visible):
