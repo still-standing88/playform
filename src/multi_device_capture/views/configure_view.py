@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QGroupBox,
     QHBoxLayout,
+    QLabel,
     QListWidget,
     QListWidgetItem,
     QMenu,
@@ -34,11 +35,12 @@ from PySide6.QtWidgets import (
 )
 
 from media_core.av_capture.capabilities import CaptureCapabilities
+from media_core.av_capture.mediacap import AUDIO_CONTAINERS
 from app_constance.styles import error_color
 
 from ..device_status import DeviceStatusChecker
 from ..dialogs import SessionDialog, SourceWizard
-from ..models import CaptureSource, Session, new_id
+from ..models import CaptureSource, Session, is_video, new_id
 from ..registries import SessionRegistry, SourceRegistry
 from ..settings import MultiDeviceCaptureSettings
 
@@ -60,6 +62,7 @@ class ConfigureView(QWidget):
 
         self.device_checker = DeviceStatusChecker(capabilities, self)
         self.device_checker.checked.connect(self._on_device_status_checked)
+        self.device_checker.failed.connect(self._on_device_status_failed)
 
         layout = QVBoxLayout(self)
 
@@ -87,17 +90,32 @@ class ConfigureView(QWidget):
         box = QGroupBox(_("Sessions"))
         v = QVBoxLayout(box)
         self.session_list = QListWidget()
+        self.session_list.setAccessibleName(_("Capture sessions"))
         self.session_list.itemDoubleClicked.connect(lambda _i: self._edit_selected_session())
         self.session_list.currentItemChanged.connect(lambda *_: self._on_session_selection_changed())
         self.session_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.session_list.customContextMenuRequested.connect(self._session_context_menu)
         v.addWidget(self.session_list)
+        self.output_label = QLabel()
+        self.output_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.output_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.output_label.setWordWrap(True)
+        v.addWidget(self.output_label)
+        row = QHBoxLayout()
+        new_btn = QPushButton(_("New session…"))
+        new_btn.clicked.connect(self._create_new_session)
+        row.addWidget(new_btn)
+        self.session_options_btn = QPushButton(_("Session options…"))
+        self.session_options_btn.clicked.connect(self._edit_selected_session)
+        row.addWidget(self.session_options_btn)
+        v.addLayout(row)
         return box
 
     def _build_sources_panel(self) -> QWidget:
         self.sources_box = QGroupBox(_("Sources"))
         v = QVBoxLayout(self.sources_box)
         self.source_list = QListWidget()
+        self.source_list.setAccessibleName(_("Capture sources"))
         self.source_list.itemDoubleClicked.connect(lambda _i: self._edit_source(self._item_source_id(_i)))
         self.source_list.itemChanged.connect(self._on_source_item_changed)
         self.source_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -108,11 +126,20 @@ class ConfigureView(QWidget):
         add_btn = QPushButton(_("Add source"))
         add_btn.clicked.connect(self._add_source)
         row.addWidget(add_btn)
+        self.edit_source_btn = QPushButton(_("Edit source…"))
+        self.edit_source_btn.setEnabled(False)
+        self.edit_source_btn.clicked.connect(lambda: self._edit_source(self._item_source_id(self.source_list.currentItem())))
+        self.source_list.currentItemChanged.connect(lambda current, _: self.edit_source_btn.setEnabled(current is not None))
+        row.addWidget(self.edit_source_btn)
         refresh_btn = QPushButton(_("Refresh status"))
         refresh_btn.setToolTip(_("Check whether each source's device is still connected/available."))
         refresh_btn.clicked.connect(self._check_device_status)
         row.addWidget(refresh_btn)
         v.addLayout(row)
+        self.device_status = QLabel()
+        self.device_status.setTextFormat(Qt.TextFormat.PlainText)
+        self.device_status.setWordWrap(True)
+        v.addWidget(self.device_status)
         return self.sources_box
 
     # -- pending (unsaved) session lifecycle -------------------------------
@@ -163,8 +190,9 @@ class ConfigureView(QWidget):
             self.session_list.addItem(item)
         self.session_list.blockSignals(False)
 
-        target_id = current_id or (self._all_sessions_for_display()[0].id if self._all_sessions_for_display() else None)
-        self._select_session_id(target_id)
+        self._select_session_id(current_id)
+        if self.session_list.currentRow() < 0 and self.session_list.count():
+            self.session_list.setCurrentRow(0)
         self._on_session_selection_changed()
 
     def _selected_session_id(self) -> Optional[str]:
@@ -189,6 +217,8 @@ class ConfigureView(QWidget):
 
     def _on_session_selection_changed(self) -> None:
         session = self.selected_session()
+        self.session_options_btn.setEnabled(session is not None)
+        self.output_label.setText(_("Output folder: {path}").format(path=session.output_dir) if session else "")
         self.sources_box.setTitle(_("Sources - {name}").format(name=session.name) if session else _("Sources"))
         self.refresh_sources()
         self._check_device_status()
@@ -281,6 +311,8 @@ class ConfigureView(QWidget):
         return {s.friendly_name for s in self.sources.all()}
 
     def refresh_sources(self) -> None:
+        selected_id = self._item_source_id(self.source_list.currentItem())
+        self.edit_source_btn.setEnabled(False)
         self.source_list.blockSignals(True)
         self.source_list.clear()
         session = self.selected_session()
@@ -291,12 +323,15 @@ class ConfigureView(QWidget):
             source = self.sources.get(source_id)
             if source is None:
                 continue
-            item = QListWidgetItem(f"{source.friendly_name}  -  {source.status_text()}")
+            item = QListWidgetItem(self._source_text(source))
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             item.setCheckState(Qt.CheckState.Checked if source.enabled else Qt.CheckState.Unchecked)
             item.setData(_ROLE_ID, source.id)
             self.source_list.addItem(item)
+            if source_id == selected_id:
+                self.source_list.setCurrentItem(item)
         self.source_list.blockSignals(False)
+        self.edit_source_btn.setEnabled(self.source_list.currentItem() is not None)
 
     def _on_source_item_changed(self, item: QListWidgetItem) -> None:
         source = self.sources.get(self._item_source_id(item))
@@ -392,6 +427,7 @@ class ConfigureView(QWidget):
     # -- device presence (non-intrusive: on session-select + manual refresh) --
 
     def _check_device_status(self) -> None:
+        self.device_status.clear()
         session = self.selected_session()
         if session is None:
             return
@@ -401,19 +437,29 @@ class ConfigureView(QWidget):
             self.device_checker.check(source_list)
 
     def _on_device_status_checked(self, presence: dict) -> None:
+        self.device_status.clear()
+        self.source_list.blockSignals(True)
         for i in range(self.source_list.count()):
             item = self.source_list.item(i)
             source_id = self._item_source_id(item)
             source = self.sources.get(source_id)
             if source is None or source_id not in presence:
                 continue
-            base_text = f"{source.friendly_name}  -  {source.status_text()}"
+            base_text = self._source_text(source)
             if presence[source_id]:
                 item.setText(base_text)
                 item.setForeground(self.source_list.palette().text())
             else:
                 item.setText(f"{base_text}  -  {_('device not found')}")
                 item.setForeground(QBrush(error_color()))
+        self.source_list.blockSignals(False)
+
+    @staticmethod
+    def _source_text(source):
+        return " · ".join(dict.fromkeys(filter(None, (source.friendly_name, source.device_name, source.status_text()))))
+
+    def _on_device_status_failed(self, message):
+        self.device_status.setText(_("Could not check sources: {error}").format(error=message))
 
     # -- transport handoff --------------------------------------------
 
@@ -426,5 +472,9 @@ class ConfigureView(QWidget):
         selected = [s for s in selected if s is not None and s.enabled]
         if not selected:
             QMessageBox.information(self, _("No sources"), _("This session has no enabled sources."))
+            return
+        if session.container_format in AUDIO_CONTAINERS and any(is_video(source.media_type) for source in selected):
+            QMessageBox.warning(self, _("Output format"),
+                                _("Choose MKV, MP4, or WebM in Session options to record video sources."))
             return
         self.start_capture_requested.emit(session, selected)

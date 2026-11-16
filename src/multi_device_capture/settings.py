@@ -20,9 +20,7 @@ DEFAULT_SETTINGS = {
         "volume": 100,
     },
     "video": {
-        "resolution_cap": "Passthrough",
         "fps": 30,
-        "capture_cursor": False,
     },
     "hotkeys_enabled": True,
     "last_active_session_id": "",
@@ -53,6 +51,14 @@ class MultiDeviceCaptureSettings:
 
     def get(self, key: str, default=None):
         return self.data.get(key, DEFAULT_SETTINGS.get(key, default))
+
+    def update(self, values: dict) -> bool:
+        from app_db import app_settings
+        updated = self.data | values
+        if not app_settings.set(SETTINGS_KEY, updated):
+            return False
+        self.data = updated
+        return True
 
     def set(self, key: str, value) -> None:
         self.data[key] = value

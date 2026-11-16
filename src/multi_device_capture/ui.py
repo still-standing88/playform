@@ -88,8 +88,8 @@ class MultiDeviceCaptureUI(QWidget):
         self.capture_view.pause_requested.connect(self.engine.pause)
         self.capture_view.resume_requested.connect(self.engine.resume)
         self.capture_view.stop_requested.connect(self.engine.stop)
+        self.capture_view.setup_requested.connect(lambda: self.stack.setCurrentWidget(self.configure_view))
 
-        self.engine.state_changed.connect(self._on_state_changed)
         self.engine.state_changed.connect(self.capture_view.on_state_changed)
         self.engine.source_started.connect(self.capture_view.on_source_started)
         self.engine.source_error.connect(self._on_source_error)
@@ -105,10 +105,6 @@ class MultiDeviceCaptureUI(QWidget):
         self.capture_view.begin(session, sources)
         self.stack.setCurrentWidget(self.capture_view)
         self.engine.start(session, sources)
-
-    def _on_state_changed(self, state: str) -> None:
-        if state in ("idle", "stopped"):
-            self.stack.setCurrentWidget(self.configure_view)
 
     def _on_source_error(self, source_id: str, message: str) -> None:
         self.capture_view.on_source_error(source_id, message)

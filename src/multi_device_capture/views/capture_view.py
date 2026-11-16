@@ -1,9 +1,3 @@
-"""Live transport view - replaces the old Capture tab. Shown in place of
-ConfigureView (see ui.py's QStackedWidget) while a capture is running, so
-the session/source configuration UI isn't sitting there editable mid-
-recording; ConfigureView comes back once the engine reports "stopped"/
-"idle".
-"""
 from __future__ import annotations
 
 from PySide6.QtCore import Signal
@@ -19,6 +13,7 @@ class CaptureView(QWidget):
     pause_requested = Signal()
     resume_requested = Signal()
     stop_requested = Signal()
+    setup_requested = Signal()
 
     def __init__(self, sources: SourceRegistry, parent=None):
         super().__init__(parent)
@@ -37,18 +32,22 @@ class CaptureView(QWidget):
         layout.addWidget(self.status_label)
 
         self.live_list = QListWidget()
+        self.live_list.setAccessibleName(_("Capture progress and output files"))
         layout.addWidget(self.live_list)
 
         transport = QHBoxLayout()
         self.pause_btn = QPushButton(_("Pause"))
         self.pause_btn.setEnabled(False)
         self.pause_btn.clicked.connect(self._on_pause_clicked)
-        self.stop_btn = QPushButton(_("Cancel"))
+        self.stop_btn = QPushButton(_("Stop and save"))
         self.stop_btn.setToolTip(_("Stop and finalize the recording (files already captured are kept)."))
         self.stop_btn.setEnabled(False)
         self.stop_btn.clicked.connect(self._on_stop_clicked)
         transport.addWidget(self.pause_btn)
         transport.addWidget(self.stop_btn)
+        self.setup_btn = QPushButton(_("Back to setup"))
+        self.setup_btn.clicked.connect(self.setup_requested.emit)
+        transport.addWidget(self.setup_btn)
         layout.addLayout(transport)
 
     def begin(self, session: Session, sources: list[CaptureSource]) -> None:
@@ -58,6 +57,7 @@ class CaptureView(QWidget):
         self.pause_btn.setText(_("Pause"))
         self.pause_btn.setEnabled(False)
         self.stop_btn.setEnabled(False)
+        self.setup_btn.setVisible(False)
 
         self.live_list.clear()
         for source in sources:
@@ -97,9 +97,11 @@ class CaptureView(QWidget):
             self.pause_btn.setEnabled(True)
         elif state in ("idle", "stopped"):
             self._paused = False
-            self.status_label.setText(_("Idle"))
+            self.status_label.setText(_("Capture finished") if state == "stopped" else _("Capture did not start"))
             self.pause_btn.setEnabled(False)
             self.stop_btn.setEnabled(False)
+            self.setup_btn.setVisible(True)
+            self.setup_btn.setFocus()
 
     def on_source_started(self, source_id: str, output_path: str) -> None:
         self._set_status(source_id, _("recording -> {path}").format(path=output_path))

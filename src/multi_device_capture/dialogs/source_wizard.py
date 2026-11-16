@@ -1,331 +1,225 @@
-from __future__ import annotations
-
 from typing import Optional
 
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import (
-    QCheckBox,
-    QComboBox,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QProgressBar,
-    QPushButton,
-    QStackedWidget,
-    QVBoxLayout,
-    QWizard,
-    QWizardPage,
+    QCheckBox, QComboBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QProgressBar,
+    QPushButton, QVBoxLayout, QWizard, QWizardPage,
 )
 
-from app_constance.styles import secondary_label_style
 from media_core.av_capture.capabilities import CaptureCapabilities
-from media_core.av_capture.models import CaptureDevice, CaptureFormatOption
 
 from ..async_probe import AsyncProbe
 from ..models import CaptureSource, MediaType, is_audio, is_video, media_type_label, new_id
-from .forms import AudioSettingsForm, CameraSettingsForm, ScreenSettingsForm, WindowSettingsForm
+from .forms import AudioSettingsForm, VideoSettingsForm
 from .source_preview import SourcePreview
 
 
 class TypeDevicePage(QWizardPage):
-
-    def __init__(self, capabilities: CaptureCapabilities, edit_source: Optional[CaptureSource] = None,
-                 existing_names: Optional[set] = None, parent=None):
+    def __init__(self, capabilities, edit_source, existing_names, parent=None):
         super().__init__(parent)
-        self.setTitle(_("Select source") if edit_source else _("Select type and device"))
+        self.setTitle(_("Choose a capture source"))
         self.capabilities = capabilities
         self._edit_source = edit_source
         self._existing_names = existing_names or set()
-        self._selected_type: Optional[MediaType] = (
-            edit_source.media_type if edit_source else None
-        )
-        # Set by SourceWizard right after addPage() - lets nextId() jump
-        # straight to Preview for a type/device with nothing editable on
-        # page 2 (a Camera reporting zero formats) instead of showing an
-        # empty Settings page.
-        self._settings_page_id: Optional[int] = None
-        self._preview_page_id: Optional[int] = None
+        self._devices_by_kind = {}
+        self._loading = True
+        self._auto_name = edit_source is None
+
+        layout = QVBoxLayout(self)
+        form = QFormLayout()
+        layout.addLayout(form)
+
+        self.type_combo = QComboBox()
+        self.type_combo.currentIndexChanged.connect(self._populate_devices)
+        form.addRow(_("Source type"), self.type_combo)
+
+        row = QHBoxLayout()
+        self.device_combo = QComboBox()
+        self.device_combo.setAccessibleName(_("Capture device"))
+        self.device_combo.currentIndexChanged.connect(self._device_changed)
+        row.addWidget(self.device_combo, 1)
+        self.refresh_btn = QPushButton(_("Refresh"))
+        self.refresh_btn.clicked.connect(self._start_probe)
+        row.addWidget(self.refresh_btn)
+        form.addRow(_("Device"), row)
+
+        self.friendly_name_edit = QLineEdit(edit_source.friendly_name if edit_source else "")
+        self.friendly_name_edit.textEdited.connect(self._name_edited)
+        self.friendly_name_edit.textChanged.connect(self.completeChanged)
+        form.addRow(_("Source name"), self.friendly_name_edit)
+
+        self.status = QLabel()
+        self.status.setTextFormat(Qt.TextFormat.PlainText)
+        self.status.setWordWrap(True)
+        layout.addWidget(self.status)
+        layout.addStretch()
 
         self._probe = AsyncProbe(self)
         self._probe.result_ready.connect(self._on_probe_result)
         self._probe.failed.connect(self._on_probe_failed)
-        self._devices_by_kind: dict[MediaType, list[CaptureDevice]] = {}
-        self._camera_formats_cache: dict[str, list[CaptureFormatOption]] = {}
-        self._loading = False
-        # Tracks whether friendly_name_edit still holds an auto-filled value
-        # (kept in sync with the selected type) vs. something the user typed
-        # themselves (left alone from then on). False from the start in edit
-        # mode, since the field already holds the source's real name.
-        self._name_is_autofilled = edit_source is None
-
-        layout = QVBoxLayout(self)
-
-        self.type_combo = QComboBox()
-        self.type_combo.setAccessibleName(_("Source type"))
-        if edit_source is None:
-            self.type_combo.currentIndexChanged.connect(self._on_type_changed)
-            layout.addWidget(QLabel(_("Source type")))
-            layout.addWidget(self.type_combo)
-        else:
-            # Fixed type in edit mode - show as a disabled label instead of
-            # a combo the user could nudge; re-typing a source is really
-            # "delete and add", not "edit".
-            fixed = QLineEdit(media_type_label(edit_source.media_type))
-            fixed.setReadOnly(True)
-            layout.addWidget(QLabel(_("Source type")))
-            layout.addWidget(fixed)
-
-        device_row = QHBoxLayout()
-        self.device_row_label = QLabel(_("Device"))
-        device_row.addWidget(self.device_row_label)
-        device_row.addStretch()
-        self.refresh_btn = QPushButton(_("Refresh"))
-        self.refresh_btn.clicked.connect(self._start_probe)
-        device_row.addWidget(self.refresh_btn)
-        layout.addLayout(device_row)
-
-        self.device_combo = QComboBox()
-        self.device_combo.setAccessibleName(_("Device"))
-        self.device_combo.currentIndexChanged.connect(self.completeChanged)
-        layout.addWidget(self.device_combo)
-
-        # Camera/Window enumeration can genuinely come back empty (no camera
-        # plugged in, no capturable windows found right now) - both types
-        # stay selectable regardless (see CaptureCapabilities
-        # .available_kinds()), so this explains why the device list is
-        # empty right now instead of it just looking broken. It also
-        # doubles as the "loading" status line while the probe is running.
-        self.empty_state_label = QLabel()
-        self.empty_state_label.setStyleSheet(secondary_label_style(font_size=11))
-        self.empty_state_label.setWordWrap(True)
-        layout.addWidget(self.empty_state_label)
-
-        self.friendly_name_edit = QLineEdit()
-        self.friendly_name_edit.setPlaceholderText(_("Friendly name shown in lists"))
-        self.friendly_name_edit.textEdited.connect(self._on_name_edited_by_user)
-        if edit_source:
-            self.friendly_name_edit.setText(edit_source.friendly_name)
-        layout.addWidget(QLabel(_("Friendly name")))
-        layout.addWidget(self.friendly_name_edit)
-
-        self.registerField("friendly_name*", self.friendly_name_edit)
-
-        layout.addStretch()
-
         self._start_probe()
 
-    def _on_name_edited_by_user(self, _text: str) -> None:
-        # textEdited (unlike textChanged) only fires from real user
-        # keystrokes, never from our own setText() calls below - so this is
-        # exactly "the user overrode the auto-fill, stop touching it".
-        self._name_is_autofilled = False
-
-    def _unique_default_name(self, mt: MediaType) -> str:
-        base = f"{media_type_label(mt)} {_('source')}"
-        if base not in self._existing_names:
-            return base
-        n = 1
-        while f"{base} {n}" in self._existing_names:
-            n += 1
-        return f"{base} {n}"
-
-    def _apply_autofill_name(self, mt: Optional[MediaType]) -> None:
-        if not self._name_is_autofilled or mt is None:
-            return
-        self.friendly_name_edit.setText(self._unique_default_name(mt))
-
-    def _start_probe(self) -> None:
+    def _start_probe(self):
         self._loading = True
         self.refresh_btn.setEnabled(False)
+        self.type_combo.setEnabled(False)
         self.device_combo.setEnabled(False)
-        self.device_combo.setVisible(False)
-        self.empty_state_label.setText(_("Checking available devices..."))
-        self.empty_state_label.setVisible(True)
+        self.status.setText(_("Checking available sources…"))
         self.completeChanged.emit()
+        self._probe.run(self.capabilities.inventory)
 
-        capabilities = self.capabilities
-        edit_mt = self._edit_source.media_type if self._edit_source else None
-        def _work(_edit_mt=edit_mt):
-            if _edit_mt is not None:
-                devices_by_kind = {_edit_mt: capabilities.list_devices(_edit_mt)}
-            else:
-                devices_by_kind = capabilities.inventory()
-            kinds = [kind for kind, devices in devices_by_kind.items()
-                     if devices or kind in (MediaType.CAMERA, MediaType.WINDOW)]
-            camera_formats = {}
-            for device in devices_by_kind.get(MediaType.CAMERA, []):
-                try:
-                    camera_formats[device.id] = capabilities.camera_formats(device)
-                except (OSError, RuntimeError):
-                    camera_formats[device.id] = []
-            return kinds, devices_by_kind, camera_formats
-
-        self._probe.run(_work)
-
-    def _on_probe_failed(self, message: str) -> None:
+    def _on_probe_failed(self, message):
         self._loading = False
-        self.refresh_btn.setEnabled(True)
-        self.empty_state_label.setText(_("Could not check devices: {error}").format(error=message))
-        self.empty_state_label.setVisible(True)
-        self.completeChanged.emit()
-
-    def _on_probe_result(self, result) -> None:
-        kinds, devices_by_kind, camera_formats = result
-        self._loading = False
-        self._devices_by_kind = devices_by_kind
-        self._camera_formats_cache = camera_formats
-        self.refresh_btn.setEnabled(True)
-
-        if self._edit_source is None:
-            current_type = self._selected_type
-            self.type_combo.blockSignals(True)
-            self.type_combo.clear()
-            for mt in kinds:
-                self.type_combo.addItem(media_type_label(mt), mt)
-            idx = self.type_combo.findData(current_type) if current_type is not None else -1
-            self.type_combo.setCurrentIndex(idx if idx >= 0 else 0)
-            self.type_combo.blockSignals(False)
-            self._selected_type = self.type_combo.currentData()
-        else:
-            self._selected_type = self._edit_source.media_type
-
-        self._populate_devices(self._selected_type)
-        self._apply_autofill_name(self._selected_type)
-
-    def _on_type_changed(self, index: int) -> None:
-        if self._loading:
-            return
-        mt = self.type_combo.itemData(index)
-        self._selected_type = mt
-        self._populate_devices(mt)
-        self._apply_autofill_name(mt)
-
-    def _empty_state_text(self, mt: Optional[MediaType]) -> str:
-        if mt == MediaType.CAMERA:
-            return _(
-                "No cameras found. Make sure one is connected and allowed under your "
-                "system's camera privacy settings, then Refresh."
-            )
-        if mt == MediaType.WINDOW:
-            note = self.capabilities.window_capture_note()
-            base = _("No capturable windows found right now. Open the window you want to capture, then Refresh.")
-            return f"{base} {note}" if note else base
-        return ""
-
-    def _populate_devices(self, mt: Optional[MediaType]) -> None:
-        self.device_row_label.setText(media_type_label(mt) if mt is not None else _("Device"))
-        self.device_combo.setEnabled(True)
+        self._devices_by_kind.clear()
         self.device_combo.clear()
-        devices: list[CaptureDevice] = self._devices_by_kind.get(mt, []) if mt is not None else []
-        for device in devices:
-            label = f"{device.name} (likely loopback)" if device.loopback_hint else device.name
-            self.device_combo.addItem(label, device)
-
-        if self._edit_source and mt == self._edit_source.media_type:
-            target = self.capabilities.resolve_device(devices, self._edit_source.device_id,
-                                                      self._edit_source.device_name)
-            self.device_combo.setCurrentIndex(devices.index(target) if target else -1)
-
-        is_empty = self.device_combo.count() == 0
-        self.device_combo.setVisible(not is_empty)
-        self.empty_state_label.setText(self._empty_state_text(mt) if is_empty else "")
-        self.empty_state_label.setVisible(is_empty and bool(self._empty_state_text(mt)))
+        self.refresh_btn.setEnabled(True)
+        self.status.setText(_("Could not check sources: {error}").format(error=message))
         self.completeChanged.emit()
 
-    def selected_type(self) -> Optional[MediaType]:
-        return self._selected_type
+    def _on_probe_result(self, devices):
+        current_kind = self.type_combo.currentData()
+        self._devices_by_kind = devices
+        self._loading = False
+        self.refresh_btn.setEnabled(True)
+        self.type_combo.blockSignals(True)
+        self.type_combo.clear()
+        if self._edit_source:
+            kind = self._edit_source.media_type
+            self.type_combo.addItem(media_type_label(kind), kind)
+        else:
+            for kind, sources in devices.items():
+                if sources or kind in (MediaType.CAMERA, MediaType.WINDOW):
+                    self.type_combo.addItem(media_type_label(kind), kind)
+        self.type_combo.setCurrentIndex(max(0, self.type_combo.findData(current_kind)))
+        self.type_combo.setEnabled(self._edit_source is None)
+        self.type_combo.blockSignals(False)
+        self._populate_devices()
 
-    def selected_device(self) -> Optional[CaptureDevice]:
-        idx = self.device_combo.currentIndex()
-        return self.device_combo.itemData(idx) if idx >= 0 else None
+    def _populate_devices(self, *_):
+        old_device = self.selected_device()
+        kind = self.type_combo.currentData()
+        devices = self.devices(kind)
+        self.device_combo.blockSignals(True)
+        self.device_combo.clear()
+        for device in devices:
+            self.device_combo.addItem(device.name or _("Mixed audio"), device)
 
-    def isComplete(self) -> bool:
-        return not self._loading and bool(self.friendly_name_edit.text().strip()) and self.selected_device() is not None
+        target = None
+        if old_device and old_device.kind == kind:
+            target = self.capabilities.resolve_device(devices, old_device.id, old_device.name)
+        elif self._edit_source:
+            saved = self._edit_source
+            target = self.capabilities.resolve_device(
+                devices, saved.device_id, saved.device_name or saved.settings.get("screen_name", ""),
+            )
+        if target is not None:
+            self.device_combo.setCurrentIndex(devices.index(target))
+        elif self._edit_source:
+            self.device_combo.setCurrentIndex(-1)
+        self.device_combo.setEnabled(bool(devices))
+        self.device_combo.blockSignals(False)
+        self._device_changed()
 
-    def nextId(self) -> int:
-        if self._settings_page_id is not None and self._preview_page_id is not None:
-            device = self.selected_device()
-            formats = self._camera_formats_cache.get(device.id, []) if device is not None else []
-            if not _type_has_editable_settings(self.selected_type(), device, formats):
-                return self._preview_page_id
-            return self._settings_page_id
-        return super().nextId()
+    def _device_changed(self, *_):
+        device = self.selected_device()
+        if device is not None:
+            if self._auto_name:
+                base = device.name or media_type_label(device.kind)
+                name = base
+                suffix = 2
+                while name in self._existing_names:
+                    name = f"{base} {suffix}"
+                    suffix += 1
+                self.friendly_name_edit.setText(name)
+            self.status.clear()
+        elif self._loading:
+            self.status.setText(_("Checking available sources…"))
+        elif self.device_combo.count():
+            self.status.setText(_("The saved device is unavailable. Select a device to update this source."))
+        else:
+            self.status.setText(_("No sources of this type are available. Connect the device or open the target, then refresh."))
+        self.completeChanged.emit()
 
+    def _name_edited(self, _text):
+        self._auto_name = False
 
-def _type_has_editable_settings(mt: Optional[MediaType], device, camera_formats: list) -> bool:
-    """Whether page 2 (Settings) has anything real for this type/device to
-    show. Monitor/Window now do (frame-rate cap + cursor toggle, both real
-    gdigrab/x11grab/avfoundation options) - the previous QScreenCapture/
-    QWindowCapture-based module genuinely had nothing to show here, which is
-    why it skipped this page for those types; a Camera device can still
-    report zero usable formats (driver quirk, virtual camera)."""
-    if mt in (MediaType.AUDIO_INPUT, MediaType.AUDIO_OUTPUT):
-        return True
-    if mt == MediaType.CAMERA:
-        return device is not None and len(camera_formats) > 0
-    if mt in (MediaType.MONITOR, MediaType.WINDOW):
-        return True
-    return False
+    def devices(self, kind):
+        return self._devices_by_kind.get(kind, [])
+
+    def selected_type(self):
+        return self.type_combo.currentData()
+
+    def selected_device(self):
+        return self.device_combo.currentData()
+
+    def isComplete(self):
+        return not self._loading and self.selected_device() is not None and bool(self.friendly_name_edit.text().strip())
 
 
 class SettingsPage(QWizardPage):
-    def __init__(self, capabilities: CaptureCapabilities, type_device_page: TypeDevicePage,
-                 global_settings=None, parent=None):
+    def __init__(self, capabilities, device_page, global_settings, edit_source, parent=None):
         super().__init__(parent)
-        self.setTitle(_("Configure settings"))
-        self.capabilities = capabilities
-        self._type_device_page = type_device_page
-        self._global_settings = global_settings
+        self.setTitle(_("Capture and encoding settings"))
+        self._capabilities = capabilities
+        self._devices = device_page
+        self._defaults = global_settings
+        self._edit_source = edit_source
+        self._device_key = None
+        self._form = None
+        self._layout = QVBoxLayout(self)
+        self._status = QLabel()
+        self._status.setWordWrap(True)
+        self._layout.addWidget(self._status)
+        self._layout.addStretch()
+        self._probe = AsyncProbe(self)
+        self._probe.result_ready.connect(self._on_camera_formats)
 
-        self.stack = QStackedWidget()
-        self.audio_form = AudioSettingsForm()
-        self.camera_form = CameraSettingsForm()
-        self.screen_form = ScreenSettingsForm()
-        self.window_form = WindowSettingsForm()
-        for w in (self.audio_form, self.camera_form, self.screen_form, self.window_form):
-            self.stack.addWidget(w)
+    def initializePage(self):
+        device = self._devices.selected_device()
+        kind = device.kind
+        key = (kind, device.id)
+        if self._device_key == key:
+            return
+        self._device_key = key
+        if self._form is not None:
+            self._layout.removeWidget(self._form)
+            self._form.deleteLater()
 
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.stack)
+        if is_audio(kind):
+            self._form = AudioSettingsForm(
+                kind, self._devices.devices(MediaType.AUDIO_INPUT), self._devices.devices(MediaType.AUDIO_OUTPUT),
+            )
+            settings = self._defaults.get_audio() if self._defaults else {}
+        else:
+            self._form = VideoSettingsForm(kind)
+            settings = self._defaults.get_video() if self._defaults else {}
+        if self._edit_source:
+            settings.update(self._edit_source.settings)
+        self._form.from_settings(settings)
+        self._layout.insertWidget(0, self._form)
+        self._status.clear()
 
-    def initializePage(self) -> None:
-        mt = self._type_device_page.selected_type()
-        device = self._type_device_page.selected_device()
-        is_new_source = self._type_device_page._edit_source is None
-        if mt in (MediaType.AUDIO_INPUT, MediaType.AUDIO_OUTPUT):
-            self.stack.setCurrentWidget(self.audio_form)
-            if is_new_source and self._global_settings is not None:
-                self.audio_form.from_settings(self._global_settings.get_audio())
-            if device is not None:
-                self.audio_form.load_device_defaults(device)
-        elif mt == MediaType.CAMERA:
-            self.stack.setCurrentWidget(self.camera_form)
-            if device is not None:
-                formats = self._type_device_page._camera_formats_cache.get(device.id, [])
-                self.camera_form.load_device_formats(formats)
-        elif mt == MediaType.MONITOR:
-            self.stack.setCurrentWidget(self.screen_form)
-            if is_new_source and self._global_settings is not None:
-                self.screen_form.from_settings(self._video_defaults())
-            if device is not None:
-                self.screen_form.load_screen(device, self.capabilities)
-        elif mt == MediaType.WINDOW:
-            self.stack.setCurrentWidget(self.window_form)
-            if is_new_source and self._global_settings is not None:
-                self.window_form.from_settings(self._video_defaults())
-            if device is not None:
-                self.window_form.load_window(device, self.capabilities)
+        if kind == MediaType.CAMERA:
+            self._status.setText(_("Checking camera resolutions…"))
 
-    def _video_defaults(self) -> dict:
-        video = self._global_settings.get_video()
-        return {"fps": video.get("fps", 30), "capture_cursor": video.get("capture_cursor", False)}
+            def get_formats():
+                try:
+                    return key, self._capabilities.camera_formats(device)
+                except (OSError, RuntimeError):
+                    return key, []
 
-    def current_settings(self) -> dict:
-        return self.stack.currentWidget().to_settings()
+            self._probe.run(get_formats)
 
-    def load_settings(self, s: dict) -> None:
-        self.stack.currentWidget().from_settings(s)
+    def _on_camera_formats(self, result):
+        key, formats = result
+        if key != self._device_key:
+            return
+        self._form.load_camera_formats(formats)
+        self._status.setText("" if formats else _("MediaCap could not read camera resolutions. You can use the default."))
+
+    def current_settings(self):
+        return self._form.to_settings()
 
 
 class PreviewPage(QWizardPage):
@@ -364,9 +258,6 @@ class PreviewPage(QWizardPage):
         self.level_meter.setVisible(is_audio(mt))
         self.level_meter.setValue(0)
 
-        # Reset to unchecked on every visit (including navigating back and
-        # forward again) rather than remembering the last state - so a
-        # camera/mic already granted once doesn't silently reactivate.
         self.preview_checkbox.blockSignals(True)
         self.preview_checkbox.setChecked(False)
         self.preview_checkbox.blockSignals(False)
@@ -380,11 +271,7 @@ class PreviewPage(QWizardPage):
         self._start_preview()
 
     def _current_settings(self) -> dict:
-        wizard = self.wizard()
-        settings_id = self._type_device_page._settings_page_id
-        if settings_id is not None and settings_id in wizard.visitedIds():
-            return wizard.settings_page.current_settings()
-        return {}
+        return self.wizard().settings_page.current_settings()
 
     def _start_preview(self) -> None:
         mt = self._type_device_page.selected_type()
@@ -440,67 +327,27 @@ class SourceWizard(QWizard):
         super().__init__(parent)
         self.setWindowTitle(_("Edit source") if edit_source else _("Add source"))
         self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
-        self.capabilities = capabilities
         self._edit_source = edit_source
-
         self.type_device_page = TypeDevicePage(capabilities, edit_source, existing_names)
-        self.settings_page = SettingsPage(capabilities, self.type_device_page, global_settings)
+        self.settings_page = SettingsPage(capabilities, self.type_device_page, global_settings, edit_source)
         self.preview_page = PreviewPage(capabilities, self.type_device_page)
-
         self.addPage(self.type_device_page)
-        settings_page_id = self.addPage(self.settings_page)
-        preview_page_id = self.addPage(self.preview_page)
-        self.type_device_page._settings_page_id = settings_page_id
-        self.type_device_page._preview_page_id = preview_page_id
-
-        if edit_source and edit_source.settings:
-            # Pre-seed the settings page once it's shown by connecting to
-            # currentIdChanged, since forms only exist after initializePage.
-            self.currentIdChanged.connect(self._maybe_preload_settings)
-
-    def _maybe_preload_settings(self, page_id: int) -> None:
-        if self.page(page_id) is self.settings_page:
-            self.settings_page.load_settings(self._edit_source.settings)
-
-    def closeEvent(self, event) -> None:
-        self.preview_page._teardown()
-        super().closeEvent(event)
+        self.addPage(self.settings_page)
+        self.addPage(self.preview_page)
 
     def done(self, result: int) -> None:
         self.preview_page._teardown()
         super().done(result)
 
     def result_source(self) -> CaptureSource:
-        mt = self.type_device_page.selected_type()
         device = self.type_device_page.selected_device()
-        friendly_name = self.type_device_page.friendly_name_edit.text()
-
-        # Settings page is skipped entirely (see TypeDevicePage.nextId()) for
-        # types/devices with nothing editable - pulling current_settings()
-        # from it unconditionally would return whatever form the
-        # QStackedWidget last happened to show instead of anything
-        # meaningful for this type.
-        settings_id = self.type_device_page._settings_page_id
-        if settings_id is not None and settings_id in self.visitedIds():
-            settings = self.settings_page.current_settings()
-        else:
-            settings = {}
-
-        device_id = device.id if device is not None else ""
-        window_description = device.name if device is not None else ""
-
-        if self._edit_source:
-            self._edit_source.friendly_name = friendly_name
-            self._edit_source.device_id = device_id or self._edit_source.device_id
-            self._edit_source.window_description = window_description or self._edit_source.window_description
-            self._edit_source.settings = settings
-            return self._edit_source
-
+        saved = self._edit_source
         return CaptureSource(
-            id=new_id(),
-            friendly_name=friendly_name,
-            media_type=mt,
-            device_id=device_id,
-            window_description=window_description,
-            settings=settings,
+            id=saved.id if saved else new_id(),
+            friendly_name=self.type_device_page.friendly_name_edit.text().strip(),
+            media_type=device.kind,
+            device_id=device.id,
+            window_description=device.name,
+            settings=self.settings_page.current_settings(),
+            enabled=saved.enabled if saved else True,
         )

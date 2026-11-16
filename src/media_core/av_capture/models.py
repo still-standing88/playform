@@ -12,10 +12,12 @@ class MediaKind(Enum):
     CAMERA = auto()
     MONITOR = auto()
     WINDOW = auto()
+    AUDIO_PROCESS = auto()
+    AUDIO_MIX = auto()
 
 
 VIDEO_KINDS = (MediaKind.CAMERA, MediaKind.MONITOR, MediaKind.WINDOW)
-AUDIO_KINDS = (MediaKind.AUDIO_INPUT, MediaKind.AUDIO_OUTPUT)
+AUDIO_KINDS = (MediaKind.AUDIO_INPUT, MediaKind.AUDIO_OUTPUT, MediaKind.AUDIO_PROCESS, MediaKind.AUDIO_MIX)
 
 
 def new_id() -> str:

@@ -19,6 +19,8 @@ MediaType = MediaKind
 _LABELS = {
     MediaType.AUDIO_INPUT: lambda: _("Audio input"),
     MediaType.AUDIO_OUTPUT: lambda: _("Audio output"),
+    MediaType.AUDIO_PROCESS: lambda: _("Application audio"),
+    MediaType.AUDIO_MIX: lambda: _("Microphone and system mix"),
     MediaType.CAMERA: lambda: _("Camera"),
     MediaType.MONITOR: lambda: _("Monitor"),
     MediaType.WINDOW: lambda: _("Window"),
@@ -71,8 +73,8 @@ class CaptureSource(CaptureSourceConfig):
             ch = self.settings.get("channels", "?")
             return _("{rate} Hz - {channels} ch").format(rate=rate, channels=ch)
         if self.media_type == MediaType.CAMERA:
-            res = self.settings.get("resolution", "?")
-            fps = self.settings.get("fps", "?")
+            res = self.settings.get("resolution") or _("Default size")
+            fps = self.settings.get("capture_fps", self.settings.get("fps", 30))
             return _("{resolution} @ {fps}fps").format(resolution=res, fps=fps)
         if self.media_type == MediaType.MONITOR:
             return self.device_name

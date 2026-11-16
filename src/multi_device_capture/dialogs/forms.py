@@ -1,208 +1,154 @@
-"""Per-media-type settings forms used by page 2 of the Source wizard and by
-the Settings tab's global-defaults panel.
+from PySide6.QtWidgets import QComboBox, QFormLayout, QSpinBox, QWidget
 
-Every field here maps directly onto an option the active
-media_core.av_capture backend actually passes to ffmpeg (see
-backends/*.build_input()) - nothing is shown that the current
-platform/device can't back. Monitor/Window capture now expose real
-"Capture cursor" and frame-rate controls (gdigrab's draw_mouse/framerate,
-x11grab's draw_mouse/framerate, avfoundation's capture_cursor/framerate),
-which is a genuine capability gain over the previous QtMultimedia-based
-QScreenCapture/QWindowCapture, which exposed neither.
-"""
-from __future__ import annotations
+from media_core.av_capture.models import MediaKind
 
-from PySide6.QtGui import QIntValidator
-from PySide6.QtWidgets import QCheckBox, QComboBox, QFormLayout, QLabel, QSpinBox, QWidget
 
-from app_constance.styles import secondary_label_style
-from media_core.av_capture.capabilities import CaptureCapabilities
-from media_core.av_capture.models import CaptureDevice
+VIDEO_SIZES = (
+    "640x360", "640x480", "854x480", "960x540", "1280x720",
+    "1920x1080", "2560x1440", "3840x2160",
+)
+VIDEO_CODECS = ("h264", "vp9", "av1")
+AUDIO_CODECS = ("aac", "opus", "vorbis", "flac", "mp3", "pcm")
+CAMERA_PIXEL_FORMATS = ("bgra", "bgr24", "rgba", "rgb24", "nv12", "i420")
 
-# ffmpeg's `volume` audio filter (see command_builder.output_options_for)
-# accepts any positive multiplier, not just attenuation - values over 100%
-# are a real gain boost (200% ~= +6dB), not clamped or faked here.
-_MAX_VOLUME_PERCENT = 300
-# dshow/pulse/avfoundation will all fail to open at a rate the device
-# genuinely doesn't support (ffmpeg reports that as a per-source error same
-# as any other bad setting) - the combo stays editable with sane min/max
-# guard rails rather than a fixed preset list.
-_MIN_SAMPLE_RATE = 8000
-_MAX_SAMPLE_RATE = 192000
+
+def _number(minimum, maximum, default, suffix=""):
+    widget = QSpinBox()
+    widget.setRange(minimum, maximum)
+    widget.setValue(default)
+    widget.setSuffix(suffix)
+    return widget
+
+
+def _choices(default_label, default_value, values):
+    widget = QComboBox()
+    widget.addItem(default_label, default_value)
+    for value in values:
+        widget.addItem(value, value)
+    return widget
+
+
+def _select(widget, value, *, allow_custom=False):
+    index = widget.findData(value)
+    if index < 0 and allow_custom and value:
+        widget.addItem(value, value)
+        index = widget.count() - 1
+    widget.setCurrentIndex(max(0, index))
 
 
 class AudioSettingsForm(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, kind=None, microphones=(), outputs=(), parent=None):
         super().__init__(parent)
         form = QFormLayout(self)
-        self.sample_rate = QComboBox()
-        self.sample_rate.setAccessibleName(_("Sample rate"))
-        self.sample_rate.setEditable(True)
-        self.sample_rate.addItems(["44100", "48000", "96000", "192000"])
-        self.sample_rate.setCurrentText("48000")
-        self.sample_rate.setValidator(QIntValidator(_MIN_SAMPLE_RATE, _MAX_SAMPLE_RATE, self))
+        self.sample_rate = _number(8000, 384000, 48000, _(" Hz"))
+        self.sample_rate.setSingleStep(1000)
         self.channels = QComboBox()
-        self.channels.setAccessibleName(_("Channels"))
-        self.channels.addItems([_("Mono"), _("Stereo")])
-        self.channels.setCurrentIndex(1)
-        self.volume = QSpinBox()
-        self.volume.setRange(0, _MAX_VOLUME_PERCENT)
-        self.volume.setValue(100)
-        self.volume.setSuffix(_(" %"))
-        self.volume.setToolTip(_("Over 100% boosts gain (ffmpeg's volume filter, e.g. 200% ~= +6dB)."))
-        form.addRow(_("Sample rate (Hz)"), self.sample_rate)
+        self.channels.addItem(_("Mono"), 1)
+        self.channels.addItem(_("Stereo"), 2)
+        self.volume = _number(0, 300, 100, _(" %"))
+        self.codec = _choices(_("Automatic"), "auto", AUDIO_CODECS)
+        self.bitrate = _number(8, 1536, 192, _(" kbps"))
+        self.route_fields = {}
+
+        if kind == MediaKind.AUDIO_MIX:
+            for key, label, devices in (
+                ("mic", _("Microphone"), microphones), ("system", _("System output"), outputs),
+            ):
+                selector = _choices(_("System default"), "", ())
+                for device in devices:
+                    if audio_id := device.extra.get("audio_id"):
+                        selector.addItem(device.name, audio_id)
+                gain = _number(0, 300, 100, _(" %"))
+                self.route_fields[key] = (selector, gain)
+                form.addRow(label, selector)
+                form.addRow(_("{source} gain").format(source=label), gain)
+
+        form.addRow(_("Sample rate"), self.sample_rate)
         form.addRow(_("Channels"), self.channels)
-        form.addRow(_("Volume"), self.volume)
+        form.addRow(_("Gain"), self.volume)
+        form.addRow(_("Audio codec"), self.codec)
+        form.addRow(_("Audio bitrate"), self.bitrate)
+        self.from_settings({})
 
-    def load_device_defaults(self, device: CaptureDevice) -> None:
-        # ffmpeg's device-listing mechanisms (dshow/pulse/avfoundation) don't
-        # report a single "preferred" format the way QAudioDevice did - the
-        # dshow -list_options probe *does* enumerate exact supported
-        # (rate, channels) pairs, but doing that on every wizard page visit
-        # means spinning up an extra ffmpeg process per device; the sane
-        # default (48kHz stereo) covers virtually every capture device, and
-        # the fields stay user-editable exactly as before.
-        pass
-
-    def to_settings(self) -> dict:
-        try:
-            sample_rate = int(self.sample_rate.currentText())
-        except ValueError:
-            sample_rate = 48000
-        return {
-            "sample_rate": sample_rate,
-            "channels": 1 if self.channels.currentIndex() == 0 else 2,
+    def to_settings(self):
+        settings = {
+            "sample_rate": self.sample_rate.value(),
+            "channels": self.channels.currentData(),
             "volume": self.volume.value(),
+            "audio_codec": self.codec.currentData(),
+            "audio_bitrate": self.bitrate.value() * 1000,
         }
-
-    def from_settings(self, s: dict) -> None:
-        if "sample_rate" in s:
-            idx = self.sample_rate.findText(str(s["sample_rate"]))
-            if idx >= 0:
-                self.sample_rate.setCurrentIndex(idx)
-        if "channels" in s:
-            self.channels.setCurrentIndex(0 if s["channels"] == 1 else 1)
-        if "volume" in s:
-            self.volume.setValue(s["volume"])
-
-
-class CameraSettingsForm(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        form = QFormLayout(self)
-        self.resolution = QComboBox()
-        self.resolution.setAccessibleName(_("Resolution"))
-        self.fps = QComboBox()
-        self.fps.setAccessibleName(_("Frame rate"))
-        form.addRow(_("Resolution"), self.resolution)
-        form.addRow(_("Frame rate"), self.fps)
-        self._formats = []
-
-    def load_device_formats(self, formats: list) -> None:
-        """`formats` is pre-fetched (see TypeDevicePage's background probe
-        in dialogs/source_wizard.py) rather than queried here, so opening
-        this page never blocks the GUI thread on a camera format probe."""
-        self.resolution.clear()
-        self._formats = formats
-        seen = set()
-        for fmt in self._formats:
-            if fmt.resolution in seen:
-                continue
-            seen.add(fmt.resolution)
-            self.resolution.addItem(fmt.resolution, fmt.resolution)
-        self.resolution.currentIndexChanged.connect(self._refresh_fps)
-        if self.resolution.count():
-            self._refresh_fps(0)
-
-    def _refresh_fps(self, index: int) -> None:
-        self.fps.clear()
-        target = self.resolution.itemData(index)
-        if target is None:
-            return
-        seen = set()
-        for fmt in self._formats:
-            if fmt.resolution != target:
-                continue
-            fps_value = round(fmt.fps) if fmt.fps else 0
-            if not fps_value or fps_value in seen:
-                continue
-            seen.add(fps_value)
-            self.fps.addItem(str(fps_value), fps_value)
-
-    def to_settings(self) -> dict:
-        resolution = self.resolution.currentData()
-        settings = {"resolution": resolution or "", "fps": self.fps.currentData() or 0}
-        matching = [f for f in self._formats if f.resolution == resolution and round(f.fps or 0) == settings["fps"]]
-        if matching:
-            settings["pixel_format"] = matching[0].pixel_format
-            settings["codec"] = matching[0].codec
+        for key, (selector, gain) in self.route_fields.items():
+            settings[f"{key}_device"] = selector.currentData()
+            settings[f"{key}_volume"] = gain.value()
         return settings
 
-    def from_settings(self, s: dict) -> None:
-        if "resolution" in s:
-            idx = self.resolution.findText(s["resolution"])
-            if idx >= 0:
-                self.resolution.setCurrentIndex(idx)
-        if "fps" in s:
-            idx = self.fps.findText(str(s["fps"]))
-            if idx >= 0:
-                self.fps.setCurrentIndex(idx)
+    def from_settings(self, settings):
+        self.sample_rate.setValue(settings.get("sample_rate", 48000))
+        _select(self.channels, settings.get("channels", 2))
+        self.volume.setValue(settings.get("volume", 100))
+        _select(self.codec, settings.get("audio_codec", "auto"))
+        self.bitrate.setValue(settings.get("audio_bitrate", 192000) // 1000)
+        for key, (selector, gain) in self.route_fields.items():
+            _select(selector, settings.get(f"{key}_device", ""), allow_custom=True)
+            gain.setValue(settings.get(f"{key}_volume", 100))
 
 
-class _FrameCaptureSettingsForm(QWidget):
-    """Shared by Monitor/Window: both are gdigrab/x11grab/avfoundation
-    inputs with the same real, ffmpeg-backed knobs - a frame-rate cap and a
-    cursor-visibility toggle (draw_mouse / capture_cursor)."""
-
-    _LABEL_ROW = ""
-
-    def __init__(self, parent=None):
+class VideoSettingsForm(QWidget):
+    def __init__(self, kind=None, parent=None):
         super().__init__(parent)
+        self.kind = kind
         form = QFormLayout(self)
-        self.device_label = QLabel("-")
-        form.addRow(self._LABEL_ROW, self.device_label)
-        self.fps = QSpinBox()
-        self.fps.setRange(1, 240)
-        self.fps.setValue(30)
-        form.addRow(_("Frame rate"), self.fps)
-        self.capture_cursor = QCheckBox(_("Capture mouse cursor"))
-        self.capture_cursor.setChecked(True)
-        form.addRow(self.capture_cursor)
-        self._note_label = QLabel("")
-        self._note_label.setStyleSheet(secondary_label_style(font_size=11))
-        self._note_label.setWordWrap(True)
-        form.addRow(self._note_label)
+        if kind == MediaKind.CAMERA:
+            self.resolution = _choices(_("Device default"), "", ())
+            self.capture_fps = _number(1, 240, 30)
+            self.pixel_format = _choices(_("Automatic"), "", CAMERA_PIXEL_FORMATS)
+            form.addRow(_("Camera resolution"), self.resolution)
+            form.addRow(_("Camera frame rate"), self.capture_fps)
+            form.addRow(_("Camera pixel format"), self.pixel_format)
+        elif kind in (MediaKind.MONITOR, MediaKind.WINDOW):
+            self.capture_interval = _number(1, 60000, 33, _(" ms"))
+            form.addRow(_("Capture interval"), self.capture_interval)
 
-    def set_note(self, text: str) -> None:
-        self._note_label.setText(text)
-        self._note_label.setVisible(bool(text))
+        self.output_size = _choices(_("Source size"), "", VIDEO_SIZES)
+        self.fps = _number(1, 240, 30)
+        self.codec = _choices(_("Automatic"), "auto", VIDEO_CODECS)
+        self.bitrate = _number(100, 200000, 8000, _(" kbps"))
+        form.addRow(_("Output resolution"), self.output_size)
+        form.addRow(_("Output frame rate"), self.fps)
+        form.addRow(_("Video codec"), self.codec)
+        form.addRow(_("Video bitrate"), self.bitrate)
 
-    def to_settings(self) -> dict:
-        return {"fps": self.fps.value(), "capture_cursor": self.capture_cursor.isChecked()}
+    def load_camera_formats(self, formats):
+        for size in dict.fromkeys(fmt.resolution for fmt in formats):
+            if self.resolution.findData(size) < 0:
+                self.resolution.addItem(size, size)
 
-    def from_settings(self, s: dict) -> None:
-        if "fps" in s and s["fps"]:
-            self.fps.setValue(int(s["fps"]))
-        if "capture_cursor" in s:
-            self.capture_cursor.setChecked(bool(s["capture_cursor"]))
-
-
-class ScreenSettingsForm(_FrameCaptureSettingsForm):
-    _LABEL_ROW = _("Screen")
-
-    def load_screen(self, device: CaptureDevice, capabilities: CaptureCapabilities) -> None:
-        self.device_label.setText(device.name)
-        self.set_note(capabilities.screen_capture_note())
-
-    def to_settings(self) -> dict:
-        settings = super().to_settings()
-        settings["screen_name"] = self.device_label.text()
+    def to_settings(self):
+        settings = {
+            "output_size": self.output_size.currentData(),
+            "fps": self.fps.value(),
+            "video_codec": self.codec.currentData(),
+            "video_bitrate": self.bitrate.value() * 1000,
+        }
+        if self.kind == MediaKind.CAMERA:
+            settings["resolution"] = self.resolution.currentData()
+            settings["capture_fps"] = self.capture_fps.value()
+            settings["pixel_format"] = self.pixel_format.currentData()
+        elif self.kind in (MediaKind.MONITOR, MediaKind.WINDOW):
+            settings["capture_interval"] = self.capture_interval.value()
         return settings
 
-
-class WindowSettingsForm(_FrameCaptureSettingsForm):
-    _LABEL_ROW = _("Window")
-
-    def load_window(self, device: CaptureDevice, capabilities: CaptureCapabilities) -> None:
-        self.device_label.setText(device.name)
-        self.set_note(capabilities.window_capture_note())
+    def from_settings(self, settings):
+        fps = int(settings.get("fps") or 30)
+        output_size = settings.get("output_size", settings.get("resolution_cap", ""))
+        _select(self.output_size, "" if output_size == "Passthrough" else output_size, allow_custom=True)
+        self.fps.setValue(fps)
+        _select(self.codec, settings.get("video_codec", "auto"))
+        self.bitrate.setValue(settings.get("video_bitrate", 8000000) // 1000)
+        if self.kind == MediaKind.CAMERA:
+            _select(self.resolution, settings.get("resolution", ""), allow_custom=True)
+            self.capture_fps.setValue(int(settings.get("capture_fps") or fps))
+            _select(self.pixel_format, settings.get("pixel_format", ""))
+        elif self.kind in (MediaKind.MONITOR, MediaKind.WINDOW):
+            self.capture_interval.setValue(settings.get("capture_interval", max(1, round(1000 / fps))))

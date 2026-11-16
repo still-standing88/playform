@@ -5,6 +5,7 @@ from .models import CaptureDevice, CaptureFormatOption, MediaKind
 _DEVICE_LISTS = {
     MediaKind.AUDIO_INPUT: ("audio-input", ("audio", "input")),
     MediaKind.AUDIO_OUTPUT: ("audio-output", ("audio", "output")),
+    MediaKind.AUDIO_PROCESS: ("processes", ("audio", "processes")),
     MediaKind.CAMERA: ("cameras", ("cameras",)),
     MediaKind.MONITOR: ("monitors", ("monitors",)),
     MediaKind.WINDOW: ("windows", ("windows",)),
@@ -17,11 +18,27 @@ class CaptureCapabilities:
 
     def inventory(self) -> dict[MediaKind, list[CaptureDevice]]:
         data = query(self.executable, "list", "all", allow_partial=True)
-        return {kind: self._devices(kind, data.get(key, [])) for kind, (key, _) in _DEVICE_LISTS.items()}
+        devices = {kind: self._devices(kind, data.get(key, [])) for kind, (key, _) in _DEVICE_LISTS.items()}
+        try:
+            routes = query(self.executable, "capabilities", "audio")
+        except (OSError, RuntimeError):
+            return devices
+        if routes.get("process") == "unavailable":
+            devices.pop(MediaKind.AUDIO_PROCESS, None)
+        if routes.get("mix") == "available":
+            devices[MediaKind.AUDIO_MIX] = [self._mixed_audio()]
+        return devices
 
     def list_devices(self, kind: MediaKind) -> list[CaptureDevice]:
+        if kind == MediaKind.AUDIO_MIX:
+            routes = query(self.executable, "capabilities", "audio")
+            return [self._mixed_audio()] if routes.get("mix") == "available" else []
         _, subcommand = _DEVICE_LISTS[kind]
         return self._devices(kind, query(self.executable, "list", *subcommand))
+
+    @staticmethod
+    def _mixed_audio():
+        return CaptureDevice(MediaKind.AUDIO_MIX, "mix", "", extra={"route": "mix"})
 
     @staticmethod
     def _devices(kind, rows):
@@ -36,6 +53,10 @@ class CaptureCapabilities:
                     extra["audio_id"] = row["id"]
                 else:
                     extra["route"] = f'{row["kind"]}:{row["index"]}'
+            elif kind == MediaKind.AUDIO_PROCESS:
+                ident = f'process:{row["pid"]}:{row["executable"] or row["name"]}'
+                name = f'{row["name"]} ({row["pid"]})'
+                extra["route"] = f'process:{row["pid"]}'
             elif kind == MediaKind.CAMERA:
                 extra["selector"] = row["index"]
                 name = row["name"]
@@ -67,12 +88,3 @@ class CaptureCapabilities:
         return [CaptureFormatOption(size["width"], size["height"], 0, pixel_format=pixel_format)
                 for size in data.get("resolutions", [])
                 for pixel_format in data.get("pixel_formats") or [""]]
-
-    def loopback_note(self) -> str:
-        return ""
-
-    def window_capture_note(self) -> str:
-        return ""
-
-    def screen_capture_note(self) -> str:
-        return ""

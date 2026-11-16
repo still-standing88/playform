@@ -13,6 +13,12 @@ VIDEO_SOURCE = {
     MediaKind.MONITOR: ("screen", "--monitor"),
     MediaKind.WINDOW: ("window", "--window"),
 }
+VIDEO_CONTAINERS = ("mkv", "mp4", "webm")
+AUDIO_CONTAINERS = ("m4a", "wav", "flac", "mp3", "opus")
+
+
+def escape_audio_id(value):
+    return value.replace("%", "%25").replace(";", "%3B")
 
 
 def find_mediacap(bin_dir=None):
@@ -27,10 +33,13 @@ def find_mediacap(bin_dir=None):
 def query(executable, *args, allow_partial=False):
     if not executable:
         raise RuntimeError("MediaCap was not found. Install it in PlayForm's bin folder or on PATH.")
-    result = subprocess.run(
-        [executable, "--json", *args], stdin=subprocess.DEVNULL, capture_output=True,
-        encoding="utf-8", errors="replace", timeout=25, **PROCESS_OPTIONS,
-    )
+    try:
+        result = subprocess.run(
+            [executable, "--json", *args], stdin=subprocess.DEVNULL, capture_output=True,
+            encoding="utf-8", errors="replace", timeout=25, **PROCESS_OPTIONS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("MediaCap did not respond in time.") from exc
     try:
         data = json.loads(result.stdout)
     except ValueError as exc:
@@ -47,8 +56,12 @@ def source_args(device: CaptureDevice, settings: dict, *, preview=False) -> list
     if kind in AUDIO_KINDS:
         route = device.extra["route"]
         if "audio_id" in device.extra:
-            escaped = device.extra["audio_id"].replace("%", "%25").replace(";", "%3B")
-            route += f";device={escaped}"
+            route += f';device={escape_audio_id(device.extra["audio_id"])}'
+        if kind == MediaKind.AUDIO_MIX:
+            for key in ("mic", "system"):
+                if device_id := settings.get(f"{key}_device"):
+                    route += f";{key}-device={escape_audio_id(device_id)}"
+                route += f";{key}-gain={settings.get(f'{key}_volume', 100) / 100}"
         rate = settings.get("sample_rate", 48000)
         channels = settings.get("channels", 2)
         gain = settings.get("volume", 100) / 100
@@ -76,7 +89,7 @@ def source_args(device: CaptureDevice, settings: dict, *, preview=False) -> list
 
 def recording_args(device, settings, container, output):
     args = source_args(device, settings)
-    args += ["--output", output, "--container", "mp4" if container == "mov" else container]
+    args += ["--output", output, "--container", container]
     if device.kind in AUDIO_KINDS:
         options = {
             "sample_rate": "--sample-rate", "channels": "--channels",

@@ -26,6 +26,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from media_core.av_capture.mediacap import AUDIO_CONTAINERS, VIDEO_CONTAINERS
+
 from ..models import Session, default_capture_directory, new_id
 
 
@@ -53,9 +55,10 @@ class SessionDialog(QDialog):
         form.addRow(_("Output directory"), browse_row)
 
         self.container_combo = QComboBox()
-        self.container_combo.addItems(["mkv", "mp4", "mov"])
-        self.container_combo.setCurrentText(session.container_format if session else default_container)
-        form.addRow(_("Container format"), self.container_combo)
+        self.container_combo.addItems(VIDEO_CONTAINERS + AUDIO_CONTAINERS)
+        container = session.container_format if session else default_container
+        self.container_combo.setCurrentText("mp4" if container == "mov" else container)
+        form.addRow(_("Output format"), self.container_combo)
 
         layout.addLayout(form)
 
