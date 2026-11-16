@@ -24,14 +24,6 @@ QT_PLUGINS = [
     "styles",
     "iconengines",
     "imageformats",
-    # multi_device_capture's wizard preview (dialogs/audio_monitor.py) uses
-    # QAudioSink/QMediaDevices for raw-PCM playback - without this,
-    # --standalone builds ship no plugins/multimedia/*.dll at all, so those
-    # classes enumerate nothing in the compiled app even though they work
-    # fine from a plain `python app.py` dev run (which sees the full
-    # pip-installed PySide6 plugins folder). Capture itself (camera/
-    # monitor/window/audio) does not need this - media_core.av_capture
-    # shells out to ffmpeg directly, it doesn't touch QtMultimedia at all.
     "multimedia",
     # tools/speech_converter drives QTextToSpeech; without this the standalone
     # build ships no plugins/texttospeech/*.dll (notably qtexttospeech_sapi.dll

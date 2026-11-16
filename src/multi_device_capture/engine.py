@@ -1,24 +1,3 @@
-"""Qt-facing wrapper around media_core.av_capture.session_runner
-.CaptureSessionRunner - the actual ffmpeg process management, device
-resolution and pause/resume-via-segment-concat logic all live there and
-know nothing about Qt (same split as
-tools.ffmpeg.batch_converter.job.ConvertJob wrapping
-media_core.ffmpeg.conversion_job.ConversionRunner).
-
-Unlike the previous QCamera/QScreenCapture/QWindowCapture/QMediaRecorder
-engine, none of this needs to run on the GUI thread - it is one `ffmpeg`
-subprocess per source, not a live Qt Multimedia object - so start/pause/
-resume/stop (pause/stop in particular: each blocks for up to a few seconds
-per source while ffmpeg finalizes/concats) run on a single background
-worker thread via a 1-worker ThreadPoolExecutor, keeping the UI responsive.
-CaptureSessionRunner's own callbacks fire from that same worker thread (or
-one of the per-source ffmpeg threads it owns); Qt's signal/slot system
-queues the emit()s below onto the GUI thread automatically since this
-QObject's thread affinity is the GUI thread, regardless of which thread
-calls .emit().
-"""
-from __future__ import annotations
-
 import concurrent.futures
 import logging
 
@@ -27,7 +6,6 @@ from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 
 from media_core.av_capture.capabilities import CaptureCapabilities
 from media_core.av_capture.session_runner import CaptureSessionRunner
-from tools.ffmpeg_handler import FFmpegHandler
 
 from .models import CaptureSource, Session
 from .settings import MultiDeviceCaptureSettings
@@ -36,30 +14,21 @@ logger = logging.getLogger(__name__)
 
 
 class CaptureEngine(QObject):
-    source_started = Signal(str, str)     # source_id, output_path
-    source_error = Signal(str, str)       # source_id, message ("" source_id => session-level error)
-    source_stopped = Signal(str, str)     # source_id, final_output_path
-    duration_changed = Signal(str, float)  # source_id, elapsed seconds
-    state_changed = Signal(str)           # "idle" | "recording" | "paused" | "stopped"
+    source_started = Signal(str, str)
+    source_error = Signal(str, str)
+    source_stopped = Signal(str, str)
+    duration_changed = Signal(str, float)
+    state_changed = Signal(str)
 
-    def __init__(
-        self, capabilities: CaptureCapabilities | None = None,
-        settings: MultiDeviceCaptureSettings | None = None, parent=None,
-    ):
+    def __init__(self, capabilities: CaptureCapabilities, settings: MultiDeviceCaptureSettings, parent=None):
         super().__init__(parent)
-        ffmpeg_path, _ffprobe_path = FFmpegHandler.get_ffmpeg_binary()
-        self.capabilities = capabilities or CaptureCapabilities(ffmpeg_executable=ffmpeg_path)
+        self.capabilities = capabilities
         self.settings = settings
-        self._ffmpeg_executable = ffmpeg_path
-        self._runner: CaptureSessionRunner | None = None
+        self._runner = None
         self._active = False
         self._paused = False
+        self._shutting_down = False
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="av-capture-ctl")
-        # Notify-on-finish touches QApplication/QSystemTrayIcon, so it must
-        # run on the GUI thread - connect to our own (auto-queued across
-        # threads) signal rather than calling it from
-        # _on_runner_state_changed, which session_runner invokes directly
-        # from the executor thread.
         self.state_changed.connect(self._maybe_notify_finished)
 
     def is_active(self) -> bool:
@@ -69,112 +38,89 @@ class CaptureEngine(QObject):
         return self._paused
 
     def shutdown(self) -> None:
-        """Called on real app shutdown (see MainWindow.closeEvent) - stops
-        any in-progress capture and releases the worker thread."""
+        self._shutting_down = True
         if self._active:
             self.stop_and_wait()
         self._executor.shutdown(wait=False)
 
-    # -- transport -----------------------------------------------------
-    #
-    # start()/stop() block briefly (start: up to ~0.6s per source to catch a
-    # fast-failing device; stop: up to a few seconds per source to gracefully
-    # terminate + concat) - callers that need a synchronous result (a
-    # "capture still active, are you sure" shutdown gate) use the *_and_wait
-    # variants; everything else fires the async version and reacts to
-    # state_changed/source_* signals.
-
     def start(self, session: Session, sources: list[CaptureSource]) -> None:
-        if self._active:
-            return
-        self._executor.submit(self._start_sync, session, sources)
+        if not self._active:
+            self._active = True
+            self._executor.submit(self._start_sync, session, sources)
 
-    def start_and_wait(self, session: Session, sources: list[CaptureSource]) -> bool:
-        if self._active:
-            return False
-        return self._executor.submit(self._start_sync, session, sources).result()
-
-    def _start_sync(self, session: Session, sources: list[CaptureSource]) -> bool:
-        self.capabilities.refresh()
-        keep_segments = bool(self.settings.get("keep_segments_after_pause", False)) if self.settings else False
+    def _start_sync(self, session: Session, sources: list[CaptureSource]):
         runner = CaptureSessionRunner(
-            session, sources, capabilities=self.capabilities, ffmpeg_executable=self._ffmpeg_executable,
-            keep_segments=keep_segments,
+            session, sources, self.capabilities,
             on_source_started=self.source_started.emit,
             on_source_error=self.source_error.emit,
             on_source_stopped=self.source_stopped.emit,
             on_source_progress=self.duration_changed.emit,
             on_state_changed=self._on_runner_state_changed,
+            on_source_exit=self._source_exited,
         )
-        ok = runner.start()
-        if ok:
-            # runner already fired its own on_state_changed("recording")
-            # callback (-> self._on_runner_state_changed) during start().
-            self._runner = runner
-            self._active = True
-            self._paused = False
-        else:
-            # Nothing started - session_runner.start() already reported why
-            # through per-source source_error signals; state_changed still
-            # fires so the UI can re-enable Start instead of staying stuck
-            # showing "starting...".
-            self.state_changed.emit("idle")
-        return ok
+        self._runner = runner
+        try:
+            if runner.start():
+                self._on_runner_state_changed("recording")
+                return
+        except Exception as exc:
+            logger.exception("Capture start failed")
+            self.source_error.emit("", str(exc))
+            runner.stop()
+        self._runner = None
+        self._active = False
+        self.state_changed.emit("idle")
+
+    def _source_exited(self, runner):
+        if not self._shutting_down:
+            self._executor.submit(self._finish_if_done, runner)
+
+    def _finish_if_done(self, runner):
+        if self._runner is runner and runner.all_finished():
+            self._stop_sync()
 
     def pause(self) -> None:
-        if not self._active or self._paused or self._runner is None:
-            return
-        self._executor.submit(self._runner.pause)
+        self._executor.submit(self._change_pause, True)
 
     def resume(self) -> None:
-        if not self._active or not self._paused or self._runner is None:
+        self._executor.submit(self._change_pause, False)
+
+    def _change_pause(self, paused):
+        if self._runner is None or self._paused == paused:
             return
-        self._executor.submit(self._runner.resume)
+        if paused:
+            self._runner.pause()
+        else:
+            self._runner.resume()
 
     def stop(self) -> None:
-        if not self._active or self._runner is None:
-            return
         self._executor.submit(self._stop_sync)
 
     def stop_and_wait(self) -> None:
-        if not self._active or self._runner is None:
-            return
         self._executor.submit(self._stop_sync).result()
 
     def _stop_sync(self) -> None:
         runner = self._runner
         if runner is None:
             return
-        # Cleared before runner.stop() runs: this runs on a fire-and-forget
-        # future whose exceptions nobody observes, so a raise inside stop()
-        # used to leave _active True forever - the tool dialog's close-gate
-        # then refused to close and the UI sat on "Stopping...".
-        self._runner = None
-        self._active = False
-        self._paused = False
         try:
             runner.stop()
-        except Exception:
+        except Exception as exc:
             logger.exception("Capture stop failed")
+            self.source_error.emit("", str(exc))
+        finally:
+            self._runner = None
+            self._active = False
+            self._paused = False
+            self.state_changed.emit("stopped")
 
     def _on_runner_state_changed(self, state: str) -> None:
-        # Called directly by session_runner from the executor thread (not a
-        # Qt slot) - only touch the emit() here, which is the thread-safe
-        # boundary; anything GUI-only (notify-on-finish) hangs off the
-        # state_changed signal instead, see _maybe_notify_finished below.
-        if state == "paused":
-            self._paused = True
-        elif state == "recording":
-            self._paused = False
+        self._paused = state == "paused"
         self.state_changed.emit(state)
 
     def _maybe_notify_finished(self, state: str) -> None:
-        if state != "stopped":
+        if state != "stopped" or not self.settings.get("notify_on_finish", True):
             return
-        if self.settings is None or not self.settings.get("notify_on_finish", True):
-            return
-        # Same tray-notification path tools.ffmpeg.batch_converter uses -
-        # the app-wide QSystemTrayIcon registered at startup by system_tray.py.
         tray_icon = getattr(QApplication.instance(), "_tray_icon", None)
         if tray_icon is not None and hasattr(tray_icon, "showMessage"):
             tray_icon.showMessage(

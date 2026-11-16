@@ -1,12 +1,3 @@
-"""Domain model for the Multi Device Capture panel.
-
-Thin Qt-facing layer over media_core.av_capture.models: MediaType is the
-same MediaKind enum the ffmpeg engine uses (so a source's `media_type` can
-be handed straight to CaptureCapabilities/CaptureSessionRunner with no
-translation step), with a translated `.label` lookup and is_video/is_audio
-helpers added here rather than on MediaKind itself, since media_core stays
-Qt/gettext-free.
-"""
 from __future__ import annotations
 
 from pathlib import Path

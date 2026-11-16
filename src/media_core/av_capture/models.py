@@ -1,11 +1,3 @@
-"""Domain model for the ffmpeg-based capture engine.
-
-Deliberately Qt-light (no PySide6 import, no `_()` translation calls) so
-capabilities/backends/session_runner can all import it without pulling in a
-QApplication - translation of labels for display is the Qt wrapper layer's
-job (multi_device_capture/), same split as
-media_core.m4b_tools/media_core.ffmpeg vs. their tools/ wrappers.
-"""
 from __future__ import annotations
 
 import uuid
@@ -32,20 +24,6 @@ def new_id() -> str:
 
 @dataclass(frozen=True)
 class CaptureDevice:
-    """One device/window/monitor as enumerated by the platform backend,
-    using ffmpeg's own device-listing mechanism wherever ffmpeg provides one
-    (dshow -list_devices, avfoundation -list_devices, v4l2 sysfs names) and
-    the platform's native tool where it doesn't (gdigrab has no window
-    listing of its own, so Windows window enumeration goes through
-    EnumWindows; x11grab has none either, so Linux goes through wmctrl).
-
-    `id` is whatever value command_builder needs to plug into the ffmpeg
-    input url/options for *this* backend - it is not a display string. For
-    dshow that's the device's "Alternative name" (@device_... - stable
-    across friendly-name collisions and renames); for a Windows window it's
-    the HWND; for a monitor it's "x,y,w,h"; for avfoundation/v4l2 it's the
-    device index/node ffmpeg expects.
-    """
 
     kind: MediaKind
     id: str

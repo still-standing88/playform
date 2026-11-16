@@ -1,22 +1,3 @@
-"""Shared/general settings dialog - device-agnostic knobs that apply across
-every source rather than one device's own wizard page:
-
-- Default output directory / container - prefilled into the "New session"
-  dialog, not retroactively applied to existing sessions.
-- Default audio/video prefill (sample rate/channels/volume, fps/cursor) -
-  seeded into the Add Source wizard's Settings page for a *new* source of
-  that kind; editing an existing source doesn't re-read these.
-- Notify on finish - posts through the app's tray icon
-  (QApplication.instance()._tray_icon), same pattern as
-  tools.ffmpeg.batch_converter's progress dialog.
-- Keep segment files after a paused session - session_runner.py normally
-  deletes per-segment files once they're concatenated into the final
-  output; this keeps them as a safety net.
-
-Was the Settings tab; now a modal dialog opened from a button instead of a
-third tab, since the panel is a single consolidated view now (see
-views/configure_view.py).
-"""
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
@@ -79,7 +60,6 @@ class SettingsDialog(QDialog):
         self.output_dir_edit.editingFinished.connect(self._save_general)
         self.container_combo.currentIndexChanged.connect(self._save_general)
         self.notify_checkbox.toggled.connect(self._save_general)
-        self.keep_segments_checkbox.toggled.connect(self._save_general)
         self.audio_defaults.sample_rate.currentIndexChanged.connect(self._save_audio)
         self.audio_defaults.channels.currentIndexChanged.connect(self._save_audio)
         self.audio_defaults.volume.valueChanged.connect(self._save_audio)
@@ -106,12 +86,6 @@ class SettingsDialog(QDialog):
         self.notify_checkbox = QCheckBox(_("Notify (system tray) when a capture finishes"))
         form.addRow(self.notify_checkbox)
 
-        self.keep_segments_checkbox = QCheckBox(_("Keep intermediate segment files after a paused session"))
-        self.keep_segments_checkbox.setToolTip(
-            _("Pausing splits a recording into segments that are joined into one file on Stop. "
-              "Enable this to keep the individual segment files as a backup instead of deleting them.")
-        )
-        form.addRow(self.keep_segments_checkbox)
         return w
 
     def _build_video_page(self):
@@ -141,7 +115,6 @@ class SettingsDialog(QDialog):
         self.output_dir_edit.setPlaceholderText(default_capture_directory())
         self.container_combo.setCurrentText(self.settings.get("default_container", "mkv"))
         self.notify_checkbox.setChecked(bool(self.settings.get("notify_on_finish", True)))
-        self.keep_segments_checkbox.setChecked(bool(self.settings.get("keep_segments_after_pause", False)))
 
         audio = self.settings.get_audio()
         self.audio_defaults.from_settings(audio)
@@ -157,7 +130,6 @@ class SettingsDialog(QDialog):
         self.settings.set("default_output_dir", self.output_dir_edit.text())
         self.settings.set("default_container", self.container_combo.currentText())
         self.settings.set("notify_on_finish", self.notify_checkbox.isChecked())
-        self.settings.set("keep_segments_after_pause", self.keep_segments_checkbox.isChecked())
 
     def _save_audio(self) -> None:
         self.settings.set_audio(self.audio_defaults.to_settings())

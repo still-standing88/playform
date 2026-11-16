@@ -29,7 +29,6 @@ DEFAULT_SETTINGS = {
     "default_output_dir": "",
     "default_container": "mkv",
     "notify_on_finish": True,
-    "keep_segments_after_pause": False,
 }
 
 

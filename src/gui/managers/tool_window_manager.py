@@ -61,8 +61,6 @@ class ToolWindowManager:
 
     def open_multi_device_capture(self):
         from multi_device_capture.ui import MultiDeviceCaptureUI
-        if not ensure_ffmpeg_available(self.main_window, show_message=True, min_major=6):
-            return
         self.open_tool_dialog("multi_device_capture", MultiDeviceCaptureUI(), _("Multi Device Capture"))
 
     def open_tool_dialog(self, tool_name, tool_widget, title):

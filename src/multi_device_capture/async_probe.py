@@ -1,15 +1,3 @@
-"""Run a blocking media_core.av_capture call (device enumeration, camera
-format probing, device-presence checks - anything that spins up a real
-ffmpeg/platform subprocess) off the GUI thread and deliver the result back
-via a signal.
-
-Every direct CaptureCapabilities call used to happen inline in whatever
-widget needed it (TypeDevicePage.__init__, its Refresh button, the planned
-disconnected-device check) - each one is a few hundred ms to a couple of
-seconds of real subprocess time, which is a UI freeze on a click. This is
-the one place that pattern is handled, so nothing in dialogs/ or views/
-touches CaptureCapabilities synchronously.
-"""
 from __future__ import annotations
 
 import threading

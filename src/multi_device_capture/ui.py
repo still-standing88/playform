@@ -25,13 +25,16 @@ Panels-menu wiring to remove things from if this changes again.
 """
 from __future__ import annotations
 
+import os
+
 from PySide6.QtCore import QThread, Qt
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QMessageBox, QStackedWidget, QVBoxLayout, QWidget
 
 from app_config import key_config
 from media_core.av_capture.capabilities import CaptureCapabilities
-from tools.ffmpeg_handler import FFmpegHandler
+from media_core.av_capture.mediacap import find_mediacap
+from utilities.functions import get_parent_dir
 
 from .dialogs import SettingsDialog
 from .engine import CaptureEngine
@@ -66,8 +69,7 @@ class MultiDeviceCaptureUI(QWidget):
         self.sources = SourceRegistry()
         self.sessions = SessionRegistry()
         self.settings = multi_device_capture_settings
-        ffmpeg_path, _ffprobe_path = FFmpegHandler.get_ffmpeg_binary()
-        self.capabilities = CaptureCapabilities(ffmpeg_executable=ffmpeg_path)
+        self.capabilities = CaptureCapabilities(find_mediacap(os.path.join(get_parent_dir(), "bin")))
         self.engine = CaptureEngine(capabilities=self.capabilities, settings=self.settings, parent=self)
         self.thread = _EngineActivityThread(self.engine, self)
 
