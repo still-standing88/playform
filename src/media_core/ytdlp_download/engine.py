@@ -413,6 +413,7 @@ class YtDlpEntry:
             "category": self.category, "destination": self.destination,
             "parent": self.parent, "format_mode": self.format_mode,
             "status": self.status, "filepath": self.filepath, "error": self.error,
+            "progress_pct": self.progress_pct,
         }
 
     @staticmethod
@@ -429,6 +430,7 @@ class YtDlpEntry:
             parent=data.get("parent", ""),
             format_mode=data.get("format_mode", "original"),
             status=status,
+            progress_pct=data.get("progress_pct", 100.0 if status == STATUS_COMPLETED else 0.0),
             filepath=data.get("filepath", ""),
             error=data.get("error", ""),
         )
@@ -633,6 +635,7 @@ class YtDlpDownloadEngine:
         with self._lock:
             entry.status = STATUS_DOWNLOADING
             entry.progress_pct = 0.0
+            entry.speed = entry.eta = ""
             entry.error = ""
             self._persist()
         self.on_entry_updated(entry)
@@ -687,17 +690,10 @@ class YtDlpDownloadEngine:
             entry.progress_pct = float(match.group("pct"))
             entry.speed = match.group("speed") or ""
             entry.eta = match.group("eta") or ""
-            self.on_entry_updated(entry)
             return
-        match = _DESTINATION_RE.search(line) or _MERGER_RE.search(line)
+        match = _DESTINATION_RE.search(line) or _MERGER_RE.search(line) or _ALREADY_RE.search(line)
         if match:
             entry.filepath = match.group("path").strip()
-            self.on_entry_updated(entry)
-            return
-        match = _ALREADY_RE.search(line)
-        if match:
-            entry.filepath = match.group("path").strip()
-            self.on_entry_updated(entry)
 
     def _locate_output(self, entry: YtDlpEntry) -> str:
         if entry.filepath and os.path.isfile(entry.filepath):

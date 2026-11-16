@@ -2,9 +2,7 @@
 
 Singleton dialog like the regular Download Manager: a category tree
 (YouTube videos / playlists / channels / other), a per-category video
-list, a live status label + pause button, and a yt-dlp log pane. The
-queue engine runs in the background regardless of visibility; the status
-label, list, and log only refresh while the dialog is shown.
+list, a live status label + pause button, and a selected download progress pane.
 """
 
 import logging
@@ -13,7 +11,7 @@ import re
 import subprocess
 import sys
 
-from PySide6.QtCore import QObject, Qt, Signal, Slot
+from PySide6.QtCore import QObject, Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSplitter,
@@ -53,7 +51,6 @@ CATEGORY_LABELS = {
 class _EngineBridge(QObject):
     queue_changed = Signal()
     entry_updated = Signal(object)
-    log_line = Signal(str)
 
 
 def default_ytdlp_destination() -> str:
@@ -79,12 +76,12 @@ class YtDlpDownloaderDialog(QDialog):
 
         self._engine.on_queue_changed = self._bridge.queue_changed.emit
         self._engine.on_entry_updated = self._bridge.entry_updated.emit
-        self._engine.on_log_line = self._bridge.log_line.emit
         self._bridge.queue_changed.connect(self._refresh_all)
         self._bridge.entry_updated.connect(self._on_entry_updated)
-        self._bridge.log_line.connect(self._append_log)
 
         self._build_ui()
+        self._progress_timer = QTimer(self, interval=250)
+        self._progress_timer.timeout.connect(self._refresh_status)
         self._engine.start()
         self._refresh_categories()
         self._refresh_status()
@@ -137,6 +134,7 @@ class YtDlpDownloaderDialog(QDialog):
         self.video_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.video_list.customContextMenuRequested.connect(self._show_video_menu)
         self.video_list.itemDoubleClicked.connect(self._on_item_double_clicked)
+        self.video_list.currentItemChanged.connect(self._refresh_selected_progress)
         splitter.addWidget(self.video_list)
         splitter.setSizes([260, 700])
 
@@ -151,15 +149,15 @@ class YtDlpDownloaderDialog(QDialog):
         status_row.addWidget(self.pause_button)
         layout.addLayout(status_row)
 
-        self.log_edit = QPlainTextEdit(self)
-        self.log_edit.setReadOnly(True)
-        self.log_edit.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.log_edit.setTextInteractionFlags(
+        self.progress_edit = QPlainTextEdit(self)
+        self.progress_edit.setReadOnly(True)
+        self.progress_edit.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.progress_edit.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse
             | Qt.TextInteractionFlag.TextSelectableByKeyboard)
-        self.log_edit.setAccessibleName(_("yt-dlp log"))
-        self.log_edit.setMaximumHeight(120)
-        layout.addWidget(self.log_edit)
+        self.progress_edit.setAccessibleName(_("Selected download progress"))
+        self.progress_edit.setMaximumHeight(120)
+        layout.addWidget(self.progress_edit)
 
         bottom_row = QHBoxLayout()
         bottom_row.addStretch()
@@ -184,7 +182,6 @@ class YtDlpDownloaderDialog(QDialog):
         if not self._updates_allowed():
             return
         self._refresh_categories()
-        self._refresh_video_list()
         self._refresh_status()
 
     @Slot(object)
@@ -192,13 +189,17 @@ class YtDlpDownloaderDialog(QDialog):
         if not self._updates_allowed():
             return
         self._update_list_item(entry)
+        current = self.video_list.currentItem()
+        if current is not None and current.data(Qt.ItemDataRole.UserRole) == entry.id:
+            self._refresh_selected_progress()
         self._refresh_status()
 
-    @Slot(str)
-    def _append_log(self, line: str):
-        if not self._updates_allowed():
-            return
-        self.log_edit.appendPlainText(line)
+    def _refresh_selected_progress(self, *_items):
+        item = self.video_list.currentItem()
+        entry = self._engine.get_entry(item.data(Qt.ItemDataRole.UserRole)) if item else None
+        text = self._entry_text(entry) if entry else ""
+        if self.progress_edit.toPlainText() != text:
+            self.progress_edit.setPlainText(text)
 
     def _selected_node(self):
         item = self.category_tree.currentItem()
@@ -260,13 +261,20 @@ class YtDlpDownloaderDialog(QDialog):
 
     def _refresh_video_list(self):
         category, parent = self._selected_node()
+        current = self.video_list.currentItem()
+        selected_id = current.data(Qt.ItemDataRole.UserRole) if current else None
         self.video_list.clear()
         if category is None:
             return
         for entry in self._engine.get_entries(category):
             if parent is not None and (entry.parent or entry.title) != parent:
                 continue
-            self.video_list.addItem(self._make_list_item(entry))
+            item = self._make_list_item(entry)
+            self.video_list.addItem(item)
+            if entry.id == selected_id:
+                self.video_list.setCurrentItem(item)
+        if self.video_list.currentItem() is None and self.video_list.count():
+            self.video_list.setCurrentRow(0)
 
     @staticmethod
     def _entry_text(entry) -> str:
@@ -285,7 +293,9 @@ class YtDlpDownloaderDialog(QDialog):
             if entry.eta:
                 details += f" · ETA {entry.eta}"
             text = f"{text} ({details})"
-        elif entry.error:
+        elif entry.status in (STATUS_PAUSED, STATUS_COMPLETED) and entry.progress_pct:
+            text = f"{text} ({entry.progress_pct:.1f}%)"
+        if entry.error:
             text = f"{text} ({entry.error})"
         return text
 
@@ -325,6 +335,8 @@ class YtDlpDownloaderDialog(QDialog):
         summary = " · ".join(summary_parts)
 
         if current is not None:
+            self._update_list_item(current)
+            self._refresh_selected_progress()
             text = _("Downloading {title} — {pct}% at {speed}, ETA {eta}").format(
                 title=current.title, pct=f"{current.progress_pct:.1f}",
                 speed=current.speed or "—", eta=current.eta or "—")
@@ -639,6 +651,14 @@ class YtDlpDownloaderDialog(QDialog):
         self.raise_()
         self.activateWindow()
         self._refresh_all()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._progress_timer.start()
+
+    def hideEvent(self, event):
+        self._progress_timer.stop()
+        super().hideEvent(event)
 
     @Slot()
     def _on_minimize(self):
