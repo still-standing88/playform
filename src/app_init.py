@@ -4,7 +4,7 @@ import threading
 import locale
 
 from pathlib import Path
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QEventLoop, Qt, QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from utilities.i18n import install_translation
@@ -18,6 +18,7 @@ def _log(msg: str) -> None:
         out.flush()
 
 LOCAL_SERVER_NAME = "PlayFormLocalIPC"
+FOCUS_REQUEST = "\n"
 
 
 def _clean_path_arg(raw_arg: str) -> str:
@@ -35,13 +36,22 @@ def _send_via_local_socket(path: str) -> bool:
     socket.connectToServer(LOCAL_SERVER_NAME)
     if not socket.waitForConnected(3000):
         return False
-    socket.write(f"{path}\n".encode("utf-8"))
-    if not socket.waitForBytesWritten(3000):
+    loop = QEventLoop()
+    timer = QTimer(singleShot=True)
+    timer.timeout.connect(loop.quit)
+    socket.readyRead.connect(loop.quit)
+    socket.disconnected.connect(loop.quit)
+    payload = (FOCUS_REQUEST if path == FOCUS_REQUEST else path + "\n").encode("utf-8")
+    if socket.write(payload) != len(payload):
         socket.disconnectFromServer()
         return False
     socket.flush()
+    if not socket.bytesAvailable():
+        timer.start(3000)
+        loop.exec()
+    acknowledged = bytes(socket.read(1)) == b"\n"
     socket.disconnectFromServer()
-    return True
+    return acknowledged
 
 
 def _allow_foreground() -> None:
@@ -61,11 +71,6 @@ def _allow_foreground() -> None:
         ctypes.windll.user32.AllowSetForegroundWindow(-1)  # ASFW_ANY
     except Exception:
         pass
-
-
-def _deliver_path(window, path: str) -> None:
-    window.load_external_path(path)
-    window.bring_to_front()
 
 
 def setup_environment():
@@ -113,10 +118,8 @@ def initialize_app_guard(cli_args):
 
     if not app_instance.is_primary_instance():
         _allow_foreground()
-        for raw_arg in cli_args[1:]:
-            path = _clean_path_arg(raw_arg)
-            if not path:
-                continue
+        paths = list(filter(None, map(_clean_path_arg, cli_args[1:])))
+        for path in paths or [FOCUS_REQUEST]:
             _log(f"[PlayForm IPC] Secondary sending: {path}\n")
             if not _send_via_local_socket(path):
                 app_instance.send_msg_request("cli-args", path)
@@ -177,7 +180,9 @@ def start_local_server(window):
         client = server.nextPendingConnection()
         if not client:
             return
+        client.disconnected.connect(client.deleteLater)
         client.readyRead.connect(lambda c=client: _read_client(c, window))
+        _read_client(client, window)
 
     server.newConnection.connect(on_new_connection)
     _log(f"[PlayForm IPC] Primary: local server started\n")
@@ -185,28 +190,25 @@ def start_local_server(window):
 
 
 def _read_client(client, window):
-    data = client.readAll()
-    if not data:
+    if client.property("requestReceived") or not client.canReadLine():
         return
-    paths = [
-        path.strip()
-        for path in data.data().decode("utf-8").splitlines()
-        if path.strip()
-    ]
-    client.disconnectFromServer()
-    for path in paths:
-        _log(f"[PlayForm IPC] Primary local: received '{path}'\n")
-        QTimer.singleShot(0, lambda p=path: _deliver_path(window, p))
+    path = bytes(client.readLine()).decode("utf-8").removesuffix("\n")
+    client.setProperty("requestReceived", True)
+    client.write(b"\n")
+    client.flush()
+    window.external_launch_requested.emit(path)
 
 
 def setup_ipc_handlers(app_instance, window):
-    import app_guard
+    window.external_launch_requested.connect(
+        window.handle_external_launch, Qt.ConnectionType.QueuedConnection
+    )
 
     def handle_cli_args(data):
         _log(f"[PlayForm IPC] AppGuard received: {data}\n")
         path = data.get("msg_data", "") if isinstance(data, dict) else ""
         if path:
-            QTimer.singleShot(0, lambda p=path: _deliver_path(window, p))
+            window.external_launch_requested.emit("" if path == FOCUS_REQUEST else path)
 
     cli_args_msg = app_instance.create_ipc_msg("cli-args", handle_cli_args)
     app_instance.register_msg(cli_args_msg)

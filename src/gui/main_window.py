@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QFileDialog, QInputDialog, QApplication, QMessageBox, QDialog,
     QPushButton
 )
-from PySide6.QtCore import Qt, Signal, QTimer, QUrl
+from PySide6.QtCore import Qt, Signal, Slot, QTimer, QUrl
 from PySide6.QtGui import QAction, QIcon, QKeySequence
 
 from app_db import UserFiles
@@ -72,6 +72,7 @@ def _announce_downloads(text):
 
 class MainWindow(QMainWindow):
     fileOpened = Signal(str)
+    external_launch_requested = Signal(str)
     urlOpened = Signal(str)
     playerReady = Signal()
     _mpvWarmupDone = Signal()
@@ -892,12 +893,13 @@ class MainWindow(QMainWindow):
                 self.raise_()
                 self.activateWindow()
 
+    @Slot(str)
+    def handle_external_launch(self, path: str):
+        self.bring_to_front()
+        if path:
+            self.load_external_path(path)
+
     def bring_to_front(self):
-        # Called when a path arrives from outside the app (file association
-        # launch, a second instance handing this one a file): without this the
-        # file played invisibly behind whatever else is on screen, or stayed
-        # hidden in the tray. Deliberately Qt-level rather than AppGuard's
-        # native focus_window, which is what used to do (or fail to do) this.
         if self.tray and self.tray.is_available():
             self.tray.show_window()
             return

@@ -36,6 +36,11 @@ def main():
     app.setOrganizationDomain(APP_WEBSITE)
     from utilities.icon_loader import get_app_icon
     app.setWindowIcon(get_app_icon())
+
+    from app_init import initialize_app_guard
+    app_instance, should_exit = initialize_app_guard(cli_args)
+    if should_exit:
+        sys.exit(0)
     
     from loading import LoadingSplash
     splash = LoadingSplash()
@@ -46,7 +51,6 @@ def main():
         from app_init import (
             setup_environment,
             setup_application_style,
-            initialize_app_guard,
             initialize_modules,
             create_main_window,
             start_local_server,
@@ -56,12 +60,6 @@ def main():
         
         BASE_DIR = setup_environment()
         setup_application_style(app)
-        app_instance, should_exit = initialize_app_guard(cli_args)
-
-        if should_exit:
-            splash.close()
-
-            sys.exit(0)
         app_db, key_config = initialize_modules(splash)
         window = create_main_window(splash, cli_args)
         window.local_ipc_server = start_local_server(window)
