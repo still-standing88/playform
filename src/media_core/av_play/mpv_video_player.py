@@ -614,13 +614,10 @@ class MPVMediaInterface(AVMediaInterface):
 
     def set_loop(self, id: int, loop: bool):
         self._check_instance(id)
-        gen = self.__generation
         loop_value = "inf" if loop else "no"
 
         def set_loop_mode():
-            if gen != self.__generation:
-                return
-            self._mpv().loop = loop_value
+            self._mpv().loop_file = loop_value
         self._submit(set_loop_mode, wait=False)
 
     def get_length(self, id: int) -> int:
@@ -706,7 +703,7 @@ class MPVMediaInterface(AVMediaInterface):
         self._check_instance(id)
 
         def get_loop_state():
-            return self._mpv().loop
+            return self._mpv().loop_file
         loop_val = self._submit(get_loop_state, wait=True, timeout=0.5)
         return loop_val == "inf" if loop_val is not None else False
 

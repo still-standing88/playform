@@ -264,8 +264,8 @@ class ExplorerWidget(QWidget):
         controls_layout.addWidget(self.autoplay_cb)
 
         self.loop_cb = QCheckBox(_("Loop"))
-        self.loop_cb.stateChanged.connect(self.loopState)
         self.loop_cb.setChecked(prefs.prefs.get("explorer_loop", False))
+        self.loop_cb.toggled.connect(self.loopState)
         controls_layout.addWidget(self.loop_cb)
         controls_layout.addStretch()
 
@@ -364,9 +364,8 @@ class ExplorerWidget(QWidget):
                 prefs.prefs['autoplay'] = False
         prefs.save()
 
-    @Slot(int)
-    def loopState(self, state):
-        enabled = state == 2
+    @Slot(bool)
+    def loopState(self, enabled):
         prefs.prefs['explorer_loop'] = enabled
         prefs.save()
         self.explorer_view.set_loop_enabled(enabled)
