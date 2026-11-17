@@ -35,12 +35,11 @@ from PySide6.QtWidgets import (
 )
 
 from media_core.av_capture.capabilities import CaptureCapabilities
-from media_core.av_capture.mediacap import AUDIO_CONTAINERS
 from app_constance.styles import error_color
 
 from ..device_status import DeviceStatusChecker
 from ..dialogs import SessionDialog, SourceWizard
-from ..models import CaptureSource, Session, is_video, new_id
+from ..models import CaptureSource, Session, new_id
 from ..registries import SessionRegistry, SourceRegistry
 from ..settings import MultiDeviceCaptureSettings
 
@@ -149,11 +148,17 @@ class ConfigureView(QWidget):
             self._pending_session = Session(
                 id=new_id(), name=_("Untitled session"), source_ids=[],
                 output_dir=self.settings.get("default_output_dir", ""),
-                container_format=self.settings.get("default_container", "mkv"),
+                **self.settings.get_output_formats(),
             )
 
     def _is_pending(self, session: Session) -> bool:
         return self._pending_session is not None and session.id == self._pending_session.id
+
+    def refresh_format_defaults(self) -> None:
+        if self._pending_session is not None:
+            formats = self.settings.get_output_formats()
+            self._pending_session.audio_format = formats["audio_format"]
+            self._pending_session.video_format = formats["video_format"]
 
     def _promote_pending_session(self, session: Session) -> None:
         """Called the moment a source is first added to the pending
@@ -259,7 +264,7 @@ class ConfigureView(QWidget):
     def _create_new_session(self) -> None:
         dlg = SessionDialog(
             default_output_dir=self.settings.get("default_output_dir", ""),
-            default_container=self.settings.get("default_container", "mkv"), parent=self,
+            parent=self, **self.settings.get_output_formats(),
         )
         if dlg.exec() == QDialog.DialogCode.Accepted:
             session = dlg.result_session()
@@ -472,9 +477,5 @@ class ConfigureView(QWidget):
         selected = [s for s in selected if s is not None and s.enabled]
         if not selected:
             QMessageBox.information(self, _("No sources"), _("This session has no enabled sources."))
-            return
-        if session.container_format in AUDIO_CONTAINERS and any(is_video(source.media_type) for source in selected):
-            QMessageBox.warning(self, _("Output format"),
-                                _("Choose MKV, MP4, or WebM in Session options to record video sources."))
             return
         self.start_capture_requested.emit(session, selected)

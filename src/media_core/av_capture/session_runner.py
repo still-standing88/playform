@@ -9,6 +9,7 @@ from time import monotonic
 from uuid import uuid4
 
 from .mediacap import PROCESS_OPTIONS, recording_args
+from .models import VIDEO_KINDS
 
 
 @dataclass
@@ -51,13 +52,6 @@ class CaptureSessionRunner:
         if not self.capabilities.executable:
             self._on_source_error("", "MediaCap was not found. Install it in PlayForm's bin folder or on PATH.")
             return False
-        output_dir = os.path.abspath(os.path.expanduser(self.session.output_dir))
-        try:
-            os.makedirs(output_dir, exist_ok=True)
-        except OSError as exc:
-            self._on_source_error("", f"Could not create output directory: {exc}")
-            return False
-
         enabled_sources = [source for source in self.sources if source.enabled]
         devices_by_kind = {}
         discovery_errors = {}
@@ -67,19 +61,34 @@ class CaptureSessionRunner:
             except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
                 discovery_errors[kind] = str(exc)
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        container = "mp4" if self.session.container == "mov" else self.session.container
+        available_sources = []
         for source in enabled_sources:
             if source.kind in discovery_errors:
                 self._on_source_error(source.id, discovery_errors[source.kind])
                 continue
+            device = self.capabilities.resolve_device(
+                devices_by_kind[source.kind], source.device_id, source.device_name or source.settings.get("screen_name", ""),
+            )
+            if device is None:
+                self._on_source_error(source.id, "The device is no longer available. Edit the source to select it again.")
+                continue
+            available_sources.append((source, device))
+
+        if not available_sources:
+            return False
+
+        output_dir = os.path.abspath(os.path.expanduser(self.session.output_dir))
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+        except OSError as exc:
+            self._on_source_error("", f"Could not create output directory: {exc}")
+            return False
+
+        has_video = any(device.kind in VIDEO_KINDS for _, device in available_sources)
+        container = self.session.video_format if has_video else self.session.audio_format
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        for source, device in available_sources:
             try:
-                devices = devices_by_kind[source.kind]
-                device = self.capabilities.resolve_device(
-                    devices, source.device_id, source.device_name or source.settings.get("screen_name", ""),
-                )
-                if device is None:
-                    raise RuntimeError("The device is no longer available. Edit the source to select it again.")
                 name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", source.friendly_name).strip(" .")[:90] or "capture"
                 path = os.path.join(output_dir, f"{name}_{timestamp}_{uuid4().hex[:8]}.{container}")
                 args = recording_args(device, source.settings, container, path)

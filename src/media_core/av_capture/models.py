@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Optional
+from typing import Optional, Self
 
 
 class MediaKind(Enum):
@@ -18,6 +18,21 @@ class MediaKind(Enum):
 
 VIDEO_KINDS = (MediaKind.CAMERA, MediaKind.MONITOR, MediaKind.WINDOW)
 AUDIO_KINDS = (MediaKind.AUDIO_INPUT, MediaKind.AUDIO_OUTPUT, MediaKind.AUDIO_PROCESS, MediaKind.AUDIO_MIX)
+VIDEO_CONTAINERS = ("mkv", "mp4", "webm")
+AUDIO_CONTAINERS = ("m4a", "wav", "flac", "mp3", "opus")
+DEFAULT_VIDEO_FORMAT = "mkv"
+DEFAULT_AUDIO_FORMAT = "wav"
+
+
+def output_formats(audio=None, video=None, legacy=None) -> dict[str, str]:
+    if legacy == "mov":
+        legacy = "mp4"
+    audio_default = legacy if legacy in AUDIO_CONTAINERS else DEFAULT_AUDIO_FORMAT
+    video_default = legacy if legacy in VIDEO_CONTAINERS else DEFAULT_VIDEO_FORMAT
+    return {
+        "audio_format": audio if audio in AUDIO_CONTAINERS else audio_default,
+        "video_format": video if video in VIDEO_CONTAINERS else video_default,
+    }
 
 
 def new_id() -> str:
@@ -98,16 +113,18 @@ class CaptureSourceConfig:
 
 @dataclass
 class CaptureSessionConfig:
-    """A saved capture configuration. Stores its own settings snapshot for
-    any field it overrides; anything not overridden resolves against global
-    defaults at capture-start time."""
-
     id: str
     name: str
     source_ids: list[str] = field(default_factory=list)
     output_dir: str = ""
-    container: str = "mkv"
+    audio_format: str = DEFAULT_AUDIO_FORMAT
+    video_format: str = DEFAULT_VIDEO_FORMAT
     settings_override: Optional[dict] = None
+
+    def __post_init__(self) -> None:
+        formats = output_formats(self.audio_format, self.video_format)
+        self.audio_format = formats["audio_format"]
+        self.video_format = formats["video_format"]
 
     def to_dict(self) -> dict:
         return {
@@ -115,17 +132,21 @@ class CaptureSessionConfig:
             "name": self.name,
             "source_ids": list(self.source_ids),
             "output_dir": self.output_dir,
-            "container": self.container,
+            "audio_format": self.audio_format,
+            "video_format": self.video_format,
             "settings_override": self.settings_override,
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "CaptureSessionConfig":
+    def from_dict(cls, data: dict) -> Self:
         return cls(
             id=data["id"],
             name=data.get("name", ""),
             source_ids=list(data.get("source_ids", [])),
             output_dir=data.get("output_dir", ""),
-            container=data.get("container", data.get("container_format", "mkv")),
             settings_override=data.get("settings_override"),
+            **output_formats(
+                data.get("audio_format"), data.get("video_format"),
+                data.get("container_format") or data.get("container"),
+            ),
         )

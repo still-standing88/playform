@@ -13,8 +13,16 @@ VIDEO_SOURCE = {
     MediaKind.MONITOR: ("screen", "--monitor"),
     MediaKind.WINDOW: ("window", "--window"),
 }
-VIDEO_CONTAINERS = ("mkv", "mp4", "webm")
-AUDIO_CONTAINERS = ("m4a", "wav", "flac", "mp3", "opus")
+AUDIO_CODEC_LIMITS = {
+    "m4a": {"aac"},
+    "mp4": {"aac", "mp3", "opus", "flac", "pcm"},
+    "flac": {"flac"},
+    "mp3": {"mp3"},
+    "opus": {"opus"},
+    "webm": {"opus", "vorbis"},
+    "wav": {"pcm", "mp3"},
+}
+VIDEO_CODEC_LIMITS = {"webm": {"vp9", "av1"}}
 
 
 def escape_audio_id(value):
@@ -95,14 +103,20 @@ def recording_args(device, settings, container, output):
             "sample_rate": "--sample-rate", "channels": "--channels",
             "audio_codec": "--audio-codec", "audio_bitrate": "--audio-bitrate",
         }
+        codec_key = "audio_codec"
+        compatible_codecs = AUDIO_CODEC_LIMITS.get(container)
     else:
         options = {
             "fps": "--fps", "output_size": "--size",
             "video_codec": "--video-codec", "video_bitrate": "--video-bitrate",
         }
+        codec_key = "video_codec"
+        compatible_codecs = VIDEO_CODEC_LIMITS.get(container)
     for key, option in options.items():
         value = settings.get(key)
         if key == "fps" and not value:
+            continue
+        if key == codec_key and compatible_codecs is not None and value not in compatible_codecs:
             continue
         if value is not None and value not in ("", "Passthrough"):
             args += [option, str(value)]

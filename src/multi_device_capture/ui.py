@@ -112,7 +112,8 @@ class MultiDeviceCaptureUI(QWidget):
             QMessageBox.warning(self, _("Capture error"), message)
 
     def _open_settings(self) -> None:
-        SettingsDialog(self.settings, parent=self).exec()
+        if SettingsDialog(self.settings, parent=self).exec():
+            self.configure_view.refresh_format_defaults()
 
     # -- hotkeys: Start / Pause-Resume / Stop capture --------------------
     #

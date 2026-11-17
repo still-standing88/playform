@@ -1,15 +1,3 @@
-"""Session editor: name, output directory, container format only.
-
-The source checklist the previous version of this dialog had is gone -
-sources are now managed directly from the (session-scoped) source list in
-views/configure_view.py, "Add source" attaches straight to whichever
-session is selected rather than going through a separate assign-to-session
-step here. The "use custom audio/video settings for this session" checkbox
-is gone too: it toggled Session.settings_override between {} and None, but
-nothing ever read that field to actually override anything - dropped rather
-than kept as a control with no effect. The field itself is still accepted
-on load for old sessions.json files, just not exposed here.
-"""
 from __future__ import annotations
 
 from typing import Optional
@@ -26,14 +14,16 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from media_core.av_capture.mediacap import AUDIO_CONTAINERS, VIDEO_CONTAINERS
+from media_core.av_capture.models import (
+    AUDIO_CONTAINERS, VIDEO_CONTAINERS, DEFAULT_AUDIO_FORMAT, DEFAULT_VIDEO_FORMAT,
+)
 
 from ..models import Session, default_capture_directory, new_id
 
 
 class SessionDialog(QDialog):
     def __init__(self, session: Optional[Session] = None, default_output_dir: str = "",
-                 default_container: str = "mkv", parent=None):
+                 *, audio_format: str = DEFAULT_AUDIO_FORMAT, video_format: str = DEFAULT_VIDEO_FORMAT, parent=None):
         super().__init__(parent)
         self.setWindowTitle(_("Edit session") if session else _("New session"))
         self._session = session
@@ -54,11 +44,16 @@ class SessionDialog(QDialog):
         browse_row.addWidget(browse_btn)
         form.addRow(_("Output directory"), browse_row)
 
-        self.container_combo = QComboBox()
-        self.container_combo.addItems(VIDEO_CONTAINERS + AUDIO_CONTAINERS)
-        container = session.container_format if session else default_container
-        self.container_combo.setCurrentText("mp4" if container == "mov" else container)
-        form.addRow(_("Output format"), self.container_combo)
+        self.audio_format_combo = QComboBox()
+        self.audio_format_combo.addItems(AUDIO_CONTAINERS)
+        self.audio_format_combo.setCurrentText(session.audio_format if session else audio_format)
+        form.addRow(_("Audio-only format"), self.audio_format_combo)
+
+        self.video_format_combo = QComboBox()
+        self.video_format_combo.addItems(VIDEO_CONTAINERS)
+        self.video_format_combo.setCurrentText(session.video_format if session else video_format)
+        self.video_format_combo.setToolTip(_("Used for the session when an enabled video source is available."))
+        form.addRow(_("Video format"), self.video_format_combo)
 
         layout.addLayout(form)
 
@@ -82,12 +77,14 @@ class SessionDialog(QDialog):
     def result_session(self) -> Session:
         name = self.name_edit.text().strip()
         output_dir = self.output_edit.text().strip() or self._default_output_dir
-        container = self.container_combo.currentText()
+        audio_format = self.audio_format_combo.currentText()
+        video_format = self.video_format_combo.currentText()
 
         if self._session:
             self._session.name = name
             self._session.output_dir = output_dir
-            self._session.container_format = container
+            self._session.audio_format = audio_format
+            self._session.video_format = video_format
             return self._session
 
-        return Session(id=new_id(), name=name, source_ids=[], output_dir=output_dir, container_format=container)
+        return Session(id=new_id(), name=name, output_dir=output_dir, audio_format=audio_format, video_format=video_format)

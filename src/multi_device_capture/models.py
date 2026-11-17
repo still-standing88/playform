@@ -112,44 +112,9 @@ def default_capture_directory() -> str:
 
 
 class Session(CaptureSessionConfig):
-    """CaptureSessionConfig with the previous `container_format` field name
-    kept as the public attribute (persisted JSON already uses it)."""
-
-    def __init__(self, id: str, name: str, source_ids: Optional[list] = None, output_dir: str = "",
-                 container_format: str = "mkv", settings_override: Optional[dict] = None):
-        super().__init__(
-            id=id, name=name, source_ids=source_ids or [], output_dir=output_dir or default_capture_directory(),
-            container=container_format, settings_override=settings_override,
-        )
-
-    @property
-    def container_format(self) -> str:
-        return self.container
-
-    @container_format.setter
-    def container_format(self, value: str) -> None:
-        self.container = value
-
-    @classmethod
-    def from_dict(cls, data: dict) -> "Session":
-        return cls(
-            id=data["id"],
-            name=data.get("name", ""),
-            source_ids=list(data.get("source_ids", [])),
-            output_dir=data.get("output_dir", ""),
-            container_format=data.get("container_format", data.get("container", "mkv")),
-            settings_override=data.get("settings_override"),
-        )
-
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "name": self.name,
-            "source_ids": list(self.source_ids),
-            "output_dir": self.output_dir,
-            "container_format": self.container_format,
-            "settings_override": self.settings_override,
-        }
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.output_dir = self.output_dir or default_capture_directory()
 
 
 __all__ = ["CaptureSource", "MediaType", "Session", "is_audio", "is_video", "media_type_label", "new_id"]

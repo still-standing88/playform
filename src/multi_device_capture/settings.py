@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import os
 
+from media_core.av_capture.models import output_formats
 from utilities.functions import get_app_path
 
 SETTINGS_KEY = "multi_device_capture_settings"
@@ -25,7 +26,7 @@ DEFAULT_SETTINGS = {
     "hotkeys_enabled": True,
     "last_active_session_id": "",
     "default_output_dir": "",
-    "default_container": "mkv",
+    **output_formats(),
     "notify_on_finish": True,
 }
 
@@ -40,6 +41,9 @@ class MultiDeviceCaptureSettings:
 
     def get_video(self) -> dict:
         return dict(self.data.get("video", DEFAULT_SETTINGS["video"]))
+
+    def get_output_formats(self) -> dict[str, str]:
+        return output_formats(self.data.get("audio_format"), self.data.get("video_format"))
 
     def set_audio(self, values: dict) -> None:
         self.data.setdefault("audio", {}).update(values)
@@ -82,6 +86,9 @@ class MultiDeviceCaptureSettings:
                 merged[key].update(value)
             else:
                 merged[key] = value
+        merged.update(output_formats(
+            loaded.get("audio_format"), loaded.get("video_format"), merged.pop("default_container", None),
+        ))
         self.data = merged
 
 
