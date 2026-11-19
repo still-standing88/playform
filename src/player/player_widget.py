@@ -210,8 +210,9 @@ class PlayerWidget(QWidget):
         self.accordion_scroll = QScrollArea(self)
         self.accordion_scroll.setWidget(self.side_accordion)
         self.accordion_scroll.setWidgetResizable(True)
+        self.side_accordion.layout().setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         self.accordion_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self.accordion_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.accordion_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         # A floor on its own height still matters even as a side pane -
         # main_splitter gives every pane the full row height, but that row
         # height is itself bounded below by the tallest pane's minimum, so

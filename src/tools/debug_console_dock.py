@@ -28,6 +28,7 @@ class DebugConsoleDock(QDockWidget):
         self.setWidget(container)
         layout = QVBoxLayout(container)
         info = QLabel(_("Console output. Tab key won't insert tabs inside editor."))
+        info.setWordWrap(True)
         info.setObjectName("consoleInfoLabel")
         layout.addWidget(info)
 

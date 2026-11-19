@@ -11,6 +11,7 @@ from PySide6.QtGui import QIcon, QFont
 
 from gui_controls.toggle_button import ToggleButton
 from gui_controls.flow_layout import FlowLayout, FlowContainer
+from gui_controls.elided_label import ElidedLabel
 from app_config import prefs
 from .dialogs.bookmarks_dialog import BookmarksDialog
 from .dialogs.goto_dialog import GoToDialog
@@ -243,7 +244,7 @@ class PlayerControls(QWidget):
         self.time_label.setMinimumWidth(100)
         self.time_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
 
-        self.current_track_label = QLabel(_("No media loaded"), self)
+        self.current_track_label = ElidedLabel(_("No media loaded"), self)
         self.current_track_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.current_track_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.current_track_label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -264,8 +265,7 @@ class PlayerControls(QWidget):
         self.main_layout.setSpacing(10)
 
         self.track_layout = QHBoxLayout()
-        self.track_layout.addWidget(self.current_track_label)
-        self.track_layout.addStretch()
+        self.track_layout.addWidget(self.current_track_label, 1)
 
         # The seek bar stays its own always-full-width row - unlike the
         # buttons below, it needs to stay wide to be usable, not wrap.

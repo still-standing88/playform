@@ -1,9 +1,10 @@
-from PySide6.QtWidgets import QToolBar, QMenu, QDialog, QLabel, QWidget, QToolButton, QFrame, QSizePolicy
+from PySide6.QtWidgets import QToolBar, QMenu, QDialog, QWidget, QToolButton, QFrame, QSizePolicy, QHBoxLayout
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from app_config.toolbar_config import toolbar_config
 from gui.dialogs.toolbar_customize_dialog import ToolbarCustomizeDialog
 from gui_controls.flow_layout import FlowLayout, FlowContainer
+from gui_controls.elided_label import ElidedLabel
 
 class ToolbarManager:
     def __init__(self, main_window):
@@ -84,20 +85,27 @@ class ToolbarManager:
         float."""
         mw = self.main_window
         flow = self._panels_flow
+        group = QWidget()
+        group.setAccessibleName(label_text)
+        group_layout = QHBoxLayout(group)
+        group_layout.setContentsMargins(0, 0, 0, 0)
+        group_layout.setSpacing(6)
 
         if flow.count():
             separator = QFrame()
             separator.setFrameShape(QFrame.Shape.VLine)
             separator.setFrameShadow(QFrame.Shadow.Sunken)
-            flow.addWidget(separator)
+            group_layout.addWidget(separator)
 
-        flow.addWidget(QLabel(label_text))
+        label = ElidedLabel(label_text)
+        label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        group_layout.addWidget(label)
 
         show_button = QToolButton()
         show_button.setDefaultAction(show_action)
         show_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         show_button.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        flow.addWidget(show_button)
+        group_layout.addWidget(show_button)
 
         float_action = QAction(_("Float"), mw)
         float_action.setCheckable(True)
@@ -107,13 +115,21 @@ class ToolbarManager:
         float_button.setDefaultAction(float_action)
         float_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         float_button.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        flow.addWidget(float_button)
+        group_layout.addWidget(float_button)
+        # Wrap a pane's label and buttons together, so a label at the end
+        # of one row cannot be separated from its controls on the next.
+        flow.addWidget(group)
 
         # The group label already names the pane, so the show/hide button's
         # own full action text ("Show &Radio Browser") is redundant width -
         # shorten just this button's display text, leaving show_action.text()
         # (and its View-menu entry) untouched.
-        show_button.setText(show_button_text or _("Show"))
+        short_text = show_button_text or _("Show")
+        show_button.setText(short_text)
+        # Updating the menu action's checked/text state also resets a
+        # QToolButton's text. Keep the toolbar's compact label across panel
+        # visibility changes instead of growing each row unexpectedly.
+        show_action.changed.connect(lambda: show_button.setText(short_text))
 
         for button in (show_button, float_button):
             if self._first_tab_widget is None:

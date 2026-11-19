@@ -54,7 +54,7 @@ class DockManager:
     def setup_dock_widgets(self):
         self.recents_favorites_dock = FloatableDockWidget(_("Recents && Favorites"), self.main_window)
         self.recents_favorites_dock.setObjectName("recentsFavoritesDock")
-        self.recents_favorites_dock.setWidget(self.main_window.recents_and_favorites_widget)
+        self.recents_favorites_dock.set_scrollable_widget(self.main_window.recents_and_favorites_widget)
         self.recents_favorites_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
         self.recents_favorites_dock.setFeatures(self._floatable_features())
         self._make_float_a_real_window(self.recents_favorites_dock)
@@ -96,7 +96,7 @@ class DockManager:
         self.player_dock = FloatableDockWidget(_("Player"), self.main_window)
         self.player_dock.setObjectName("playerDock")
         if self.main_window.player_widget is not None:
-            self.player_dock.setWidget(self.main_window.player_widget)
+            self.player_dock.set_scrollable_widget(self.main_window.player_widget)
         else:
             self.player_dock.setWidget(self._make_player_placeholder())
         self.player_dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
@@ -275,7 +275,7 @@ class DockManager:
             self.main_window.radio_widget.play_requested.connect(self.main_window.urlOpened.emit)
             self.main_window.radio_dock = FloatableDockWidget(_("Radio Browser"), self.main_window)
             self.main_window.radio_dock.setObjectName("radioDock")
-            self.main_window.radio_dock.setWidget(self.main_window.radio_widget)
+            self.main_window.radio_dock.set_scrollable_widget(self.main_window.radio_widget)
             self.main_window.radio_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
             self.main_window.radio_dock.setFeatures(self._floatable_features())
             self._make_float_a_real_window(self.main_window.radio_dock)
@@ -293,7 +293,7 @@ class DockManager:
             self.main_window.podcast_widget.episode_download_all_requested.connect(self.main_window.queue_podcast_all_download)
             self.main_window.podcast_dock = FloatableDockWidget(_("Podcasts"), self.main_window)
             self.main_window.podcast_dock.setObjectName("podcastDock")
-            self.main_window.podcast_dock.setWidget(self.main_window.podcast_widget)
+            self.main_window.podcast_dock.set_scrollable_widget(self.main_window.podcast_widget)
             self.main_window.podcast_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
             self.main_window.podcast_dock.setFeatures(self._floatable_features())
             self._make_float_a_real_window(self.main_window.podcast_dock)
@@ -374,20 +374,11 @@ class DockManager:
             self._fit_again = False
             self._schedule_clamp_to_screen()
 
-    # The window's own ideal, comfortable minimum - not necessarily what
-    # any given screen can actually offer. Recomputed against the current
-    # screen on every clamp_to_screen() pass rather than set once, so a
-    # bigger monitor always gets the full width/height back.
-    #
-    # 1350, not 1200: the panels toolbar's FlowLayout wraps into a 3rd row
-    # somewhere between 1220-1320px wide (verified live) - a 3rd row eats
-    # ~45px of extra chrome height that the status-bar-fit shrink chain
-    # below doesn't budget for, so a too-narrow window starves the status
-    # bar the same way a too-short one used to. Keeping width above the
-    # 2-row threshold avoids that entirely instead of trying to claw the
-    # extra height back from dock content floors after the fact.
-    IDEAL_MIN_WIDTH = 1350
-    IDEAL_MIN_HEIGHT = 800
+    # Dock contents can scroll, so desktop windows need not be forced to
+    # 1350px wide merely to avoid toolbar wrapping. Cap even this smaller
+    # minimum against the screen's usable area.
+    IDEAL_MIN_WIDTH = 800
+    IDEAL_MIN_HEIGHT = 600
 
     def _resync_min_height(self, mw, available):
         # setMinimumSize() is a hard floor Qt enforces on every subsequent
@@ -418,6 +409,8 @@ class DockManager:
         SCREEN_FIT_SAFETY_MARGIN = 16
         target_min_w = max(0, min(self.IDEAL_MIN_WIDTH, available.width() - frame_extra_w))
         target_min_h = max(0, min(self.IDEAL_MIN_HEIGHT, available.height() - frame_extra_h - SCREEN_FIT_SAFETY_MARGIN))
+        target_w = max(target_min_w, min(mw.width(), available.width() - frame_extra_w))
+        target_h = max(target_min_h, min(mw.height(), available.height() - frame_extra_h - SCREEN_FIT_SAFETY_MARGIN))
         mw.setMinimumSize(target_min_w, target_min_h)
 
         # Dock content floors (Explorer's, Player's accordion, the video
@@ -452,8 +445,9 @@ class DockManager:
         # cleared immediately, so this never becomes a standing restriction
         # that would stop the user resizing the window taller later (e.g.
         # after moving to a bigger monitor).
-        mw.setMaximumHeight(target_min_h)
-        mw.resize(target_min_w, target_min_h)
+        # Preserve the user's chosen size when toggling panels or zooming.
+        mw.setMaximumHeight(target_h)
+        mw.resize(target_w, target_h)
 
         QTimer.singleShot(0, lambda: self._resync_status_bar_step(mw, 0))
 

@@ -22,3 +22,9 @@ src/assets_rc.py
 
 /release_gh.py
 /change-log.md
+
+# Local test scripts and GUI review artifacts
+tests/
+test_*.py
+*_test.py
+/docs/source/gui-layout-review-*.md

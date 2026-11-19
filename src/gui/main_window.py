@@ -30,6 +30,7 @@ from utilities.announcement_categories import AnnouncementCategory
 import utilities.mpv_bootstrap
 from media_core.av_play import Playlist, PlaylistEntry
 from gui_controls.key_event_filter import ShortcutManager
+from gui_controls.elided_label import ElidedLabel
 from app_constance.file_filter import file_filter
 from tools.logs_viewer_dialog import LogsViewerDialog
 from tools.debug_console_dock import DebugConsoleDock
@@ -151,15 +152,9 @@ class MainWindow(QMainWindow):
 
 
         self.setWindowTitle("PlayForm")
-        # A flat 1200x800 floor is bigger than plenty of real screens (e.g.
-        # 1366x768 laptops, ~720px tall after the taskbar), and Qt then
-        # refuses to ever shrink the window below it - this is what was
-        # pushing the status bar off the bottom of the screen. This initial
-        # value is just a reasonable pre-layout guess; restore_window_state()
-        # (called at the end of __init__) schedules clamp_to_screen(), which
-        # owns the real, frame-aware, screen-relative version of this floor
-        # and corrects it within one event loop tick regardless.
-        self.setMinimumSize(1200, 800)
+        # The dock manager caps this minimum against the usable screen area
+        # after the window frame and layout have been created.
+        self.setMinimumSize(DockManager.IDEAL_MIN_WIDTH, DockManager.IDEAL_MIN_HEIGHT)
         self.resize(1400, 900)
         
         self._shortcut_manager = ShortcutManager(self)
@@ -240,7 +235,7 @@ class MainWindow(QMainWindow):
             enqueue_files_callback=self.enqueue_files
         )
         self.explorer_widget.setObjectName("explorerWidget")
-        self.explorer_dock.setWidget(self.explorer_widget)
+        self.explorer_dock.set_scrollable_widget(self.explorer_widget)
 
     def _ensure_playlists_widget(self):
         if self.playlists_widget is not None:
@@ -251,7 +246,7 @@ class MainWindow(QMainWindow):
             play_callback=self.play_playlist_track
         )
         self.playlists_widget.setObjectName("playlistsWidget")
-        self.playlists_dock.setWidget(self.playlists_widget)
+        self.playlists_dock.set_scrollable_widget(self.playlists_widget)
         self.playlists_widget.playlist_selected.connect(lambda _p: self._apply_now_playing_highlight())
         self._apply_now_playing_highlight()
 
@@ -261,7 +256,7 @@ class MainWindow(QMainWindow):
         from player.player_widget import PlayerWidget
         self.player_widget = PlayerWidget(self)
         self.player_widget.setObjectName("playerWidget")
-        self.player_dock.setWidget(self.player_widget)
+        self.player_dock.set_scrollable_widget(self.player_widget)
         self._wire_player_signals()
         self.dock_manager.apply_player_controls_state()
         self.dock_manager.update_focusable_widgets()
@@ -311,15 +306,15 @@ class MainWindow(QMainWindow):
         self.status_bar.setMinimumHeight(24)
         self.setStatusBar(self.status_bar)
         
-        self.status_label = QLabel(_("Ready"))
+        self.status_label = ElidedLabel(_("Ready"))
         self.status_label.setObjectName("statusLabel")
         self.status_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.status_bar.addWidget(self.status_label, 1)
 
-        self.media_info_label = QLabel("")
+        self.media_info_label = ElidedLabel("")
         self.media_info_label.setObjectName("mediaInfoLabel")
         self.media_info_label.setFocusPolicy(Qt.FocusPolicy.TabFocus)
-        self.status_bar.addPermanentWidget(self.media_info_label)
+        self.status_bar.addPermanentWidget(self.media_info_label, 1)
 
         self.status_bar.show()
         self.refresh_ui_layout()

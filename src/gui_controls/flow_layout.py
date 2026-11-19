@@ -83,6 +83,14 @@ class FlowLayout(QLayout):
             if not self._item_is_visible(item):
                 continue
             hint = item.sizeHint()
+            # A composite item (e.g. a pane label with show/float buttons)
+            # can have a large preferred width while still being able to
+            # shrink. Respect its minimum rather than drawing it outside
+            # the flow container on a narrow screen.
+            if hint.width() > effective_rect.width():
+                hint.setWidth(max(item.minimumSize().width(), effective_rect.width()))
+                if item.hasHeightForWidth():
+                    hint.setHeight(item.heightForWidth(hint.width()))
             space_x = self.horizontalSpacing()
             space_y = self.verticalSpacing()
             next_x = x + hint.width() + space_x
