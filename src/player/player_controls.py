@@ -132,7 +132,6 @@ class PlayerControls(QWidget):
 
     def setup_ui(self):
         self.toggle_controls_btn = ToggleButton(_("Minimize"), self)
-        self.toggle_controls_btn.setFixedHeight(30)
         self.toggle_controls_btn.setToolTip(_("Minimize/Maximize Controls"))
 
         # Create media control buttons with icons
@@ -399,6 +398,15 @@ class PlayerControls(QWidget):
         width = self.buttons_container.width()
         if width > 0:
             self.buttons_container.setFixedHeight(self.buttons_flow.heightForWidth(width))
+        player = self._player_widget
+        if player is not None and hasattr(player, 'controls_scroll'):
+            player._sync_controls_scroll_height()
+
+    def refresh_ui_layout(self):
+        self.buttons_flow.invalidate()
+        self._resync_buttons_container_height()
+        self.updateGeometry()
+        QTimer.singleShot(0, self._resync_buttons_container_height)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -410,7 +418,6 @@ class PlayerControls(QWidget):
 
         for widget in self.expandable_widgets:
             widget.setVisible(not minimized)
-        self._resync_buttons_container_height()
 
         if minimized:
             self.toggle_controls_btn.setText(_("Maximize"))
@@ -418,6 +425,7 @@ class PlayerControls(QWidget):
         else:
             self.toggle_controls_btn.setText(_("Minimize"))
             self.toggle_controls_btn.setToolTip(_("Minimize Controls"))
+        self._resync_buttons_container_height()
 
     @Slot()
     def show_more_menu(self):

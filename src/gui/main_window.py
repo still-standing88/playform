@@ -322,10 +322,20 @@ class MainWindow(QMainWindow):
         self.status_bar.addPermanentWidget(self.media_info_label)
 
         self.status_bar.show()
+        self.refresh_ui_layout()
 
         signal_manager.statusbar_message.connect(self._update_status_message)
         signal_manager.statusbar_message_categorized.connect(self._on_categorized_message)
         signal_manager.media_info_message.connect(self.media_info_label.setText)
+
+    def refresh_ui_layout(self):
+        status_bar = getattr(self, "status_bar", None)
+        if status_bar is not None:
+            text_height = max(self.status_label.fontMetrics().height(),
+                              self.media_info_label.fontMetrics().height())
+            status_bar.setMinimumHeight(max(24, text_height + 8))
+            status_bar.updateGeometry()
+        self.dock_manager._schedule_clamp_to_screen()
 
     def setup_menubar_indicators(self):
         """"Restore minimized" indicators, in the menu bar's own corner

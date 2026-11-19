@@ -8,7 +8,7 @@ import media_core.av_play as av_play
 
 from PySide6.QtWidgets import (QWidget, QLayout, QVBoxLayout, QHBoxLayout, QSplitter,
                                QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSlider, QSpinBox,
-                               QScrollArea, QFrame, QApplication)
+                               QScrollArea, QFrame, QApplication, QSizePolicy)
 from PySide6.QtGui import QCloseEvent, QFont, QPalette, QColor, QShortcut
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, Slot
 
@@ -146,7 +146,6 @@ class PlayerWidget(QWidget):
         # far-away playback controls row - the button and the panel it
         # affects should be visually next to each other.
         self.toggle_accordion_btn = ToggleButton(_("Hide Side Panel"), self)
-        self.toggle_accordion_btn.setFixedHeight(30)
         self.toggle_accordion_btn.setToolTip(_("Hide/Show Side Panel"))
 
 
@@ -169,10 +168,30 @@ class PlayerWidget(QWidget):
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(5)
 
-        left_layout.addWidget(self.video_display, 2)
-        left_layout.addWidget(self.timeline)
-        left_layout.addWidget(self.player_controls)
-        self.video_display.set_position_info(left_layout, 0)
+        media_content = QWidget()
+        media_layout = QVBoxLayout(media_content)
+        media_layout.setContentsMargins(0, 0, 0, 0)
+        media_layout.setSpacing(5)
+        media_layout.addWidget(self.video_display, 2)
+        media_layout.addWidget(self.timeline)
+        # Reserve space for playback controls before the display/timeline.
+        self.media_scroll = QScrollArea(self)
+        self.media_scroll.setWidgetResizable(True)
+        self.media_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.media_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Ignored)
+        self.media_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.media_scroll.setWidget(media_content)
+        left_layout.addWidget(self.media_scroll, 1)
+        # On very short screens even the controls' wrapped rows can exceed
+        # the dock. Keep them intact and scroll instead of clipping them.
+        self.player_controls.layout().setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        self.controls_scroll = QScrollArea(self)
+        self.controls_scroll.setWidgetResizable(True)
+        self.controls_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.controls_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.controls_scroll.setWidget(self.player_controls)
+        left_layout.addWidget(self.controls_scroll)
+        self.video_display.set_position_info(media_layout, 0)
 
         self.side_accordion.add_section(_("Chapters"), self.chapters_widget)
         self.side_accordion.add_section(_("Subtitles"), self.subtitles_widget)
@@ -232,6 +251,7 @@ class PlayerWidget(QWidget):
         self.main_splitter.setSizes([800, 300])
         self.main_splitter.setStretchFactor(0, 1)
         self.main_splitter.setStretchFactor(1, 0)
+        self.main_splitter.setCollapsible(0, False)
         self.main_splitter.setCollapsible(1, True)
 
         self.main_layout.addWidget(self.main_splitter)
@@ -315,6 +335,14 @@ class PlayerWidget(QWidget):
         self.setStyleSheet(player_widget_style())
 
     apply_styles = apply_theme_styles
+
+    def refresh_ui_layout(self):
+        self.player_controls.refresh_ui_layout()
+        self._sync_controls_scroll_height()
+
+    def _sync_controls_scroll_height(self):
+        self.controls_scroll.setMaximumHeight(self.player_controls.sizeHint().height())
+        self.controls_scroll.updateGeometry()
 
     @Slot(bool)
     def _on_accordion_panel_toggled(self, hidden):

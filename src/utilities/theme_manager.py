@@ -96,6 +96,9 @@ def apply_theme(theme_name: Optional[str] = None, app: Optional[QApplication] = 
         stylesheet = qdarkstyle.load_stylesheet(palette=LightPalette)
     else:
         stylesheet = ""
+
+    from app_constance.styles import group_box_title_style
+    stylesheet += group_box_title_style()
     
     # Apply stylesheet to application
     app.setStyleSheet(stylesheet)
@@ -120,7 +123,16 @@ def _repolish_all_widgets(app: QApplication) -> None:
             apply_theme_styles()
         widget.style().unpolish(widget)
         widget.style().polish(widget)
+        if widget.layout() is not None:
+            widget.layout().invalidate()
+        widget.updateGeometry()
         widget.update()
+
+    # Recompute width-dependent controls after all child fonts have settled.
+    for widget in app.allWidgets():
+        refresh_layout = getattr(widget, "refresh_ui_layout", None)
+        if callable(refresh_layout):
+            refresh_layout()
 
 
 def get_current_theme() -> str:

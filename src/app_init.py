@@ -101,6 +101,10 @@ def apply_ui_zoom(app, zoom_level=None):
         zoom_level = prefs.prefs.get("ui_zoom_level", 0)
     zoom_level = max(MIN_UI_ZOOM_LEVEL, min(MAX_UI_ZOOM_LEVEL, zoom_level))
     app.setFont(QFont("Segoe UI", BASE_FONT_POINT_SIZE + zoom_level))
+    if app.styleSheet():
+        # Styled widgets keep a resolved font until their styles are reapplied.
+        from utilities.theme_manager import apply_theme, get_current_theme
+        apply_theme(get_current_theme(), app)
     return zoom_level
 
 

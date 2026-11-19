@@ -36,9 +36,23 @@ class ColorButton(QPushButton):
                 label=self._label, value=text, alpha=parsed.alpha()
             )
         )
+        self.apply_theme_styles()
+
+    def apply_theme_styles(self):
+        from app_constance.styles import get_theme_palette
+
+        parsed = self._color
+        background = QColor(get_theme_palette().COLOR_BACKGROUND_1)
+        alpha = parsed.alphaF()
+        channels = [alpha * value + (1 - alpha) * base
+                    for value, base in zip(parsed.getRgbF()[:3], background.getRgbF()[:3])]
+        linear = [value / 12.92 if value <= 0.04045 else ((value + 0.055) / 1.055) ** 2.4
+                  for value in channels]
+        luminance = sum(value * weight for value, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
+        foreground = "#000000" if luminance > 0.179 else "#FFFFFF"
         self.setStyleSheet(
             f"background-color: rgba({parsed.red()}, {parsed.green()}, "
-            f"{parsed.blue()}, {parsed.alpha()});"
+            f"{parsed.blue()}, {parsed.alpha()}); color: {foreground};"
         )
 
     def _pick_color(self):

@@ -1,4 +1,4 @@
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QFontMetrics
 from qdarkstyle.dark.palette import DarkPalette
 from qdarkstyle.light.palette import LightPalette
 
@@ -35,6 +35,24 @@ def secondary_text_color(theme_name: str | None = None) -> str:
 
 def border_color(theme_name: str | None = None) -> str:
     return theme_color("COLOR_BACKGROUND_4", theme_name)
+
+
+def group_box_title_style() -> str:
+    from PySide6.QtWidgets import QApplication
+
+    title_height = QFontMetrics(QApplication.font()).height()
+    return f"""
+        QGroupBox {{
+            margin-top: {title_height + 6}px;
+            padding-top: 4px;
+        }}
+        QGroupBox::title {{
+            subcontrol-origin: margin;
+            subcontrol-position: top left;
+            padding-top: 0px;
+            padding-bottom: 0px;
+        }}
+    """
 
 
 def secondary_label_style(font_size: int | None = None, italic: bool = False) -> str:
@@ -221,15 +239,13 @@ def radio_group_box_style() -> str:
             font-weight: bold;
             border: 1px solid {palette.COLOR_BACKGROUND_4};
             border-radius: {palette.SIZE_BORDER_RADIUS};
-            margin-top: 10px;
-            padding-top: 10px;
         }}
         QGroupBox::title {{
             subcontrol-origin: margin;
             left: 10px;
             padding: 0 5px;
         }}
-    """
+    """ + group_box_title_style()
 
 
 def radio_tree_style() -> str:

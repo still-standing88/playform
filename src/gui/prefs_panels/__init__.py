@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QTabWidget,
-                               QPushButton, QMessageBox)
+                               QPushButton, QMessageBox, QScrollArea, QFrame,
+                               QLayout, QFormLayout)
 from PySide6.QtCore import Qt, Signal, QTimer
 import sys
 import os
@@ -32,6 +33,27 @@ class PreferencesDialog(QDialog):
         self.setMinimumSize(500, 400)
         self.setup_ui()
         self.load_preferences()
+        self.resize(700, 560)
+
+    def _add_page(self, panel, title):
+        # Keep dense forms at their natural minimum and scroll the excess.
+        panel.layout().setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        for form in panel.findChildren(QFormLayout):
+            form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
+        scroll = QScrollArea(self.tab_widget)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setWidget(panel)
+        self.tab_widget.addTab(scroll, title)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        screen = self.screen()
+        if screen is not None:
+            area = screen.availableGeometry()
+            frame = self.frameGeometry().size() - self.size()
+            self.resize(min(self.width(), area.width() - frame.width() - 16),
+                        min(self.height(), area.height() - frame.height() - 16))
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -40,25 +62,25 @@ class PreferencesDialog(QDialog):
         layout.addWidget(self.tab_widget)
 
         self.general_panel = GeneralPanel(self)
-        self.tab_widget.addTab(self.general_panel, _("General"))
+        self._add_page(self.general_panel, _("General"))
 
         self.media_panel = MediaPanel(self, self.audio_devices)
-        self.tab_widget.addTab(self.media_panel, _("Media"))
+        self._add_page(self.media_panel, _("Media"))
 
         self.subtitles_panel = SubtitlesPanel(self)
-        self.tab_widget.addTab(self.subtitles_panel, _("Subtitles"))
+        self._add_page(self.subtitles_panel, _("Subtitles"))
 
         self.accessibility_panel = AccessibilityPanel(self)
-        self.tab_widget.addTab(self.accessibility_panel, _("Accessibility"))
+        self._add_page(self.accessibility_panel, _("Accessibility"))
 
         self.advanced_panel = AdvancedPanel(self)
-        self.tab_widget.addTab(self.advanced_panel, _("Advanced"))
+        self._add_page(self.advanced_panel, _("Advanced"))
 
         self.database_panel = DatabasePanel(self, main_window=self._main_window)
-        self.tab_widget.addTab(self.database_panel, _("Database"))
+        self._add_page(self.database_panel, _("Database"))
 
         self.downloads_panel = DownloadsPanel(self)
-        self.tab_widget.addTab(self.downloads_panel, _("Downloads"))
+        self._add_page(self.downloads_panel, _("Downloads"))
 
         button_layout = QHBoxLayout()
         self.reset_button = QPushButton(_("Reset to Default"))

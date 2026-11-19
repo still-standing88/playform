@@ -70,7 +70,7 @@ class FlowLayout(QLayout):
         # widgets get hidden dynamically (e.g. a "minimize controls" toggle)
         # rather than only ever being all-visible.
         widget = item.widget()
-        return widget is None or widget.isVisible()
+        return widget is None or not widget.isHidden()
 
     def _do_layout(self, rect, test_only):
         left, top, right, bottom = self.getContentsMargins()
@@ -124,6 +124,15 @@ class FlowContainer(QWidget):
             return super().sizeHint()
         width = self.width() if self.width() > 0 else self._fallback_width
         return QSize(width, layout.heightForWidth(width))
+
+    def minimumSizeHint(self):
+        layout = self.layout()
+        if layout is None:
+            return super().minimumSizeHint()
+        width = self.width() if self.width() > 0 else self._fallback_width
+        # QWidget's default minimum hint queries height at a single item's
+        # width, which makes a wrapping toolbar demand an entire column.
+        return QSize(layout.minimumSize().width(), layout.heightForWidth(width))
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

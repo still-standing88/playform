@@ -1,6 +1,6 @@
 import shiboken6
 from PySide6.QtWidgets import QPushButton, QGraphicsOpacityEffect, QGraphicsDropShadowEffect
-from PySide6.QtCore import Signal, QPropertyAnimation, QEasingCurve, QRect, Qt, QParallelAnimationGroup, QSize
+from PySide6.QtCore import Signal, QPropertyAnimation, QEasingCurve, Qt, QParallelAnimationGroup
 from PySide6.QtGui import QColor
 
 from app_constance.styles import get_theme_palette
@@ -28,7 +28,7 @@ class ToggleButton(QPushButton):
         self.updateAccessibility()
         self.updateStyle()
         
-        self.setMinimumSize(100, 35)
+        self.setMinimumSize(100, self.sizeHint().height())
         
     def setupAnimations(self):
         self.animationGroup = QParallelAnimationGroup(self)
@@ -39,12 +39,7 @@ class ToggleButton(QPushButton):
         self.opacityAnimation.setDuration(200)
         self.opacityAnimation.setEasingCurve(QEasingCurve.Type.InOutQuad)
         
-        self.sizeAnimation = QPropertyAnimation(self, b"minimumSize")
-        self.sizeAnimation.setDuration(250)
-        self.sizeAnimation.setEasingCurve(QEasingCurve.Type.OutCubic)
-        
         self.animationGroup.addAnimation(self.opacityAnimation)
-        self.animationGroup.addAnimation(self.sizeAnimation)
         
         self.shadowEffect = QGraphicsDropShadowEffect()
         self.shadowEffect.setBlurRadius(8)
@@ -128,6 +123,7 @@ class ToggleButton(QPushButton):
         self._ensure_shadow_effect()
         self.shadowEffect.setColor(self._shadow_color())
         self.updateStyle()
+        self.setMinimumHeight(self.sizeHint().height())
         
     def updateStyle(self):
         if self.activated:
@@ -176,18 +172,6 @@ class ToggleButton(QPushButton):
         self.opacityAnimation.setStartValue(1.0)
         self.opacityAnimation.setKeyValueAt(0.5, 0.7)
         self.opacityAnimation.setEndValue(1.0)
-        
-        current_size = self.minimumSize()
-        
-        if self.activated:
-            target_size = self.size() if self.size().isValid() else current_size
-            target_size.setWidth(max(target_size.width(), current_size.width() + 10))
-            target_size.setHeight(max(target_size.height(), current_size.height() + 2))
-        else:
-            target_size = current_size
-            
-        self.sizeAnimation.setStartValue(current_size)
-        self.sizeAnimation.setEndValue(target_size)
         
         self.animationGroup.start()
         

@@ -10,6 +10,9 @@ class DockManager:
     def __init__(self, main_window):
         self.main_window = main_window
         self._dock_features = QDockWidget.DockWidgetFeature.DockWidgetMovable
+        self._clamp_scheduled = False
+        self._fitting_screen = False
+        self._fit_again = False
 
     @staticmethod
     def _make_float_a_real_window(dock: QDockWidget):
@@ -356,7 +359,20 @@ class DockManager:
         # Deferred because the layout hasn't actually recalculated the
         # window's real size yet at the point a dock's visibility changes -
         # running this synchronously would check stale geometry.
-        QTimer.singleShot(0, self.clamp_to_screen)
+        if not self._clamp_scheduled:
+            self._clamp_scheduled = True
+            QTimer.singleShot(0, self._run_scheduled_clamp)
+
+    def _run_scheduled_clamp(self):
+        self._clamp_scheduled = False
+        self.clamp_to_screen()
+
+    def _finish_screen_fit(self, mw):
+        mw.setMaximumHeight(16777215)
+        self._fitting_screen = False
+        if self._fit_again:
+            self._fit_again = False
+            self._schedule_clamp_to_screen()
 
     # The window's own ideal, comfortable minimum - not necessarily what
     # any given screen can actually offer. Recomputed against the current
@@ -458,14 +474,19 @@ class DockManager:
         # gives it a real separate event-loop turn each step, which does
         # let it settle.
         status_bar = getattr(mw, 'status_bar', None)
-        if status_bar is None or iteration >= 10:
-            mw.setMaximumHeight(16777215)
+        if status_bar is None or not status_bar.isVisible() or iteration >= 10:
+            self._finish_screen_fit(mw)
             return
-        STATUS_BAR_TARGET_H = 24
+        target_height = status_bar.minimumHeight()
         visible_h = min(status_bar.height(), max(0, mw.height() - status_bar.y()))
-        shortfall = STATUS_BAR_TARGET_H - visible_h
+        shortfall = target_height - visible_h
+        # Qt can place docks over the status bar while still reporting the
+        # status bar's own rectangle inside the window.
+        for dock in self._all_docks():
+            if dock is not None and dock.isVisible() and not dock.isFloating():
+                shortfall = max(shortfall, dock.geometry().bottom() + 1 - status_bar.y())
         if shortfall <= 0:
-            mw.setMaximumHeight(16777215)
+            self._finish_screen_fit(mw)
             return
 
         player = getattr(mw, 'player_widget', None)
@@ -520,7 +541,7 @@ class DockManager:
             mw.resizeDocks(shrink_docks, shrink_sizes, Qt.Orientation.Vertical)
 
         if not cut_any:
-            mw.setMaximumHeight(16777215)
+            self._finish_screen_fit(mw)
             return
         QTimer.singleShot(0, lambda: self._resync_status_bar_step(mw, iteration + 1))
 
@@ -541,6 +562,10 @@ class DockManager:
         screen = mw.screen()
         if screen is None:
             return
+        if self._fitting_screen:
+            self._fit_again = True
+            return
+        self._fitting_screen = True
         available = screen.availableGeometry()
 
         self._resync_min_height(mw, available)
