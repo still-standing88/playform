@@ -24,10 +24,16 @@ def dev_install(c):
 
 @task
 def clear_cache(c):
-    if sys.platform == "win32":
-        c.run('for /d /r . %d in (__pycache__) do @if exist "%d" rd /s /q "%d"', shell="cmd", pty=False, in_stream=False)
-    else:
-        c.run('find . -type d -name __pycache__ -exec rm -rf {} +', pty=False, in_stream=False)
+    root = ROOT_DIR.resolve()
+    removed = 0
+    cache_dirs = sorted(root.rglob("__pycache__"), key=lambda path: len(path.parts), reverse=True)
+    for cache_dir in cache_dirs:
+        if cache_dir.is_symlink() or not cache_dir.is_dir():
+            continue
+        cache_dir.resolve().relative_to(root)
+        shutil.rmtree(cache_dir)
+        removed += 1
+    print(f"Removed {removed} __pycache__ dir(s) under {root}")
 
 
 @task
