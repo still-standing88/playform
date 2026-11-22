@@ -1,4 +1,4 @@
-from .mediacap import query
+from .mediacap import find_mediacap, query
 from .models import CaptureDevice, CaptureFormatOption, MediaKind
 
 
@@ -13,8 +13,13 @@ _DEVICE_LISTS = {
 
 
 class CaptureCapabilities:
-    def __init__(self, executable):
-        self.executable = executable
+    def __init__(self, executable=None):
+        self._executable = executable
+
+    @property
+    def executable(self):
+        # Re-resolve after an install or preference edit while the tool is open.
+        return self._executable if self._executable is not None else find_mediacap()
 
     def inventory(self) -> dict[MediaKind, list[CaptureDevice]]:
         data = query(self.executable, "list", "all", allow_partial=True)

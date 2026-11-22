@@ -8,7 +8,7 @@ from datetime import datetime
 from time import monotonic
 from uuid import uuid4
 
-from .mediacap import PROCESS_OPTIONS, recording_args
+from .mediacap import PROCESS_OPTIONS, check_mediacap, recording_args
 from .models import VIDEO_KINDS
 
 
@@ -50,7 +50,7 @@ class CaptureSessionRunner:
 
     def start(self):
         if not self.capabilities.executable:
-            self._on_source_error("", "MediaCap was not found. Install it in PlayForm's bin folder or on PATH.")
+            self._on_source_error("", check_mediacap().message)
             return False
         enabled_sources = [source for source in self.sources if source.enabled]
         devices_by_kind = {}

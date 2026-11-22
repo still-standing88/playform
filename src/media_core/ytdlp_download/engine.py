@@ -192,16 +192,8 @@ def _app_bin_dir() -> str:
 
 
 def _deno_args() -> list:
-    # Same helper role as player.util.url._get_deno_arg -- deno is solely a
-    # yt-dlp dependency; duplicated here because media_core must not import
-    # from the player package.
-    name = "deno.exe" if os.name == "nt" else "deno"
-    bin_dir = _app_bin_dir()
-    if bin_dir:
-        candidate = os.path.join(bin_dir, name)
-        if os.path.isfile(candidate):
-            return ["--js-runtimes", f"deno:{candidate}", "--remote-components", "ejs:github"]
-    return ["--remote-components", "ejs:github"]
+    from utilities.cli_binaries import deno_runtime_args
+    return deno_runtime_args()
 
 
 def find_ytdlp_binary() -> str:

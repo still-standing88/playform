@@ -3,7 +3,7 @@ from gui.dialogs.tool_dialog import ToolDialog
 from tools.logs_viewer_dialog import LogsViewerDialog
 from utilities import signal_manager
 from utilities.announcement_categories import AnnouncementCategory
-from player.util.utilities import ensure_ffmpeg_available
+from player.util.utilities import ensure_ffmpeg_available, ensure_mediacap_available
 
 
 def _announce(text):
@@ -60,6 +60,8 @@ class ToolWindowManager:
         self.open_tool_dialog("audiobook_combiner", AudiobookCombinerUI(), _("Audiobook Combiner"))
 
     def open_multi_device_capture(self):
+        if not ensure_mediacap_available(self.main_window):
+            return
         from multi_device_capture.ui import MultiDeviceCaptureUI
         self.open_tool_dialog("multi_device_capture", MultiDeviceCaptureUI(), _("Multi Device Capture"))
 

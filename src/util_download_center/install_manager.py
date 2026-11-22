@@ -4,6 +4,7 @@ import shutil
 import zipfile
 from pathlib import Path
 import tarfile
+import tempfile
 
 from utilities.functions import get_parent_dir
 
@@ -31,12 +32,17 @@ def install_tool(
 
     final_name = binary_name_win if sys.platform == "win32" else binary_name_posix
     dest       = bin_dir / final_name
-
+    staged = None
     try:
+        if tool_name in ("deno", "mediacap"):
+            fd, staging_path = tempfile.mkstemp(prefix=f"_{tool_name}_", suffix=dest.suffix, dir=bin_dir)
+            os.close(fd)
+            staged = Path(staging_path)
+        target = staged or dest
         if not is_zip:
-            shutil.copy2(str(src), str(dest))
+            shutil.copy2(str(src), str(target))
             if sys.platform != "win32":
-                os.chmod(str(dest), 0o755)
+                os.chmod(str(target), 0o755)
         else:
             tmp_dir = src.parent / f"_extract_{tool_name}"
             tmp_dir.mkdir(parents=True, exist_ok=True)
@@ -52,14 +58,24 @@ def install_tool(
                 if binary is None:
                     return False, f"Binary '{final_name}' not found inside zip archive"
 
-                shutil.copy2(str(binary), str(dest))
+                shutil.copy2(str(binary), str(target))
                 if sys.platform != "win32":
-                    os.chmod(str(dest), 0o755)
+                    os.chmod(str(target), 0o755)
             finally:
                 shutil.rmtree(str(tmp_dir), ignore_errors=True)
 
+        if staged is not None:
+            from utilities.cli_binaries import check_cli_binary
+            result = check_cli_binary(tool_name, str(staged))
+            if not result.ok:
+                return False, result.message
+            os.replace(staged, dest)
+
     except Exception as exc:
         return False, str(exc)
+    finally:
+        if staged is not None:
+            staged.unlink(missing_ok=True)
 
     _record_installed_binary(tool_name, dest)
     return True, str(dest)
@@ -71,6 +87,8 @@ def _record_installed_binary(tool_name: str, dest: Path) -> None:
     pref_keys = {
         "yt-dlp": ("yt-dlp_binary", "yt-dlp_path"),
         "ffmpeg": ("ffmpeg_binary", "ffmpeg_path"),
+        "deno": ("deno_binary", "deno_path"),
+        "mediacap": ("mediacap_binary", "mediacap_path"),
     }.get(tool_name)
     if pref_keys is None or not dest.exists():
         return

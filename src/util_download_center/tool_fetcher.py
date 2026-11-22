@@ -158,12 +158,14 @@ class ToolFetcher(QObject):
             return asset, ""
 
         pattern_map = tool.asset_patterns.get(self._platform, {})
-        target = pattern_map.get(self._arch) or next(iter(pattern_map.values()), None)
+        target = pattern_map.get(self._arch)
+        if not target and not tool.exact_assets:
+            target = next(iter(pattern_map.values()), None)
         if not target:
             return None, f"No asset pattern defined for {self._platform}/{self._arch}"
 
         asset = next((a for a in assets if a["name"] == target), None)
-        if asset is None:
+        if asset is None and not tool.exact_assets:
             asset = next((a for a in assets if target in a["name"]), None)
         if asset is None:
             return None, (

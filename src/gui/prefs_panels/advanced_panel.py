@@ -14,13 +14,15 @@ class AdvancedPanel(QWidget):
         ("youtube_cookies", "file"),
         ("yt-dlp_path", "dir"),
         ("ffmpeg_path", "dir"),
+        ("deno_path", "dir"),
+        ("mediacap_path", "dir"),
     ]
 
     def __init__(self, parent=None):
         super().__init__(parent)
         # Labels built lazily in setup_ui() so _() is resolved after
         # translations are installed, not at class-definition time.
-        self._path_values = {"youtube_cookies": "", "yt-dlp_path": "", "ffmpeg_path": ""}
+        self._path_values = {key: "" for key, _kind in self.PATH_ENTRIES}
         self.setup_ui()
 
     def setup_ui(self):
@@ -53,20 +55,21 @@ class AdvancedPanel(QWidget):
 
         layout.addWidget(mpv_group)
 
-        ytdlp_group = QGroupBox(_("yt-dlp Settings"))
+        ytdlp_group = QGroupBox(_("Utility Paths and yt-dlp Settings"))
         self.ytdlp_layout = QFormLayout(ytdlp_group)
 
         # One shared path field + Browse button, driven by whichever entry
-        # is selected in the list -- replaces three near-identical
-        # edit+browse rows (cookies file / yt-dlp path / ffmpeg path).
+        # is selected in the list.
         self._path_labels = {
             "youtube_cookies": _("YouTube Cookies File"),
             "yt-dlp_path": _("yt-dlp Path"),
             "ffmpeg_path": _("FFmpeg Path"),
+            "deno_path": _("Deno Path"),
+            "mediacap_path": _("MediaCap Path"),
         }
 
         self.path_list = QListWidget()
-        self.path_list.setMaximumHeight(90)
+        self.path_list.setMaximumHeight(130)
         self.path_list.setAccessibleName(_("Path setting to edit"))
         for key, _kind in self.PATH_ENTRIES:
             item = QListWidgetItem(self._path_labels[key])
@@ -82,8 +85,11 @@ class AdvancedPanel(QWidget):
         self.path_value_edit.setReadOnly(True)
         self.path_browse_btn = QPushButton(_("Browse"))
         self.path_browse_btn.clicked.connect(self.browse_selected_path)
+        self.path_check_btn = QPushButton(_("Check"))
+        self.path_check_btn.clicked.connect(self.check_selected_path)
         path_row_layout.addWidget(self.path_value_edit)
         path_row_layout.addWidget(self.path_browse_btn)
+        path_row_layout.addWidget(self.path_check_btn)
         self.ytdlp_layout.addRow(_("Path:"), path_row)
 
         self.ytdlp_logging_check = QCheckBox(_("Enable yt-dlp Logging"))
@@ -135,6 +141,21 @@ class AdvancedPanel(QWidget):
     def _on_path_selection_changed(self, current, previous):
         key = current.data(Qt.ItemDataRole.UserRole) if current else None
         self.path_value_edit.setText(self._path_values.get(key, "") if key else "")
+        self.path_check_btn.setVisible(key in ("deno_path", "mediacap_path"))
+
+    def check_selected_path(self):
+        from utilities.cli_binaries import check_deno, check_mediacap
+        from player.util.utilities import show_binary_check_result
+        from app_config import prefs
+
+        key = self._selected_path_key()
+        check = {"deno_path": check_deno, "mediacap_path": check_mediacap}.get(key)
+        if check is None:
+            return
+        values = prefs.prefs.copy()
+        values.update(self._path_values)
+        values.pop(key.replace("_path", "_binary"), None)
+        show_binary_check_result(self, check(values))
 
     def _dialog_kind_for(self, key):
         for entry_key, kind in self.PATH_ENTRIES:
@@ -162,9 +183,8 @@ class AdvancedPanel(QWidget):
         self.debug_level_spin.setValue(prefs["debug_level"])
         self.mpv_options_edit.setPlainText(prefs["mpv_extra_options"])
 
-        self._path_values["youtube_cookies"] = prefs["youtube_cookies"]
-        self._path_values["yt-dlp_path"] = prefs["yt-dlp_path"]
-        self._path_values["ffmpeg_path"] = prefs["ffmpeg_path"]
+        for key, _kind in self.PATH_ENTRIES:
+            self._path_values[key] = prefs.get(key, "")
         self._on_path_selection_changed(self.path_list.currentItem(), None)
 
         self.ytdlp_logging_check.setChecked(prefs["yt-dlp_logging"])
@@ -177,8 +197,10 @@ class AdvancedPanel(QWidget):
         prefs["mpv_logging"] = self.mpv_logging_check.isChecked()
         prefs["debug_level"] = self.debug_level_spin.value()
         prefs["mpv_extra_options"] = self.mpv_options_edit.toPlainText().strip()
-        prefs["youtube_cookies"] = self._path_values["youtube_cookies"]
-        prefs["yt-dlp_path"] = self._path_values["yt-dlp_path"]
-        prefs["ffmpeg_path"] = self._path_values["ffmpeg_path"]
+        for key, _kind in self.PATH_ENTRIES:
+            value = self._path_values[key]
+            if key.endswith("_path") and value != prefs.get(key):
+                prefs[key.replace("_path", "_binary")] = ""
+            prefs[key] = value
         prefs["yt-dlp_logging"] = self.ytdlp_logging_check.isChecked()
         prefs["yt-dlp_verbose_output"] = self.ytdlp_verbose_check.isChecked()

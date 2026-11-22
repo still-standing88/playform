@@ -2,7 +2,6 @@ import os
 import re
 import subprocess
 import sys
-from dataclasses import dataclass
 from typing import Optional, Tuple
 
 from PySide6.QtWidgets import QMessageBox, QWidget
@@ -10,19 +9,10 @@ from PySide6.QtWidgets import QMessageBox, QWidget
 from app_config import prefs as app_prefs
 from app_constance import prefs_dict
 from utilities.functions import get_parent_dir
-
-
-@dataclass(frozen=True)
-class BinaryCheckResult:
-    name: str
-    path: str
-    exists: bool
-    runnable: bool
-    detected: bool
-    version: Optional[str]
-    major: Optional[int]
-    ok: bool
-    message: str
+from utilities.cli_binaries import (
+    BinaryCheckResult, check_deno, check_mediacap,
+    resolve_deno_binary_path, resolve_mediacap_binary_path,
+)
 
 
 def _get_pref_value(key: str, default: str = "") -> str:
@@ -202,6 +192,9 @@ def update_prefs_with_found_binaries(prefs: dict) -> dict:
     if ytdlp_path:
         prefs['yt-dlp_binary'] = ytdlp_path
         prefs['yt-dlp_path'] = os.path.dirname(ytdlp_path)
+
+    prefs['deno_binary'] = resolve_deno_binary_path(prefs)
+    prefs['mediacap_binary'] = resolve_mediacap_binary_path(prefs)
     
     return prefs
 
@@ -477,8 +470,17 @@ def ensure_ffprobe_available(parent: Optional[QWidget] = None, show_message: boo
     return False
 
 
+def ensure_mediacap_available(parent: Optional[QWidget] = None, show_message: bool = True) -> bool:
+    result = check_mediacap()
+    if result.ok:
+        return True
+    if show_message:
+        show_binary_check_result(parent, result, _("MediaCap Not Available"))
+    return False
+
+
 def prefs_keys_present() -> dict[str, bool]:
-    keys = ["yt-dlp_path", "ffmpeg_binary"]
+    keys = ["yt-dlp_path", "ffmpeg_binary", "deno_path", "mediacap_path"]
     return {
         f"app_config.prefs:{k}": k in app_prefs.prefs
         for k in keys

@@ -6,7 +6,7 @@ import threading
 from pathlib import Path
 from time import monotonic
 
-from .mediacap import PROCESS_OPTIONS, source_args
+from .mediacap import PROCESS_OPTIONS, check_mediacap, source_args
 from .models import AUDIO_KINDS
 
 
@@ -29,7 +29,7 @@ class CapturePreview:
     def _run(self):
         try:
             if not self._executable:
-                raise RuntimeError("MediaCap was not found.")
+                raise RuntimeError(check_mediacap().message)
             with tempfile.TemporaryDirectory(prefix="playform-preview-") as directory:
                 self._capture(Path(directory))
         except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as exc:

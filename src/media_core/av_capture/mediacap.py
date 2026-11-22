@@ -1,8 +1,8 @@
 import json
-import os
-import shutil
 import subprocess
 import sys
+
+from utilities.cli_binaries import check_mediacap, resolve_mediacap_binary_path
 
 from .models import AUDIO_KINDS, CaptureDevice, MediaKind
 
@@ -30,17 +30,12 @@ def escape_audio_id(value):
 
 
 def find_mediacap(bin_dir=None):
-    name = "MediaCap.exe" if sys.platform == "win32" else "MediaCap"
-    if bin_dir is not None:
-        bundled = os.path.join(bin_dir, name)
-        if os.path.isfile(bundled):
-            return bundled
-    return shutil.which(name)
+    return resolve_mediacap_binary_path(bin_dir=bin_dir) or None
 
 
 def query(executable, *args, allow_partial=False):
     if not executable:
-        raise RuntimeError("MediaCap was not found. Install it in PlayForm's bin folder or on PATH.")
+        raise RuntimeError(check_mediacap().message)
     try:
         result = subprocess.run(
             [executable, "--json", *args], stdin=subprocess.DEVNULL, capture_output=True,

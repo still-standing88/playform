@@ -18,6 +18,7 @@ class ToolDef:
     direct_urls: dict = field(default_factory=dict)
     release_tag: str = ""
     asset_regex: dict = field(default_factory=dict)
+    exact_assets: bool = False
 
 
 def current_machine() -> str:
@@ -140,4 +141,29 @@ FFMPEG = ToolDef(
     },
 )
 
-ALL_TOOLS: list[ToolDef] = [YTDLP, DENO, FFMPEG]
+MEDIACAP = ToolDef(
+    name="mediacap",
+    label="MediaCap",
+    description=N_(
+        "MediaCap records screens, windows, cameras, and audio for PlayForm's "
+        "Multi Device Capture tool. Downloads the standalone CLI binary directly "
+        "for Windows or Linux (x64 or ARM64) and installs it in PlayForm's bin folder. "
+        "A working global installation on PATH is used automatically."
+    ),
+    github_repo="still-standing88/media-cap",
+    asset_patterns={
+        "windows": {
+            "x86_64": "MediaCap-cli-windows-x64.exe",
+            "aarch64": "MediaCap-cli-windows-arm64.exe",
+        },
+        "linux": {
+            "x86_64": "MediaCap-cli-linux-x64",
+            "aarch64": "MediaCap-cli-linux-arm64",
+        },
+    },
+    binary_name_posix="MediaCap",
+    binary_name_win="MediaCap.exe",
+    exact_assets=True,
+)
+
+ALL_TOOLS: list[ToolDef] = [YTDLP, DENO, FFMPEG, MEDIACAP]

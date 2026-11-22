@@ -32,6 +32,10 @@ prefs = {
 "mpv_extra_options": "",
 "yt-dlp_binary": "",
 "yt-dlp_path": os.path.join(get_parent_dir(), "bin"),
+"deno_binary": "",
+"deno_path": os.path.join(get_parent_dir(), "bin"),
+"mediacap_binary": "",
+"mediacap_path": os.path.join(get_parent_dir(), "bin"),
 # Dev-only metadata cross-check oracle (media_core.metaparser.exiftool_bridge);
 # deliberately not surfaced in the Preferences dialog.
 "exiftool_binary": "",
@@ -113,6 +117,7 @@ DIALOG_PREFS_KEYS = frozenset({
     "accessibility_feedback", "tts_speech_interrupt", "tts_voice",
     "tts_volume", "tts_rate", "mpv_logging", "debug_level",
     "mpv_extra_options", "youtube_cookies", "yt-dlp_path", "ffmpeg_path",
+    "deno_path", "mediacap_path",
     "yt-dlp_logging", "yt-dlp_verbose_output", "catalog_extensions",
     "store_search_history",
     "download_max_parallel", "download_speed_limit_kbps",
