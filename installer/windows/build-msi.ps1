@@ -1,7 +1,7 @@
 param(
     [string]$SourceDir,
     [string]$OutputDir,
-    [string]$Version = "1.3.0"
+    [string]$Version = "1.3.1"
 )
 
 if (-not (Get-Command "candle.exe" -ErrorAction SilentlyContinue)) {
