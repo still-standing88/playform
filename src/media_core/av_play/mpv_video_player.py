@@ -905,6 +905,12 @@ class MPVVideoPlayer(AVPlayer):
         except (TypeError, ValueError):
             return 1.0
 
+    def can_seek(self) -> bool:
+        return bool(self.__mpv_interface.run_on_mpv(lambda m: m.seekable, wait=True, timeout=0.5))
+
+    def show_osd_text(self, text: str, duration_ms: int = 1000):
+        self.__mpv_interface.run_on_mpv(lambda m: m.show_text(text, duration_ms), wait=False)
+
     def take_screenshot(self, path: str, include_subtitles: bool = True) -> bool:
         """Captures what mpv is actually rendering (current vf chain, rotate/
         flip, colour adjustments) rather than re-decoding the source frame,

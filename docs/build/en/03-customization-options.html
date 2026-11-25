@@ -592,6 +592,71 @@
 <p><strong>Index Statistics</strong> shows the total number of indexed files and how many had errors during cataloging.</p>
 <p>A cataloging scan runs in the background; progress is shown in a dialog on top of Manage Database, where it can be paused or the whole scan canceled. Minimizing either dialog leaves a restore button in the menu-bar corner (see <a href="02-interface-tour.html#211-menubar">Section 2.1.1</a>).</p>
 <hr>
+<h2 id="34-touch-gestures">3.4. Touch Gestures</h2>
+<p>Open <strong>Options &gt; Manage Touch Gestures…</strong>, immediately below <strong>Manage Hotkeys</strong>, to configure touchscreen controls. Gestures apply to the video display area, including its audio-only placeholder. Playlist scrolling, sliders, and other panels keep their usual controls.</p>
+<h3 id="default-gestures">Default Gestures</h3>
+<table>
+<thead>
+<tr>
+<th>Gesture</th>
+<th>Default action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Single tap</td>
+<td>Show/hide controls. In fullscreen, this opens a compact playback bar with Back, Play/Pause, Forward, More, and Exit fullscreen.</td>
+</tr>
+<tr>
+<td>Double tap in the left third</td>
+<td>Seek backward 10 seconds.</td>
+</tr>
+<tr>
+<td>Double tap in the centre third</td>
+<td>Play/Pause.</td>
+</tr>
+<tr>
+<td>Double tap in the right third</td>
+<td>Seek forward 10 seconds.</td>
+</tr>
+<tr>
+<td>Long press</td>
+<td>Open the playback menu.</td>
+</tr>
+<tr>
+<td>One-finger horizontal swipe</td>
+<td>Preview a playback position; release to seek there.</td>
+</tr>
+<tr>
+<td>One-finger vertical swipe in the left half</td>
+<td>Adjust video brightness.</td>
+</tr>
+<tr>
+<td>One-finger vertical swipe in the right half</td>
+<td>Adjust volume, up to 150% by default.</td>
+</tr>
+<tr>
+<td>Pinch with two fingers</td>
+<td>Zoom the video, from 0.25× to 5×.</td>
+</tr>
+<tr>
+<td>Drag with two fingers</td>
+<td>Move the video within its display area.</td>
+</tr>
+</tbody>
+</table>
+<p>Single taps wait briefly for a possible double tap, so a double tap does not also trigger the single-tap action. During a horizontal swipe, moving your finger vertically reduces seek sensitivity for finer positioning. Seeking is unavailable for streams that cannot seek or have no known duration. Brightness adjusts the video picture; it does not change the device's screen brightness.</p>
+<h3 id="configuring-gestures">Configuring Gestures</h3>
+<ol>
+<li>Choose <strong>Video (default)</strong>, <strong>Audiobooks / Podcasts</strong>, or keep your <strong>Custom</strong> mappings. The audio preset uses a 30-second forward skip, assigns long press to Add bookmark, and disables brightness, zoom, and pan.</li>
+<li>In <strong>Mappings</strong>, select a gesture and choose its action in the field below the list. Choose <strong>Disabled</strong> to turn off an individual gesture. Taps and holds can be assigned to playback, fullscreen, bookmarks, repeat-loop markers, subtitles, screenshots, playlist, or queue actions. Continuous gestures offer actions suitable for their movement.</li>
+<li>In <strong>Behavior</strong>, adjust skip distances, swipe sensitivity, maximum volume, tap and hold timing, and the movement required before a swipe starts. You can limit gestures to fullscreen or disable visual feedback.</li>
+<li>Use <strong>Practice</strong> to try the current draft on a touchscreen. The practice area reports what it recognizes without changing playback.</li>
+<li>Choose <strong>Apply</strong> to save without closing, or <strong>OK</strong> to save and close. <strong>Cancel</strong> discards changes made since the last Apply. <strong>Reset to Default</strong> changes the draft; it is saved only when you choose Apply or OK.</li>
+</ol>
+<p>The optional long-press action <strong>Temporary fast playback while held</strong> uses the speed selected in Behavior, then restores the previous speed when you release or the touch is canceled. Interrupting a swipe cancels its pending seek and restores any volume, brightness, zoom, or pan adjustment made during that gesture.</p>
+<p>Settings are remembered between sessions. Uncheck <strong>Enable touchscreen gestures on the video area</strong> to disable all of them. These controls use touchscreen input; touchpad gestures remain governed by the operating system and existing mouse controls.</p>
+<hr>
 <p><strong>Previous:</strong> <a href="02-interface-tour.html">← 2. A Tour of the Program's User Interface</a> | <strong>Next:</strong> <a href="04-tools.html">4. Tools →</a></p>
 </body>
 </html>

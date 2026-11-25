@@ -368,6 +368,10 @@ class MenuManager:
         self.main_window.hotkeys_action.triggered.connect(self.main_window.open_hotkeys)
         self.main_window.options_menu.addAction(self.main_window.hotkeys_action)
 
+        self.main_window.touch_gestures_action = QAction(_("Manage Touch &Gestures..."), self.main_window)
+        self.main_window.touch_gestures_action.triggered.connect(self.main_window.open_touch_gestures)
+        self.main_window.options_menu.addAction(self.main_window.touch_gestures_action)
+
         self.main_window.customize_toolbar_action = QAction(_("Customize &Toolbar..."), self.main_window)
         self.main_window.customize_toolbar_action.triggered.connect(
             self.main_window.toolbar_manager.open_toolbar_customize_dialog

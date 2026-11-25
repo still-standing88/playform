@@ -1,8 +1,9 @@
 from typing import Callable, Optional
-from PySide6.QtWidgets import QWidget, QLayout, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy
+from PySide6.QtWidgets import QWidget, QLayout, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QFrame, QPushButton
 from PySide6.QtGui import QCloseEvent, QPalette, QColor
 from PySide6.QtCore import Qt
 from app_constance.styles import video_loading_style, video_placeholder_style
+from gui_controls.flow_layout import FlowLayout
 
 LayoutType = QVBoxLayout | QHBoxLayout 
 
@@ -106,11 +107,45 @@ class VideoDisplayWidget(QWidget):
             self.showFullScreen()
             self._fullscreen = True
         else:
+            if hasattr(self, "touch_controls"):
+                self.touch_controls.hide()
             self.showNormal()
             self.restore_position()
             self.setWindowFlags(Qt.WindowType.Widget)
             self.show()
             self._fullscreen = False
+
+    def create_touch_controls(self, callbacks):
+        self.touch_controls = QFrame(self)
+        self.touch_controls.setObjectName("fullscreenTouchControls")
+        self.touch_controls.setFrameShape(QFrame.Shape.StyledPanel)
+        # mpv renders in a native child window, so a non-native Qt overlay
+        # would be painted underneath the video.
+        self.touch_controls.setAttribute(Qt.WidgetAttribute.WA_NativeWindow)
+        self.touch_controls.setAutoFillBackground(True)
+        self._touch_controls_layout = FlowLayout(self.touch_controls, margin=8, h_spacing=8, v_spacing=8)
+        for key, text in (("backward", _("Back")), ("play_pause", _("Play/Pause")),
+                          ("forward", _("Forward")), ("menu", _("More")),
+                          ("fullscreen", _("Exit fullscreen"))):
+            button = QPushButton(text, self.touch_controls)
+            button.setMinimumHeight(44)
+            button.clicked.connect(callbacks[key])
+            self._touch_controls_layout.addWidget(button)
+        self.touch_controls.hide()
+
+    def toggle_touch_controls(self):
+        self.touch_controls.setVisible(not self.touch_controls.isVisible())
+        self._position_touch_controls()
+        self.touch_controls.raise_()
+
+    def _position_touch_controls(self):
+        if hasattr(self, "touch_controls"):
+            height = self._touch_controls_layout.heightForWidth(self.width())
+            self.touch_controls.setGeometry(0, max(0, self.height() - height), self.width(), height)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._position_touch_controls()
 
     def show_loading(self, message: str = _("Extracting URL...")):
         self.loading_label.setText(message)

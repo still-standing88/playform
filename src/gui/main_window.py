@@ -20,6 +20,7 @@ import app_db
 import media_core.av_play as av_play
 from .recents_favorites import RecentsAndFavoritesWidget
 from .dialogs.hotkeys_dialog import HotkeysDialog
+from .dialogs.touch_gestures_dialog import TouchGesturesDialog
 from .dialogs.url_dialog import URLDialog
 from .dialogs.prefs_dialog import PreferencesDialog
 from utilities.util_gui import menuItem
@@ -782,6 +783,11 @@ class MainWindow(QMainWindow):
         dialog = HotkeysDialog(self, reset_callback=self.reset_shortcuts_callback)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             _announce_dialogs(_("Hotkeys updated"))
+
+    def open_touch_gestures(self):
+        dialog = TouchGesturesDialog(self)
+        dialog.applied.connect(lambda: _announce_dialogs(_("Touch gestures updated")))
+        dialog.exec()
 
     # ------------------------------------------------------------------
     # About & Options menu actions

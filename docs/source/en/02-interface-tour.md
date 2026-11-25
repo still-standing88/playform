@@ -95,6 +95,7 @@ The menubar contains six menus: **File**, **Media**, **View**, **Tools**, **Down
 | **Manage Preferences** | Opens the Preferences dialog. |
 | **Manage Database…** | Opens the Manage Database dialog (see [Section 3.3](03-customization-options.md#33-manage-database)). |
 | **Manage Hotkeys** | Opens the Hotkeys configuration dialog where all keyboard shortcuts can be remapped. |
+| **Manage Touch Gestures…** | Opens the touchscreen gesture configuration dialog, directly below Manage Hotkeys (see [Section 3.4](03-customization-options.md#34-touch-gestures)). |
 | **Customize Toolbar…** | Opens the Toolbar Customization dialog (see below). |
 | **About PlayForm…** | Opens the About dialog with version and license information. |
 | *separator* | |

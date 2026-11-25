@@ -16,6 +16,7 @@ from app_config import prefs
 from .player_controls import PlayerControls
 from .widgets.subtitles_widget import SubtitlesWidget
 from .widgets.video_display_widget import VideoDisplayWidget
+from .core.touch_actions import PlayerTouchActions
 from .timeline import SegmentTimelineWidget
 from gui_controls.player_key_event_filter import KeyEventFilter
 from gui_controls.toggle_button import ToggleButton
@@ -125,6 +126,8 @@ class PlayerWidget(QWidget):
         self.apply_styles()
         self.set_shortcuts()
         self._install_event_filters()
+
+        self._touch_actions = PlayerTouchActions(self)
 
     def setup_ui(self):
         self.player_controls = PlayerControls(self)
@@ -618,8 +621,13 @@ class PlayerWidget(QWidget):
 
     @Slot(bool)
     def _on_fullscreen_toggled(self, enabled):
+        self.player_controls.set_fullscreen_state(enabled)
+        old_window = int(self.video_display.winId())
         self.video_display.set_fullscreen(enabled)
         try:
+            window = int(self.video_display.winId())
+            if window != old_window:
+                self.player.set_window(window)
             self.player.set_fullscreen(enabled)
         except Exception:
             pass
@@ -665,6 +673,8 @@ class PlayerWidget(QWidget):
             _announce(_("Failed to take screenshot"))
 
     def close_current_media(self):
+        if hasattr(self, "_touch_actions"):
+            self._touch_actions.cancel()
         try:
             if self.player.primary_instance is not None:
                 self.player_controls.save_last_position()
@@ -798,7 +808,8 @@ class PlayerWidget(QWidget):
                 # interrupted (window switch, grab loss); without this
                 # recovery the stale flag suppressed position follow for
                 # the rest of the session.
-                if self.is_seeking and not (QApplication.mouseButtons() & Qt.MouseButton.LeftButton):
+                touch_seeking = hasattr(self, "_touch_actions") and self._touch_actions.is_seeking()
+                if self.is_seeking and not touch_seeking and not (QApplication.mouseButtons() & Qt.MouseButton.LeftButton):
                     self.is_seeking = False
                     self.player_controls._is_user_seeking = False
 
@@ -1133,6 +1144,8 @@ class PlayerWidget(QWidget):
         self._info_dialogs.view_mpv_metadata()
 
     def closeEvent(self, event):
+        if hasattr(self, "_touch_actions"):
+            self._touch_actions.cancel()
         try:
             self._track_loader.cleanup()
             self._info_dialogs.cleanup()

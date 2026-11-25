@@ -259,4 +259,39 @@ A cataloging scan runs in the background; progress is shown in a dialog on top o
 
 ---
 
+## 3.4. Touch Gestures
+
+Open **Options > Manage Touch Gestures…**, immediately below **Manage Hotkeys**, to configure touchscreen controls. Gestures apply to the video display area, including its audio-only placeholder. Playlist scrolling, sliders, and other panels keep their usual controls.
+
+### Default Gestures
+
+| Gesture | Default action |
+|---|---|
+| Single tap | Show/hide controls. In fullscreen, this opens a compact playback bar with Back, Play/Pause, Forward, More, and Exit fullscreen. |
+| Double tap in the left third | Seek backward 10 seconds. |
+| Double tap in the centre third | Play/Pause. |
+| Double tap in the right third | Seek forward 10 seconds. |
+| Long press | Open the playback menu. |
+| One-finger horizontal swipe | Preview a playback position; release to seek there. |
+| One-finger vertical swipe in the left half | Adjust video brightness. |
+| One-finger vertical swipe in the right half | Adjust volume, up to 150% by default. |
+| Pinch with two fingers | Zoom the video, from 0.25× to 5×. |
+| Drag with two fingers | Move the video within its display area. |
+
+Single taps wait briefly for a possible double tap, so a double tap does not also trigger the single-tap action. During a horizontal swipe, moving your finger vertically reduces seek sensitivity for finer positioning. Seeking is unavailable for streams that cannot seek or have no known duration. Brightness adjusts the video picture; it does not change the device's screen brightness.
+
+### Configuring Gestures
+
+1. Choose **Video (default)**, **Audiobooks / Podcasts**, or keep your **Custom** mappings. The audio preset uses a 30-second forward skip, assigns long press to Add bookmark, and disables brightness, zoom, and pan.
+2. In **Mappings**, select a gesture and choose its action in the field below the list. Choose **Disabled** to turn off an individual gesture. Taps and holds can be assigned to playback, fullscreen, bookmarks, repeat-loop markers, subtitles, screenshots, playlist, or queue actions. Continuous gestures offer actions suitable for their movement.
+3. In **Behavior**, adjust skip distances, swipe sensitivity, maximum volume, tap and hold timing, and the movement required before a swipe starts. You can limit gestures to fullscreen or disable visual feedback.
+4. Use **Practice** to try the current draft on a touchscreen. The practice area reports what it recognizes without changing playback.
+5. Choose **Apply** to save without closing, or **OK** to save and close. **Cancel** discards changes made since the last Apply. **Reset to Default** changes the draft; it is saved only when you choose Apply or OK.
+
+The optional long-press action **Temporary fast playback while held** uses the speed selected in Behavior, then restores the previous speed when you release or the touch is canceled. Interrupting a swipe cancels its pending seek and restores any volume, brightness, zoom, or pan adjustment made during that gesture.
+
+Settings are remembered between sessions. Uncheck **Enable touchscreen gestures on the video area** to disable all of them. These controls use touchscreen input; touchpad gestures remain governed by the operating system and existing mouse controls.
+
+---
+
 **Previous:** [← 2. A Tour of the Program's User Interface](02-interface-tour.md) | **Next:** [4. Tools →](04-tools.md)

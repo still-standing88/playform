@@ -29,6 +29,7 @@
   - [3.1. Shortcuts](03-customization-options.md#31-shortcuts)
   - [3.2. Preferences](03-customization-options.md#32-preferences)
   - [3.3. Manage Database](03-customization-options.md#33-manage-database)
+  - [3.4. Touch Gestures](03-customization-options.md#34-touch-gestures)
 - [4. Tools](04-tools.md)
   - [4.1. FFmpeg Tools](04-tools.md#41-ffmpeg-tools)
   - [4.2. M4B Tools](04-tools.md#42-m4b-tools)
